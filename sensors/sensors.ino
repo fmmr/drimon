@@ -1,11 +1,20 @@
 // wiring:
 
+// 1. HC-SR04 ultrasonic sensor
+//    trigger: 11
+//    echo: 12
+
+// 2. i2c: SLA/SLC. (oled,  BH1750 light intensity sensor, DHT20 temp/hum)
+
+// 3. LM393 soil moisture: A0
+
+
 #include "DHT20.h"
 #include <Wire.h>
 #include <math.h>
-
 #include "SSD1306Ascii.h"
 #include "SSD1306AsciiWire.h"
+
 // #define SCREEN_WIDTH 128  // OLED display width, in pixels
 // #define SCREEN_HEIGHT 64  // OLED display height, in pixels
 #define I2C_ADDRESS 0x3C
