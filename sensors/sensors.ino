@@ -69,8 +69,14 @@ void loop() {
 }
 
 int hygroRead() {
+  int maxRealMeasuredValue = 1023;  // when dipped in real dry soil - typically 550
   int hygro = analogRead(HYGRO_PIN);
-  if (hygro < 900) {
+Serial.println(hygro);
+
+  hygro = map(hygro, 0, 1023, 10, maxRealMeasuredValue);
+  hygro = map(hygro, maxRealMeasuredValue, 10, 0, 100);
+  
+  if (hygro > 50) {
     digitalWrite(6, HIGH);
     digitalWrite(5, LOW);
   } else {
@@ -195,14 +201,13 @@ void serialPrint(float hum, float temp, int hygro, uint16_t lux, uint32_t start,
   Serial.print("\n");
 }
 
-void flashLeds() {
+void flashLeds(int del) {
   for (int i = 0; i <= 3; i++) {
-    Serial.println(i);
     digitalWrite(5, HIGH);
     digitalWrite(6, HIGH);
-    delay(80);
+    delay(del);
     digitalWrite(5, LOW);
     digitalWrite(6, LOW);
-    delay(80);
+    delay(delay);
   }
 }
