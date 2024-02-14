@@ -16,24 +16,137 @@
 #include "SSD1306Ascii.h"
 #include "SSD1306AsciiWire.h"
 
-// #define SCREEN_WIDTH 128  // OLED display width, in pixels
-// #define SCREEN_HEIGHT 64  // OLED display height, in pixels
-#define I2C_ADDRESS 0x3C
-SSD1306AsciiWire oled;
-int BH1750address = 0x23;  //setting i2c address
+const uint8_t OLED_I2C = 0x3C;
+const int BH1750_I2C = 0x23;  //setting i2c address
+const int HYGRO_PIN = A0;     // select the input pin for the potentiometer
+const int LOOP_DELAY = 1000;  // will not probe unless millis has passed since last probe
+const uint8_t ULTRA_TRIGGER_PIN = 11;
+const uint8_t ULTRA_ECHO_PIN = 12;
+const uint8_t GREEN_PIN = 6;
+const uint8_t ORANGE_PIN = 5;
+const uint8_t OLED_VALUES_COL = 88;
+const byte INIT_FLASH_DELAY = 50;
+const byte PRINT_HEADER_EVERY = 15;
 
-const int HYGRO_PIN = A0;  // select the input pin for the potentiometer
+uint8_t headerCountSerial = 0;
+
 DHT20 DHT;
-byte luxBuffer[2];
-
+SSD1306AsciiWire oled;
 
 void setup() {
   Serial.begin(115200);
   Serial.println(__FILE__);
   Wire.begin();
 
-  oled.begin(&Adafruit128x64, I2C_ADDRESS);
   DHT.begin();
+
+  oled.begin(&Adafruit128x64, OLED_I2C);
+  initOled();
+
+  pinMode(ULTRA_TRIGGER_PIN, OUTPUT);  // ultrasonic trigger
+  pinMode(ULTRA_ECHO_PIN, INPUT);   // ultrasonic echo
+  pinMode(ORANGE_PIN, OUTPUT);   // led
+  pinMode(GREEN_PIN, OUTPUT);   // led
+  flashLeds(INIT_FLASH_DELAY);
+}
+
+
+void loop() {
+  if (millis() - DHT.lastRead() >= LOOP_DELAY) {
+    uint32_t start = micros();
+    float temp;
+    float hum;
+    int status;
+    bool printHeader = false;
+    int hygro = hygroRead();
+    int lux = luxRead();
+    float distance = ultrasonic();
+    readDHT20(&hum, &temp, &status);
+    display(hum, temp, hygro, lux, distance);
+    serialPrint(hum, temp, hygro, lux, start, status);
+  }
+}
+
+int hygroRead() {
+  int hygro = analogRead(HYGRO_PIN);
+
+  int maxRealMeasuredValue = 1023;  // when dipped in real dry soil - typically 550 - debug by uncommenting serial line below.
+  // Serial.println(hygro);
+
+  // magic mapping from: https://pijaeducation.com/arduino/sensor/soil-sensor-with-arduino-in-analog-mode/
+  hygro = map(hygro, 0, 1023, 10, maxRealMeasuredValue);
+  hygro = map(hygro, maxRealMeasuredValue, 10, 0, 100);
+  if (hygro > 50) {
+    digitalWrite(GREEN_PIN, HIGH);
+    digitalWrite(ORANGE_PIN, LOW);
+  } else {
+    digitalWrite(ORANGE_PIN, HIGH);
+    digitalWrite(GREEN_PIN, LOW);
+  }
+  return hygro;
+}
+
+int luxRead() {
+  Wire.beginTransmission(BH1750_I2C);
+  Wire.write(0x10);  //1lx reolution 120ms
+  Wire.endTransmission();
+  delay(100);
+
+  byte luxBuffer[2];
+  int i = 0;
+  Wire.beginTransmission(BH1750_I2C);
+  Wire.requestFrom(BH1750_I2C, 2);
+  while (Wire.available())  //
+  {
+    luxBuffer[i] = Wire.read();  // receive one byte
+    i++;
+  }
+  Wire.endTransmission();
+
+  if (2 == i) {
+    return ((luxBuffer[0] << 8) | luxBuffer[1]) / 1.2;
+  }
+  return -1;
+}
+
+
+
+float ultrasonic() {
+  digitalWrite(ULTRA_TRIGGER_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(ULTRA_TRIGGER_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(ULTRA_TRIGGER_PIN, LOW);
+  long duration = pulseIn(ULTRA_ECHO_PIN, HIGH);
+  return duration * 0.034 / 2;
+}
+
+void readDHT20(float *hum, float *temp, int *status) {
+  *status = DHT.read();
+  *hum = DHT.getHumidity();
+  *temp = DHT.getTemperature();
+}
+
+void display(float hum, float temp, int hygro, int lux, float distance) {
+  byte i = 0;
+  oled.setCursor(OLED_VALUES_COL, i++);
+  oled.print(hum);
+  oled.clearToEOL();
+  oled.setCursor(OLED_VALUES_COL, i++);
+  oled.print(temp);
+  oled.clearToEOL();
+  oled.setCursor(OLED_VALUES_COL, i++);
+  oled.print(hygro);
+  oled.clearToEOL();
+  oled.setCursor(OLED_VALUES_COL, i++);
+  oled.print(distance);
+  oled.clearToEOL();
+  oled.setCursor(OLED_VALUES_COL, i++);
+  oled.print(lux);
+  oled.clearToEOL();
+}
+
+void initOled() {
   oled.setFont(System5x7);
   oled.setLetterSpacing(1);
   oled.clear();
@@ -42,124 +155,15 @@ void setup() {
   oled.println("Humidity soil:");
   oled.println("Distance     :");
   oled.println("Light        :");
-
-  pinMode(11, OUTPUT);  // hygro trigger
-  pinMode(12, INPUT);   // hygro echo
-  pinMode(5, OUTPUT);   // led
-  pinMode(6, OUTPUT);   // led
-  flashLeds(80);
 }
 
-
-void loop() {
-  if (millis() - DHT.lastRead() >= 1000) {
-    uint32_t start = micros();
-    float temp;
-    float hum;
-    uint32_t time;
-    int status;
-    bool printHeader = false;
-    int hygro = hygroRead();
-    uint16_t lux = luxRead();
-    float distance = ultrasonic();
-    readDHT20(&hum, &temp, &time, &status);
-    display(hum, temp, hygro, lux, distance);
-    serialPrint(hum, temp, hygro, lux, start, status);
-  }
-}
-
-int hygroRead() {
-  int maxRealMeasuredValue = 1023;  // when dipped in real dry soil - typically 550
-  int hygro = analogRead(HYGRO_PIN);
-Serial.println(hygro);
-
-  hygro = map(hygro, 0, 1023, 10, maxRealMeasuredValue);
-  hygro = map(hygro, maxRealMeasuredValue, 10, 0, 100);
-  
-  if (hygro > 50) {
-    digitalWrite(6, HIGH);
-    digitalWrite(5, LOW);
-  } else {
-    digitalWrite(5, HIGH);
-    digitalWrite(6, LOW);
-  }
-  return hygro;
-}
-
-uint16_t luxRead() {
-  BH1750_Init();
-  delay(100);
-  if (2 == BH1750_Read()) {
-    return ((luxBuffer[0] << 8) | luxBuffer[1]) / 1.2;
-  }
-  return -1;
-}
-
-int BH1750_Read()  //
-{
-  int i = 0;
-  Wire.beginTransmission(BH1750address);
-  Wire.requestFrom(BH1750address, 2);
-  while (Wire.available())  //
-  {
-    luxBuffer[i] = Wire.read();  // receive one byte
-    i++;
-  }
-  Wire.endTransmission();
-  return i;
-}
-
-void BH1750_Init() {
-  Wire.beginTransmission(BH1750address);
-  Wire.write(0x10);  //1lx reolution 120ms
-  Wire.endTransmission();
-}
-
-float ultrasonic() {
-  digitalWrite(11, LOW);
-  delayMicroseconds(2);
-  digitalWrite(11, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(11, LOW);
-  long duration = pulseIn(12, HIGH);
-  return duration * 0.034 / 2;
-}
-
-
-void display(float hum, float temp, int hygro, uint16_t lux, float distance) {
-  oled.setCursor(88, 0);
-  oled.print(hum);
-  oled.clearToEOL();
-  oled.setCursor(88, 1);
-  oled.print(temp);
-  oled.clearToEOL();
-  oled.setCursor(88, 2);
-  oled.print(hygro);
-  oled.clearToEOL();
-  oled.setCursor(88, 3);
-  oled.print(distance);
-  oled.setCursor(88, 4);
-  oled.print(lux);
-  oled.clearToEOL();
-}
-
-
-void readDHT20(float *hum, float *temp, uint32_t *time, int *status) {
-  uint32_t start = micros();
-  *status = DHT.read();
-  *time = micros() - start;
-  *hum = DHT.getHumidity();
-  *temp = DHT.getTemperature();
-}
-
-uint8_t count = 0;
-void serialPrint(float hum, float temp, int hygro, uint16_t lux, uint32_t start, int status) {
-  if ((count % 10) == 0) {
-    count = 0;
+void serialPrint(float hum, float temp, int hygro, int lux, uint32_t start, int status) {
+  if ((headerCountSerial % PRINT_HEADER_EVERY) == 0) {
+    headerCountSerial = 0;
     Serial.println();
-    Serial.println("Humidity (%)\tTemp (°C)\tHygro (A)\tLight (lx)\tTime (µs)\tStatus");
+    Serial.println("Humidity (%)\tTemp (°C)\tHygro (A)\tLight (lx)\tTime (µs)\tStatus DHT20");
   }
-  count++;
+  headerCountSerial++;
 
   //  DISPLAY DATA, sensor has only one decimal.
   Serial.print(hum, 1);
@@ -203,11 +207,11 @@ void serialPrint(float hum, float temp, int hygro, uint16_t lux, uint32_t start,
 
 void flashLeds(int del) {
   for (int i = 0; i <= 3; i++) {
-    digitalWrite(5, HIGH);
-    digitalWrite(6, HIGH);
+    digitalWrite(ORANGE_PIN, HIGH);
+    digitalWrite(GREEN_PIN, HIGH);
     delay(del);
-    digitalWrite(5, LOW);
-    digitalWrite(6, LOW);
-    delay(delay);
+    digitalWrite(ORANGE_PIN, LOW);
+    digitalWrite(GREEN_PIN, LOW);
+    delay(del);
   }
 }
