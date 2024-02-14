@@ -8,6 +8,7 @@
 
 // 3. LM393 soil moisture: A0
 
+// 4. LEDS hygro: green 6, yellow/red: 5)
 
 #include "DHT20.h"
 #include <Wire.h>
@@ -29,15 +30,10 @@ byte luxBuffer[2];
 void setup() {
   Serial.begin(115200);
   Serial.println(__FILE__);
-  Serial.print("DHT20 LIBRARY VERSION: ");
-  Serial.println(DHT20_LIB_VERSION);
-  Serial.println();
-  Wire.begin();  // join i2c bus (address optional for master)
+  Wire.begin();
 
   oled.begin(&Adafruit128x64, I2C_ADDRESS);
-
-  DHT.begin();  //  ESP32 default pins 21 22
-
+  DHT.begin();
   oled.setFont(System5x7);
   oled.setLetterSpacing(1);
   oled.clear();
@@ -47,27 +43,41 @@ void setup() {
   oled.println("Distance     :");
   oled.println("Light        :");
 
-  pinMode(11, OUTPUT);
-  pinMode(12, INPUT);
-
-  delay(100);
+  pinMode(11, OUTPUT);  // hygro trigger
+  pinMode(12, INPUT);   // hygro echo
+  pinMode(5, OUTPUT);   // led
+  pinMode(6, OUTPUT);   // led
+  flashLeds(80);
 }
 
 
 void loop() {
   if (millis() - DHT.lastRead() >= 1000) {
+    uint32_t start = micros();
     float temp;
     float hum;
     uint32_t time;
     int status;
     bool printHeader = false;
-    int hygro = analogRead(HYGRO_PIN);
+    int hygro = hygroRead();
     uint16_t lux = luxRead();
-    readDHT20(&hum, &temp, &time, &status);
     float distance = ultrasonic();
-    serialPrint(hum, temp, hygro, lux, time, status);
+    readDHT20(&hum, &temp, &time, &status);
     display(hum, temp, hygro, lux, distance);
+    serialPrint(hum, temp, hygro, lux, start, status);
   }
+}
+
+int hygroRead() {
+  int hygro = analogRead(HYGRO_PIN);
+  if (hygro < 900) {
+    digitalWrite(6, HIGH);
+    digitalWrite(5, LOW);
+  } else {
+    digitalWrite(5, HIGH);
+    digitalWrite(6, LOW);
+  }
+  return hygro;
 }
 
 uint16_t luxRead() {
@@ -137,7 +147,7 @@ void readDHT20(float *hum, float *temp, uint32_t *time, int *status) {
 }
 
 uint8_t count = 0;
-void serialPrint(float hum, float temp, int hygro, uint16_t lux, uint32_t time, int status) {
+void serialPrint(float hum, float temp, int hygro, uint16_t lux, uint32_t start, int status) {
   if ((count % 10) == 0) {
     count = 0;
     Serial.println();
@@ -154,7 +164,7 @@ void serialPrint(float hum, float temp, int hygro, uint16_t lux, uint32_t time, 
   Serial.print("\t\t");
   Serial.print(lux);
   Serial.print("\t\t");
-  Serial.print(time);
+  Serial.print(micros() - start);
   Serial.print("\t\t");
   switch (status) {
     case DHT20_OK:
@@ -185,6 +195,14 @@ void serialPrint(float hum, float temp, int hygro, uint16_t lux, uint32_t time, 
   Serial.print("\n");
 }
 
-
-
-//  -- END OF FILE --
+void flashLeds() {
+  for (int i = 0; i <= 3; i++) {
+    Serial.println(i);
+    digitalWrite(5, HIGH);
+    digitalWrite(6, HIGH);
+    delay(80);
+    digitalWrite(5, LOW);
+    digitalWrite(6, LOW);
+    delay(80);
+  }
+}
