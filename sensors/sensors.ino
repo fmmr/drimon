@@ -8,7 +8,9 @@
 
 // 3. LM393 soil moisture: A0
 
-// 4. LEDS hygro: green 6, yellow/red: 5)
+// 4. LEDS hygro: green 6, red: 5)
+
+// 5. LEDS distance: green 10, yellow: 9, red: 7
 
 #include "DHT20.h"
 #include <Wire.h>
@@ -16,20 +18,26 @@
 #include "SSD1306Ascii.h"
 #include "SSD1306AsciiWire.h"
 
+// Misc constants
+const int LOOP_DELAY = 1000;  // will not probe unless millis has passed since last probe
+const byte INIT_FLASH_DELAY = 70;  // delay used in init-flashing
+const byte PRINT_HEADER_EVERY = 15;  // serial output emits a header every PRINT_HEADER_EVERY lines.
+
+// Pins and i2c addresses
 const uint8_t OLED_I2C = 0x3C;
 const int BH1750_I2C = 0x23;  //setting i2c address
 const int HYGRO_PIN = A0;     // select the input pin for the potentiometer
-const int LOOP_DELAY = 1000;  // will not probe unless millis has passed since last probe
 const uint8_t ULTRA_TRIGGER_PIN = 11;
 const uint8_t ULTRA_ECHO_PIN = 12;
 const uint8_t GREEN_PIN = 6;
 const uint8_t ORANGE_PIN = 5;
 const uint8_t OLED_VALUES_COL = 88;
-const byte INIT_FLASH_DELAY = 50;
-const byte PRINT_HEADER_EVERY = 15;
+const uint8_t NEAR_PIN = 10; 
+const uint8_t MEDIUM_PIN = 9;
+const uint8_t FAR_PIN = 7;
 
+// Variables
 uint8_t headerCountSerial = 0;
-
 DHT20 DHT;
 SSD1306AsciiWire oled;
 
@@ -44,15 +52,19 @@ void setup() {
   initOled();
 
   pinMode(ULTRA_TRIGGER_PIN, OUTPUT);  // ultrasonic trigger
-  pinMode(ULTRA_ECHO_PIN, INPUT);   // ultrasonic echo
-  pinMode(ORANGE_PIN, OUTPUT);   // led
-  pinMode(GREEN_PIN, OUTPUT);   // led
+  pinMode(ULTRA_ECHO_PIN, INPUT);      // ultrasonic echo
+  pinMode(ORANGE_PIN, OUTPUT);         // led
+  pinMode(GREEN_PIN, OUTPUT);          // led
+  pinMode(NEAR_PIN, OUTPUT);           // led
+  pinMode(MEDIUM_PIN, OUTPUT);         // led
+  pinMode(FAR_PIN, OUTPUT);            // led
+
   flashLeds(INIT_FLASH_DELAY);
 }
 
 
 void loop() {
-  if (millis() - DHT.lastRead() >= LOOP_DELAY) {
+  if (shouldTrigger()) {
     uint32_t start = micros();
     float temp;
     float hum;
@@ -63,8 +75,13 @@ void loop() {
     float distance = ultrasonic();
     readDHT20(&hum, &temp, &status);
     display(hum, temp, hygro, lux, distance);
-    serialPrint(hum, temp, hygro, lux, start, status);
+    serialPrint(hum, temp, hygro, lux, start, status, distance);
   }
+  delay(20);
+}
+
+bool shouldTrigger() {
+  return millis() - DHT.lastRead() >= LOOP_DELAY;
 }
 
 int hygroRead() {
@@ -118,7 +135,21 @@ float ultrasonic() {
   delayMicroseconds(10);
   digitalWrite(ULTRA_TRIGGER_PIN, LOW);
   long duration = pulseIn(ULTRA_ECHO_PIN, HIGH);
-  return duration * 0.034 / 2;
+  float distance = duration * 0.034 / 2;
+  if (distance < 7) {
+    digitalWrite(NEAR_PIN, HIGH);
+    digitalWrite(MEDIUM_PIN, LOW);
+    digitalWrite(FAR_PIN, LOW);
+  } else if (distance < 20) {
+    digitalWrite(NEAR_PIN, LOW);
+    digitalWrite(MEDIUM_PIN, HIGH);
+    digitalWrite(FAR_PIN, LOW);
+  } else {
+    digitalWrite(NEAR_PIN, LOW);
+    digitalWrite(MEDIUM_PIN, LOW);
+    digitalWrite(FAR_PIN, HIGH);
+  }
+  return distance;
 }
 
 void readDHT20(float *hum, float *temp, int *status) {
@@ -155,13 +186,16 @@ void initOled() {
   oled.println("Humidity soil:");
   oled.println("Distance     :");
   oled.println("Light        :");
+  oled.println();
+  oled.println();
+  oled.println("       FMR 2024");
 }
 
-void serialPrint(float hum, float temp, int hygro, int lux, uint32_t start, int status) {
+void serialPrint(float hum, float temp, int hygro, int lux, uint32_t start, int status, float distance) {
   if ((headerCountSerial % PRINT_HEADER_EVERY) == 0) {
     headerCountSerial = 0;
     Serial.println();
-    Serial.println("Humidity (%)\tTemp (°C)\tHygro (A)\tLight (lx)\tTime (µs)\tStatus DHT20");
+    Serial.println("Humidity (%)\tTemp (°C)\tHygro (A)\tLight (lx)\tDistance\tTime (µs)\tStatus DHT20");
   }
   headerCountSerial++;
 
@@ -173,6 +207,8 @@ void serialPrint(float hum, float temp, int hygro, int lux, uint32_t start, int 
   Serial.print(hygro);
   Serial.print("\t\t");
   Serial.print(lux);
+  Serial.print("\t\t");
+  Serial.print(distance);
   Serial.print("\t\t");
   Serial.print(micros() - start);
   Serial.print("\t\t");
@@ -206,10 +242,12 @@ void serialPrint(float hum, float temp, int hygro, int lux, uint32_t start, int 
 }
 
 void flashLeds(int del) {
-  for (int i = 0; i <= 3; i++) {
+  for (int i = 0; i < 3; i++) {
+    digitalWrite(NEAR_PIN + i, HIGH);
     digitalWrite(ORANGE_PIN, HIGH);
     digitalWrite(GREEN_PIN, HIGH);
     delay(del);
+    digitalWrite(NEAR_PIN + i, LOW);
     digitalWrite(ORANGE_PIN, LOW);
     digitalWrite(GREEN_PIN, LOW);
     delay(del);
