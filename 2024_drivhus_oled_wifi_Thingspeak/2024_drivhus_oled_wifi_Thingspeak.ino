@@ -5,12 +5,14 @@
 #include <ThingSpeak.h>
 #include <esp_sleep.h>
 #include <DFRobot_MAX17043.h> // Library for DFR0563 battery monitor
+#include <Wire.h>
+#include <BH1750.h> // Library for BH1750 light sensor
 
 // secrets
 #define WIFI_SSID "CHANGE"
 #define WIFI_PASSWORD "CHANGE"
 unsigned long myChannelNumber = CHANGE; // ThingSpeak channel number
-const char* myWriteAPIKey = "CHANGE"; // ThingSpeak API key
+const char* myWriteAPIKey = "CHANGE"; // ThingSpeak channel write API key
 
 // variables
 #define DISPLAY_DURATION 5000 // Duration to show the display before going back to deep sleep (milliseconds)
@@ -25,10 +27,13 @@ const char* myWriteAPIKey = "CHANGE"; // ThingSpeak API key
 #define BUTTON_PIN 15 // GPIO pin for the button
 #define SOIL_MOISTURE_PIN 34 // GPIO pin for the soil moisture sensor
 #define BATTERY_VOLTAGE_PIN 35 // GPIO pin to monitor the voltage of the batteries
+#define TRIGGER_PIN 25 // GPIO pin for the HC-SR04 trigger
+#define ECHO_PIN 26 // GPIO pin for the HC-SR04 echo
 
 // instances
 Adafruit_AHTX0 aht; // Create an instance of the DHT20 sensor
 DFRobot_MAX17043 batteryMonitor; // Create an instance of the DFR0563 battery monitor
+BH1750 lightMeter; // Create an instance of the BH1750 light sensor
 WiFiClient client;
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
 
@@ -39,7 +44,9 @@ struct SensorData {
   int soilMoisture;
   float batteryVoltage;
   int batteryPercentage;
-  float dfr0559BatteryVoltage;
+  float distance;
+  float lux;
+  String status;
 };
 
 void connectToWiFi() {
@@ -86,14 +93,24 @@ void initializeSensors() {
     display.setCursor(0, 0);
     display.print("DHT20 fail");
     display.display();
-    flashRedLED(4); // Flash red LED 4 times for sensor initialization failure
+    flashRedLED(7); // Flash red LED 4 times for sensor initialization failure
+  }
+
+  if (!lightMeter.begin()) {
+    Serial.println("Could not find a valid BH1750 sensor, check wiring!");
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.print("BH1750 fail");
+    display.display();
+    flashRedLED(8); // Flash red LED 4 times for sensor initialization failure
   }
 }
 
 void initializeBatteryMonitor() {
-  if (!batteryMonitor.begin()) {
-    Serial.println("Could not find a valid DFR0563 battery monitor, check wiring!");
-    flashRedLED(7); // Flash red LED 7 times for battery monitor initialization failure
+  while(batteryMonitor.begin() != 0) {
+    Serial.println("gauge begin faild!");
+    flashRedLED(4); // Flash red LED 7 times for battery monitor initialization failure
+    delay(500);
   }
 }
 
@@ -111,8 +128,32 @@ void gatherData(SensorData& data) {
   data.batteryVoltage = batteryMonitor.readVoltage() / 1000.0; // Convert millivolts to volts
   data.batteryPercentage = static_cast<int>(batteryMonitor.readPercentage());
 
-  int analogValue = analogRead(BATTERY_VOLTAGE_PIN);
-  data.dfr0559BatteryVoltage = analogValue * (3.3 / 4095.0) * (4.2 / 3.3); // Correct the calculation
+  // Measure distance using HC-SR04
+  digitalWrite(TRIGGER_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIGGER_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIGGER_PIN, LOW);
+  long duration = pulseIn(ECHO_PIN, HIGH);
+  data.distance = duration * 0.0343 / 2; // Calculate distance in cm
+
+  data.lux = lightMeter.readLightLevel(); // Read light level in lux
+
+  // Calculate the status string
+  data.status = "";
+  if (data.temperature < 14) data.status += "COLD";
+  else if (data.temperature > 40) data.status += "HOT";
+  else data.status += "TOK";
+
+  if (data.lux < 2) data.status += "-NIGHT";
+  else if (data.lux < 1200) data.status += "-SHADE";
+  else data.status += "-SUN";
+
+  if (data.distance < 3) data.status += "-CLOSE";
+  else data.status += "-OPEN";
+
+  if (data.batteryPercentage < 50) data.status += "-BLOW";
+  else data.status += "-BOK";
 }
 
 void displayData(const SensorData& data) {
@@ -135,11 +176,16 @@ void displayData(const SensorData& data) {
   display.setCursor(0, 20);
   display.print("G:");
   display.print(data.batteryVoltage, 2);
-  display.print("V C:");
-  display.print(data.dfr0559BatteryVoltage, 2);
   display.print("V ");
   display.print(data.batteryPercentage);
   display.print("%");
+  display.setCursor(0, 30);
+  display.print("D:");
+  display.print(data.distance, 1);
+  display.print(" L:");
+  display.print(data.lux, 1);
+  display.setCursor(0, 40);
+  display.print(data.status);
   display.display();
 }
 
@@ -151,7 +197,11 @@ void postToThingSpeak(const SensorData& data) {
   ThingSpeak.setField(4, data.soilMoisture);
   ThingSpeak.setField(5, data.batteryVoltage);
   ThingSpeak.setField(6, data.batteryPercentage);
-  ThingSpeak.setField(7, data.dfr0559BatteryVoltage);
+  ThingSpeak.setField(7, data.distance);
+  ThingSpeak.setField(8, data.lux);
+  
+  // Set the status
+  ThingSpeak.setStatus(data.status);
 
   Serial.println("Attempting to update ThingSpeak...");
   int result = ThingSpeak.writeFields(myChannelNumber, myWriteAPIKey);
@@ -160,7 +210,7 @@ void postToThingSpeak(const SensorData& data) {
     Serial.println("Channel update successful.");
   } else {
     Serial.println("Problem updating channel. HTTP error code " + String(result));
-    flashRedLED(6); // Flash red LED 6 times for ThingSpeak update failure
+    flashRedLED(3); // Flash red LED 6 times for ThingSpeak update failure
   }
 }
 
@@ -181,17 +231,22 @@ void postToSerial(const SensorData& data) {
   Serial.print("Battery Percentage: ");
   Serial.print(data.batteryPercentage);
   Serial.println("%");
-  Serial.print("DFR0559 Battery Voltage: ");
-  Serial.print(data.dfr0559BatteryVoltage, 2);
-  Serial.println("V");
+  Serial.print("Distance: ");
+  Serial.print(data.distance, 1);
+  Serial.println(" cm");
+  Serial.print("Light Intensity: ");
+  Serial.print(data.lux, 1);
+  Serial.println(" lx");
+  Serial.print("Status: ");
+  Serial.println(data.status);
 }
 
 void flashRedLED(int times) {
   for (int i = 0; i < times; i++) {
     digitalWrite(RED_LED_PIN, HIGH);
-    delay(250);
+    delay(180);
     digitalWrite(RED_LED_PIN, LOW);
-    delay(250);
+    delay(180);
   }
 }
 
@@ -202,6 +257,8 @@ void setup() {
   pinMode(GREEN_LED_PIN, OUTPUT);
   pinMode(RED_LED_PIN, OUTPUT);
   pinMode(SENSOR_POWER_PIN, OUTPUT);
+  pinMode(TRIGGER_PIN, OUTPUT);
+  pinMode(ECHO_PIN, INPUT);
 
   // Turn on the green LED
   digitalWrite(GREEN_LED_PIN, HIGH);
