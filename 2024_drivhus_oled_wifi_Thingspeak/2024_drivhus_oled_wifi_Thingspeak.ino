@@ -12,10 +12,10 @@
 // secrets
 #define WIFI_SSID "CHANGE"
 #define WIFI_PASSWORD "CHANGE"
-unsigned long thingSpeakChannel = CHANGE;
 const char* thingSpeakAPIKey = "CHANGE";
 
 // variables
+unsigned long thingSpeakChannel = 2568299;
 #define DISPLAY_DURATION 5000       // Duration to show the display before going back to deep sleep (milliseconds)
 #define INIT_DISPLAY_DURATION 1000  // Duration to show the initial display message
 #define WIFI_MAX_RETRIES 5          // Maximum number of Wi-Fi connection retries
