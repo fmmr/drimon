@@ -18,10 +18,12 @@ const char* myWriteAPIKey = "CHANGE"; // ThingSpeak channel write API key
 // variables
 #define DISPLAY_DURATION 5000 // Duration to show the display before going back to deep sleep (milliseconds)
 #define INIT_DISPLAY_DURATION 1000 // Duration to show the initial display message
-#define SLEEP_DURATION 300 // Deep sleep duration in seconds
 #define WIFI_MAX_RETRIES 5 // Maximum number of Wi-Fi connection retries
 #define EEPROM_SIZE 1
 #define IN_GREENHOUSE_ADDR 0
+#define SLEEP_DURATION_DUSK 900
+#define SLEEP_DURATION_DAY 300
+#define SLEEP_DURATION_NIGHT 1800
 
 // error codes
 #define WIFI_CONNECTION_FAILURE_FLASHES 2
@@ -291,7 +293,17 @@ void postToSerial(const SensorData& data) {
   Serial.println(data.status);
 }
 
-void goToDeepSleep() {
+int getSleepDuration(float lux) {
+  if (lux < 2) {
+    return SLEEP_DURATION_NIGHT;
+  } else if (lux < 800) {
+    return SLEEP_DURATION_DUSK;
+  } else {
+    return SLEEP_DURATION_DAY;
+  }
+}
+
+void goToDeepSleep(int sleepDuration = 300) {
   // Turn off all LEDs
   digitalWrite(GREEN_LED_PIN, LOW);
   digitalWrite(RED_LED_PIN, LOW);
@@ -302,7 +314,7 @@ void goToDeepSleep() {
 
   // Enable wakeup on button press (LOW) for both buttons
   esp_sleep_enable_ext1_wakeup((1ULL << BUTTON_PIN) | (1ULL << TOGGLE_BUTTON_PIN), ESP_EXT1_WAKEUP_ANY_HIGH);
-  esp_sleep_enable_timer_wakeup(SLEEP_DURATION * 1000000); // Wake up after SLEEP_DURATION seconds
+  esp_sleep_enable_timer_wakeup(sleepDuration * 1000000); // Wake up after specified sleep duration in seconds
 
   Serial.println("Going to deep sleep...");
   esp_deep_sleep_start();
@@ -403,7 +415,9 @@ void setup() {
     display.ssd1306_command(SSD1306_DISPLAYOFF);
   }
 
-  goToDeepSleep();
+  // Determine sleep duration based on light intensity
+  int sleepDuration = getSleepDuration(data.lux);
+  goToDeepSleep(sleepDuration);
 }
 
 void loop() {
