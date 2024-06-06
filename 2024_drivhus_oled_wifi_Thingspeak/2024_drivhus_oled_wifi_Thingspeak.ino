@@ -1,24 +1,24 @@
 #include <WiFi.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
-#include <Adafruit_AHTX0.h> // Library for DHT20
+#include <Adafruit_AHTX0.h>
 #include <ThingSpeak.h>
 #include <esp_sleep.h>
-#include <DFRobot_MAX17043.h> // Library for DFR0563 battery monitor
+#include <DFRobot_MAX17043.h>
 #include <Wire.h>
-#include <BH1750.h> // Library for BH1750 light sensor
+#include <BH1750.h>
 #include <EEPROM.h>
 
 // secrets
 #define WIFI_SSID "CHANGE"
 #define WIFI_PASSWORD "CHANGE"
-unsigned long myChannelNumber = CHANGE; // ThingSpeak channel number
-const char* myWriteAPIKey = "CHANGE"; // ThingSpeak channel write API key
+unsigned long thingSpeakChannel = CHANGE;
+const char* thingSpeakAPIKey = "CHANGE";
 
 // variables
-#define DISPLAY_DURATION 5000 // Duration to show the display before going back to deep sleep (milliseconds)
-#define INIT_DISPLAY_DURATION 1000 // Duration to show the initial display message
-#define WIFI_MAX_RETRIES 5 // Maximum number of Wi-Fi connection retries
+#define DISPLAY_DURATION 5000       // Duration to show the display before going back to deep sleep (milliseconds)
+#define INIT_DISPLAY_DURATION 1000  // Duration to show the initial display message
+#define WIFI_MAX_RETRIES 5          // Maximum number of Wi-Fi connection retries
 #define EEPROM_SIZE 1
 #define IN_GREENHOUSE_ADDR 0
 #define SLEEP_DURATION_DUSK 900
@@ -34,21 +34,21 @@ const char* myWriteAPIKey = "CHANGE"; // ThingSpeak channel write API key
 #define BATTERY_MONITOR_FAILURE_FLASHES 8
 
 // pins
-#define GREEN_LED_PIN 2 // GPIO pin for the green LED
-#define RED_LED_PIN 4 // GPIO pin for the red LED
-#define BLUE_LED_PIN 16 // GPIO pin for the blue LED
-#define SENSOR_POWER_PIN 13 // GPIO pin to control power to sensors
-#define BUTTON_PIN 15 // GPIO pin for the button
-#define TOGGLE_BUTTON_PIN 27 // GPIO pin for the toggle button
-#define SOIL_MOISTURE_PIN 34 // GPIO pin for the soil moisture sensor
-#define BATTERY_VOLTAGE_PIN 35 // GPIO pin to monitor the voltage of the batteries
-#define TRIGGER_PIN 25 // GPIO pin for the HC-SR04 trigger
-#define ECHO_PIN 26 // GPIO pin for the HC-SR04 echo
+#define GREEN_LED_PIN 2         // GPIO pin for the green LED
+#define RED_LED_PIN 4           // GPIO pin for the red LED
+#define BLUE_LED_PIN 16         // GPIO pin for the blue LED
+#define SENSOR_POWER_PIN 13     // GPIO pin to control power to sensors
+#define BUTTON_PIN 15           // GPIO pin for the button
+#define TOGGLE_BUTTON_PIN 27    // GPIO pin for the toggle button
+#define SOIL_MOISTURE_PIN 34    // GPIO pin for the soil moisture sensor
+#define BATTERY_VOLTAGE_PIN 35  // GPIO pin to monitor the voltage of the batteries
+#define TRIGGER_PIN 25          // GPIO pin for the HC-SR04 trigger
+#define ECHO_PIN 26             // GPIO pin for the HC-SR04 echo
 
 // instances
-Adafruit_AHTX0 aht; // Create an instance of the DHT20 sensor
-DFRobot_MAX17043 batteryMonitor; // Create an instance of the DFR0563 battery monitor
-BH1750 lightMeter; // Create an instance of the BH1750 light sensor
+Adafruit_AHTX0 aht;               // Create an instance of the DHT20 sensor
+DFRobot_MAX17043 batteryMonitor;  // Create an instance of the DFR0563 battery monitor
+BH1750 lightMeter;                // Create an instance of the BH1750 light sensor
 WiFiClient client;
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
 
@@ -67,8 +67,8 @@ struct SensorData {
   String status;
 };
 
-#define NUM_READINGS 5 // Number of readings to average
-#define READING_DELAY 50 // Delay between readings in milliseconds
+#define NUM_READINGS 5    // Number of readings to average
+#define READING_DELAY 50  // Delay between readings in milliseconds
 
 void flashLED(int pin, int times, int delayTime = 180) {
   for (int i = 0; i < times; i++) {
@@ -137,7 +137,7 @@ void initializeSensors() {
 }
 
 void initializeBatteryMonitor() {
-  while(batteryMonitor.begin() != 0) {
+  while (batteryMonitor.begin() != 0) {
     Serial.println("gauge begin failed!");
     flashLED(RED_LED_PIN, BATTERY_MONITOR_FAILURE_FLASHES);
     delay(500);
@@ -159,7 +159,7 @@ void gatherAverageData(SensorData& data) {
     aht.getEvent(&humidity_event, &temp_event);
     tempSum += temp_event.temperature;
     humSum += humidity_event.relative_humidity;
-    
+
     rssiSum += WiFi.RSSI();
 
     int rawSoilMoisture = analogRead(SOIL_MOISTURE_PIN);
@@ -251,12 +251,12 @@ void postToThingSpeak(const SensorData& data) {
   ThingSpeak.setField(6, data.batteryPercentage);
   ThingSpeak.setField(7, data.distance);
   ThingSpeak.setField(8, data.lux);
-  
+
   // Set the status
   ThingSpeak.setStatus(data.status);
 
   Serial.println("Attempting to update ThingSpeak...");
-  int result = ThingSpeak.writeFields(myChannelNumber, myWriteAPIKey);
+  int result = ThingSpeak.writeFields(thingSpeakChannel, thingSpeakAPIKey);
 
   if (result == 200) {
     Serial.println("Channel update successful.");
@@ -308,13 +308,13 @@ void goToDeepSleep(int sleepDuration = 300) {
   digitalWrite(GREEN_LED_PIN, LOW);
   digitalWrite(RED_LED_PIN, LOW);
   digitalWrite(BLUE_LED_PIN, LOW);
-  
+
   // Turn off the power to the sensors
   digitalWrite(SENSOR_POWER_PIN, LOW);
 
   // Enable wakeup on button press (LOW) for both buttons
   esp_sleep_enable_ext1_wakeup((1ULL << BUTTON_PIN) | (1ULL << TOGGLE_BUTTON_PIN), ESP_EXT1_WAKEUP_ANY_HIGH);
-  esp_sleep_enable_timer_wakeup(sleepDuration * 1000000); // Wake up after specified sleep duration in seconds
+  esp_sleep_enable_timer_wakeup(sleepDuration * 1000000);  // Wake up after specified sleep duration in seconds
 
   Serial.println("Going to deep sleep...");
   esp_deep_sleep_start();
@@ -379,7 +379,7 @@ void setup() {
   // Initialize the OLED display if required
   if (displayOn) {
     initializeDisplay();
-    delay(INIT_DISPLAY_DURATION); // Show initial display message
+    delay(INIT_DISPLAY_DURATION);  // Show initial display message
   }
 
   // Initialize the DHT20 sensor
