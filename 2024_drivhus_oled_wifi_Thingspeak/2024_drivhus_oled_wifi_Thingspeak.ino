@@ -7,6 +7,7 @@
 #include <DFRobot_MAX17043.h> // Library for DFR0563 battery monitor
 #include <Wire.h>
 #include <BH1750.h> // Library for BH1750 light sensor
+#include <EEPROM.h>
 
 // secrets
 #define WIFI_SSID "CHANGE"
@@ -18,13 +19,16 @@ const char* myWriteAPIKey = "CHANGE"; // ThingSpeak channel write API key
 #define DISPLAY_DURATION 5000 // Duration to show the display before going back to deep sleep (milliseconds)
 #define INIT_DISPLAY_DURATION 1000 // Duration to show the initial display message
 #define SLEEP_DURATION 300 // Deep sleep duration in seconds
-#define WIFI_MAX_RETRIES 3 // Maximum number of Wi-Fi connection retries
+#define WIFI_MAX_RETRIES 5 // Maximum number of Wi-Fi connection retries
+#define EEPROM_SIZE 1
+#define IN_GREENHOUSE_ADDR 0
 
 // pins
 #define GREEN_LED_PIN 2 // GPIO pin for the green LED
 #define RED_LED_PIN 4 // GPIO pin for the red LED
 #define SENSOR_POWER_PIN 13 // GPIO pin to control power to sensors
 #define BUTTON_PIN 15 // GPIO pin for the button
+#define TOGGLE_BUTTON_PIN 27 // GPIO pin for the toggle button
 #define SOIL_MOISTURE_PIN 34 // GPIO pin for the soil moisture sensor
 #define BATTERY_VOLTAGE_PIN 35 // GPIO pin to monitor the voltage of the batteries
 #define TRIGGER_PIN 25 // GPIO pin for the HC-SR04 trigger
@@ -36,6 +40,9 @@ DFRobot_MAX17043 batteryMonitor; // Create an instance of the DFR0563 battery mo
 BH1750 lightMeter; // Create an instance of the BH1750 light sensor
 WiFiClient client;
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
+
+// flag
+bool inGreenHouse = false;
 
 struct SensorData {
   float temperature;
@@ -55,7 +62,7 @@ void connectToWiFi() {
   Serial.print("Connecting to WiFi...");
 
   while (WiFi.status() != WL_CONNECTED && retries < WIFI_MAX_RETRIES) {
-    delay(1000);
+    delay(500);
     Serial.print(".");
     retries++;
   }
@@ -93,7 +100,7 @@ void initializeSensors() {
     display.setCursor(0, 0);
     display.print("DHT20 fail");
     display.display();
-    flashRedLED(7); // Flash red LED 4 times for sensor initialization failure
+    flashRedLED(7);
   }
 
   if (!lightMeter.begin()) {
@@ -102,14 +109,14 @@ void initializeSensors() {
     display.setCursor(0, 0);
     display.print("BH1750 fail");
     display.display();
-    flashRedLED(8); // Flash red LED 4 times for sensor initialization failure
+    flashRedLED(8);
   }
 }
 
 void initializeBatteryMonitor() {
   while(batteryMonitor.begin() != 0) {
     Serial.println("gauge begin faild!");
-    flashRedLED(4); // Flash red LED 7 times for battery monitor initialization failure
+    flashRedLED(4);
     delay(500);
   }
 }
@@ -163,9 +170,6 @@ void displayData(const SensorData& data) {
   display.print(" ");
   display.print(data.rssi);
   display.print("dBm");
-  display.display();
-  delay(500); // Short delay to ensure the display is updated
-
   display.setCursor(0, 10);
   display.print("T:");
   display.print(data.temperature, 1);
@@ -250,9 +254,26 @@ void flashRedLED(int times) {
   }
 }
 
+void goToDeepSleep() {
+  // Turn off all LEDs
+  digitalWrite(GREEN_LED_PIN, LOW);
+  digitalWrite(RED_LED_PIN, LOW);
+  
+  // Turn off the power to the sensors
+  digitalWrite(SENSOR_POWER_PIN, LOW);
+
+  // Enable wakeup on button press (LOW) for both buttons
+  esp_sleep_enable_ext1_wakeup((1ULL << BUTTON_PIN) | (1ULL << TOGGLE_BUTTON_PIN), ESP_EXT1_WAKEUP_ANY_HIGH);
+  esp_sleep_enable_timer_wakeup(SLEEP_DURATION * 1000000); // Wake up after SLEEP_DURATION seconds
+
+  Serial.println("Going to deep sleep...");
+  esp_deep_sleep_start();
+}
+
 void setup() {
   Serial.begin(115200);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(TOGGLE_BUTTON_PIN, INPUT_PULLUP);
   pinMode(SOIL_MOISTURE_PIN, INPUT);
   pinMode(GREEN_LED_PIN, OUTPUT);
   pinMode(RED_LED_PIN, OUTPUT);
@@ -260,24 +281,38 @@ void setup() {
   pinMode(TRIGGER_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
 
+  // Initialize EEPROM
+  EEPROM.begin(EEPROM_SIZE);
+  inGreenHouse = EEPROM.read(IN_GREENHOUSE_ADDR);
+
   // Turn on the green LED
   digitalWrite(GREEN_LED_PIN, HIGH);
-
-  // Turn on the power to the sensors
-  digitalWrite(SENSOR_POWER_PIN, HIGH);
 
   // Check if wakeup was caused by deep sleep
   esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
   bool displayOn = false;
-  if (wakeup_reason == ESP_SLEEP_WAKEUP_EXT0) {
-    Serial.println("Woke up from deep sleep by button press");
-    displayOn = true;
+
+  if (wakeup_reason == ESP_SLEEP_WAKEUP_EXT1) {
+    uint64_t wakeup_pin_mask = esp_sleep_get_ext1_wakeup_status();
+    if (wakeup_pin_mask & (1ULL << TOGGLE_BUTTON_PIN)) {
+      Serial.println("Toggle button pressed, toggling greenhouse flag");
+      inGreenHouse = !inGreenHouse;
+      EEPROM.write(IN_GREENHOUSE_ADDR, inGreenHouse);
+      EEPROM.commit();
+      goToDeepSleep();
+    } else if (wakeup_pin_mask & (1ULL << BUTTON_PIN)) {
+      Serial.println("Woke up from deep sleep by main button press");
+      displayOn = true;
+    }
   } else if (wakeup_reason == ESP_SLEEP_WAKEUP_TIMER) {
     Serial.println("Woke up from deep sleep by timer");
   } else {
     Serial.println("Starting fresh");
     displayOn = true;
   }
+
+  // Turn on the power to the sensors
+  digitalWrite(SENSOR_POWER_PIN, HIGH);
 
   // Initialize the OLED display if required
   if (displayOn) {
@@ -294,19 +329,19 @@ void setup() {
   // Connect to Wi-Fi
   connectToWiFi();
 
-  // Initialize ThingSpeak
-  Serial.println("Initializing ThingSpeak...");
-  ThingSpeak.begin(client);
-
   // Gather and display data
   SensorData data;
   gatherData(data);
   if (displayOn) {
     displayData(data);
   }
-  
-  // Post data to ThingSpeak
-  postToThingSpeak(data);
+
+  // Post data to ThingSpeak if inGreenHouse is true
+  if (inGreenHouse) {
+    Serial.println("Initializing ThingSpeak...");
+    ThingSpeak.begin(client);
+    postToThingSpeak(data);
+  }
 
   // Post data to Serial
   postToSerial(data);
@@ -318,17 +353,7 @@ void setup() {
     display.ssd1306_command(SSD1306_DISPLAYOFF);
   }
 
-  // Turn off the power to the sensors
-  digitalWrite(SENSOR_POWER_PIN, LOW);
-
-  // Turn off the green LED
-  digitalWrite(GREEN_LED_PIN, LOW);
-
-  // Go to deep sleep
-  Serial.println("Going to deep sleep...");
-  esp_sleep_enable_ext0_wakeup(GPIO_NUM_15, 0); // Wake up on button press (LOW)
-  esp_sleep_enable_timer_wakeup(SLEEP_DURATION * 1000000); // Wake up after SLEEP_DURATION seconds
-  esp_deep_sleep_start();
+  goToDeepSleep();
 }
 
 void loop() {
