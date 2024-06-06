@@ -65,6 +65,18 @@ struct SensorData {
   String status;
 };
 
+#define NUM_READINGS 5 // Number of readings to average
+#define READING_DELAY 50 // Delay between readings in milliseconds
+
+void flashLED(int pin, int times, int delayTime = 180) {
+  for (int i = 0; i < times; i++) {
+    digitalWrite(pin, HIGH);
+    delay(delayTime);
+    digitalWrite(pin, LOW);
+    delay(delayTime);
+  }
+}
+
 void connectToWiFi() {
   int retries = 0;
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -130,30 +142,55 @@ void initializeBatteryMonitor() {
   }
 }
 
+void gatherAverageData(SensorData& data) {
+  float tempSum = 0;
+  float humSum = 0;
+  int rssiSum = 0;
+  int soilMoistureSum = 0;
+  float batteryVoltageSum = 0;
+  int batteryPercentageSum = 0;
+  float distanceSum = 0;
+  float luxSum = 0;
+
+  for (int i = 0; i < NUM_READINGS; i++) {
+    sensors_event_t humidity_event, temp_event;
+    aht.getEvent(&humidity_event, &temp_event);
+    tempSum += temp_event.temperature;
+    humSum += humidity_event.relative_humidity;
+    
+    rssiSum += WiFi.RSSI();
+
+    int rawSoilMoisture = analogRead(SOIL_MOISTURE_PIN);
+    soilMoistureSum += (100 - ((rawSoilMoisture / 4095.00) * 100));
+
+    batteryVoltageSum += batteryMonitor.readVoltage() / 1000.0;
+    batteryPercentageSum += static_cast<int>(batteryMonitor.readPercentage());
+
+    digitalWrite(TRIGGER_PIN, LOW);
+    delayMicroseconds(2);
+    digitalWrite(TRIGGER_PIN, HIGH);
+    delayMicroseconds(10);
+    digitalWrite(TRIGGER_PIN, LOW);
+    long duration = pulseIn(ECHO_PIN, HIGH);
+    distanceSum += duration * 0.0343 / 2;
+
+    luxSum += lightMeter.readLightLevel();
+
+    delay(READING_DELAY);
+  }
+
+  data.temperature = tempSum / NUM_READINGS;
+  data.humidity = humSum / NUM_READINGS;
+  data.rssi = rssiSum / NUM_READINGS;
+  data.soilMoisture = soilMoistureSum / NUM_READINGS;
+  data.batteryVoltage = batteryVoltageSum / NUM_READINGS;
+  data.batteryPercentage = batteryPercentageSum / NUM_READINGS;
+  data.distance = distanceSum / NUM_READINGS;
+  data.lux = luxSum / NUM_READINGS;
+}
+
 void gatherData(SensorData& data) {
-  data.rssi = WiFi.RSSI();
-
-  sensors_event_t humidity, temp;
-  aht.getEvent(&humidity, &temp);
-  data.temperature = temp.temperature;
-  data.humidity = humidity.relative_humidity;
-
-  int rawSoilMoisture = analogRead(SOIL_MOISTURE_PIN);
-  data.soilMoisture = map(rawSoilMoisture, 1900, 4095, 100, 0); // Convert to percentage
-
-  data.batteryVoltage = batteryMonitor.readVoltage() / 1000.0; // Convert millivolts to volts
-  data.batteryPercentage = static_cast<int>(batteryMonitor.readPercentage());
-
-  // Measure distance using HC-SR04
-  digitalWrite(TRIGGER_PIN, LOW);
-  delayMicroseconds(2);
-  digitalWrite(TRIGGER_PIN, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(TRIGGER_PIN, LOW);
-  long duration = pulseIn(ECHO_PIN, HIGH);
-  data.distance = duration * 0.0343 / 2; // Calculate distance in cm
-
-  data.lux = lightMeter.readLightLevel(); // Read light level in lux
+  gatherAverageData(data);
 
   // Calculate the status string
   data.status = "";
@@ -252,15 +289,6 @@ void postToSerial(const SensorData& data) {
   Serial.println(" lx");
   Serial.print("Status: ");
   Serial.println(data.status);
-}
-
-void flashLED(int pin, int times, int delayTime = 180) {
-  for (int i = 0; i < times; i++) {
-    digitalWrite(pin, HIGH);
-    delay(delayTime);
-    digitalWrite(pin, LOW);
-    delay(delayTime);
-  }
 }
 
 void goToDeepSleep() {
