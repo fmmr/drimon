@@ -23,9 +23,18 @@ const char* myWriteAPIKey = "CHANGE"; // ThingSpeak channel write API key
 #define EEPROM_SIZE 1
 #define IN_GREENHOUSE_ADDR 0
 
+// error codes
+#define WIFI_CONNECTION_FAILURE_FLASHES 2
+#define THINGSPEAK_UPDATE_FAILURE_FLASHES 3
+#define DISPLAY_INIT_FAILURE_FLASHES 5
+#define DHT20_FAILURE_FLASHES 6
+#define BH1750_FAILURE_FLASHES 7
+#define BATTERY_MONITOR_FAILURE_FLASHES 8
+
 // pins
 #define GREEN_LED_PIN 2 // GPIO pin for the green LED
 #define RED_LED_PIN 4 // GPIO pin for the red LED
+#define BLUE_LED_PIN 16 // GPIO pin for the blue LED
 #define SENSOR_POWER_PIN 13 // GPIO pin to control power to sensors
 #define BUTTON_PIN 15 // GPIO pin for the button
 #define TOGGLE_BUTTON_PIN 27 // GPIO pin for the toggle button
@@ -71,7 +80,7 @@ void connectToWiFi() {
     Serial.println("Connected to WiFi");
   } else {
     Serial.println("Failed to connect to WiFi");
-    flashRedLED(3); // Flash red LED 3 times for WiFi connection failure
+    flashLED(RED_LED_PIN, WIFI_CONNECTION_FAILURE_FLASHES);
   }
 }
 
@@ -82,7 +91,7 @@ void initializeDisplay() {
     display.setCursor(0, 0);
     display.print("D init fail");
     display.display();
-    flashRedLED(5); // Flash red LED 5 times for display initialization failure
+    flashLED(RED_LED_PIN, DISPLAY_INIT_FAILURE_FLASHES);
   } else {
     display.clearDisplay();
     display.setTextSize(1);
@@ -100,7 +109,7 @@ void initializeSensors() {
     display.setCursor(0, 0);
     display.print("DHT20 fail");
     display.display();
-    flashRedLED(7);
+    flashLED(RED_LED_PIN, DHT20_FAILURE_FLASHES);
   }
 
   if (!lightMeter.begin()) {
@@ -109,14 +118,14 @@ void initializeSensors() {
     display.setCursor(0, 0);
     display.print("BH1750 fail");
     display.display();
-    flashRedLED(8);
+    flashLED(RED_LED_PIN, BH1750_FAILURE_FLASHES);
   }
 }
 
 void initializeBatteryMonitor() {
   while(batteryMonitor.begin() != 0) {
-    Serial.println("gauge begin faild!");
-    flashRedLED(4);
+    Serial.println("gauge begin failed!");
+    flashLED(RED_LED_PIN, BATTERY_MONITOR_FAILURE_FLASHES);
     delay(500);
   }
 }
@@ -214,7 +223,7 @@ void postToThingSpeak(const SensorData& data) {
     Serial.println("Channel update successful.");
   } else {
     Serial.println("Problem updating channel. HTTP error code " + String(result));
-    flashRedLED(3); // Flash red LED 6 times for ThingSpeak update failure
+    flashLED(RED_LED_PIN, THINGSPEAK_UPDATE_FAILURE_FLASHES);
   }
 }
 
@@ -245,12 +254,12 @@ void postToSerial(const SensorData& data) {
   Serial.println(data.status);
 }
 
-void flashRedLED(int times) {
+void flashLED(int pin, int times, int delayTime = 180) {
   for (int i = 0; i < times; i++) {
-    digitalWrite(RED_LED_PIN, HIGH);
-    delay(180);
-    digitalWrite(RED_LED_PIN, LOW);
-    delay(180);
+    digitalWrite(pin, HIGH);
+    delay(delayTime);
+    digitalWrite(pin, LOW);
+    delay(delayTime);
   }
 }
 
@@ -258,6 +267,7 @@ void goToDeepSleep() {
   // Turn off all LEDs
   digitalWrite(GREEN_LED_PIN, LOW);
   digitalWrite(RED_LED_PIN, LOW);
+  digitalWrite(BLUE_LED_PIN, LOW);
   
   // Turn off the power to the sensors
   digitalWrite(SENSOR_POWER_PIN, LOW);
@@ -277,6 +287,7 @@ void setup() {
   pinMode(SOIL_MOISTURE_PIN, INPUT);
   pinMode(GREEN_LED_PIN, OUTPUT);
   pinMode(RED_LED_PIN, OUTPUT);
+  pinMode(BLUE_LED_PIN, OUTPUT);
   pinMode(SENSOR_POWER_PIN, OUTPUT);
   pinMode(TRIGGER_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
@@ -285,8 +296,14 @@ void setup() {
   EEPROM.begin(EEPROM_SIZE);
   inGreenHouse = EEPROM.read(IN_GREENHOUSE_ADDR);
 
-  // Turn on the green LED
-  digitalWrite(GREEN_LED_PIN, HIGH);
+  // Turn on the green LED and blue LED if inGreenHouse is true
+  if (inGreenHouse) {
+    digitalWrite(GREEN_LED_PIN, HIGH);
+    digitalWrite(BLUE_LED_PIN, HIGH);
+  } else {
+    digitalWrite(GREEN_LED_PIN, HIGH);
+    digitalWrite(BLUE_LED_PIN, LOW);
+  }
 
   // Check if wakeup was caused by deep sleep
   esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
@@ -299,6 +316,11 @@ void setup() {
       inGreenHouse = !inGreenHouse;
       EEPROM.write(IN_GREENHOUSE_ADDR, inGreenHouse);
       EEPROM.commit();
+      if (inGreenHouse) {
+        flashLED(BLUE_LED_PIN, 4);
+      } else {
+        flashLED(BLUE_LED_PIN, 2);
+      }
       goToDeepSleep();
     } else if (wakeup_pin_mask & (1ULL << BUTTON_PIN)) {
       Serial.println("Woke up from deep sleep by main button press");
