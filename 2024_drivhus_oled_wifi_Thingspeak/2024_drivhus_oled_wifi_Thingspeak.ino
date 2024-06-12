@@ -12,38 +12,41 @@
 // secrets
 #define WIFI_SSID "CHANGE"
 #define WIFI_PASSWORD "CHANGE"
-const char* thingSpeakAPIKey = "CHANGE";
+const char* thingSpeakAPIKey = "CHANGE";  // ThingSpeak channel write API key
 
-// variables
-unsigned long thingSpeakChannel = 2568299;
-#define DISPLAY_DURATION 5000       // Duration to show the display before going back to deep sleep (milliseconds)
-#define INIT_DISPLAY_DURATION 1000  // Duration to show the initial display message
-#define WIFI_MAX_RETRIES 5          // Maximum number of Wi-Fi connection retries
-#define EEPROM_SIZE 1
-#define IN_GREENHOUSE_ADDR 0
-#define SLEEP_DURATION_DUSK 900
-#define SLEEP_DURATION_DAY 300
-#define SLEEP_DURATION_NIGHT 1800
+unsigned long thingSpeakChannel = 2568299;  // ThingSpeak channel number
 
-// error codes
-#define WIFI_CONNECTION_FAILURE_FLASHES 2
-#define THINGSPEAK_UPDATE_FAILURE_FLASHES 3
-#define DISPLAY_INIT_FAILURE_FLASHES 5
-#define DHT20_FAILURE_FLASHES 6
-#define BH1750_FAILURE_FLASHES 7
-#define BATTERY_MONITOR_FAILURE_FLASHES 8
+// Error-handling constants
+#define FLASH_WIFI_CONNECT_FAILURE 2
+#define FLASH_THINGSPEAK_UPDATE_FAILURE 3
+#define FLASH_BATTERY_MONITOR_INIT_FAILURE 5
+#define FLASH_DISPLAY_INIT_FAILURE 6
+#define FLASH_DHT20_INIT_FAILURE 7
+#define FLASH_BH1750_INIT_FAILURE 8
+
+// Other constants
+#define FLASH_INGREENHOUSE_TRUE 4
+#define FLASH_INGREENHOUSE_FALSE 2
+#define DISPLAY_DURATION 3500      // Duration to show the display before going back to deep sleep (milliseconds)
+#define INIT_DISPLAY_DURATION 800  // Duration to show the initial display message
+#define SLEEP_DURATION 300         // Deep sleep duration in seconds
+#define WIFI_MAX_RETRIES 3         // Maximum number of Wi-Fi connection retries
 
 // pins
-#define GREEN_LED_PIN 2         // GPIO pin for the green LED
-#define RED_LED_PIN 4           // GPIO pin for the red LED
-#define BLUE_LED_PIN 16         // GPIO pin for the blue LED
-#define SENSOR_POWER_PIN 13     // GPIO pin to control power to sensors
-#define BUTTON_PIN 15           // GPIO pin for the button
-#define TOGGLE_BUTTON_PIN 27    // GPIO pin for the toggle button
-#define SOIL_MOISTURE_PIN 34    // GPIO pin for the soil moisture sensor
-#define BATTERY_VOLTAGE_PIN 35  // GPIO pin to monitor the voltage of the batteries
-#define TRIGGER_PIN 25          // GPIO pin for the HC-SR04 trigger
-#define ECHO_PIN 26             // GPIO pin for the HC-SR04 echo
+#define GREEN_LED_PIN 2          // GPIO pin for the green LED
+#define RED_LED_PIN 4            // GPIO pin for the red LED
+#define BLUE_LED_PIN 16          // GPIO pin for the blue LED
+#define SENSOR_POWER_PIN 13      // GPIO pin to control power to sensors
+#define BUTTON_PIN 15            // GPIO pin for the button
+#define SECONDARY_BUTTON_PIN 27  // GPIO pin for the secondary button
+#define SOIL_MOISTURE_PIN 34     // GPIO pin for the soil moisture sensor
+#define BATTERY_VOLTAGE_PIN 35   // GPIO pin to monitor the voltage of the batteries
+#define TRIGGER_PIN 25           // GPIO pin for the HC-SR04 trigger
+#define ECHO_PIN 26              // GPIO pin for the HC-SR04 echo
+
+// EEPROM addresses
+#define EEPROM_SIZE 1
+#define EEPROM_ADDRESS_INGREENHOUSE 0
 
 // instances
 Adafruit_AHTX0 aht;               // Create an instance of the DHT20 sensor
@@ -52,7 +55,7 @@ BH1750 lightMeter;                // Create an instance of the BH1750 light sens
 WiFiClient client;
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
 
-// flag
+// variable to store inGreenHouse state
 bool inGreenHouse = false;
 
 struct SensorData {
@@ -62,13 +65,11 @@ struct SensorData {
   int soilMoisture;
   float batteryVoltage;
   int batteryPercentage;
+  int batVoltageCharger;
   float distance;
   float lux;
   String status;
 };
-
-#define NUM_READINGS 5    // Number of readings to average
-#define READING_DELAY 50  // Delay between readings in milliseconds
 
 void flashLED(int pin, int times, int delayTime = 180) {
   for (int i = 0; i < times; i++) {
@@ -85,7 +86,7 @@ void connectToWiFi() {
   Serial.print("Connecting to WiFi...");
 
   while (WiFi.status() != WL_CONNECTED && retries < WIFI_MAX_RETRIES) {
-    delay(500);
+    delay(400);
     Serial.print(".");
     retries++;
   }
@@ -94,7 +95,7 @@ void connectToWiFi() {
     Serial.println("Connected to WiFi");
   } else {
     Serial.println("Failed to connect to WiFi");
-    flashLED(RED_LED_PIN, WIFI_CONNECTION_FAILURE_FLASHES);
+    flashLED(RED_LED_PIN, FLASH_WIFI_CONNECT_FAILURE);
   }
 }
 
@@ -105,7 +106,7 @@ void initializeDisplay() {
     display.setCursor(0, 0);
     display.print("D init fail");
     display.display();
-    flashLED(RED_LED_PIN, DISPLAY_INIT_FAILURE_FLASHES);
+    flashLED(RED_LED_PIN, FLASH_DISPLAY_INIT_FAILURE);
   } else {
     display.clearDisplay();
     display.setTextSize(1);
@@ -123,7 +124,7 @@ void initializeSensors() {
     display.setCursor(0, 0);
     display.print("DHT20 fail");
     display.display();
-    flashLED(RED_LED_PIN, DHT20_FAILURE_FLASHES);
+    flashLED(RED_LED_PIN, FLASH_DHT20_INIT_FAILURE);
   }
 
   if (!lightMeter.begin()) {
@@ -132,67 +133,45 @@ void initializeSensors() {
     display.setCursor(0, 0);
     display.print("BH1750 fail");
     display.display();
-    flashLED(RED_LED_PIN, BH1750_FAILURE_FLASHES);
+    flashLED(RED_LED_PIN, FLASH_BH1750_INIT_FAILURE);
   }
-}
 
-void initializeBatteryMonitor() {
   while (batteryMonitor.begin() != 0) {
-    Serial.println("gauge begin failed!");
-    flashLED(RED_LED_PIN, BATTERY_MONITOR_FAILURE_FLASHES);
-    delay(500);
+    delay(100);
+    Serial.println("gauge begin faild!");
+    flashLED(RED_LED_PIN, 5);
+    delay(100);
   }
 }
 
-void gatherAverageData(SensorData& data) {
-  float tempSum = 0;
-  float humSum = 0;
-  int rssiSum = 0;
-  int soilMoistureSum = 0;
-  float batteryVoltageSum = 0;
-  int batteryPercentageSum = 0;
-  float distanceSum = 0;
-  float luxSum = 0;
-
-  for (int i = 0; i < NUM_READINGS; i++) {
-    sensors_event_t humidity_event, temp_event;
-    aht.getEvent(&humidity_event, &temp_event);
-    tempSum += temp_event.temperature;
-    humSum += humidity_event.relative_humidity;
-
-    rssiSum += WiFi.RSSI();
-
-    int rawSoilMoisture = analogRead(SOIL_MOISTURE_PIN);
-    soilMoistureSum += (100 - ((rawSoilMoisture / 4095.00) * 100));
-
-    batteryVoltageSum += batteryMonitor.readVoltage() / 1000.0;
-    batteryPercentageSum += static_cast<int>(batteryMonitor.readPercentage());
-
-    digitalWrite(TRIGGER_PIN, LOW);
-    delayMicroseconds(2);
-    digitalWrite(TRIGGER_PIN, HIGH);
-    delayMicroseconds(10);
-    digitalWrite(TRIGGER_PIN, LOW);
-    long duration = pulseIn(ECHO_PIN, HIGH);
-    distanceSum += duration * 0.0343 / 2;
-
-    luxSum += lightMeter.readLightLevel();
-
-    delay(READING_DELAY);
-  }
-
-  data.temperature = tempSum / NUM_READINGS;
-  data.humidity = humSum / NUM_READINGS;
-  data.rssi = rssiSum / NUM_READINGS;
-  data.soilMoisture = soilMoistureSum / NUM_READINGS;
-  data.batteryVoltage = batteryVoltageSum / NUM_READINGS;
-  data.batteryPercentage = batteryPercentageSum / NUM_READINGS;
-  data.distance = distanceSum / NUM_READINGS;
-  data.lux = luxSum / NUM_READINGS;
-}
 
 void gatherData(SensorData& data) {
-  gatherAverageData(data);
+  data.rssi = WiFi.RSSI();
+
+  sensors_event_t humidity, temp;
+  aht.getEvent(&humidity, &temp);
+  data.temperature = temp.temperature;
+  data.humidity = humidity.relative_humidity;
+
+  int rawSoilMoisture = analogRead(SOIL_MOISTURE_PIN);
+  data.soilMoisture = (100 - ((rawSoilMoisture / 4095.00) * 100));  // Convert to percentage using the new formula
+
+  int batVoltage = analogRead(BATTERY_VOLTAGE_PIN);
+  data.batVoltageCharger = batVoltage;
+
+  data.batteryVoltage = batteryMonitor.readVoltage() / 1000.0;  // Convert millivolts to volts
+  data.batteryPercentage = static_cast<int>(batteryMonitor.readPercentage());
+
+  // Measure distance using HC-SR04
+  digitalWrite(TRIGGER_PIN, LOW);
+  delayMicroseconds(2);
+  digitalWrite(TRIGGER_PIN, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(TRIGGER_PIN, LOW);
+  long duration = pulseIn(ECHO_PIN, HIGH);
+  data.distance = duration * 0.0343 / 2;  // Calculate distance in cm
+
+  data.lux = lightMeter.readLightLevel();  // Read light level in lux
 
   // Calculate the status string
   data.status = "";
@@ -218,6 +197,9 @@ void displayData(const SensorData& data) {
   display.print(" ");
   display.print(data.rssi);
   display.print("dBm");
+  display.display();
+  delay(500);  // Short delay to ensure the display is updated
+
   display.setCursor(0, 10);
   display.print("T:");
   display.print(data.temperature, 1);
@@ -230,7 +212,8 @@ void displayData(const SensorData& data) {
   display.print(data.batteryVoltage, 2);
   display.print("V ");
   display.print(data.batteryPercentage);
-  display.print("%");
+  display.print("% ");
+  display.print(data.batVoltageCharger);
   display.setCursor(0, 30);
   display.print("D:");
   display.print(data.distance, 1);
@@ -242,7 +225,7 @@ void displayData(const SensorData& data) {
 }
 
 void postToThingSpeak(const SensorData& data) {
-  Serial.println("Setting fields...");
+  Serial.println("Setting fields to ThingSpeak...");
   ThingSpeak.setField(1, data.temperature);
   ThingSpeak.setField(2, data.humidity);
   ThingSpeak.setField(3, data.rssi);
@@ -262,7 +245,7 @@ void postToThingSpeak(const SensorData& data) {
     Serial.println("Channel update successful.");
   } else {
     Serial.println("Problem updating channel. HTTP error code " + String(result));
-    flashLED(RED_LED_PIN, THINGSPEAK_UPDATE_FAILURE_FLASHES);
+    flashLED(RED_LED_PIN, 3);
   }
 }
 
@@ -283,6 +266,9 @@ void postToSerial(const SensorData& data) {
   Serial.print("Battery Percentage: ");
   Serial.print(data.batteryPercentage);
   Serial.println("%");
+  Serial.print("Battery Voltage Charger: ");
+  Serial.print(data.batVoltageCharger);
+  Serial.println("V");
   Serial.print("Distance: ");
   Serial.print(data.distance, 1);
   Serial.println(" cm");
@@ -293,37 +279,40 @@ void postToSerial(const SensorData& data) {
   Serial.println(data.status);
 }
 
-int getSleepDuration(float lux) {
-  if (lux < 2) {
-    return SLEEP_DURATION_NIGHT;
-  } else if (lux < 800) {
-    return SLEEP_DURATION_DUSK;
-  } else {
-    return SLEEP_DURATION_DAY;
-  }
+void writeInGreenHouse(bool state) {
+  EEPROM.begin(EEPROM_SIZE);
+  EEPROM.write(EEPROM_ADDRESS_INGREENHOUSE, state);
+  EEPROM.commit();
+  EEPROM.end();
 }
 
-void goToDeepSleep(int sleepDuration = 300) {
+void toggleInGreenHouse() {
+  inGreenHouse = !inGreenHouse;
+  writeInGreenHouse(inGreenHouse);
+  int flashCount = inGreenHouse ? 4 : 2;
+  flashLED(BLUE_LED_PIN, flashCount);
+}
+
+void enterDeepSleep() {
+  // Turn off the power to the sensors
+  digitalWrite(SENSOR_POWER_PIN, LOW);
+
   // Turn off all LEDs
   digitalWrite(GREEN_LED_PIN, LOW);
   digitalWrite(RED_LED_PIN, LOW);
   digitalWrite(BLUE_LED_PIN, LOW);
 
-  // Turn off the power to the sensors
-  digitalWrite(SENSOR_POWER_PIN, LOW);
-
-  // Enable wakeup on button press (LOW) for both buttons
-  esp_sleep_enable_ext1_wakeup((1ULL << BUTTON_PIN) | (1ULL << TOGGLE_BUTTON_PIN), ESP_EXT1_WAKEUP_ANY_HIGH);
-  esp_sleep_enable_timer_wakeup(sleepDuration * 1000000);  // Wake up after specified sleep duration in seconds
-
+  // Go to deep sleep
   Serial.println("Going to deep sleep...");
+  esp_sleep_enable_ext0_wakeup(GPIO_NUM_15, 0);             // Wake up on button press (LOW)
+  esp_sleep_enable_timer_wakeup(SLEEP_DURATION * 1000000);  // Wake up after SLEEP_DURATION seconds
   esp_deep_sleep_start();
 }
 
 void setup() {
   Serial.begin(115200);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
-  pinMode(TOGGLE_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(SECONDARY_BUTTON_PIN, INPUT_PULLUP);
   pinMode(SOIL_MOISTURE_PIN, INPUT);
   pinMode(GREEN_LED_PIN, OUTPUT);
   pinMode(RED_LED_PIN, OUTPUT);
@@ -332,40 +321,22 @@ void setup() {
   pinMode(TRIGGER_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
 
-  // Initialize EEPROM
+  // Read inGreenHouse state from EEPROM
   EEPROM.begin(EEPROM_SIZE);
-  inGreenHouse = EEPROM.read(IN_GREENHOUSE_ADDR);
-
-  // Turn on the green LED and blue LED if inGreenHouse is true
-  if (inGreenHouse) {
-    digitalWrite(GREEN_LED_PIN, HIGH);
-    digitalWrite(BLUE_LED_PIN, HIGH);
-  } else {
-    digitalWrite(GREEN_LED_PIN, HIGH);
-    digitalWrite(BLUE_LED_PIN, LOW);
-  }
+  inGreenHouse = EEPROM.read(EEPROM_ADDRESS_INGREENHOUSE);
+  EEPROM.end();
 
   // Check if wakeup was caused by deep sleep
   esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
   bool displayOn = false;
-
-  if (wakeup_reason == ESP_SLEEP_WAKEUP_EXT1) {
-    uint64_t wakeup_pin_mask = esp_sleep_get_ext1_wakeup_status();
-    if (wakeup_pin_mask & (1ULL << TOGGLE_BUTTON_PIN)) {
-      Serial.println("Toggle button pressed, toggling greenhouse flag");
-      inGreenHouse = !inGreenHouse;
-      EEPROM.write(IN_GREENHOUSE_ADDR, inGreenHouse);
-      EEPROM.commit();
-      if (inGreenHouse) {
-        flashLED(BLUE_LED_PIN, 4);
-      } else {
-        flashLED(BLUE_LED_PIN, 2);
-      }
-      goToDeepSleep();
-    } else if (wakeup_pin_mask & (1ULL << BUTTON_PIN)) {
-      Serial.println("Woke up from deep sleep by main button press");
-      displayOn = true;
+  if (wakeup_reason == ESP_SLEEP_WAKEUP_EXT0) {
+    if (digitalRead(SECONDARY_BUTTON_PIN) == LOW) {
+      Serial.println("Will toggle in greenhouse");
+      toggleInGreenHouse();
+      enterDeepSleep();
     }
+    Serial.println("Woke up from deep sleep by button press");
+    displayOn = true;
   } else if (wakeup_reason == ESP_SLEEP_WAKEUP_TIMER) {
     Serial.println("Woke up from deep sleep by timer");
   } else {
@@ -373,9 +344,9 @@ void setup() {
     displayOn = true;
   }
 
-  // Turn on the power to the sensors
+  digitalWrite(inGreenHouse ? BLUE_LED_PIN : GREEN_LED_PIN, HIGH);
   digitalWrite(SENSOR_POWER_PIN, HIGH);
-
+  delay(50);
   // Initialize the OLED display if required
   if (displayOn) {
     initializeDisplay();
@@ -384,9 +355,6 @@ void setup() {
 
   // Initialize the DHT20 sensor
   initializeSensors();
-
-  // Initialize the battery monitor
-  initializeBatteryMonitor();
 
   // Connect to Wi-Fi
   connectToWiFi();
@@ -398,26 +366,26 @@ void setup() {
     displayData(data);
   }
 
-  // Post data to ThingSpeak if inGreenHouse is true
+  // Post data to Serial
+  postToSerial(data);
+
+  // Post data to ThingSpeak
   if (inGreenHouse) {
     Serial.println("Initializing ThingSpeak...");
     ThingSpeak.begin(client);
     postToThingSpeak(data);
+  } else {
+    Serial.println("Not in greenhouse mode, skipping ThingSpeak update.");
   }
 
-  // Post data to Serial
-  postToSerial(data);
-
-  // Keep the display on for 5 seconds if it was turned on
+  // Keep the display on for DISPLAY_DURATION seconds if it was turned on
   if (displayOn) {
-    delay(DISPLAY_DURATION);
+    delay(inGreenHouse ? DISPLAY_DURATION * 2 : DISPLAY_DURATION);
     // Turn off the display to save power
     display.ssd1306_command(SSD1306_DISPLAYOFF);
   }
 
-  // Determine sleep duration based on light intensity
-  int sleepDuration = getSleepDuration(data.lux);
-  goToDeepSleep(sleepDuration);
+  enterDeepSleep();
 }
 
 void loop() {
