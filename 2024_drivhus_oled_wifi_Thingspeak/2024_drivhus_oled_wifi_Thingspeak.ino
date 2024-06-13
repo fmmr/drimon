@@ -32,9 +32,13 @@ unsigned long thingSpeakChannel = 2568299;  // ThingSpeak channel number
 #define WIFI_MAX_RETRIES 3         // Maximum number of Wi-Fi connection retries
 #define NUM_READINGS 5             // Number of readings to average
 #define SLEEP_BETWEEN_READINGS 15  // Number of ms to sleep between each reading
-#define SLEEP_DURATION_DUSK 900
+
+// lux-dependent deep sleep
+#define NIGHT_LEVEL 2
+#define DUSK_LEVEL 800
+#define SLEEP_DURATION_DUSK 200
 #define SLEEP_DURATION_DAY 300
-#define SLEEP_DURATION_NIGHT 1800
+#define SLEEP_DURATION_NIGHT 800
 
 // pins
 #define GREEN_LED_PIN 2          // GPIO pin for the green LED
@@ -341,9 +345,9 @@ void enterDeepSleep(int sleepDuration = SLEEP_DURATION_DAY) {
 }
 
 int getSleepDuration(float lux) {
-  if (lux < 2) {
+  if (lux < NIGHT_LEVEL) {
     return SLEEP_DURATION_NIGHT;
-  } else if (lux < 800) {
+  } else if (lux < DUSK_LEVEL) {
     return SLEEP_DURATION_DUSK;
   } else {
     return SLEEP_DURATION_DAY;
