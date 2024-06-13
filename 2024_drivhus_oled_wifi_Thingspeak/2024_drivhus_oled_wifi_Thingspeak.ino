@@ -8,6 +8,7 @@
 #include <Wire.h>
 #include <BH1750.h>
 #include <EEPROM.h>
+#include <LCD_I2C.h>
 
 // secrets
 #define WIFI_SSID "R23_GJEST"
@@ -62,6 +63,7 @@ DFRobot_MAX17043 batteryMonitor;  // Create an instance of the DFR0563 battery m
 BH1750 lightMeter;                // Create an instance of the BH1750 light sensor
 WiFiClient client;
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
+LCD_I2C lcd(0x27, 16, 2);  // Default address of most PCF8574 modules, change according
 
 // variable to store inGreenHouse state
 bool inGreenHouse = false;
@@ -107,8 +109,8 @@ void connectToWiFi() {
   }
 }
 
-void initializeDisplay() {
-  Serial.println("Initializing display...");
+void initializeDisplays() {
+  Serial.println("Initializing displays...");
   if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
     Serial.println("SSD1306 allocation failed");
     display.setCursor(0, 0);
@@ -123,6 +125,12 @@ void initializeDisplay() {
     display.print("Drivhus - FmR - 2024");
     display.display();
   }
+
+  // Initialize the LCD
+  lcd.begin(false);
+  lcd.clear();
+  lcd.backlight();
+  lcd.home();
 }
 
 void initializeSensors() {
@@ -250,6 +258,33 @@ void displayData(const SensorData& data) {
   display.setCursor(0, 40);
   display.print(data.status);
   display.display();
+
+  // Update LCD
+  lcd.clear();
+  lcd.home();
+  lcd.print(F("FmR Drivhus 2024"));
+
+  lcd.setCursor(0, 1);
+  lcd.print("T: ");
+  if (data.temperature < 10) {
+    lcd.print(" ");
+  }
+  lcd.print(data.temperature);
+  lcd.print((char)DEGREE);
+  lcd.print("  L: ");
+  if (data.lux < 10000) {
+    lcd.print(" ");
+  }
+  if (data.lux < 1000) {
+    lcd.print(" ");
+  }
+  if (data.lux < 100) {
+    lcd.print(" ");
+  }
+  if (data.lux < 10) {
+    lcd.print(" ");
+  }
+  lcd.print(data.lux);
 }
 
 void postToThingSpeak(const SensorData& data) {
@@ -326,7 +361,7 @@ void toggleInGreenHouse() {
   }
 }
 
-void enterDeepSleep(int sleepDuration = SLEEP_DURATION_DAY) {
+void enterDeepSleep(int sleepDuration, bool inGreenHouse) {
   // Turn off the power to the sensors
   digitalWrite(SENSOR_POWER_PIN, LOW);
 
@@ -335,14 +370,20 @@ void enterDeepSleep(int sleepDuration = SLEEP_DURATION_DAY) {
   digitalWrite(RED_LED_PIN, LOW);
   digitalWrite(BLUE_LED_PIN, LOW);
 
-  // Go to deep sleep
-  Serial.print("Going to deep sleep for ");
-  Serial.print(sleepDuration);
-  Serial.println(" seconds...");
-  esp_sleep_enable_ext0_wakeup(GPIO_NUM_15, 0);            // Wake up on button press (LOW)
-  esp_sleep_enable_timer_wakeup(sleepDuration * 1000000);  // Wake up after SLEEP_DURATION seconds
+  esp_sleep_enable_ext0_wakeup(GPIO_NUM_15, 0);  // Wake up on button press (LOW)
+
+  if (inGreenHouse) {
+    // Go to deep sleep with timer wakeup if in greenhouse
+    Serial.print("Going to deep sleep for ");
+    Serial.print(sleepDuration);
+    Serial.println(" seconds...");
+    esp_sleep_enable_timer_wakeup(sleepDuration * 1000000);
+  } else {
+    Serial.println("Not adding wake up timer...");
+  }
   esp_deep_sleep_start();
 }
+
 
 int getSleepDuration(float lux) {
   if (lux < NIGHT_LEVEL) {
@@ -377,7 +418,7 @@ void setup() {
   if (wakeup_reason == ESP_SLEEP_WAKEUP_EXT0) {
     if (digitalRead(SECONDARY_BUTTON_PIN) == LOW) {
       toggleInGreenHouse();
-      enterDeepSleep();
+      enterDeepSleep(0, inGreenHouse);  // No timer, just deep sleep
     }
     Serial.println("Woke up from deep sleep by button press");
     displayOn = true;
@@ -391,9 +432,9 @@ void setup() {
   digitalWrite(inGreenHouse ? BLUE_LED_PIN : GREEN_LED_PIN, HIGH);
   digitalWrite(SENSOR_POWER_PIN, HIGH);
   delay(50);
-  // Initialize the OLED display if required
+  // Initialize the OLED and LCD displays if required
   if (displayOn) {
-    initializeDisplay();
+    initializeDisplays();
     delay(INIT_DISPLAY_DURATION);  // Show initial display message
   }
 
@@ -430,7 +471,7 @@ void setup() {
   }
 
   int sleepDuration = getSleepDuration(data.lux);
-  enterDeepSleep(sleepDuration);
+  enterDeepSleep(sleepDuration, inGreenHouse);
 }
 
 void loop() {
