@@ -27,7 +27,7 @@ unsigned long thingSpeakChannel = 2568299;  // ThingSpeak channel number
 // Other constants
 #define FLASH_INGREENHOUSE_TRUE 4
 #define FLASH_INGREENHOUSE_FALSE 2
-#define DISPLAY_DURATION 3500      // Duration to show the display before going back to deep sleep (milliseconds)
+#define DISPLAY_DURATION 2000      // Duration to show the display before going back to deep sleep (milliseconds)
 #define INIT_DISPLAY_DURATION 800  // Duration to show the initial display message
 #define WIFI_MAX_RETRIES 3         // Maximum number of Wi-Fi connection retries
 #define NUM_READINGS 5             // Number of readings to average
@@ -420,7 +420,7 @@ void setup() {
 
   // Keep the display on for DISPLAY_DURATION seconds if it was turned on
   if (displayOn) {
-    delay(inGreenHouse ? DISPLAY_DURATION * 2 : DISPLAY_DURATION);
+    delay(inGreenHouse ? DISPLAY_DURATION * 3 : DISPLAY_DURATION);
     // Turn off the display to save power
     display.ssd1306_command(SSD1306_DISPLAYOFF);
   }
