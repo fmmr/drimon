@@ -33,6 +33,7 @@ unsigned long thingSpeakChannel = 2568299;  // ThingSpeak channel number
 #define WIFI_MAX_RETRIES 3         // Maximum number of Wi-Fi connection retries
 #define NUM_READINGS 5             // Number of readings to average
 #define SLEEP_BETWEEN_READINGS 15  // Number of ms to sleep between each reading
+#define DEGREE 223
 
 // lux-dependent deep sleep
 #define NIGHT_LEVEL 2
