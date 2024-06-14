@@ -9,6 +9,7 @@
 #include <BH1750.h>
 #include <EEPROM.h>
 #include <LCD_I2C.h>
+#include <Adafruit_BMP085.h>
 
 // secrets
 #define WIFI_SSID "R23_GJEST"
@@ -24,6 +25,7 @@ unsigned long thingSpeakChannel = 2568299;  // ThingSpeak channel number
 #define FLASH_DISPLAY_INIT_FAILURE 6
 #define FLASH_DHT20_INIT_FAILURE 7
 #define FLASH_BH1750_INIT_FAILURE 8
+#define FLASH_BMP_INIT_FAILURE 9
 
 // Other constants
 #define FLASH_INGREENHOUSE_TRUE 4
@@ -34,10 +36,12 @@ unsigned long thingSpeakChannel = 2568299;  // ThingSpeak channel number
 #define NUM_READINGS 5             // Number of readings to average
 #define SLEEP_BETWEEN_READINGS 15  // Number of ms to sleep between each reading
 #define DEGREE 223
+#define seaLevelPressure_hPa 1013.25
 
 // lux-dependent deep sleep
 #define NIGHT_LEVEL 2
-#define DUSK_LEVEL 800
+#define DUSK_LEVEL 700
+#define SHADE_LEVEL 3500
 #define SLEEP_DURATION_DUSK 200
 #define SLEEP_DURATION_DAY 300
 #define SLEEP_DURATION_NIGHT 800
@@ -64,7 +68,8 @@ DFRobot_MAX17043 batteryMonitor;  // Create an instance of the DFR0563 battery m
 BH1750 lightMeter;                // Create an instance of the BH1750 light sensor
 WiFiClient client;
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
-LCD_I2C lcd(0x27, 16, 2);  // Default address of most PCF8574 modules, change according
+LCD_I2C lcd(0x27, 16, 2);
+Adafruit_BMP085 bmp;
 
 // variable to store inGreenHouse state
 bool inGreenHouse = false;
@@ -72,6 +77,9 @@ bool inGreenHouse = false;
 struct SensorData {
   float temperature;
   float humidity;
+  float ahtTemperature;
+  float bmpTemperature;
+  float pressure;
   int32_t rssi;
   int soilMoisture;
   float batteryVoltage;
@@ -152,7 +160,14 @@ void initializeSensors() {
     display.display();
     flashLED(RED_LED_PIN, FLASH_BH1750_INIT_FAILURE);
   }
-
+  if (!bmp.begin()) {
+    Serial.println("Could not find a valid BMP085 sensor, check wiring!");
+    display.clearDisplay();
+    display.setCursor(0, 0);
+    display.print("BH1750 fail");
+    display.display();
+    flashLED(RED_LED_PIN, FLASH_BMP_INIT_FAILURE);
+  }
   while (batteryMonitor.begin() != 0) {
     delay(100);
     Serial.println("gauge begin faild!");
@@ -164,7 +179,8 @@ void initializeSensors() {
 void gatherData(SensorData& data) {
   data.rssi = WiFi.RSSI();
 
-  float totalTemp = 0, totalHumidity = 0;
+  float totalAhtTemp = 0, totalHumidity = 0;
+  float totalBmpTemp = 0, totalPressure = 0;
   int totalSoilMoisture = 0;
   float totalBatteryVoltage = 0;
   int totalBatteryPercentage = 0;
@@ -175,8 +191,11 @@ void gatherData(SensorData& data) {
   for (int i = 0; i < NUM_READINGS; i++) {
     sensors_event_t humidity, temp;
     aht.getEvent(&humidity, &temp);
-    totalTemp += temp.temperature;
+    totalAhtTemp += temp.temperature;
     totalHumidity += humidity.relative_humidity;
+
+    totalBmpTemp += bmp.readTemperature();
+    totalPressure += bmp.readSealevelPressure(31.0) / 100.0;
 
     int rawSoilMoisture = analogRead(SOIL_MOISTURE_PIN);
     totalSoilMoisture += (100 - ((rawSoilMoisture / 4095.00) * 100));  // Convert to percentage using the new formula
@@ -201,8 +220,11 @@ void gatherData(SensorData& data) {
     delay(SLEEP_BETWEEN_READINGS);  // Short delay between readings
   }
 
-  data.temperature = totalTemp / NUM_READINGS;
+  data.temperature = ((totalAhtTemp + totalBmpTemp) / NUM_READINGS) / 2.0;
   data.humidity = totalHumidity / NUM_READINGS;
+  data.ahtTemperature = totalAhtTemp / NUM_READINGS;
+  data.bmpTemperature = totalBmpTemp / NUM_READINGS;
+  data.pressure = totalPressure / NUM_READINGS;
   data.soilMoisture = totalSoilMoisture / NUM_READINGS;
   data.batVoltageCharger = totalBatVoltageCharger / NUM_READINGS;
   data.batteryVoltage = totalBatteryVoltage / NUM_READINGS;
@@ -212,19 +234,24 @@ void gatherData(SensorData& data) {
 
   // Calculate the status string
   data.status = "";
-  if (data.temperature < 14) data.status += "COLD";
-  else if (data.temperature > 40) data.status += "HOT";
-  else data.status += "TOK";
+  if (data.temperature < 14) data.status += "T-COLD";
+  else if (data.temperature > 40) data.status += "T-HOT";
+  else data.status += "T-OK";
 
-  if (data.lux < 2) data.status += "-NIGHT";
-  else if (data.lux < 1200) data.status += "-SHADE";
-  else data.status += "-SUN";
+  if (data.lux < 2) data.status += "_NIGHT";
+  else if (data.lux < DUSK_LEVEL) data.status += "_DUSK";
+  else if (data.lux < SHADE_LEVEL) data.status += "_SHADE";
+  else data.status += "_SUN";
 
-  if (data.distance < 3) data.status += "-CLOSE";
-  else data.status += "-OPEN";
+  if (data.distance < 3) data.status += "_W-CLOSE";
+  else data.status += "_W-OPEN";
 
-  if (data.batteryPercentage < 50) data.status += "-BLOW";
-  else data.status += "-BOK";
+  if (data.batteryPercentage < 50) data.status += "_B-LOW";
+  else data.status += "_B-OK";
+
+  if (data.pressure < 990) data.status += "_P-LOW";
+  else if (data.pressure > 1025) data.status += "_P-HIGH";
+  else data.status += "_P-OK";
 }
 
 void displayData(const SensorData& data) {
@@ -240,23 +267,29 @@ void displayData(const SensorData& data) {
   display.setCursor(0, 10);
   display.print("T:");
   display.print(data.temperature, 1);
-  display.print(" H:");
-  display.print(data.humidity, 1);
+  display.print(" T1:");
+  display.print(data.ahtTemperature, 0);
+  display.print(" T2:");
+  display.print(data.bmpTemperature, 0);
+  display.setCursor(0, 20);
+  display.print("H:");
+  display.print(data.humidity, 0);
   display.print(" S:");
   display.print(data.soilMoisture);
-  display.setCursor(0, 20);
-  display.print("G:");
+  display.print(" D:");
+  display.print(data.distance, 0);
+  display.setCursor(0, 30);
+  display.print("B:");
   display.print(data.batteryVoltage, 2);
-  display.print("V ");
+  display.print("v ");
   display.print(data.batteryPercentage);
   display.print("% ");
-  display.print(data.batVoltageCharger);
-  display.setCursor(0, 30);
-  display.print("D:");
-  display.print(data.distance, 1);
-  display.print(" L:");
-  display.print(data.lux, 1);
   display.setCursor(0, 40);
+  display.print("P:");
+  display.print(data.pressure, 0);
+  display.print(" L:");
+  display.print(data.lux, 0);
+  display.setCursor(0, 50);
   display.print(data.status);
   display.display();
 
@@ -265,27 +298,19 @@ void displayData(const SensorData& data) {
   lcd.home();
   lcd.print(F("FmR Drivhus 2024"));
 
+
+  int tempInt = data.temperature < 0 ? data.temperature - 0.5 : data.temperature + 0.5;
+  int pressureInt = data.pressure + 0.5;
+  int humidityInt = data.humidity + 0.5;
+
   lcd.setCursor(0, 1);
-  lcd.print("T: ");
-  if (data.temperature < 10) {
-    lcd.print(" ");
-  }
-  lcd.print(data.temperature);
+  lcd.print(tempInt);
   lcd.print((char)DEGREE);
-  lcd.print("  L: ");
-  if (data.lux < 10000) {
-    lcd.print(" ");
-  }
-  if (data.lux < 1000) {
-    lcd.print(" ");
-  }
-  if (data.lux < 100) {
-    lcd.print(" ");
-  }
-  if (data.lux < 10) {
-    lcd.print(" ");
-  }
-  lcd.print(data.lux);
+  lcd.print(" ");
+  lcd.print(humidityInt);
+  lcd.print("%  ");
+  lcd.print(pressureInt);
+  lcd.print("hPa");
 }
 
 void postToThingSpeak(const SensorData& data) {
@@ -296,7 +321,7 @@ void postToThingSpeak(const SensorData& data) {
   ThingSpeak.setField(4, data.soilMoisture);
   ThingSpeak.setField(5, data.batteryVoltage);
   ThingSpeak.setField(6, data.batteryPercentage);
-  ThingSpeak.setField(7, data.distance);
+  ThingSpeak.setField(7, data.pressure);
   ThingSpeak.setField(8, data.lux);
 
   // Set the status
@@ -320,6 +345,13 @@ void postToSerial(const SensorData& data) {
 
   Serial.print("Temp: ");
   Serial.println(data.temperature);
+  Serial.print("Temp AHT: ");
+  Serial.println(data.ahtTemperature);
+  Serial.print("Temp BMP: ");
+  Serial.println(data.bmpTemperature);
+  Serial.print("Pressure: ");
+  Serial.print(data.pressure);
+  Serial.println("hPa");
   Serial.print("Humidity: ");
   Serial.println(data.humidity);
   Serial.print("Soil Moisture: ");
