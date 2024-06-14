@@ -41,7 +41,7 @@ unsigned long thingSpeakChannel = 2568299;  // ThingSpeak channel number
 // lux-dependent deep sleep
 #define NIGHT_LEVEL 2
 #define DUSK_LEVEL 700
-#define SHADE_LEVEL 3500
+#define SHADE_LEVEL 6000
 #define SLEEP_DURATION_DUSK 200
 #define SLEEP_DURATION_DAY 300
 #define SLEEP_DURATION_NIGHT 800
