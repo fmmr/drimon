@@ -33,7 +33,7 @@ unsigned long thingSpeakChannel = 2568299;  // ThingSpeak channel number
 #define DISPLAY_DURATION 2000      // Duration to show the display before going back to deep sleep (milliseconds)
 #define INIT_DISPLAY_DURATION 800  // Duration to show the initial display message
 #define WIFI_MAX_RETRIES 3         // Maximum number of Wi-Fi connection retries
-#define NUM_READINGS 5             // Number of readings to average
+#define NUM_READINGS 2             // Number of readings to average
 #define SLEEP_BETWEEN_READINGS 15  // Number of ms to sleep between each reading
 #define DEGREE 223
 #define seaLevelPressure_hPa 1013.25
@@ -42,9 +42,9 @@ unsigned long thingSpeakChannel = 2568299;  // ThingSpeak channel number
 #define NIGHT_LEVEL 2
 #define DUSK_LEVEL 700
 #define SHADE_LEVEL 6000
-#define SLEEP_DURATION_DUSK 200
+#define SLEEP_DURATION_DUSK 300
 #define SLEEP_DURATION_DAY 300
-#define SLEEP_DURATION_NIGHT 800
+#define SLEEP_DURATION_NIGHT 500
 
 // pins
 #define GREEN_LED_PIN 2          // GPIO pin for the green LED
@@ -296,21 +296,23 @@ void displayData(const SensorData& data) {
   // Update LCD
   lcd.clear();
   lcd.home();
-  lcd.print(F("FmR Drivhus 2024"));
+  lcd.print(F("FmR 2024 L:"));
+  lcd.print(data.lux, 0);
 
 
   int tempInt = data.temperature < 0 ? data.temperature - 0.5 : data.temperature + 0.5;
-  int pressureInt = data.pressure + 0.5;
-  int humidityInt = data.humidity + 0.5;
+   int pressureInt = data.pressure + 0.5;
+  // int humidityInt = data.humidity + 0.5;
 
   lcd.setCursor(0, 1);
-  lcd.print(tempInt);
-  lcd.print((char)DEGREE);
+  lcd.print(data.temperature,1);
+//  lcd.print((char)DEGREE);
   lcd.print(" ");
-  lcd.print(humidityInt);
-  lcd.print("%  ");
+  lcd.print(data.batteryVoltage, 1);
+  lcd.print(" ");
+  lcd.print(data.batteryPercentage, 0);
+  lcd.print(" ");
   lcd.print(pressureInt);
-  lcd.print("hPa");
 }
 
 void postToThingSpeak(const SensorData& data) {
