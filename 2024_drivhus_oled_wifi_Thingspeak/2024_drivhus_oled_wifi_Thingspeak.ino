@@ -289,8 +289,8 @@ void displayData(const SensorData& data) {
   display.print(data.pressure, 0);
   display.print(" L:");
   display.print(data.lux, 0);
-  display.setCursor(0, 50);
-  display.print(data.status);
+//  display.setCursor(0, 50);
+//  display.print(data.status);
   display.display();
 
   // Update LCD
