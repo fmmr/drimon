@@ -1,5 +1,7 @@
 
 void displaySerial(SensorData& data) {
+  Serial.print("    Distance:     ");
+  Serial.println(data.distance);
   Serial.print("    BME Temp:     ");
   Serial.println(data.bmeTemp);
   Serial.print("    AHT Temp:     ");
@@ -20,10 +22,22 @@ void displaySerial(SensorData& data) {
   Serial.println(data.batteryVoltage);
   Serial.print("    Bat %:        ");
   Serial.println(data.batteryPercentage);
-  Serial.print("    Bat %         ");
+  Serial.print("    Bat %:        ");
   Serial.println(data.batteryPercentageInt);
-  Serial.print("    RSSI          ");
+  Serial.print("    RSSI:         ");
   Serial.println(data.rssi);
+  Serial.print("    Soil 1:       ");
+  Serial.println(data.soil1);
+  Serial.print("    Soil 2:       ");
+  Serial.println(data.soil2);
+  Serial.print("    Soil 3:       ");
+  Serial.println(data.soil3);
+  Serial.print("    Termo 1:      ");
+  Serial.println(data.termo1);
+  Serial.print("    Termo 2:      ");
+  Serial.println(data.termo2);
+  Serial.print("    Termo 3:      ");
+  Serial.println(data.termo3);
   Serial.print("    Status:       ");
   Serial.println(data.status);
   Serial.print("    Time:         ");
@@ -45,9 +59,9 @@ void displayLCD(SensorData& data) {
   lcd.print("b:");
   lcd.print(data.batteryPercentageInt);
   lcd.print(" t:");
-  lcd.print(data.temperature,1);
-  lcd.print("/");
-  lcd.print(data.humidity,1);
+  lcd.print(data.temperature, 1);
+  lcd.print(" h:");
+  lcd.print(data.humidity, 0);
 }
 
 void displayData(SensorData& data) {

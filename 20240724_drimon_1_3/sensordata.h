@@ -1,4 +1,6 @@
 struct SensorData {
+  int distance;
+
   float bmeTemp;
   float bmeHumidity;
   float ahtTemp;
@@ -14,6 +16,10 @@ struct SensorData {
   int soil1;
   int soil2;
   int soil3;
+
+  float termo1;
+  float termo2;
+  float termo3;
 
   int rssi;
 

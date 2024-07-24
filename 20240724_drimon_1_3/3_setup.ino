@@ -1,11 +1,14 @@
 void setupPins() {
-  pinMode(BUZZZER_PIN, OUTPUT);
-  pinMode(BUTTON_PIN, INPUT_PULLUP);
-  pinMode(GREEN_LED_PIN, OUTPUT);
-  pinMode(RED_LED_PIN, OUTPUT);
   pinMode(BLUE_LED_PIN, OUTPUT);
-  pinMode(SENSOR_POWER_PIN, OUTPUT);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(BUZZZER_PIN, OUTPUT);
+  pinMode(GREEN_LED_PIN, OUTPUT);
   pinMode(POST_SWITCH_PIN, INPUT_PULLUP);
+  pinMode(RED_LED_PIN, OUTPUT);
+  pinMode(SENSOR_POWER_PIN, OUTPUT);
+  pinMode(SOIL_1_PIN, ANALOG);
+  pinMode(SOIL_2_PIN, ANALOG);
+  pinMode(SOIL_3_PIN, ANALOG);
 
   digitalWrite(SENSOR_POWER_PIN, HIGH);
 }
@@ -74,13 +77,12 @@ void fixShouldPost() {
 
 void initSensors() {
   Serial.println("  Initializing sensors...");
-  // TODO include
-  // if (!tof.begin()) {
-  //   Serial.println("    VL53L0X (tof): Failed");
-  //   dispPrint("VL53L0X (tof): FAIL");
-  // } else {
-  //   Serial.println("    VL53L0X (tof): OK");
-  // }
+  if (!tof.begin()) {
+    Serial.println("    VL53L0X (tof): Failed");
+    dispPrint("VL53L0X (tof): FAIL");
+  } else {
+    Serial.println("    VL53L0X (tof): OK");
+  }
 
   if (!bme.begin(0x76)) {
     Serial.println("    BME280: Failed");
@@ -116,6 +118,42 @@ void initSensors() {
     Serial.println("    GAUGE: OK");
   }
 
-  dispPrint("Sensors initialized");
+  // test soil moisture sensors
+  int soilTemp = analogRead(SOIL_1_PIN);
+  if (soilTemp == 4095 || soilTemp == 0) {
+    Serial.println("    SOIL1: Failed");
+    String msg = "SOIL1: FAIL (";
+    msg = msg + soilTemp;
+    msg = msg + ")";
+    dispPrint(msg);
+  }
+  soilTemp = analogRead(SOIL_2_PIN);
+  if (soilTemp == 4095 || soilTemp == 0) {
+    Serial.println("    SOIL2: Failed");
+    String msg = "SOIL2: FAIL (";
+    msg = msg + soilTemp;
+    msg = msg + ")";
+    dispPrint(msg);
+  }
+  soilTemp = analogRead(SOIL_3_PIN);
+  if (soilTemp == 4095 || soilTemp == 0) {
+    Serial.println("    SOIL3: Failed");
+    String msg = "SOIL3: FAIL (";
+    msg = msg + soilTemp;
+    msg = msg + ")";
+    dispPrint(msg);
+  }
+
+  sensors.begin();
+  String msg = "Found ";
+  msg = msg + sensors.getDeviceCount();
+  msg = msg + " 1-Wire dev";
+  Serial.print("    ");
+  Serial.println(msg);
+  sensors.setResolution(termo1, 10);
+  sensors.setResolution(termo2, 10);
+  sensors.setResolution(termo3, 10);
+
+  dispPrint(msg);
   Serial.println("  Sensors Initialized");
 }

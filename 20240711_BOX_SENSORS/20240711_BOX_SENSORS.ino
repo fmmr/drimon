@@ -32,7 +32,6 @@ Adafruit_AHTX0 aht;  // Create an instance of the AHT30 sensor
 Adafruit_BME280 bme;
 Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
-LCD_I2C lcd(0x27, 16, 2);
 BH1750 lightMeter;  // Create an instance of the BH1750 light sensor
 OneWire oneWire(ONE_WIRE_BUS);
 int counter = 0;
