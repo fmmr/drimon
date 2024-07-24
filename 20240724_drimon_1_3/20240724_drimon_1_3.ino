@@ -64,31 +64,24 @@ void testLeds() {// TODO no need for this
 
 void setup() {
   setupPins();
-
   Serial.begin(115200);
   Serial.println("Setup started");
 
   initDisplays();
 
-  SHOULD_POST = digitalRead(POST_SWITCH_PIN) == LOW;
-  if (SHOULD_POST) {
-    Serial.println("  Will POST");
-    dispPrint("Will POST");
-  } else {
-    Serial.println("  Will NOT post");
-    dispPrint("Will NOT POST");
-  }
+  // Setting SHOULD_POST to correct value
+  fixShouldPost();
 
   // TODO we only need wifi if we are to log data
   connectToWiFi();
 
+  // TODO no need for this
+  testLeds();  
 
-
-  testLeds();  // TODO no need for this
   delay(5000);
   digitalWrite(SENSOR_POWER_PIN, LOW);
-  // TODO when finfished setup? beep(50);
 
+  // TODO when finished setup? beep(50);
   Serial.println("setup done");
 }
 

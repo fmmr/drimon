@@ -65,3 +65,14 @@ void initDisplays() {
   Serial.println("    LCD Initialized");
   Serial.println("  Displays Initialized");
 }
+
+void fixShouldPost() {
+  SHOULD_POST = digitalRead(POST_SWITCH_PIN) == LOW;
+  if (SHOULD_POST) {
+    Serial.println("  Will POST");
+    dispPrint("Will POST");
+  } else {
+    Serial.println("  Will NOT post");
+    dispPrint("Will NOT POST");
+  }
+}
