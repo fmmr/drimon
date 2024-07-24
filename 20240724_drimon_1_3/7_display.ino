@@ -75,9 +75,12 @@ void displayOled(SensorData& data) {
   display.print("%");
 
   display.setCursor(0, 38);
-  display.print("Dist: ");
+  display.print("dst: ");
   display.print(data.distance);
-  display.print("mm");
+  display.print("mm ");
+  display.print(" tu: ");
+  display.print(data.timeUsed);
+  display.print("ms");
 
   display.setCursor(0, 47);
   display.print("Soil M: ");

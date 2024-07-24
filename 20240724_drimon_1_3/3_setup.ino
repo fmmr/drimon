@@ -66,7 +66,8 @@ void initDisplays() {
   } else {
     Serial.println("  Will NOT output stuff on displays");
     lcd.begin(false);
-    lcd.noBacklight();
+    lcd.noDisplay();
+    // lcd.noBacklight();
   }
   Serial.println("  Displays Initialized");
 }
@@ -152,7 +153,7 @@ void initSensors() {
     msg = msg + ")";
     dispPrint(msg);
   } else {
-    String msg = "SOIL 2: OK (";
+    String msg = "SOIL 3: OK (";
     msg = msg + soilTemp;
     msg = msg + ")";
     Serial.print("    ");

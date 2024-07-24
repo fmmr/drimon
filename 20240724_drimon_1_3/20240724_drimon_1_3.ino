@@ -39,8 +39,7 @@
 #define SLEEP_BETWEEN_READINGS 12
 #define HEIGHT_ABOVE_SEE_LEVEL 31
 
-// todo should be around 12 sec
-#define DISPLAY_TIME 5000
+#define DISPLAY_TIME 12000
 
 #define NIGHT_LEVEL 2
 #define DUSK_LEVEL 700
@@ -67,7 +66,6 @@ OneWire oneWire(ONE_WIRE_PIN);
 DallasTemperature sensors(&oneWire);
 VL53L0X_RangingMeasurementData_t tofData;
 
-// WiFiClient client;
 
 void dispPrint(String msg) {
   if (DISPLAY_ON) {
@@ -100,19 +98,10 @@ void flashLED(int pin, int times, int delayTime = 180) {
   }
 }
 
-void testLeds() {  // TODO no need for this
-  flashLED(GREEN_LED_PIN, 2);
-  flashLED(BLUE_LED_PIN, 2);
-  flashLED(RED_LED_PIN, 2);
-}
-
-// TODO - do not post til thingspeak if button is pressed
-// TODO - do not display/power on display if wakeup from timer  (can we turn off lcd backlight)
-
-
 void setup() {
   long start = millis();
   setupPins();
+  beep(50);
   flashLED(GREEN_LED_PIN, 2);
   Serial.begin(115200);
 
@@ -134,18 +123,14 @@ void setup() {
   if (SHOULD_POST) {
     Serial.println("  Will POST");
     dispPrint("Will POST");
+    connectToWiFi();
   } else {
     Serial.println("  Will NOT post");
     dispPrint("Will NOT POST");
   }
 
-  // TODO we only need wifi if we are to log data
-  connectToWiFi();
-
   initSensors();
 
-
-  // TODO when finished setup? beep(50);
   Serial.println("Setup: done");
 
   delay(200);
@@ -165,7 +150,6 @@ void setup() {
   if (SHOULD_POST) {
     postThingSpeak(data);
   }
-  //calibrate_soil();  // TODO remove
 
   int sleepDuration = getSleepDuration(data.lux);
   enterDeepSleep(sleepDuration);
