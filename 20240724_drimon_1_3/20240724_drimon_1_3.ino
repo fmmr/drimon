@@ -5,6 +5,7 @@
 #include <WiFi.h>
 #include <LCD_I2C.h>
 #include <BH1750.h>
+#include <DFRobot_MAX17043.h>
 
 #include <secrets.h>
 #include <sensordata.h>
@@ -28,6 +29,7 @@
 #define NUM_READINGS 2
 #define SLEEP_BETWEEN_READINGS 12
 #define HEIGHT_ABOVE_SEE_LEVEL 31
+#define DISPLAY_TIME 8000
 
 int dispLine = 0;
 boolean SHOULD_POST = false;
@@ -38,6 +40,7 @@ LCD_I2C lcd(0x27, 16, 2);
 Adafruit_BME280 bme;
 BH1750 lightMeter;
 Adafruit_AHTX0 aht;
+DFRobot_MAX17043 batteryMonitor;
 
 
 // WiFiClient client;
@@ -83,6 +86,7 @@ void testLeds() {  // TODO no need for this
 
 
 void setup() {
+  long start = millis();
   setupPins();
   Serial.begin(115200);
   Serial.println("Setup...");
@@ -100,18 +104,20 @@ void setup() {
   // TODO no need for this
   testLeds();
   delay(500);
+  
   // TODO when finished setup? beep(50);
   Serial.println("Setup: done");
 
   Serial.println("Measuring...");
-  SensorData data = measure();
+  dispPrint("Measuring...");
+  SensorData data = measure(start);
   Serial.println("Measuring: done");
 
   Serial.println("Displaying data...");
   displayData(data);
   Serial.println("Displaying data: done");
 
-  delay(5000);
+  delay(DISPLAY_TIME);
   digitalWrite(SENSOR_POWER_PIN, LOW);
 
 }

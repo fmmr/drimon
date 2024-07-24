@@ -28,18 +28,13 @@ void connectToWiFi() {
     Serial.print(WiFi.localIP());
     Serial.print(", RSSI: ");
     Serial.println(WiFi.RSSI());
+    dispPrint(WiFi.localIP().toString() + "   " + WiFi.RSSI());
+
   } else {
     Serial.println("    WiFi: FAILED");
     flashLED(RED_LED_PIN, FLASH_WIFI_CONNECT_FAILURE);
+    dispPrint("WiFi FAILED - " + WiFi.RSSI());
   }
-
-  lcd.setCursor(0, 1);
-  lcd.print(WiFi.RSSI());
-  lcd.print(" ...");
-  lcd.print(WiFi.localIP().toString().substring(8));
-
-  dispPrint(WiFi.localIP().toString() + "   " + WiFi.RSSI());
-
   Serial.println("  Wifi Initialized");
 }
 
@@ -106,6 +101,19 @@ void initSensors() {
     dispPrint("AHT: FAIL");
   } else {
     Serial.println("    AHT: OK");
+  }
+
+  int retriesGauge = 0;
+
+  while (batteryMonitor.begin() != 0 && retriesGauge < 5) {
+    delay(30);
+    retriesGauge++;
+  }
+  if (batteryMonitor.begin() != 0) {
+    Serial.println("    GAUGE: Failed");
+    dispPrint("GAUGE: FAIL");
+  } else {
+    Serial.println("    GAUGE: OK");
   }
 
   dispPrint("Sensors initialized");
