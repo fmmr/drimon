@@ -12,9 +12,9 @@
 #include <Adafruit_BMP085.h>
 
 // secrets
-#define WIFI_SSID "R23_GJEST"
-#define WIFI_PASSWORD "hyttetur"
-const char* thingSpeakAPIKey = "CHANGE";  // ThingSpeak channel write API key
+#define WIFI_SSID "CHANGEME"
+#define WIFI_PASSWORD "CHANGEME"
+const char* thingSpeakAPIKey = "CHANGEME";  // ThingSpeak channel write API key
 
 unsigned long thingSpeakChannel = 2568299;  // ThingSpeak channel number
 

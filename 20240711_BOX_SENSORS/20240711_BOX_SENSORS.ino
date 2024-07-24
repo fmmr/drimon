@@ -1,3 +1,4 @@
+#include <WiFi.h>
 #include "Adafruit_VL53L0X.h"
 #include <Adafruit_Sensor.h>
 #include <Adafruit_BME280.h>
@@ -17,15 +18,24 @@
 #define soil1 34
 #define soil2 36
 #define soil3 39
+#define SECONDARY_BUTTON_PIN 27  // GPIO pin for the secondary button
+#define BUTTON_PIN 15            // GPIO pin for the button
+#define GREEN_LED_PIN 2          // GPIO pin for the green LED
+#define RED_LED_PIN 4            // GPIO pin for the red LED
+#define BLUE_LED_PIN 16          // GPIO pin for the blue LED
+#define WIFI_SSID "R23_GJEST"
+#define WIFI_PASSWORD "hyttetur"
+#define WIFI_MAX_RETRIES 6  // Maximum number of Wi-Fi connection retries
 
+WiFiClient client;
 Adafruit_AHTX0 aht;  // Create an instance of the AHT30 sensor
 Adafruit_BME280 bme;
 Adafruit_VL53L0X lox = Adafruit_VL53L0X();
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
-BH1750 lightMeter;  // Create an instance of the BH1750 light sensor
 LCD_I2C lcd(0x27, 16, 2);
+BH1750 lightMeter;  // Create an instance of the BH1750 light sensor
 OneWire oneWire(ONE_WIRE_BUS);
-
+int counter = 0;
 // Pass our oneWire reference to Dallas Temperature.
 DallasTemperature sensors(&oneWire);
 
@@ -34,9 +44,37 @@ DeviceAddress termo1 = { 0x28, 0xAD, 0x1B, 0x46, 0xD4, 0x4D, 0x17, 0x66 };  // c
 DeviceAddress termo2 = { 0x28, 0x0E, 0xE5, 0x6A, 0x00, 0x00, 0x00, 0x8E };  // middle
 DeviceAddress termo3 = { 0x28, 0xBE, 0x62, 0x6B, 0x00, 0x00, 0x00, 0x9C };  // farthest
 
+
+void connectToWiFi() {
+  int retries = 0;
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  Serial.print("Connecting to WiFi ");
+
+  while (WiFi.status() != WL_CONNECTED && retries < WIFI_MAX_RETRIES) {
+    delay(400);
+    Serial.print(".");
+    retries++;
+  }
+
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("OK");
+  } else {
+    Serial.println("FAIL");
+  }
+}
+
 void setup() {
+  pinMode(BUZZZER_PIN, OUTPUT);
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  pinMode(SECONDARY_BUTTON_PIN, INPUT_PULLUP);
+  pinMode(GREEN_LED_PIN, OUTPUT);
+  pinMode(RED_LED_PIN, OUTPUT);
+  pinMode(BLUE_LED_PIN, OUTPUT);
+  //connectToWiFi();
+
   Serial.begin(115200);
 
+  beep(70);
   // wait until serial port opens for native USB devices
   while (!Serial) {
     delay(1);
@@ -44,35 +82,28 @@ void setup() {
 
   if (!lox.begin()) {
     Serial.println(F("Failed to boot VL53L0X"));
-    while (1)
-      ;
+    // while (1)
+    //   ;
   }
   // power
 
   if (!bme.begin(0x76)) {
     Serial.println("Could not find a valid BME280 sensor, check wiring!");
-    while (1)
-      ;
+    // while (1)
+    //   ;
   }
 
   if (!lightMeter.begin()) {
     Serial.println("Could not find a valid lightMeter sensor, check wiring!");
-    while (1)
-      ;
+    // while (1)
+    //   ;
   }
 
 
   if (!aht.begin()) {
     Serial.println("Could not find a valid AHT30 sensor, check wiring!");
-    while (1)
-      ;
-  }
-  Serial.println("Initializing displays...");
-  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    Serial.println("SSD1306 allocation failed");
-    display.setCursor(0, 0);
-    display.print("D init fail");
-    display.display();
+    // while (1)
+    //   ;
   }
 
   // Initialize the LCD
@@ -95,12 +126,15 @@ void setup() {
   printAddress(termo2);
   Serial.println();
 
-  Serial.println("termo3 Address: ");
+  Serial.print("termo3 Address: ");
   printAddress(termo3);
   Serial.println();
   sensors.setResolution(termo1, 10);
   sensors.setResolution(termo2, 10);
   sensors.setResolution(termo3, 10);
+
+  beep(40);
+  beep(40);
 }
 void printAddress(DeviceAddress deviceAddress) {
   for (uint8_t i = 0; i < 8; i++) {
@@ -123,7 +157,15 @@ void printTemperature(DeviceAddress deviceAddress) {
   }
   Serial.println(tempC, 2);
 }
-void loop() {
+void measure() {
+  boolean shouldPost = digitalRead(SECONDARY_BUTTON_PIN) == LOW;
+
+  if (shouldPost) {
+    Serial.println("Will POST");
+  } else {
+    Serial.println("Will NOT post");
+  }
+
   VL53L0X_RangingMeasurementData_t measure;
 
   Serial.println("Reading a measurement... ");
@@ -246,20 +288,35 @@ void loop() {
   display.setCursor(0, 48);
   display.print("H:");
   display.print(hum, 2);
+  display.print(" ");
+  if (shouldPost) {
+    display.print("ON/POST");
+  } else {
+    display.print("OFF/DRYRUN");
+  }
   display.display();
+}
 
+void loop() {
+  flashLED(GREEN_LED_PIN, 1);
+  counter++;
+  connectToWiFi();
+  int8_t rssi = WiFi.RSSI();
   lcd.clear();
   lcd.home();
-  lcd.print(lux, 0);
-  lcd.print("lx ");
-  lcd.print(seaLevelPressure,0);
-  lcd.print("hPa");
+  lcd.print(WiFi.localIP());
 
   lcd.setCursor(0, 1);
-  lcd.print(temp, 1);
-  lcd.print("*C   ");
-  lcd.print(range,1);
-  lcd.print("mm");
+  lcd.print(rssi);
+  lcd.print(" ");
+  lcd.print(counter);
 
-  delay(3000);
+  if (counter % 10 == 0) {
+    measure();
+    flashLED(RED_LED_PIN, 1);
+  } else {
+    flashLED(BLUE_LED_PIN, 1);
+  }
+
+  delay(400);
 }
