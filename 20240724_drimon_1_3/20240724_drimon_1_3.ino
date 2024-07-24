@@ -19,11 +19,13 @@
 
 #define WIFI_MAX_RETRIES 3
 
+int dispLine = 0;
+boolean SHOULD_POST = false;
 
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
 LCD_I2C lcd(0x27, 16, 2);
 // WiFiClient client;
-int dispLine = 0;
+
 
 void dispPrint(String msg) {
   display.setCursor(0, dispLine);
@@ -68,11 +70,13 @@ void setup() {
 
   initDisplays();
 
-  boolean shouldPost = digitalRead(SECONDARY_BUTTON_PIN) == LOW;
-  if (shouldPost) {
-    Serial.println("Will POST");
+  SHOULD_POST = digitalRead(POST_SWITCH_PIN) == LOW;
+  if (SHOULD_POST) {
+    Serial.println("  Will POST");
+    dispPrint("Will POST");
   } else {
-    Serial.println("Will NOT post");
+    Serial.println("  Will NOT post");
+    dispPrint("Will NOT POST");
   }
 
   // TODO we only need wifi if we are to log data
