@@ -44,28 +44,82 @@ void displaySerial(SensorData& data) {
   Serial.println(data.timeUsed);
 }
 void displayOled(SensorData& data) {
-  Serial.println("  Displaying on OLED");
+  display.clearDisplay();
+  display.setTextSize(1);
+  display.setTextColor(SSD1306_WHITE, SSD1306_BLACK);
+  display.setCursor(0, 0);
+  display.print("DriMon - FmR - 2024");
+
+  display.setCursor(0, 11);
+  display.print(data.temperature, 1);
+  display.print(" ");
+  display.print(data.bmeTemp, 1);
+  display.print(" ");
+  display.print(data.ahtTemp, 1);
+  display.print(" ");
+  display.print(data.termo2, 1);
+
+  display.setCursor(0, 20);
+  display.print("Hum: ");
+  display.print(data.humidity, 1);
+  display.print(" ");
+  display.print(data.bmeHumidity, 1);
+  display.print(" ");
+  display.print(data.ahtHumidity, 1);
+
+  display.setCursor(0, 29);
+  display.print("Bat: ");
+  display.print(data.batteryVoltage, 1);
+  display.print("v  ");
+  display.print(data.batteryPercentageInt);
+  display.print("%");
+
+  display.setCursor(0, 38);
+  display.print("Dist: ");
+  display.print(data.distance);
+  display.print("mm");
+
+  display.setCursor(0, 47);
+  display.print("Soil M: ");
+  display.print(data.soil1);
+  display.print("% ");
+  display.print(data.soil2);
+  display.print("% ");
+  display.print(data.soil3);
+  display.print("%");
+
+  display.setCursor(0, 56);
+  display.print("Soil T: ");
+  display.print(data.termo1, 1);
+  display.print(" ");
+  display.print(data.termo2, 1);
+
+  display.display();
 }
+
 void displayLCD(SensorData& data) {
   lcd.clear();
   lcd.backlight();
   lcd.home();
 
+  lcd.print("t:");
+  lcd.print(data.temperature, 1);
+  lcd.print(" b:");
+  lcd.print(data.batteryPercentageInt);
+  lcd.print(" h:");
+  lcd.print(data.humidity, 0);
+
+  lcd.setCursor(0, 1);
   lcd.print("p:");
   lcd.print(data.pressureInt);
   lcd.print("  l:");
   lcd.print(data.luxInt);
-  lcd.setCursor(0, 1);
-  lcd.print("b:");
-  lcd.print(data.batteryPercentageInt);
-  lcd.print(" t:");
-  lcd.print(data.temperature, 1);
-  lcd.print(" h:");
-  lcd.print(data.humidity, 0);
 }
 
 void displayData(SensorData& data) {
   displaySerial(data);
-  displayOled(data);
-  displayLCD(data);
+  if (DISPLAY_ON) {
+    displayOled(data);
+    displayLCD(data);
+  }
 }

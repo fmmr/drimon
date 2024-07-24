@@ -27,6 +27,7 @@
 #define SOIL_1_PIN 34
 #define SOIL_2_PIN 39
 #define SOIL_3_PIN 36
+#define ONE_WIRE_PIN 23
 
 
 #define FLASH_WIFI_CONNECT_FAILURE 2
@@ -37,11 +38,20 @@
 #define NUM_READINGS 2
 #define SLEEP_BETWEEN_READINGS 12
 #define HEIGHT_ABOVE_SEE_LEVEL 31
-#define DISPLAY_TIME 3000
-#define ONE_WIRE_BUS 23
+
+// todo should be around 12 sec
+#define DISPLAY_TIME 5000
+
+#define NIGHT_LEVEL 2
+#define DUSK_LEVEL 700
+#define SHADE_LEVEL 6000
+#define SLEEP_DURATION_DUSK 300
+#define SLEEP_DURATION_DAY 300
+#define SLEEP_DURATION_NIGHT 500
 
 int dispLine = 0;
 boolean SHOULD_POST = false;
+bool DISPLAY_ON = false;
 
 Adafruit_VL53L0X tof = Adafruit_VL53L0X();
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
@@ -53,22 +63,24 @@ DFRobot_MAX17043 batteryMonitor;
 DeviceAddress termo1 = { 0x28, 0xAD, 0x1B, 0x46, 0xD4, 0x4D, 0x17, 0x66 };  // closest
 DeviceAddress termo2 = { 0x28, 0x0E, 0xE5, 0x6A, 0x00, 0x00, 0x00, 0x8E };  // middle
 DeviceAddress termo3 = { 0x28, 0xBE, 0x62, 0x6B, 0x00, 0x00, 0x00, 0x9C };  // farthest
-OneWire oneWire(ONE_WIRE_BUS);
+OneWire oneWire(ONE_WIRE_PIN);
 DallasTemperature sensors(&oneWire);
 VL53L0X_RangingMeasurementData_t tofData;
 
 // WiFiClient client;
 
 void dispPrint(String msg) {
-  display.setCursor(0, dispLine);
-  display.print("                     ");
-  display.setCursor(0, dispLine);
-  display.print(msg);
-  display.display();
-  if (dispLine < 50) {
-    dispLine += 9;
-  } else {
-    dispLine = 0;
+  if (DISPLAY_ON) {
+    display.setCursor(0, dispLine);
+    display.print("                     ");
+    display.setCursor(0, dispLine);
+    display.print(msg);
+    display.display();
+    if (dispLine < 50) {
+      dispLine += 9;
+    } else {
+      dispLine = 0;
+    }
   }
 }
 
@@ -101,38 +113,62 @@ void testLeds() {  // TODO no need for this
 void setup() {
   long start = millis();
   setupPins();
+  flashLED(GREEN_LED_PIN, 2);
   Serial.begin(115200);
+
   Serial.println("Setup...");
+  esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
+  if (wakeup_reason == ESP_SLEEP_WAKEUP_EXT0) {
+    Serial.println("  Woke up from deep sleep by button press");
+    DISPLAY_ON = true;
+  } else if (wakeup_reason == ESP_SLEEP_WAKEUP_TIMER) {
+    SHOULD_POST = digitalRead(POST_SWITCH_PIN) == LOW;
+    Serial.println("  Woke up from deep sleep by timer");
+  } else {
+    Serial.println("  Starting fresh");
+    DISPLAY_ON = true;
+  }
 
   initDisplays();
 
-  // Setting SHOULD_POST to correct value
-  fixShouldPost();
+  if (SHOULD_POST) {
+    Serial.println("  Will POST");
+    dispPrint("Will POST");
+  } else {
+    Serial.println("  Will NOT post");
+    dispPrint("Will NOT POST");
+  }
 
   // TODO we only need wifi if we are to log data
   connectToWiFi();
 
   initSensors();
 
-  // TODO no need for this
-  testLeds();
-  delay(500);
 
   // TODO when finished setup? beep(50);
   Serial.println("Setup: done");
+
+  delay(200);
 
   Serial.println("Measuring...");
   dispPrint("Measuring...");
   SensorData data = measure(start);
   Serial.println("Measuring: done");
+  dispPrint("Done!");
 
   Serial.println("Displaying data...");
   displayData(data);
   Serial.println("Displaying data: done");
-
-  delay(DISPLAY_TIME);
+  if (DISPLAY_ON) {
+    delay(DISPLAY_TIME);
+  }
+  if (SHOULD_POST) {
+    postThingSpeak(data);
+  }
   //calibrate_soil();  // TODO remove
-  digitalWrite(SENSOR_POWER_PIN, LOW);
+
+  int sleepDuration = getSleepDuration(data.lux);
+  enterDeepSleep(sleepDuration);
 }
 
 void loop() {  // do nothing

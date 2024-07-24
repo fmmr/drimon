@@ -43,37 +43,34 @@ void connectToWiFi() {
 
 void initDisplays() {
   Serial.println("  Initializing displays...");
-  if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
-    Serial.println("SSD1306 allocation failed");
-    dispPrint("    D init fail");
-    flashLED(RED_LED_PIN, FLASH_DISPLAY_INIT_FAILURE);
-  } else {
-    display.clearDisplay();
-    display.setTextSize(1);
-    display.setTextColor(SSD1306_WHITE, SSD1306_BLACK);
-    dispPrint("DriMon - FmR - 2024");
-    Serial.println("    SSD1306 Initialized");
-  }
+  if (DISPLAY_ON) {
+    Serial.println("  Will output stuff on displays");
+    if (!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
+      Serial.println("SSD1306 allocation failed");
+      dispPrint("    D init fail");
+      flashLED(RED_LED_PIN, FLASH_DISPLAY_INIT_FAILURE);
+    } else {
+      display.clearDisplay();
+      display.setTextSize(1);
+      display.setTextColor(SSD1306_WHITE, SSD1306_BLACK);
+      dispPrint("DriMon - FmR - 2024");
+      Serial.println("    SSD1306 Initialized");
+    }
 
-  lcd.begin(false);
-  lcd.clear();
-  lcd.backlight();
-  lcd.home();
-  lcd.print("DriMon FmR 2024");
-  Serial.println("    LCD Initialized");
+    lcd.begin(false);
+    lcd.clear();
+    lcd.backlight();
+    lcd.home();
+    lcd.print("DriMon FmR 2024");
+    Serial.println("    LCD Initialized");
+  } else {
+    Serial.println("  Will NOT output stuff on displays");
+    lcd.begin(false);
+    lcd.noBacklight();
+  }
   Serial.println("  Displays Initialized");
 }
 
-void fixShouldPost() {
-  SHOULD_POST = digitalRead(POST_SWITCH_PIN) == LOW;
-  if (SHOULD_POST) {
-    Serial.println("  Will POST");
-    dispPrint("Will POST");
-  } else {
-    Serial.println("  Will NOT post");
-    dispPrint("Will NOT POST");
-  }
-}
 
 void initSensors() {
   Serial.println("  Initializing sensors...");
@@ -122,26 +119,44 @@ void initSensors() {
   int soilTemp = analogRead(SOIL_1_PIN);
   if (soilTemp == 4095 || soilTemp == 0) {
     Serial.println("    SOIL1: Failed");
-    String msg = "SOIL1: FAIL (";
+    String msg = "SOIL 1: FAIL (";
     msg = msg + soilTemp;
     msg = msg + ")";
     dispPrint(msg);
+  } else {
+    String msg = "SOIL 2: OK (";
+    msg = msg + soilTemp;
+    msg = msg + ")";
+    Serial.print("    ");
+    Serial.println(msg);
   }
   soilTemp = analogRead(SOIL_2_PIN);
   if (soilTemp == 4095 || soilTemp == 0) {
     Serial.println("    SOIL2: Failed");
-    String msg = "SOIL2: FAIL (";
+    String msg = "SOIL 2: FAIL (";
     msg = msg + soilTemp;
     msg = msg + ")";
     dispPrint(msg);
+  } else {
+    String msg = "SOIL 2: OK (";
+    msg = msg + soilTemp;
+    msg = msg + ")";
+    Serial.print("    ");
+    Serial.println(msg);
   }
   soilTemp = analogRead(SOIL_3_PIN);
   if (soilTemp == 4095 || soilTemp == 0) {
     Serial.println("    SOIL3: Failed");
-    String msg = "SOIL3: FAIL (";
+    String msg = "SOIL 3: FAIL (";
     msg = msg + soilTemp;
     msg = msg + ")";
     dispPrint(msg);
+  } else {
+    String msg = "SOIL 2: OK (";
+    msg = msg + soilTemp;
+    msg = msg + ")";
+    Serial.print("    ");
+    Serial.println(msg);
   }
 
   sensors.begin();
