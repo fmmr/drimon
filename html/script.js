@@ -30,15 +30,16 @@ async function fetchData() {
         const response = await fetch('https://api.thingspeak.com/channels/2568299/feeds/last.json?timezone=Europe/Paris&status=true');
         const data = await response.json();
 
+        moment.locale('nb');
+        const lastUpdated = moment(data.created_at).format('L LTS');
+        const timeSince = moment(data.created_at).fromNow();
+
         const temperature = Math.round(data.field1 * 10) / 10;
         const battery = Math.round(data.field6);
-        const createdAt = moment(data.created_at);
-        const now = moment();
-        const duration = moment.duration(now.diff(createdAt)).humanize();
 
         temperatureElement.textContent = `Temperature: ${temperature} °C`;
         batteryElement.textContent = `Battery: ${battery} %`;
-        timeSinceElement.textContent = `Last updated: ${duration}`;
+        timeSinceElement.textContent = `Last updated: ${lastUpdated} (${timeSince})`;
     } catch (error) {
         console.error('Error fetching data:', error);
         temperatureElement.textContent = 'Temperature: Error';
@@ -65,7 +66,7 @@ function updateIframes(results) {
             container.style.gridArea = area;
 
             const iframe = document.createElement('iframe');
-            iframe.src = `${config.src}?width=auto&height=auto&bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=${results}&type=line`;
+            iframe.src = `${config.src}?start=2024-07-25%2013:00:00&results=${results}&dynamic=true&width=auto&height=auto`;
 
             container.appendChild(iframe);
             iframeContainer.appendChild(container);
@@ -83,7 +84,7 @@ function updateIframes(results) {
 
         srcs.forEach((src, index) => {
             const iframe = document.createElement('iframe');
-            iframe.src = `${src}?width=auto&height=auto&bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=${results}&type=line`;
+            iframe.src = `${src}?start=2024-07-25%2013:00:00&results=${results}&dynamic=true&width=auto&height=auto`;
             iframe.style.gridColumn = index + 1; // Place iframe in the corresponding column
             iframe.style.width = '100%'; // Full width of the column
             iframe.style.height = '100%'; // Full height of the container
@@ -94,12 +95,22 @@ function updateIframes(results) {
     }
 }
 
+// Event listener for the update button
 updateButton.addEventListener('click', () => {
-    const results = resultsInput.value || 154;
+    const results = resultsInput.value || 8000; // Default to 8000
     updateIframes(results);
+});
+
+// Event listener for the input field (Enter key press)
+resultsInput.addEventListener('keypress', (event) => {
+    if (event.key === 'Enter') {
+        event.preventDefault(); // Prevent form submission if within a form
+        const results = resultsInput.value || 8000; // Default to 8000
+        updateIframes(results);
+    }
 });
 
 // Initial load
 fetchData().then(() => {
-    updateIframes(resultsInput.value || 154);
+    updateIframes(resultsInput.value || 8000); // Default to 8000
 });

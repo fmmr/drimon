@@ -42,3 +42,7 @@ body {
         grid-template-rows: repeat(8, 1fr);
     }
 }
+
+input#resultsInput {
+    max-width: 100px; /* Adjusted width for 4-digit numbers */
+}
