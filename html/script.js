@@ -29,7 +29,7 @@ async function fetchData() {
     try {
         const response = await fetch('https://api.thingspeak.com/channels/2568299/feeds/last.json?timezone=Europe/Paris&status=true');
         const data = await response.json();
-    
+
         const temperature = Math.round(data.field1 * 10) / 10;
         const battery = Math.round(data.field6);
         const createdAt = moment(data.created_at);
@@ -80,13 +80,12 @@ function updateIframes(results) {
         container.style.display = 'grid';
         container.style.gridTemplateColumns = '1fr 1fr'; // Two columns for shared iframes
         container.style.position = 'relative';
-        container.style.height = '100%'; // Full height of the cell
 
         srcs.forEach((src, index) => {
             const iframe = document.createElement('iframe');
             iframe.src = `${src}?width=auto&height=auto&bgcolor=%23ffffff&color=%23d62020&dynamic=true&results=${results}&type=line`;
             iframe.style.gridColumn = index + 1; // Place iframe in the corresponding column
-            iframe.style.width = '50%'; // Half width of the container
+            iframe.style.width = '100%'; // Full width of the column
             iframe.style.height = '100%'; // Full height of the container
             container.appendChild(iframe);
         });
