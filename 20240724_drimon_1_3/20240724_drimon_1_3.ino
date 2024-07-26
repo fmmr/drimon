@@ -36,6 +36,7 @@
 #define SEALEVELPRESSURE_HPA 1013.25
 #define WIFI_MAX_RETRIES 3
 #define NUM_READINGS 2
+#define NUM_DISTANCE_READINGS 10
 #define SLEEP_BETWEEN_READINGS 12
 #define HEIGHT_ABOVE_SEE_LEVEL 31
 
@@ -51,10 +52,11 @@
 int dispLine = 0;
 boolean SHOULD_POST = false;
 bool DISPLAY_ON = false;
+boolean TOF_OK = false;
 
-Adafruit_VL53L0X tof = Adafruit_VL53L0X();
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
 LCD_I2C lcd(0x27, 16, 2);
+Adafruit_VL53L0X tof = Adafruit_VL53L0X();
 Adafruit_BME280 bme;
 BH1750 lightMeter;
 Adafruit_AHTX0 aht;
@@ -64,7 +66,6 @@ DeviceAddress termo2 = { 0x28, 0x0E, 0xE5, 0x6A, 0x00, 0x00, 0x00, 0x8E };  // m
 DeviceAddress termo3 = { 0x28, 0xBE, 0x62, 0x6B, 0x00, 0x00, 0x00, 0x9C };  // farthest
 OneWire oneWire(ONE_WIRE_PIN);
 DallasTemperature sensors(&oneWire);
-VL53L0X_RangingMeasurementData_t tofData;
 
 
 void dispPrint(String msg) {
@@ -101,7 +102,7 @@ void flashLED(int pin, int times, int delayTime = 180) {
 void setup() {
   long start = millis();
   setupPins();
-  beep(50);
+  // beep(50);
   flashLED(GREEN_LED_PIN, 2);
   Serial.begin(115200);
 

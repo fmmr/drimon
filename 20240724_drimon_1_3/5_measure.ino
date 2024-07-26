@@ -1,5 +1,27 @@
+VL53L0X_RangingMeasurementData_t tofData;
+
 String status(SensorData& data) {
-  return "OK";
+  String stat = "";
+  if (data.temperature < 14) stat = stat + "T-COLD";
+  else if (data.temperature > 40) stat = stat + "T-HOT";
+  else stat = stat + "T-OK";
+
+  if (data.lux < 2) stat = stat + "_NIGHT";
+  else if (data.lux < DUSK_LEVEL) stat = stat + "_DUSK";
+  else if (data.lux < SHADE_LEVEL) stat = stat + "_SHADE";
+  else stat = stat + "_SUN";
+
+  if (data.distance < 80) stat = stat + "_W-CLOSE";
+  else stat = stat + "_W-OPEN";
+
+  if (data.batteryPercentage < 40) stat = stat + "_B-LOW";
+  else stat = stat + "_B-OK";
+
+  if (data.pressure < 990) stat = stat + "_P-LOW";
+  else if (data.pressure > 1025) stat = stat + "_P-HIGH";
+  else stat = stat + "_P-OK";
+
+  return stat;
 }
 
 SensorData measure(long start) {
@@ -20,11 +42,24 @@ SensorData measure(long start) {
   float total_termo1 = 0.0;
   float total_termo2 = 0.0;
   float total_termo3 = 0.0;
-  int total_distance = 0;
 
+  if (TOF_OK) {
+    int total_distance = 0;
+    int count = 0;
+    for (int i = 0; i < NUM_DISTANCE_READINGS; i++) {
+      tof.rangingTest(&tofData, false);  // pass in 'true' to get debug data printout!
+      int dist = tofData.RangeMilliMeter;
+      if (dist > 0 && dist < 8000) {
+        total_distance += tofData.RangeMilliMeter;
+        count++;
+      }
+      delay(12);
+    }
+    if (count > 0) {
+      data.distance = total_distance / count;
+    }
+  }
   for (int i = 0; i < NUM_READINGS; i++) {
-    tof.rangingTest(&tofData, false);  // pass in 'true' to get debug data printout!
-    total_distance += tofData.RangeMilliMeter;
 
     total_bmeTemp += bme.readTemperature();
     total_bmeHumidity += bme.readHumidity();
@@ -58,7 +93,6 @@ SensorData measure(long start) {
     delay(SLEEP_BETWEEN_READINGS);  // Short delay between readings
   }
 
-  data.distance = total_distance / NUM_READINGS;
   data.bmeTemp = total_bmeTemp / NUM_READINGS;
   data.bmeHumidity = total_bmeHumidity / NUM_READINGS;
   data.ahtTemp = total_ahtTemp / NUM_READINGS;
@@ -75,10 +109,12 @@ SensorData measure(long start) {
   data.batteryVoltage = total_batteryVoltage / NUM_READINGS;
   data.batteryPercentage = total_batteryPercentage / NUM_READINGS;
 
+  if (data.termo2 > 0.0) {
+    data.temperature = (2.0 * data.bmeTemp + data.ahtTemp + data.termo2) / 4.0;
+  } else {
+    data.temperature = (2.0 * data.bmeTemp + data.ahtTemp) / 3.0;
+  }
 
-
-
-  data.temperature = (2.0 * data.bmeTemp + data.ahtTemp + data.termo2) / 4.0;
   data.humidity = (2.0 * data.bmeHumidity + data.ahtHumidity) / 3.0;
 
   data.batteryPercentageInt = (int)data.batteryPercentage;

@@ -9,8 +9,14 @@ void setupPins() {
   pinMode(SOIL_1_PIN, ANALOG);
   pinMode(SOIL_2_PIN, ANALOG);
   pinMode(SOIL_3_PIN, ANALOG);
+  delay(1200);
 
+  // flashLED(GREEN_LED_PIN, 1);
+  // delay(200);
+  // flashLED(GREEN_LED_PIN, 2);
   digitalWrite(SENSOR_POWER_PIN, HIGH);
+  // flashLED(BLUE_LED_PIN, 3);
+  // delay(500);
 }
 
 void connectToWiFi() {
@@ -79,6 +85,7 @@ void initSensors() {
     Serial.println("    VL53L0X (tof): Failed");
     dispPrint("VL53L0X (tof): FAIL");
   } else {
+    TOF_OK = true;
     Serial.println("    VL53L0X (tof): OK");
   }
 
