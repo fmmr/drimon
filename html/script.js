@@ -30,6 +30,11 @@ const timeSinceElement = document.getElementById('time-since');
 
 const startDate = '2024-07-25 14:00:00';
 
+function getURLParameter(name) {
+    const urlParams = new URLSearchParams(window.location.search);
+    return urlParams.get(name);
+}
+
 async function fetchData() {
     try {
         const response = await fetch('https://api.thingspeak.com/channels/2568299/feeds/last.json?timezone=Europe/Paris&status=true');
@@ -42,8 +47,26 @@ async function fetchData() {
         const lastUpdated = createdAt.format('L LTS');
         const timeSince = createdAt.fromNow();
 
-        temperatureElement.textContent = `Temperatur: ${temperature} °C`;
-        batteryElement.textContent = `Batteri: ${battery} %`;
+        let temperatureClass = '';
+        if (temperature > 30) {
+            temperatureClass = 'high';
+        } else if (temperature < 16) {
+            temperatureClass = 'low';
+        } else {
+            temperatureClass = 'norm';
+        }
+
+        let batteryClass = '';
+        if (battery > 90) {
+            batteryClass = 'full';
+        } else if (battery < 25) {
+            batteryClass = 'low';
+        } else {
+            batteryClass = 'ok';
+        }
+
+        temperatureElement.innerHTML = `Temperatur: <span class="${temperatureClass}">${temperature} °C</span>`;
+        batteryElement.innerHTML = `Batteri: <span class="${batteryClass}">${battery} %</span>`;
         timeSinceElement.textContent = `Sist oppdatert: ${lastUpdated} (${timeSince})`;
     } catch (error) {
         console.error('Error fetching data:', error);
@@ -53,20 +76,16 @@ async function fetchData() {
     }
 }
 
-function isMobile() {
-    return window.innerWidth <= 768;
-}
-
 function updateIframes(results) {
+    const isMobile = window.innerWidth <= 768;
     iframeContainer.innerHTML = '';
 
-    if (isMobile()) {
-        // Mobile Layout: Single graph per row
+    if (isMobile) {
         iframeConfigs.forEach(config => {
             const { src, title } = config;
             const container = document.createElement('div');
             container.classList.add('iframe-container');
-            container.style.gridArea = 'auto'; // Allow natural flow
+            container.style.height = '200px';
 
             const iframe = document.createElement('iframe');
             iframe.src = `${src}?title=${encodeURIComponent(title)}&start=${encodeURIComponent(startDate)}&results=${results}&dynamic=true&width=auto&height=auto`;
@@ -75,9 +94,7 @@ function updateIframes(results) {
             iframeContainer.appendChild(container);
         });
     } else {
-        // Desktop Layout: Original layout with shared cells
         const sharedCells = {};
-
         iframeConfigs.forEach(config => {
             const { area, shared, title } = config;
             if (shared) {
@@ -135,7 +152,8 @@ resultsInput.addEventListener('keypress', (event) => {
 
 // Initial load
 fetchData().then(() => {
-    updateIframes(resultsInput.value || 8000);
+    const results = getURLParameter('results') || resultsInput.value || 8000;
+    updateIframes(results);
 });
 
 // Update data every minute
@@ -143,5 +161,6 @@ setInterval(fetchData, 60000);
 
 // Handle resize event to re-check if mobile
 window.addEventListener('resize', () => {
-    updateIframes(resultsInput.value || 8000);
+    const results = getURLParameter('results') || resultsInput.value || 8000;
+    updateIframes(results);
 });
