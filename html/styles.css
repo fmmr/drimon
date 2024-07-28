@@ -3,6 +3,15 @@ body {
     padding: 0;
     height: 100vh;
     overflow: hidden;
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    padding: 0;
+    margin: 0;
+    width: 100vw;
+    height: 100vh;
+    box-sizing: border-box;
 }
 
 .data-display {
@@ -10,19 +19,26 @@ body {
     align-items: center;
     margin: 10px;
     flex-wrap: wrap;
+    padding: 0 10px;
 }
 
 .data-display span {
     margin-right: 15px;
+    font-size: 1rem;
+}
+
+#resultsInput {
+    max-width: 80px;
 }
 
 #iframeContainer {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: repeat(4, 1fr);
-    gap: 10px;
-    height: calc(100vh - 60px); /* Adjust based on the height of the data display */
+    gap: 5px;
+    height: calc(100vh - 50px); /* Adjust based on the height of the data display */
     overflow: auto;
+    padding: 0 10px;
 }
 
 .iframe-container {
@@ -41,8 +57,4 @@ body {
         grid-template-columns: repeat(2, 1fr);
         grid-template-rows: repeat(8, 1fr);
     }
-}
-
-input#resultsInput {
-    max-width: 100px; /* Adjusted width for 4-digit numbers */
 }

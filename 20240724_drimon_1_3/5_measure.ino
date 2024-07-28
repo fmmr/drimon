@@ -11,14 +11,14 @@ String status(SensorData& data) {
   else if (data.lux < SHADE_LEVEL) stat = stat + "_SHADE";
   else stat = stat + "_SUN";
 
-  if (data.distance < 80) stat = stat + "_W-CLOSE";
+  if (data.distance < WINDOW_CLOSE) stat = stat + "_W-CLOSE";
   else stat = stat + "_W-OPEN";
 
-  if (data.batteryPercentage < 40) stat = stat + "_B-LOW";
+  if (data.batteryPercentage < BATTERY_LOW) stat = stat + "_B-LOW";
   else stat = stat + "_B-OK";
 
-  if (data.pressure < 990) stat = stat + "_P-LOW";
-  else if (data.pressure > 1025) stat = stat + "_P-HIGH";
+  if (data.pressure < PRESSURE_LOW) stat = stat + "_P-LOW";
+  else if (data.pressure > PRESSURE_HIGH) stat = stat + "_P-HIGH";
   else stat = stat + "_P-OK";
 
   return stat;
