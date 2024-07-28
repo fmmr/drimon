@@ -22,6 +22,54 @@ body {
     padding: 0 10px;
 }
 
+.compact-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px;
+    background-color: #f1f1f1;
+    border-bottom: 1px solid #ddd;
+}
+
+.title {
+    font-size: 1.5em;
+    flex: 0 1 auto;
+    margin-right: 20px;
+}
+
+.data-points {
+    display: flex;
+    flex-wrap: wrap;
+    flex: 1 1 auto;
+    gap: 10px;
+}
+
+.data-points div {
+    white-space: nowrap;
+}
+
+.label {
+    font-weight: normal;
+}
+
+
+.search-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+#results {
+    padding: 5px;
+    font-size: 1em;
+}
+
+button {
+    padding: 5px 10px;
+    font-size: 1em;
+    cursor: pointer;
+}
+
 .data-display span {
     margin-right: 15px;
     font-size: 1rem;
@@ -93,11 +141,23 @@ body {
         flex-direction: column;
     }
 
-    .data-display span {
-        width: 100%;
-        text-align: center;
-        margin: 5px 0;
+    .compact-header {
+        flex-direction: column;
+        align-items: flex-start;
     }
+
+    .title {
+        margin-bottom: 10px;
+    }
+
+    .data-points {
+        order: 2;
+    }
+
+    .search-container {
+        display: none;
+    }
+	
 }
 
 .high {

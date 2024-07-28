@@ -24,8 +24,11 @@ const iframeConfigs = [
 const iframeContainer = document.getElementById('iframeContainer');
 const resultsInput = document.getElementById('resultsInput');
 const updateButton = document.getElementById('updateButton');
+
 const temperatureElement = document.getElementById('temperature');
 const batteryElement = document.getElementById('battery');
+const windowElement = document.getElementById('window');
+const pressureElement = document.getElementById('pressure');
 const timeSinceElement = document.getElementById('time-since');
 
 const startDate = '2024-07-25 14:00:00';
@@ -43,12 +46,16 @@ async function fetchData() {
         moment.locale('nb');
         const temperature = Math.round(data.field1 * 10) / 10;
         const battery = Math.round(data.field6);
+
+        const windowOpening = Math.round(data.field4);
+        const pressure = Math.round(data.field7) ;
+
         const createdAt = moment(data.created_at);
         const lastUpdated = createdAt.format('L LTS');
         const timeSince = createdAt.fromNow();
 
         let temperatureClass = '';
-        if (temperature > 30) {
+        if (temperature > 35) {
             temperatureClass = 'high';
         } else if (temperature < 16) {
             temperatureClass = 'low';
@@ -65,9 +72,24 @@ async function fetchData() {
             batteryClass = 'ok';
         }
 
-        temperatureElement.innerHTML = `Temperatur: <span class="${temperatureClass}">${temperature} °C</span>`;
-        batteryElement.innerHTML = `Batteri: <span class="${batteryClass}">${battery} %</span>`;
-        timeSinceElement.textContent = `Sist oppdatert: ${lastUpdated} (${timeSince})`;
+        let windowText = '';
+		if (windowOpening < 8){
+			windowText = 'Lukket';
+		}else if (windowOpening > 10){
+			windowText = 'Åpent';
+		}else{
+			windowText = 'Glippe';
+		}
+
+        temperatureElement.innerHTML = `${temperature} °C`;
+		temperatureElement.className = `value ${temperatureClass}`;
+        batteryElement.innerHTML = `${battery} %`;
+		batteryElement.className = `value ${batteryClass}`;
+        windowElement.innerHTML = `${windowText}`;
+		windowElement.className = `value `;
+        pressureElement.innerHTML = `${pressure} hPa`;
+		pressureElement.className = `value`;
+        timeSinceElement.textContent = `${timeSince}`;
     } catch (error) {
         console.error('Error fetching data:', error);
         temperatureElement.textContent = 'Temperatur: Feil';

@@ -12,14 +12,21 @@
     <script src="script.js" defer></script>
 </head>
 <body>
-    <div class="container">
-        <div class="data-display" id="infoSection">
-            <span id="temperature"></span>
-            <span id="battery"></span>
-            <span id="time-since"></span>
+    <header class="compact-header">
+        <div class="title">DriMon</div>
+        <div class="data-points" id="infoSection">
+            <div><span class="label">Temperatur:</span> <span class="value" id="temperature">Laster...</span></div>
+            <div><span class="label">Batteri:</span> <span class="value" id="battery">Laster...</span></div>
+            <div><span class="label">Vindu:</span> <span class="value" id="window">Laster...</span></div>
+            <div><span class="label">Lufttrykk:</span> <span class="value" id="pressure">Laster...</span></div>
+            <div><span class="label">Sist oppdatert:</span> <span class="value" id="time-since">Laster...</span></div>
+        </div>
+        <div class="search-container">
             <input type="number" id="resultsInput" placeholder="Results" min="1">
             <button id="updateButton">Oppdater</button>
         </div>
+    </header>
+    <div class="container">
         <div id="iframeContainer"></div>
     </div>
 </body>
