@@ -29,6 +29,7 @@ const temperatureElement = document.getElementById('temperature');
 const batteryElement = document.getElementById('battery');
 const windowElement = document.getElementById('window');
 const pressureElement = document.getElementById('pressure');
+const lightElement = document.getElementById('light');
 const timeSinceElement = document.getElementById('time-since');
 
 const startDate = '2024-07-25 14:00:00';
@@ -49,6 +50,7 @@ async function fetchData() {
 
         const windowOpening = Math.round(data.field4);
         const pressure = Math.round(data.field7) ;
+        const light = Math.round(data.field8) ;
 
         const createdAt = moment(data.created_at);
         const lastUpdated = createdAt.format('L LTS');
@@ -81,6 +83,17 @@ async function fetchData() {
 			windowText = 'Glippe';
 		}
 
+        let lightText = '';
+		if (light < 1){
+			lightText = 'Natt';
+		}else if (light < 50){
+			lightText = 'Skumring';
+		}else if (light < 700){
+			lightText = 'Skyet';
+		}else{
+			lightText = 'Sol';
+		}
+
         temperatureElement.innerHTML = `${temperature} °C`;
 		temperatureElement.className = `value ${temperatureClass}`;
         batteryElement.innerHTML = `${battery} %`;
@@ -88,6 +101,8 @@ async function fetchData() {
         windowElement.innerHTML = `${windowText}`;
 		windowElement.className = `value `;
         pressureElement.innerHTML = `${pressure} hPa`;
+		pressureElement.className = `value`;
+        lightElement.innerHTML = `${lightText}`;
 		pressureElement.className = `value`;
         timeSinceElement.textContent = `${timeSince}`;
     } catch (error) {

@@ -46,7 +46,7 @@
 
 #define NIGHT_LEVEL 1
 #define DUSK_LEVEL 50
-#define SHADE_LEVEL 700
+#define SHADE_LEVEL 600
 
 #define WINDOW_CLOSE 80
 
