@@ -13,15 +13,6 @@ body {
     box-sizing: border-box;
 }
 
-.data-display {
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    margin: 10px;
-    flex-wrap: wrap;
-    padding: 0 10px;
-}
-
 .compact-header {
     display: flex;
     align-items: center;
@@ -44,36 +35,19 @@ body {
     gap: 10px;
 }
 
-.data-points div {
+.data-point {
     white-space: nowrap;
+    margin-left: 20px;
 }
 
 .label {
     font-weight: normal;
 }
 
-
 .search-container {
     display: flex;
     align-items: center;
     gap: 5px;
-}
-
-#results {
-    padding: 5px;
-    font-size: 1em;
-}
-
-button {
-    padding: 5px 10px;
-    font-size: 1em;
-    cursor: pointer;
-}
-
-.data-display span {
-    margin-right: 15px;
-    font-size: 1rem;
-    font-weight: bold;
 }
 
 #resultsInput {
@@ -101,7 +75,7 @@ button {
     grid-template-columns: repeat(4, 1fr);
     grid-template-rows: repeat(4, 1fr);
     gap: 5px;
-    height: calc(100vh - 50px); /* Adjust based on the height of the data display */
+    height: calc(100vh - 50px);
     overflow: auto;
     padding: 0 10px;
 }
@@ -122,23 +96,19 @@ button {
         display: flex;
         flex-direction: column;
         gap: 10px;
-        height: auto; /* Allow height to adjust automatically */
+        height: auto;
     }
 
     .iframe-container {
-        height: 200px; /* Set height for each iframe container */
+        height: 200px;
     }
 
     body {
-        overflow-y: auto; /* Allow vertical scrolling on mobile */
+        overflow-y: auto;
     }
 
     #resultsInput, #updateButton {
         display: none;
-    }
-
-    .data-display {
-        flex-direction: column;
     }
 
     .compact-header {
@@ -150,14 +120,9 @@ button {
         margin-bottom: 10px;
     }
 
-    .data-points {
-        order: 2;
-    }
-
     .search-container {
         display: none;
     }
-	
 }
 
 .high {

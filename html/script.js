@@ -88,7 +88,7 @@ async function fetchData() {
 			lightText = 'Natt';
 		}else if (light < 50){
 			lightText = 'Skumring';
-		}else if (light < 700){
+		}else if (light < 600){
 			lightText = 'Skyet';
 		}else{
 			lightText = 'Sol';
