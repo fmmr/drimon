@@ -12,8 +12,8 @@ const iframeConfigs = [
     { src: 'https://thingspeak.com/channels/2584548/charts/6', area: '3 / 1 / 4 / 2', title: 'Fuktighet Agurk' },
     { src: 'https://thingspeak.com/channels/2584548/charts/7', area: '3 / 2 / 4 / 3', title: 'Fuktighet Tomat' },
     { src: 'https://thingspeak.com/channels/2584548/charts/8', area: '3 / 3 / 4 / 4', title: 'Fuktighet Paprika' },
-    { src: 'https://thingspeak.com/channels/2584548/charts/3', area: '3 / 4 / 4 / 4', shared: true, title: 'Temp Agurk' },
-    { src: 'https://thingspeak.com/channels/2584548/charts/5', area: '3 / 4 / 4 / 4', shared: true, title: 'Temp Paprika' },
+    { src: 'https://thingspeak.com/channels/2584548/charts/3', area: '3 / 4 / 4 / 4', shared: true, title: 'Agurk' },
+    { src: 'https://thingspeak.com/channels/2584548/charts/5', area: '3 / 4 / 4 / 4', shared: true, title: 'Paprika' },
 
     { src: 'https://thingspeak.com/channels/2584548/charts/1', area: '4 / 1 / 5 / 2', title: 'BME Temp' },
     { src: 'https://thingspeak.com/channels/2584548/charts/2', area: '4 / 2 / 5 / 3', title: 'AHT Temp' },
