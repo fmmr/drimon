@@ -1,21 +1,24 @@
 const iframeConfigs = [
     { src: 'https://thingspeak.com/channels/2568299/charts/1', area: '1 / 1 / 2 / 2', title: 'Temperatur' },
-    { src: 'https://thingspeak.com/channels/2568299/charts/4', area: '1 / 2 / 2 / 3', title: 'Vindusåpning'},
+    { src: 'https://thingspeak.com/channels/2568299/charts/4', area: '1 / 2 / 2 / 3', title: 'Vindusåpning' },
     { src: 'https://thingspeak.com/channels/2568299/charts/8', area: '1 / 3 / 2 / 4', title: 'Lys' },
     { src: 'https://thingspeak.com/channels/2584547/charts/3', area: '1 / 4 / 2 / 5', title: 'Batteri' },
+
     { src: 'https://thingspeak.com/channels/2568299/charts/7', area: '2 / 1 / 3 / 2', title: 'Lufttrykk' },
     { src: 'https://thingspeak.com/channels/2568299/charts/2', area: '2 / 2 / 3 / 3', title: 'Luftfuktighet' },
     { src: 'https://thingspeak.com/channels/2584547/charts/2', area: '2 / 3 / 3 / 4', title: 'Batteri' },
     { src: 'https://thingspeak.com/channels/2584547/charts/1', area: '2 / 4 / 3 / 5', title: 'WiFi' },
+
     { src: 'https://thingspeak.com/channels/2584548/charts/6', area: '3 / 1 / 4 / 2', title: 'Fuktighet Agurk' },
     { src: 'https://thingspeak.com/channels/2584548/charts/7', area: '3 / 2 / 4 / 3', title: 'Fuktighet Tomat' },
     { src: 'https://thingspeak.com/channels/2584548/charts/8', area: '3 / 3 / 4 / 4', title: 'Fuktighet Paprika' },
     { src: 'https://thingspeak.com/channels/2584548/charts/3', area: '3 / 4 / 4 / 4', shared: true, title: 'Temp Agurk' },
     { src: 'https://thingspeak.com/channels/2584548/charts/5', area: '3 / 4 / 4 / 4', shared: true, title: 'Temp Paprika' },
+
     { src: 'https://thingspeak.com/channels/2584548/charts/1', area: '4 / 1 / 5 / 2', title: 'BME Temp' },
     { src: 'https://thingspeak.com/channels/2584548/charts/2', area: '4 / 2 / 5 / 3', title: 'AHT Temp' },
     { src: 'https://thingspeak.com/channels/2584548/charts/4', area: '4 / 3 / 5 / 4', title: 'Gulv Temp' },
-    { src: 'https://thingspeak.com/channels/2584547/charts/4', area: '4 / 4 / 5 / 5', title: 'Tid brukt' }
+    { src: 'https://thingspeak.com/channels/2584547/charts/4', area: '4 / 4 / 5 / 5', title: 'Tid brukt' },
 ];
 
 const iframeContainer = document.getElementById('iframeContainer');
@@ -25,7 +28,7 @@ const temperatureElement = document.getElementById('temperature');
 const batteryElement = document.getElementById('battery');
 const timeSinceElement = document.getElementById('time-since');
 
-const startDate = '2024-07-25 16:00:00';
+const startDate = '2024-07-25 14:00:00';
 
 async function fetchData() {
     try {
@@ -50,61 +53,82 @@ async function fetchData() {
     }
 }
 
+function isMobile() {
+    return window.innerWidth <= 768;
+}
+
 function updateIframes(results) {
     iframeContainer.innerHTML = '';
 
-    const sharedCells = {};
-
-    iframeConfigs.forEach(config => {
-        const { area, shared, title } = config;
-        if (shared) {
-            if (!sharedCells[area]) {
-                sharedCells[area] = [];
-            }
-            sharedCells[area].push(config.src + `?title=${encodeURIComponent(title)}`);
-        } else {
+    if (isMobile()) {
+        // Mobile Layout: Single graph per row
+        iframeConfigs.forEach(config => {
+            const { src, title } = config;
             const container = document.createElement('div');
             container.classList.add('iframe-container');
-            container.style.gridArea = area;
+            container.style.gridArea = 'auto'; // Allow natural flow
 
             const iframe = document.createElement('iframe');
-            iframe.src = `${config.src}?title=${encodeURIComponent(title)}&start=${encodeURIComponent(startDate)}&results=${results}&dynamic=true&width=auto&height=auto`;
+            iframe.src = `${src}?title=${encodeURIComponent(title)}&start=${encodeURIComponent(startDate)}&results=${results}&dynamic=true&width=auto&height=auto`;
 
             container.appendChild(iframe);
             iframeContainer.appendChild(container);
-        }
-    });
+        });
+    } else {
+        // Desktop Layout: Original layout with shared cells
+        const sharedCells = {};
 
-    // Handle shared cells
-    for (const [area, srcs] of Object.entries(sharedCells)) {
-        const container = document.createElement('div');
-        container.classList.add('iframe-container');
-        container.style.gridArea = area;
-        container.style.display = 'grid';
-        container.style.gridTemplateColumns = '1fr 1fr'; // Two columns for shared iframes
-        container.style.position = 'relative';
+        iframeConfigs.forEach(config => {
+            const { area, shared, title } = config;
+            if (shared) {
+                if (!sharedCells[area]) {
+                    sharedCells[area] = [];
+                }
+                sharedCells[area].push(config.src + `?title=${encodeURIComponent(title)}`);
+            } else {
+                const container = document.createElement('div');
+                container.classList.add('iframe-container');
+                container.style.gridArea = area;
 
-        srcs.forEach((src, index) => {
-            const iframe = document.createElement('iframe');
-            iframe.src = `${src}&start=${encodeURIComponent(startDate)}&results=${results}&dynamic=true&width=auto&height=auto`;
-            iframe.style.gridColumn = index + 1; // Place iframe in the corresponding column
-            iframe.style.width = '100%'; // Full width of the column
-            iframe.style.height = '100%'; // Full height of the container
-            container.appendChild(iframe);
+                const iframe = document.createElement('iframe');
+                iframe.src = `${config.src}?title=${encodeURIComponent(title)}&start=${encodeURIComponent(startDate)}&results=${results}&dynamic=true&width=auto&height=auto`;
+
+                container.appendChild(iframe);
+                iframeContainer.appendChild(container);
+            }
         });
 
-        iframeContainer.appendChild(container);
+        // Handle shared cells
+        for (const [area, srcs] of Object.entries(sharedCells)) {
+            const container = document.createElement('div');
+            container.classList.add('iframe-container');
+            container.style.gridArea = area;
+            container.style.display = 'grid';
+            container.style.gridTemplateColumns = '1fr 1fr'; // Two columns for shared iframes
+            container.style.position = 'relative';
+
+            srcs.forEach((src, index) => {
+                const iframe = document.createElement('iframe');
+                iframe.src = `${src}&start=${encodeURIComponent(startDate)}&results=${results}&dynamic=true&width=auto&height=auto`;
+                iframe.style.gridColumn = index + 1; // Place iframe in the corresponding column
+                iframe.style.width = '100%'; // Full width of the column
+                iframe.style.height = '100%'; // Full height of the container
+                container.appendChild(iframe);
+            });
+
+            iframeContainer.appendChild(container);
+        }
     }
 }
 
 updateButton.addEventListener('click', () => {
-    const results = Math.max(0, Math.min(resultsInput.value, 8000)) || 8000;
+    const results = resultsInput.value || 8000;
     updateIframes(results);
 });
 
 resultsInput.addEventListener('keypress', (event) => {
     if (event.key === 'Enter') {
-        const results = Math.max(0, Math.min(resultsInput.value, 8000)) || 8000;
+        const results = resultsInput.value || 8000;
         updateIframes(results);
     }
 });
@@ -116,3 +140,8 @@ fetchData().then(() => {
 
 // Update data every minute
 setInterval(fetchData, 60000);
+
+// Handle resize event to re-check if mobile
+window.addEventListener('resize', () => {
+    updateIframes(resultsInput.value || 8000);
+});

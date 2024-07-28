@@ -1,9 +1,8 @@
 body {
     margin: 0;
     padding: 0;
-    height: 100vh;
-    overflow: hidden;
     font-family: Arial, sans-serif;
+    overflow-x: hidden;
 }
 
 .container {
@@ -54,7 +53,17 @@ body {
 
 @media (max-width: 768px) {
     #iframeContainer {
-        grid-template-columns: repeat(2, 1fr);
-        grid-template-rows: repeat(8, 1fr);
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        height: auto; /* Allow height to adjust automatically */
+    }
+
+    .iframe-container {
+        height: 200px; /* Set height for each iframe container */
+    }
+
+    body {
+        overflow-y: auto; /* Allow vertical scrolling on mobile */
     }
 }
