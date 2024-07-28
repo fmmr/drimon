@@ -88,7 +88,7 @@ function updateIframes(results) {
             container.style.height = '200px';
 
             const iframe = document.createElement('iframe');
-            iframe.src = `${src}?title=${encodeURIComponent(title)}&start=${encodeURIComponent(startDate)}&results=${results}&dynamic=true&width=auto&height=auto`;
+            iframe.src = `${src}?title=${encodeURIComponent(title)}&start=${encodeURIComponent(startDate)}&results=${results}&dynamic=true&width=auto&height=auto&xaxis=`;
 
             container.appendChild(iframe);
             iframeContainer.appendChild(container);
@@ -108,7 +108,7 @@ function updateIframes(results) {
                 container.style.gridArea = area;
 
                 const iframe = document.createElement('iframe');
-                iframe.src = `${config.src}?title=${encodeURIComponent(title)}&start=${encodeURIComponent(startDate)}&results=${results}&dynamic=true&width=auto&height=auto`;
+                iframe.src = `${config.src}?title=${encodeURIComponent(title)}&start=${encodeURIComponent(startDate)}&results=${results}&dynamic=true&width=auto&height=auto&xaxis=`;
 
                 container.appendChild(iframe);
                 iframeContainer.appendChild(container);
@@ -126,7 +126,7 @@ function updateIframes(results) {
 
             srcs.forEach((src, index) => {
                 const iframe = document.createElement('iframe');
-                iframe.src = `${src}&start=${encodeURIComponent(startDate)}&results=${results}&dynamic=true&width=auto&height=auto`;
+                iframe.src = `${src}&start=${encodeURIComponent(startDate)}&results=${results}&dynamic=true&width=auto&height=auto&xaxis=`;
                 iframe.style.gridColumn = index + 1; // Place iframe in the corresponding column
                 iframe.style.width = '100%'; // Full width of the column
                 iframe.style.height = '100%'; // Full height of the container
