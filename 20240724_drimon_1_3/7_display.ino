@@ -70,9 +70,10 @@ void displayOled(SensorData& data) {
   display.setCursor(0, 29);
   display.print("Bat: ");
   display.print(data.batteryVoltage, 1);
-  display.print("v  ");
+  display.print("v ");
   display.print(data.batteryPercentageInt);
-  display.print("%");
+  display.print("% w:");
+  display.print(data.rssi);
 
   display.setCursor(0, 38);
   display.print("dst: ");

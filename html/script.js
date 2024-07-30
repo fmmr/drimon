@@ -75,12 +75,12 @@ async function fetchData() {
         }
 
         let windowText = '';
-		if (windowOpening < 8){
+		if (windowOpening < 75){
 			windowText = 'Lukket';
-		}else if (windowOpening > 10){
-			windowText = 'Åpent';
-		}else{
+		}else if (windowOpening < 100){
 			windowText = 'Glippe';
+		}else{
+			windowText = 'Åpent';
 		}
 
         let lightText = '';

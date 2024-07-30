@@ -30,13 +30,13 @@
 #define ONE_WIRE_PIN 23
 
 
-#define FLASH_WIFI_CONNECT_FAILURE 2
+#define FLASH_WIFI_CONNECT_FAILURE 4
 #define FLASH_DISPLAY_INIT_FAILURE 3
 
 #define PRESSURE_LOW 999
 #define PRESSURE_HIGH 1010
 
-#define WIFI_MAX_RETRIES 3
+#define WIFI_MAX_RETRIES 10
 #define NUM_READINGS 2
 #define NUM_DISTANCE_READINGS 10
 #define SLEEP_BETWEEN_READINGS 12
@@ -75,6 +75,7 @@ OneWire oneWire(ONE_WIRE_PIN);
 DallasTemperature sensors(&oneWire);
 
 
+
 void dispPrint(String msg) {
   if (DISPLAY_ON) {
     display.setCursor(0, dispLine);
@@ -109,7 +110,7 @@ void flashLED(int pin, int times, int delayTime = 180) {
 void setup() {
   long start = millis();
   setupPins();
-  // beep(50);
+  beep(50);
   flashLED(GREEN_LED_PIN, 2);
   Serial.begin(115200);
 
@@ -127,11 +128,11 @@ void setup() {
   }
 
   initDisplays();
+  connectToWiFi();  // not really neded when pressing button, but nic to see status...
 
   if (SHOULD_POST) {
     Serial.println("  Will POST");
     dispPrint("Will POST");
-    connectToWiFi();
   } else {
     Serial.println("  Will NOT post");
     dispPrint("Will NOT POST");

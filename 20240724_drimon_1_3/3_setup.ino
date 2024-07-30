@@ -23,9 +23,12 @@ void connectToWiFi() {
   int retries = 0;
   WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   Serial.print("  Initializing WiFi...");
+  delay(2000);
 
   while (WiFi.status() != WL_CONNECTED && retries < WIFI_MAX_RETRIES) {
-    delay(400);
+    WiFi.disconnect();
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+    delay(1000);
     Serial.print(".");
     retries++;
   }

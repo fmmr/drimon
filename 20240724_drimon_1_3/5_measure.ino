@@ -74,9 +74,7 @@ SensorData measure(long start) {
 
     total_batteryVoltage += batteryMonitor.readVoltage() / 1000.0;
     total_batteryPercentage += batteryMonitor.readPercentage();
-    if (SHOULD_POST) {
-      total_rssi += WiFi.RSSI();
-    }
+    total_rssi += WiFi.RSSI();
 
     int t1 = analogRead(SOIL_1_PIN);
     int t2 = analogRead(SOIL_2_PIN);
