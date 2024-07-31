@@ -72,7 +72,7 @@ void displayOled(SensorData& data) {
   display.print(data.batteryVoltage, 1);
   display.print("v ");
   display.print(data.batteryPercentageInt);
-  display.print("% w:");
+  display.print("% WiF:");
   display.print(data.rssi);
 
   display.setCursor(0, 38);

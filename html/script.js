@@ -32,7 +32,7 @@ const pressureElement = document.getElementById('pressure');
 const lightElement = document.getElementById('light');
 const timeSinceElement = document.getElementById('time-since');
 
-const startDate = '2024-07-25 14:00:00';
+const startDate = '2024-07-25 16:00:00';
 
 function getURLParameter(name) {
     const urlParams = new URLSearchParams(window.location.search);
