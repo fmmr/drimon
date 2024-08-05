@@ -31,8 +31,9 @@ const windowElement = document.getElementById('window');
 const pressureElement = document.getElementById('pressure');
 const lightElement = document.getElementById('light');
 const timeSinceElement = document.getElementById('time-since');
+const format = 'YYYY-MM-DD HH:mm:ss';
 
-const startDate = '2024-07-25 16:00:00';
+const startDate = moment().subtract(3, 'days').startOf('day').format(format);
 
 function getURLParameter(name) {
     const urlParams = new URLSearchParams(window.location.search);
@@ -112,8 +113,13 @@ async function fetchData() {
         timeSinceElement.textContent = 'Sist oppdatert: Feil';
     }
 }
-
-function updateIframes(results) {
+function getUrl(src, title, results, start, end){
+	const timezone=encodeURIComponent("Europe/Paris");
+	const url = `${src}?timezone=${timezone}&title=${encodeURIComponent(title)}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&results=${results}&dynamic=true&width=auto&height=auto&xaxis=&round=2`;	
+	// console.log(`url: ${url}`);
+	return url;
+}
+function updateIframes(results, start, end) {
     const isMobile = window.innerWidth <= 768;
     iframeContainer.innerHTML = '';
 
@@ -125,7 +131,7 @@ function updateIframes(results) {
             container.style.height = '200px';
 
             const iframe = document.createElement('iframe');
-            iframe.src = `${src}?title=${encodeURIComponent(title)}&start=${encodeURIComponent(startDate)}&results=${results}&dynamic=true&width=auto&height=auto&xaxis=`;
+            iframe.src = getUrl(src, title, results, start, end);
 
             container.appendChild(iframe);
             iframeContainer.appendChild(container);
@@ -138,15 +144,14 @@ function updateIframes(results) {
                 if (!sharedCells[area]) {
                     sharedCells[area] = [];
                 }
-                sharedCells[area].push(config.src + `?title=${encodeURIComponent(title)}`);
+                sharedCells[area].push(getUrl(config.src, title, results, start, end));
             } else {
                 const container = document.createElement('div');
                 container.classList.add('iframe-container');
                 container.style.gridArea = area;
 
                 const iframe = document.createElement('iframe');
-                iframe.src = `${config.src}?title=${encodeURIComponent(title)}&start=${encodeURIComponent(startDate)}&results=${results}&dynamic=true&width=auto&height=auto&xaxis=`;
-
+                iframe.src = getUrl(config.src, title, results, start, end);
                 container.appendChild(iframe);
                 iframeContainer.appendChild(container);
             }
@@ -163,7 +168,7 @@ function updateIframes(results) {
 
             srcs.forEach((src, index) => {
                 const iframe = document.createElement('iframe');
-                iframe.src = `${src}&start=${encodeURIComponent(startDate)}&results=${results}&dynamic=true&width=auto&height=auto&xaxis=`;
+                iframe.src = `${src}`;
                 iframe.style.gridColumn = index + 1; // Place iframe in the corresponding column
                 iframe.style.width = '100%'; // Full width of the column
                 iframe.style.height = '100%'; // Full height of the container
@@ -190,14 +195,114 @@ resultsInput.addEventListener('keypress', (event) => {
 // Initial load
 fetchData().then(() => {
     const results = getURLParameter('results') || resultsInput.value || 8000;
-    updateIframes(results);
+    const start = getURLParameter('startDate') || startDate;
+    const end = getURLParameter('endDate') || "";
+	
+    updateIframes(results, start, end);
 });
 
 // Update data every minute
 setInterval(fetchData, 60000);
 
-// Handle resize event to re-check if mobile
+let lastWidth = window.innerWidth;
+let lastHeight = window.innerHeight;
+let resizeTimeout;
+
+function handleResize() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    // Check if the resize is significant
+    if (Math.abs(width - lastWidth) > 50 || Math.abs(height - lastHeight) > 50) {
+        lastWidth = width;
+        lastHeight = height;
+        
+	    const results = getURLParameter('results') || resultsInput.value || 8000;
+	    const start = getURLParameter('startDate') || startDate;
+	    const end = getURLParameter('endDate') || "";
+	    updateIframes(results, start, end);
+    }
+}
+function debounceThrottle(func, wait, immediate) {
+    let timeout;
+    return function(...args) {
+        const context = this;
+        const later = function() {
+            timeout = null;
+            if (!immediate) func.apply(context, args);
+        };
+        const callNow = immediate && !timeout;
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+        if (callNow) func.apply(context, args);
+    };
+}
 window.addEventListener('resize', () => {
-    const results = getURLParameter('results') || resultsInput.value || 8000;
-    updateIframes(results);
+    if (resizeTimeout) {
+        clearTimeout(resizeTimeout);
+    }
+
+    resizeTimeout = setTimeout(handleResize, 150);
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const dateLinks = document.querySelectorAll('.date-link');
+
+    dateLinks.forEach(link => {
+        link.addEventListener('click', function(event) {
+            event.preventDefault();
+            const range = this.dataset.range;
+            const now = moment();
+            let startDate = '';
+            let endDate = '';
+
+            switch (range) {
+			case range.match(/.*days$/)?.input:
+					let days = range.substring(0, range.indexOf("-"));
+					console.log("Using " + days)
+                    startDate = moment().subtract(days, 'days').startOf('day').format(format);
+					break;
+                case 'start':
+                    startDate = moment().startOf('year').format(format);
+                    // Do nothing, startDate and endDate will be empty
+                    break;
+                case 'today':
+                    startDate = moment().startOf('day').format(format);
+                    break;
+                case 'this-week':
+                    startDate = moment().startOf('week').format(format);
+                    break;
+                case 'yesterday':
+                    startDate = moment().subtract(1, 'days').startOf('day').format(format);
+                    endDate = moment().startOf('day').format(format);
+                    break;
+                case 'last-week':
+                    startDate = moment().subtract(1, 'weeks').startOf('week').format(format);
+                    endDate = moment().startOf('week').format(format);
+                    break;
+                case 'this-month':
+                    startDate = moment().startOf('month').format(format);
+                    break;
+                case 'last-month':
+                    startDate = moment().subtract(1, 'months').startOf('month').format(format);
+                    endDate = moment().startOf('month').format(format);
+                    break;
+                case 'this-year':
+                    startDate = moment().startOf('year').format(format);
+                    break;
+                case 'last-year':
+                    startDate = moment().subtract(1, 'years').startOf('year').format(format);
+                    endDate = moment().startOf('year').format(format);
+                    break;
+                case 'custom':
+                    // Custom date handling, e.g., prompt the user to enter dates
+                    startDate = prompt("Startdato (YYYY-MM-DD HH:mm:ss):", "");
+                    endDate = prompt("Sluttdato (YYYY-MM-DD HH:mm:ss):", "");
+                    break;
+            }
+
+            let url = `${window.location.pathname}?startDate=${startDate}&endDate=${endDate}`;
+            window.location.href = url;
+        });
+    });
 });

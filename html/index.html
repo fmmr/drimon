@@ -15,12 +15,27 @@
     <header class="compact-header">
         <div class="title">DriMon</div>
         <div class="data-points" id="infoSection">
-            <div class="data-point"><span class="label">Temperatur:</span> <span class="value" id="temperature">Laster...</span></div>
-            <div class="data-point"><span class="label">Batteri:</span> <span class="value" id="battery">Laster...</span></div>
-            <div class="data-point"><span class="label">Vindu:</span> <span class="value" id="window">Laster...</span></div>
-            <div class="data-point"><span class="label">Lufttrykk:</span> <span class="value" id="pressure">Laster...</span></div>
-            <div class="data-point"><span class="label">Lys:</span> <span class="value" id="light">Laster...</span></div>
-            <div class="data-point"><span class="label">Oppdatert:</span> <span class="value" id="time-since">Laster...</span></div>
+            <div class="data-point"><span class="value" id="time-since">Laster...</span>:</div>
+            <div class="data-point"><span class="value" id="temperature">Laster...</span></div>
+            <div class="data-point"><span class="value" id="light"></span></div>
+            <div class="data-point"><span class="value" id="battery">Laster...</span></div>
+            <div class="data-point"><span class="value" id="pressure">Laster...</span></div>
+            <div class="data-point"><span class="value" id="window"></span></div>
+        </div>
+        <div class="date-links">
+            <a href="#" class="date-link" data-range="today">dag</a>
+            <a href="#" class="date-link" data-range="yesterday">dag-1</a>
+            <a href="#" class="date-link" data-range="1-days">2dag</a>
+            <a href="#" class="date-link" data-range="2-days">3dag</a>
+            <a href="#" class="date-link" data-range="6-days">7dag</a>
+            <a href="#" class="date-link" data-range="start">start</a>
+            <a href="#" class="date-link" data-range="this-week">uke</a>
+            <a href="#" class="date-link" data-range="last-week">uke-1</a>
+            <a href="#" class="date-link" data-range="this-month">mnd</a>
+            <!-- <a href="#" class="date-link" data-range="last-month">Forrige måned</a>
+            <a href="#" class="date-link" data-range="this-year">Dette året</a>
+            <a href="#" class="date-link" data-range="last-year">Forrige år</a>
+            <a href="#" class="date-link" data-range="custom">Egendefinert</a> -->
         </div>
         <div class="search-container">
             <input type="number" id="resultsInput" placeholder="Results" min="1">

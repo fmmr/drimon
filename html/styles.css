@@ -15,34 +15,33 @@ body {
 
 .compact-header {
     display: flex;
-    align-items: center;
+    align-items: flex-start; /* Top-align all children */
     justify-content: space-between;
     padding: 10px;
     background-color: #f1f1f1;
     border-bottom: 1px solid #ddd;
 }
 
+
+
 .title {
-    font-size: 1.5em;
+    font-size: 1.8em;
     flex: 0 1 auto;
     margin-right: 20px;
 }
 
 .data-points {
+    font-size: 1.1em;
     display: flex;
     flex-wrap: wrap;
     flex: 1 1 auto;
-    gap: 10px;
+    gap: 15px;
 }
 
 .data-point {
     white-space: nowrap;
-    margin-left: 20px;
 }
 
-.label {
-    font-weight: normal;
-}
 
 .search-container {
     display: flex;
@@ -91,40 +90,6 @@ body {
     border: none;
 }
 
-@media (max-width: 768px) {
-    #iframeContainer {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        height: auto;
-    }
-
-    .iframe-container {
-        height: 200px;
-    }
-
-    body {
-        overflow-y: auto;
-    }
-
-    #resultsInput, #updateButton {
-        display: none;
-    }
-
-    .compact-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .title {
-        margin-bottom: 10px;
-    }
-
-    .search-container {
-        display: none;
-    }
-}
-
 .high {
     color: red;
 }
@@ -148,3 +113,71 @@ body {
 .low {
     color: red;
 }
+
+/* Existing styles remain unchanged */
+
+.date-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 0.8em; /* Tiny font size */
+    white-space: normal; /* Allow line breaks */
+	margin-left: 20px;
+	margin-right: 20px;
+}
+
+.date-link {
+    display: inline-block; /* Prevent breaking within a single link */
+    text-decoration: none;
+    color: #007bff;
+    cursor: pointer;
+}
+
+.date-link:hover {
+    text-decoration: underline;
+}
+
+
+@media (max-width: 768px) {
+    #iframeContainer {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        height: auto;
+    }
+
+    .iframe-container {
+        height: 200px;
+    }
+
+    body {
+        overflow-y: auto;
+    }
+	.data-point {
+    	margin-left: 0px;
+	}
+
+	.date-links {
+		margin-left: 0px;
+		margin-right: 0px;
+	}
+	
+    #resultsInput, #updateButton {
+        display: none;
+    }
+
+    .compact-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .title {
+        margin-bottom: 5px;
+	    font-size: 1.2em;
+    }
+
+    .search-container {
+        display: none;
+    }
+}
+
