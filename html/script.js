@@ -27,6 +27,7 @@ const updateButton = document.getElementById('updateButton');
 
 const temperatureElement = document.getElementById('temperature');
 const batteryElement = document.getElementById('battery');
+const batteryVoltElement = document.getElementById('batteryVolt');
 const windowElement = document.getElementById('window');
 const pressureElement = document.getElementById('pressure');
 const lightElement = document.getElementById('light');
@@ -47,7 +48,8 @@ async function fetchData() {
 
         moment.locale('nb');
         const temperature = Math.round(data.field1 * 10) / 10;
-        const battery = Math.round(data.field6);
+        const battery = Math.round(data.field6 * 10) / 10;
+        const batteryVolt = Math.round(data.field5 * 100) / 100; 
 
         const windowOpening = Math.round(data.field4);
         const pressure = Math.round(data.field7) ;
@@ -69,10 +71,19 @@ async function fetchData() {
         let batteryClass = '';
         if (battery > 90) {
             batteryClass = 'full';
-        } else if (battery < 25) {
+        } else if (battery < 10) {
             batteryClass = 'low';
         } else {
             batteryClass = 'ok';
+        }
+		
+        let batteryVoltClass = '';
+        if (battery > 90) {
+            batteryVoltClass = 'full';
+        } else if (battery < 10) {
+            batteryVoltClass = 'low';
+        } else {
+            batteryVoltClass = 'ok';
         }
 
         let windowText = '';
@@ -99,8 +110,10 @@ async function fetchData() {
 		temperatureElement.className = `value ${temperatureClass}`;
         batteryElement.innerHTML = `${battery} %`;
 		batteryElement.className = `value ${batteryClass}`;
+        batteryVoltElement.innerHTML = `${batteryVolt} v`;
+		batteryVoltElement.className = `value ${batteryVoltClass}`;
         windowElement.innerHTML = `${windowText}`;
-		windowElement.className = `value `;
+		windowElement.className = `value`;
         pressureElement.innerHTML = `${pressure} hPa`;
 		pressureElement.className = `value`;
         lightElement.innerHTML = `${lightText}`;

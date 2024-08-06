@@ -65,7 +65,8 @@ Adafruit_SSD1306 display(128, 64, &Wire, -1);
 LCD_I2C lcd(0x27, 16, 2);
 Adafruit_VL53L0X tof = Adafruit_VL53L0X();
 Adafruit_BME280 bme;
-BH1750 lightMeter;
+BH1750 lightMeter(0x5C);
+BH1750 lightMeter_int(0x23);
 Adafruit_AHTX0 aht;
 DFRobot_MAX17043 batteryMonitor;
 DeviceAddress termo1 = { 0x28, 0xAD, 0x1B, 0x46, 0xD4, 0x4D, 0x17, 0x66 };  // closest

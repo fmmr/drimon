@@ -8,6 +8,7 @@ struct SensorData {
 
   float pressure;
   float lux;
+  float lux_int;
 
   int soil1;
   int soil2;

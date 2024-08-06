@@ -33,6 +33,7 @@ SensorData measure(long start) {
   float total_ahtHumidity = 0.0;
   float total_pressure = 0.0;
   float total_lux = 0.0;
+  float total_lux_int = 0.0;
   float total_batteryVoltage = 0.0;
   float total_batteryPercentage = 0.0;
   int total_rssi = 0;
@@ -71,6 +72,7 @@ SensorData measure(long start) {
     total_ahtHumidity += ahtHumidity.relative_humidity;
 
     total_lux += lightMeter.readLightLevel();
+    total_lux_int += lightMeter_int.readLightLevel();
 
     total_batteryVoltage += batteryMonitor.readVoltage() / 1000.0;
     total_batteryPercentage += batteryMonitor.readPercentage();
@@ -97,6 +99,8 @@ SensorData measure(long start) {
   data.ahtHumidity = total_ahtHumidity / NUM_READINGS;
   data.pressure = total_pressure / NUM_READINGS;
   data.lux = total_lux / NUM_READINGS;
+  data.lux_int = total_lux_int / NUM_READINGS;
+
   data.soil1 = total_soil1 / NUM_READINGS;
   data.soil2 = total_soil2 / NUM_READINGS;
   data.soil3 = total_soil3 / NUM_READINGS;

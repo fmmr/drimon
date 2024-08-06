@@ -54,6 +54,7 @@ void postThingSpeak(SensorData& data) {
   ThingSpeak.setField(2, data.batteryVoltage);
   ThingSpeak.setField(3, data.batteryPercentage);
   ThingSpeak.setField(4, data.timeUsed);
+  ThingSpeak.setField(5, data.lux_int);
 
   // Set the status
   ThingSpeak.setStatus(data.status);

@@ -99,11 +99,18 @@ void initSensors() {
     Serial.println("    BME280: OK");
   }
 
-  if (!lightMeter.begin()) {
+  if (!lightMeter.begin(BH1750::CONTINUOUS_HIGH_RES_MODE, 0x5C)) {
     Serial.println("    lightMeter: Failed");
     dispPrint("lightMeter: FAIL");
   } else {
     Serial.println("    lightMeter: OK");
+  }
+
+  if (!lightMeter_int.begin(BH1750::CONTINUOUS_HIGH_RES_MODE, 0x23)) {
+    Serial.println("    lightMeter_int: Failed");
+    dispPrint("lightMeter_int: FAIL");
+  } else {
+    Serial.println("    lightMeter_int: OK");
   }
 
   if (!aht.begin()) {

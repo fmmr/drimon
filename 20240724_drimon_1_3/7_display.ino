@@ -18,6 +18,8 @@ void displaySerial(SensorData& data) {
   Serial.println(data.pressure);
   Serial.print("    LUX:          ");
   Serial.println(data.lux);
+  Serial.print("    LUX (INT):    ");
+  Serial.println(data.lux_int);
   Serial.print("    Volt:         ");
   Serial.println(data.batteryVoltage);
   Serial.print("    Bat %:        ");
