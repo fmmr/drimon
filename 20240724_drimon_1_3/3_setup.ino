@@ -76,7 +76,7 @@ void initDisplays() {
     Serial.println("  Will NOT output stuff on displays");
     lcd.begin(false);
     lcd.noDisplay();
-    // lcd.noBacklight();
+    lcd.noBacklight();
   }
   Serial.println("  Displays Initialized");
 }

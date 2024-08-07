@@ -2,9 +2,9 @@
 
 WiFiClient client;
 void postThingSpeak(SensorData& data) {
+  digitalWrite(BLUE_LED_PIN, HIGH);
   ThingSpeak.begin(client);
   Serial.println("Posting data to ThingSpeak...");
-  digitalWrite(BLUE_LED_PIN, HIGH);
   int result = 0;
 
   ThingSpeak.setField(1, data.temperature);
@@ -25,7 +25,7 @@ void postThingSpeak(SensorData& data) {
     Serial.println("  Channel 1 update successful.");
   } else {
     Serial.println("Problem updating channel . HTTP error code " + String(result));
-    flashLED(RED_LED_PIN, 1);
+    flashLED(RED_LED_PIN, 2);
   }
 
   ThingSpeak.setField(1, data.bmeTemp);
@@ -46,7 +46,7 @@ void postThingSpeak(SensorData& data) {
     Serial.println("  Channel 2 update successful.");
   } else {
     Serial.println("Problem updating channel. HTTP error code " + String(result));
-    flashLED(RED_LED_PIN, 2);
+    flashLED(RED_LED_PIN, 3);
   }
 
 
@@ -65,9 +65,9 @@ void postThingSpeak(SensorData& data) {
     Serial.println("  Channel 3 update successful.");
   } else {
     Serial.println("Problem updating channel 3. HTTP error code " + String(result));
-    flashLED(RED_LED_PIN, 3);
+    flashLED(RED_LED_PIN, 4);
   }
 
-  digitalWrite(BLUE_LED_PIN, LOW);
   Serial.println("Done Posting data to ThingSpeak...");
+  digitalWrite(BLUE_LED_PIN, LOW);
 }

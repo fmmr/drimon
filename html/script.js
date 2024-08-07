@@ -32,7 +32,10 @@ const windowElement = document.getElementById('window');
 const pressureElement = document.getElementById('pressure');
 const lightElement = document.getElementById('light');
 const timeSinceElement = document.getElementById('time-since');
+const updatedElement = document.getElementById('updated');
+const titleElement = document.getElementById('main-title');
 const format = 'YYYY-MM-DD HH:mm:ss';
+const timezone=encodeURIComponent("Europe/Paris");
 
 const startDate = moment().subtract(3, 'days').startOf('day').format(format);
 
@@ -41,12 +44,33 @@ function getURLParameter(name) {
     return urlParams.get(name);
 }
 
+function status(data){
+	return {
+		"date": data.created_at,
+		"status": data.status
+	};
+}
+
 async function fetchData() {
     try {
-        const response = await fetch('https://api.thingspeak.com/channels/2568299/feeds/last.json?timezone=Europe/Paris&status=true');
+		const promise_2 = fetch(`https://api.thingspeak.com/channels/2584548/status/last.json?timezone=${timezone}`);
+		const promise_3 = fetch(`https://api.thingspeak.com/channels/2584547/status/last.json?timezone=${timezone}`);
+		const promise_1 = fetch(`https://api.thingspeak.com/channels/2568299/feeds/last.json?timezone=${timezone}&status=true`);
+
+        const response_2 = await promise_2;
+        const status_2   = status(await response_2.json());
+        const response_3 = await promise_3;
+        const status_3   = status(await response_3.json());
+		
+		
+        const response = await promise_1;
         const data = await response.json();
+		const status_1 = status(data)
 
         moment.locale('nb');
+		let statusArray = [status_1, status_2, status_3];
+		let lastStatus = (statusArray.sort((a, b) => moment(b.date).diff(moment(a.date))))[0];
+
         const temperature = Math.round(data.field1 * 10) / 10;
         const battery = Math.round(data.field6 * 10) / 10;
         const batteryVolt = Math.round(data.field5 * 100) / 100; 
@@ -55,7 +79,7 @@ async function fetchData() {
         const pressure = Math.round(data.field7) ;
         const light = Math.round(data.field8) ;
 
-        const createdAt = moment(data.created_at);
+        const createdAt = moment(lastStatus.date);
         const lastUpdated = createdAt.format('L LTS');
         const timeSince = createdAt.fromNow();
 
@@ -96,11 +120,11 @@ async function fetchData() {
 		}
 
         let lightText = '';
-		if (light < 1){
+		if (light < 5){
 			lightText = 'Natt';
-		}else if (light < 50){
+		}else if (light < 500){
 			lightText = 'Skumring';
-		}else if (light < 600){
+		}else if (light < 12000){
 			lightText = 'Skyet';
 		}else{
 			lightText = 'Sol';
@@ -108,17 +132,27 @@ async function fetchData() {
 
         temperatureElement.innerHTML = `${temperature} °C`;
 		temperatureElement.className = `value ${temperatureClass}`;
+
         batteryElement.innerHTML = `${battery} %`;
 		batteryElement.className = `value ${batteryClass}`;
+
         batteryVoltElement.innerHTML = `${batteryVolt} v`;
 		batteryVoltElement.className = `value ${batteryVoltClass}`;
+
         windowElement.innerHTML = `${windowText}`;
 		windowElement.className = `value`;
+		windowElement.title = `${windowOpening}mm`;
+
         pressureElement.innerHTML = `${pressure} hPa`;
 		pressureElement.className = `value`;
-        lightElement.innerHTML = `${lightText}`;
 		pressureElement.className = `value`;
+
+        lightElement.innerHTML = `${lightText}`;
+        lightElement.title = `${light} lux`;
+
         timeSinceElement.textContent = `${timeSince}`;
+        timeSinceElement.title = `${lastUpdated}`;
+		titleElement.title = `${lastStatus.status}`;
     } catch (error) {
         console.error('Error fetching data:', error);
         temperatureElement.textContent = 'Temperatur: Feil';
@@ -126,12 +160,11 @@ async function fetchData() {
         timeSinceElement.textContent = 'Sist oppdatert: Feil';
     }
 }
+
 function getUrl(src, title, results, start, end){
-	const timezone=encodeURIComponent("Europe/Paris");
-	const url = `${src}?timezone=${timezone}&title=${encodeURIComponent(title)}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&results=${results}&dynamic=true&width=auto&height=auto&xaxis=&round=2`;	
-	// console.log(`url: ${url}`);
-	return url;
+	return `${src}?timezone=${timezone}&title=${encodeURIComponent(title)}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&results=${results}&dynamic=true&width=auto&height=auto&xaxis=&round=2`;	
 }
+
 function updateIframes(results, start, end) {
     const isMobile = window.innerWidth <= 768;
     iframeContainer.innerHTML = '';
@@ -272,7 +305,6 @@ document.addEventListener('DOMContentLoaded', function() {
             switch (range) {
 			case range.match(/.*days$/)?.input:
 					let days = range.substring(0, range.indexOf("-"));
-					console.log("Using " + days)
                     startDate = moment().subtract(days, 'days').startOf('day').format(format);
 					break;
                 case 'start':

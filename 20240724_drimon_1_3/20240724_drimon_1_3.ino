@@ -44,17 +44,17 @@
 
 #define DISPLAY_TIME 12000
 
-#define NIGHT_LEVEL 1
-#define DUSK_LEVEL 50
-#define SHADE_LEVEL 600
+#define NIGHT_LEVEL 5
+#define DUSK_LEVEL 500
+#define SHADE_LEVEL 12000
 
 #define WINDOW_CLOSE 80
 
 #define BATTERY_LOW 35
 
-#define SLEEP_DURATION_DUSK 300
-#define SLEEP_DURATION_DAY 300
-#define SLEEP_DURATION_NIGHT 500
+#define SLEEP_DURATION_DUSK 420
+#define SLEEP_DURATION_DAY 600
+#define SLEEP_DURATION_NIGHT 900
 
 int dispLine = 0;
 boolean SHOULD_POST = false;
@@ -118,8 +118,9 @@ void setup() {
   Serial.println("Setup...");
   esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
   if (wakeup_reason == ESP_SLEEP_WAKEUP_EXT0) {
-    Serial.println("  Woke up from deep sleep by button press");
+    SHOULD_POST = digitalRead(POST_SWITCH_PIN) == LOW;
     DISPLAY_ON = true;
+    Serial.println("  Woke up from deep sleep by button press");
   } else if (wakeup_reason == ESP_SLEEP_WAKEUP_TIMER) {
     SHOULD_POST = digitalRead(POST_SWITCH_PIN) == LOW;
     Serial.println("  Woke up from deep sleep by timer");
