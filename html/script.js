@@ -1,24 +1,25 @@
 const iframeConfigs = [
-    { src: 'https://thingspeak.com/channels/2568299/charts/1', area: '1 / 1 / 2 / 2', title: 'Temperatur' },
-    { src: 'https://thingspeak.com/channels/2568299/charts/4', area: '1 / 2 / 2 / 3', title: 'Vindusåpning' },
-    { src: 'https://thingspeak.com/channels/2568299/charts/8', area: '1 / 3 / 2 / 4', title: 'Lys' },
-    { src: 'https://thingspeak.com/channels/2584547/charts/3', area: '1 / 4 / 2 / 5', title: 'Batteri' },
+    { src: 'https://thingspeak.com/channels/2568299/charts/1', area: '1 / 1 / 2 / 3', title: 'Temperatur' },
+    { src: 'https://thingspeak.com/channels/2568299/charts/4', area: '1 / 3 / 2 / 5', title: 'Vindusåpning' },
+    { src: 'https://thingspeak.com/channels/2568299/charts/8', area: '1 / 5 / 2 / 7', title: 'Lys' },
+    { src: 'https://thingspeak.com/channels/2584547/charts/3', area: '1 / 7 / 2 / 9', title: 'Batteri' },
 
-    { src: 'https://thingspeak.com/channels/2568299/charts/7', area: '2 / 1 / 3 / 2', title: 'Lufttrykk' },
-    { src: 'https://thingspeak.com/channels/2568299/charts/2', area: '2 / 2 / 3 / 3', title: 'Luftfuktighet' },
-    { src: 'https://thingspeak.com/channels/2584547/charts/2', area: '2 / 3 / 3 / 4', title: 'Batteri' },
-    { src: 'https://thingspeak.com/channels/2584547/charts/1', area: '2 / 4 / 3 / 5', title: 'WiFi' },
+    { src: 'https://thingspeak.com/channels/2568299/charts/7', area: '2 / 1 / 3 / 3', title: 'Lufttrykk' },
+    { src: 'https://thingspeak.com/channels/2568299/charts/2', area: '2 / 3 / 3 / 5', title: 'Luftfuktighet' },
+    { src: 'https://thingspeak.com/channels/2584547/charts/2', area: '2 / 5 / 3 / 7', title: 'Batteri' },
+    { src: 'https://thingspeak.com/channels/2584547/charts/1', area: '2 / 7 / 3 / 9', title: 'WiFi' },
 
-    { src: 'https://thingspeak.com/channels/2584548/charts/6', area: '3 / 1 / 4 / 2', title: 'Fuktighet Agurk' },
-    { src: 'https://thingspeak.com/channels/2584548/charts/7', area: '3 / 2 / 4 / 3', title: 'Fuktighet Tomat' },
-    { src: 'https://thingspeak.com/channels/2584548/charts/8', area: '3 / 3 / 4 / 4', title: 'Fuktighet Paprika' },
-    { src: 'https://thingspeak.com/channels/2584548/charts/3', area: '3 / 4 / 4 / 4', shared: true, title: 'Agurk' },
-    { src: 'https://thingspeak.com/channels/2584548/charts/5', area: '3 / 4 / 4 / 4', shared: true, title: 'Paprika' },
+    { src: 'https://thingspeak.com/channels/2584548/charts/6', area: '3 / 1 / 4 / 3', title: 'Fuktighet Agurk' },
+    { src: 'https://thingspeak.com/channels/2584548/charts/7', area: '3 / 3 / 4 / 5', title: 'Fuktighet Tomat' },
+    { src: 'https://thingspeak.com/channels/2584548/charts/8', area: '3 / 5 / 4 / 7', title: 'Fuktighet Paprika' },
+    { src: 'https://thingspeak.com/channels/2584548/charts/3', area: '3 / 7 / 4 / 8', title: 'Agurk' },
+    { src: 'https://thingspeak.com/channels/2584548/charts/5', area: '3 / 8 / 4 / 9', title: 'Paprika' },
 
-    { src: 'https://thingspeak.com/channels/2584548/charts/1', area: '4 / 1 / 5 / 2', title: 'BME Temp' },
-    { src: 'https://thingspeak.com/channels/2584548/charts/2', area: '4 / 2 / 5 / 3', title: 'AHT Temp' },
-    { src: 'https://thingspeak.com/channels/2584548/charts/4', area: '4 / 3 / 5 / 4', title: 'Gulv Temp' },
-    { src: 'https://thingspeak.com/channels/2584547/charts/4', area: '4 / 4 / 5 / 5', title: 'Tid brukt' },
+    { src: 'https://thingspeak.com/channels/2584548/charts/1', area: '4 / 1 / 5 / 3', title: 'BME Temp' },
+    { src: 'https://thingspeak.com/channels/2584548/charts/2', area: '4 / 3 / 5 / 5', title: 'AHT Temp' },
+    { src: 'https://thingspeak.com/channels/2584548/charts/4', area: '4 / 5 / 5 / 7', title: 'Gulv Temp' },
+    { src: 'https://thingspeak.com/channels/2584547/charts/5', area: '4 / 7 / 5 / 8', title: 'Lys Int' },
+    { src: 'https://thingspeak.com/channels/2584547/charts/4', area: '4 / 8 / 5 / 9', title: 'Tid brukt' },
 ];
 
 const iframeContainer = document.getElementById('iframeContainer');
@@ -35,7 +36,7 @@ const timeSinceElement = document.getElementById('time-since');
 const updatedElement = document.getElementById('updated');
 const titleElement = document.getElementById('main-title');
 const format = 'YYYY-MM-DD HH:mm:ss';
-const timezone=encodeURIComponent("Europe/Paris");
+const timezone = encodeURIComponent("Europe/Paris");
 
 const startDate = moment().subtract(3, 'days').startOf('day').format(format);
 
@@ -44,40 +45,37 @@ function getURLParameter(name) {
     return urlParams.get(name);
 }
 
-function status(data){
-	return {
-		"date": data.created_at,
-		"status": data.status
-	};
+function status(data) {
+    return {
+        "date": data.created_at,
+        "status": data.status
+    };
 }
 
 async function fetchData() {
     try {
-		const promise_2 = fetch(`https://api.thingspeak.com/channels/2584548/status/last.json?timezone=${timezone}`);
-		const promise_3 = fetch(`https://api.thingspeak.com/channels/2584547/status/last.json?timezone=${timezone}`);
-		const promise_1 = fetch(`https://api.thingspeak.com/channels/2568299/feeds/last.json?timezone=${timezone}&status=true`);
+        const responses = await Promise.all([
+            fetch(`https://api.thingspeak.com/channels/2568299/feeds/last.json?timezone=${timezone}&status=true`),
+            fetch(`https://api.thingspeak.com/channels/2584548/status/last.json?timezone=${timezone}`),
+            fetch(`https://api.thingspeak.com/channels/2584547/status/last.json?timezone=${timezone}`)
+        ]);
 
-        const response_2 = await promise_2;
-        const status_2   = status(await response_2.json());
-        const response_3 = await promise_3;
-        const status_3   = status(await response_3.json());
-		
-		
-        const response = await promise_1;
-        const data = await response.json();
-		const status_1 = status(data)
+        const [data1, data2, data3] = await Promise.all(responses.map(response => response.json()));
 
-        moment.locale('nb');
-		let statusArray = [status_1, status_2, status_3];
-		let lastStatus = (statusArray.sort((a, b) => moment(b.date).diff(moment(a.date))))[0];
+        const status1 = status(data1);
+        const status2 = status(data2);
+        const status3 = status(data3);
 
-        const temperature = Math.round(data.field1 * 10) / 10;
-        const battery = Math.round(data.field6 * 10) / 10;
-        const batteryVolt = Math.round(data.field5 * 100) / 100; 
+        const statusArray = [status1, status2, status3];
+        const lastStatus = statusArray.sort((a, b) => moment(b.date).diff(moment(a.date)))[0];
 
-        const windowOpening = Math.round(data.field4);
-        const pressure = Math.round(data.field7) ;
-        const light = Math.round(data.field8) ;
+        const temperature = Math.round(data1.field1 * 10) / 10;
+        const battery = Math.round(data1.field6 * 10) / 10;
+        const batteryVolt = Math.round(data1.field5 * 100) / 100;
+
+        const windowOpening = Math.round(data1.field4);
+        const pressure = Math.round(data1.field7);
+        const light = Math.round(data1.field8);
 
         const createdAt = moment(lastStatus.date);
         const lastUpdated = createdAt.format('L LTS');
@@ -100,7 +98,7 @@ async function fetchData() {
         } else {
             batteryClass = 'ok';
         }
-		
+
         let batteryVoltClass = '';
         if (battery > 90) {
             batteryVoltClass = 'full';
@@ -111,48 +109,47 @@ async function fetchData() {
         }
 
         let windowText = '';
-		if (windowOpening < 75){
-			windowText = 'Lukket';
-		}else if (windowOpening < 100){
-			windowText = 'Glippe';
-		}else{
-			windowText = 'Åpent';
-		}
+        if (windowOpening < 75) {
+            windowText = 'Lukket';
+        } else if (windowOpening < 100) {
+            windowText = 'Glippe';
+        } else {
+            windowText = 'Åpent';
+        }
 
         let lightText = '';
-		if (light < 5){
-			lightText = 'Natt';
-		}else if (light < 500){
-			lightText = 'Skumring';
-		}else if (light < 12000){
-			lightText = 'Skyet';
-		}else{
-			lightText = 'Sol';
-		}
+        if (light < 5) {
+            lightText = 'Natt';
+        } else if (light < 500) {
+            lightText = 'Skumring';
+        } else if (light < 12000) {
+            lightText = 'Skyet';
+        } else {
+            lightText = 'Sol';
+        }
 
         temperatureElement.innerHTML = `${temperature} °C`;
-		temperatureElement.className = `value ${temperatureClass}`;
+        temperatureElement.className = `value ${temperatureClass}`;
 
         batteryElement.innerHTML = `${battery} %`;
-		batteryElement.className = `value ${batteryClass}`;
+        batteryElement.className = `value ${batteryClass}`;
 
         batteryVoltElement.innerHTML = `${batteryVolt} v`;
-		batteryVoltElement.className = `value ${batteryVoltClass}`;
+        batteryVoltElement.className = `value ${batteryVoltClass}`;
 
         windowElement.innerHTML = `${windowText}`;
-		windowElement.className = `value`;
-		windowElement.title = `${windowOpening}mm`;
+        windowElement.className = `value`;
+        windowElement.title = `${windowOpening}mm`;
 
         pressureElement.innerHTML = `${pressure} hPa`;
-		pressureElement.className = `value`;
-		pressureElement.className = `value`;
+        pressureElement.className = `value`;
 
         lightElement.innerHTML = `${lightText}`;
         lightElement.title = `${light} lux`;
 
         timeSinceElement.textContent = `${timeSince}`;
         timeSinceElement.title = `${lastUpdated}`;
-		titleElement.title = `${lastStatus.status}`;
+        titleElement.title = `${lastStatus.status}`;
     } catch (error) {
         console.error('Error fetching data:', error);
         temperatureElement.textContent = 'Temperatur: Feil';
@@ -161,69 +158,28 @@ async function fetchData() {
     }
 }
 
-function getUrl(src, title, results, start, end){
-	return `${src}?timezone=${timezone}&title=${encodeURIComponent(title)}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&results=${results}&dynamic=true&width=auto&height=auto&xaxis=&round=2`;	
+function getUrl(src, title, results, start, end) {
+    return `${src}?timezone=${timezone}&title=${encodeURIComponent(title)}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&results=${results}&dynamic=true&width=auto&height=auto&xaxis=&round=2`;
 }
 
 function updateIframes(results, start, end) {
     const isMobile = window.innerWidth <= 768;
     iframeContainer.innerHTML = '';
 
-    if (isMobile) {
-        iframeConfigs.forEach(config => {
-            const { src, title } = config;
-            const container = document.createElement('div');
-            container.classList.add('iframe-container');
+    iframeConfigs.forEach(config => {
+        const { src, title, area } = config;
+        const container = document.createElement('div');
+        container.classList.add('iframe-container');
+        container.style.gridArea = area;
+        if (isMobile) {
             container.style.height = '200px';
-
-            const iframe = document.createElement('iframe');
-            iframe.src = getUrl(src, title, results, start, end);
-
-            container.appendChild(iframe);
-            iframeContainer.appendChild(container);
-        });
-    } else {
-        const sharedCells = {};
-        iframeConfigs.forEach(config => {
-            const { area, shared, title } = config;
-            if (shared) {
-                if (!sharedCells[area]) {
-                    sharedCells[area] = [];
-                }
-                sharedCells[area].push(getUrl(config.src, title, results, start, end));
-            } else {
-                const container = document.createElement('div');
-                container.classList.add('iframe-container');
-                container.style.gridArea = area;
-
-                const iframe = document.createElement('iframe');
-                iframe.src = getUrl(config.src, title, results, start, end);
-                container.appendChild(iframe);
-                iframeContainer.appendChild(container);
-            }
-        });
-
-        // Handle shared cells
-        for (const [area, srcs] of Object.entries(sharedCells)) {
-            const container = document.createElement('div');
-            container.classList.add('iframe-container');
-            container.style.gridArea = area;
-            container.style.display = 'grid';
-            container.style.gridTemplateColumns = '1fr 1fr'; // Two columns for shared iframes
-            container.style.position = 'relative';
-
-            srcs.forEach((src, index) => {
-                const iframe = document.createElement('iframe');
-                iframe.src = `${src}`;
-                iframe.style.gridColumn = index + 1; // Place iframe in the corresponding column
-                iframe.style.width = '100%'; // Full width of the column
-                iframe.style.height = '100%'; // Full height of the container
-                container.appendChild(iframe);
-            });
-
-            iframeContainer.appendChild(container);
         }
-    }
+
+        const iframe = document.createElement('iframe');
+        iframe.src = getUrl(src, title, results, start, end);
+        container.appendChild(iframe);
+        iframeContainer.appendChild(container);
+    });
 }
 
 updateButton.addEventListener('click', () => {
@@ -239,13 +195,12 @@ resultsInput.addEventListener('keypress', (event) => {
 });
 
 // Initial load
-fetchData().then(() => {
-    const results = getURLParameter('results') || resultsInput.value || 8000;
-    const start = getURLParameter('startDate') || startDate;
-    const end = getURLParameter('endDate') || "";
-	
-    updateIframes(results, start, end);
-});
+const initialResults = getURLParameter('results') || resultsInput.value || 8000;
+const initialStart = getURLParameter('startDate') || startDate;
+const initialEnd = getURLParameter('endDate') || "";
+
+fetchData();
+updateIframes(initialResults, initialStart, initialEnd);
 
 // Update data every minute
 setInterval(fetchData, 60000);
@@ -262,18 +217,18 @@ function handleResize() {
     if (Math.abs(width - lastWidth) > 50 || Math.abs(height - lastHeight) > 50) {
         lastWidth = width;
         lastHeight = height;
-        
-	    const results = getURLParameter('results') || resultsInput.value || 8000;
-	    const start = getURLParameter('startDate') || startDate;
-	    const end = getURLParameter('endDate') || "";
-	    updateIframes(results, start, end);
+
+        const results = getURLParameter('results') || resultsInput.value || 8000;
+        const start = getURLParameter('startDate') || startDate;
+        const end = getURLParameter('endDate') || "";
+        updateIframes(results, start, end);
     }
 }
 function debounceThrottle(func, wait, immediate) {
     let timeout;
-    return function(...args) {
+    return function (...args) {
         const context = this;
-        const later = function() {
+        const later = function () {
             timeout = null;
             if (!immediate) func.apply(context, args);
         };
@@ -291,11 +246,11 @@ window.addEventListener('resize', () => {
     resizeTimeout = setTimeout(handleResize, 150);
 });
 
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     const dateLinks = document.querySelectorAll('.date-link');
 
     dateLinks.forEach(link => {
-        link.addEventListener('click', function(event) {
+        link.addEventListener('click', function (event) {
             event.preventDefault();
             const range = this.dataset.range;
             const now = moment();
@@ -303,13 +258,12 @@ document.addEventListener('DOMContentLoaded', function() {
             let endDate = '';
 
             switch (range) {
-			case range.match(/.*days$/)?.input:
-					let days = range.substring(0, range.indexOf("-"));
+                case range.match(/.*days$/)?.input:
+                    let days = range.substring(0, range.indexOf("-"));
                     startDate = moment().subtract(days, 'days').startOf('day').format(format);
-					break;
+                    break;
                 case 'start':
                     startDate = moment().startOf('year').format(format);
-                    // Do nothing, startDate and endDate will be empty
                     break;
                 case 'today':
                     startDate = moment().startOf('day').format(format);
@@ -340,7 +294,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     endDate = moment().startOf('year').format(format);
                     break;
                 case 'custom':
-                    // Custom date handling, e.g., prompt the user to enter dates
                     startDate = prompt("Startdato (YYYY-MM-DD HH:mm:ss):", "");
                     endDate = prompt("Sluttdato (YYYY-MM-DD HH:mm:ss):", "");
                     break;
