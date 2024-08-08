@@ -14,17 +14,17 @@ updateIframes(initialResults, initialStart, initialEnd);
 // Update data every minute
 setInterval(fetchData, 60000);
 
-document.getElementById('updateButton').addEventListener('click', () => {
-    const results = resultsInput.value || 8000;
-    updateIframes(results);
-});
-
+document.getElementById('updateButton').addEventListener('click', updateResults);
 resultsInput.addEventListener('keypress', (event) => {
     if (event.key === 'Enter') {
-        const results = resultsInput.value || 8000;
-        updateIframes(results);
+        updateResults();
     }
 });
+
+function updateResults() {
+    const results = resultsInput.value || 8000;
+    updateIframes(results);
+}
 
 let lastWidth = window.innerWidth;
 let lastHeight = window.innerHeight;
@@ -118,4 +118,3 @@ function getDateRange(range) {
 function getURLParameter(name) {
     return new URLSearchParams(window.location.search).get(name);
 }
-

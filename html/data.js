@@ -1,4 +1,3 @@
-
 const elements = {
     temperature: document.getElementById('temperature'),
     battery: document.getElementById('battery'),
