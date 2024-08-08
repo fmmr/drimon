@@ -9,6 +9,8 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/locale/nb.min.js"></script>
+    <script src="data.js" defer></script>
+    <script src="iframes.js" defer></script>
     <script src="script.js" defer></script>
 </head>
 <body>
@@ -25,14 +27,14 @@
         </div>
         <div class="date-links">
             <a href="#" class="date-link" data-range="today">dag</a>
-            <a href="#" class="date-link" data-range="yesterday">dag-1</a>
             <a href="#" class="date-link" data-range="1-days">2dag</a>
             <a href="#" class="date-link" data-range="2-days">3dag</a>
             <a href="#" class="date-link" data-range="6-days">7dag</a>
-            <a href="#" class="date-link" data-range="start">start</a>
+            <a href="#" class="date-link" data-range="yesterday">i går</a>
             <a href="#" class="date-link" data-range="this-week">uke</a>
-            <a href="#" class="date-link" data-range="last-week">uke-1</a>
+            <a href="#" class="date-link" data-range="last-week">frg uke</a>
             <a href="#" class="date-link" data-range="this-month">mnd</a>
+            <a href="#" class="date-link" data-range="start">start</a>
         </div>
         <div class="search-container">
             <input type="number" id="resultsInput" placeholder="Results" min="1">

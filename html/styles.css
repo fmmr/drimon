@@ -107,6 +107,10 @@ body {
     color: orange;
 }
 
+.bat-low {
+    color: red;
+}
+
 .date-links {
     display: flex;
     flex-wrap: wrap;
