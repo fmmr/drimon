@@ -47,11 +47,14 @@ TODO: describe
 
 ## Monitoring the greenhouse (Summer of 2024)
 ### custom PCB
-TODO: v1 and v2 - process/price.  errors/bugs
+TODO: v1 and v2 - process/price.  errors/bugs. v1.0/1.1
+[v 1.0](https://aisler.net/p/QGJVZVVV)
+[v 1.1](https://aisler.net/p/GKWHNKOD)
+Changes I want to make: smaller. fix missing connection.  fewer I²C connections (used + 2). no 1-wire. text visible.  more JCT connectors instead of pins. 38 pin esp32?
 ### casing
-TODO: biltema assormtebox 
+TODO: biltema assortmentbox 
 ### sensors
-#### List of sensors
+#### List of Components
 TODO: add all components
 <table>
 	<thead>
@@ -66,15 +69,76 @@ TODO: add all components
 </thead>
 <tbody>
   <tr>
+    <td class="tg-0lax">ESP32</td>
+    <td class="tg-0pky">Microcontroller</td>
+    <td class="tg-0pky">A feature-rich MCU with integrated Wi-Fi and Bluetooth connectivity for a wide-range of applications.</td>
+    <td class="tg-0pky"></td>
+    <td class="tg-0pky"><ul>
+		<li><a href="https://en.wikipedia.org/wiki/ESP32">Wikipedia</a></li>
+		<li><a href="https://www.espressif.com/en/products/socs/esp32">Espressif</a></li>
+	</ul></td>
+    <td class="tg-0pky"><ul><li><a href="https://www.aliexpress.com/item/1005006422498371.html">AliExpress</a></td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>Solar Panel</td>
+    <td></td>
+    <td></td>
+    <td class="tg-0pky"><ul>
+		<li><a href=""></a></li>
+	</ul></td>
+    <td class="tg-0pky"><ul>
+		<li><a href=""></a></li>
+	</ul></td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>Battery Charger</td>
+    <td></td>
+    <td></td>
+    <td class="tg-0pky"><ul>
+		<li><a href=""></a></li>
+	</ul></td>
+    <td class="tg-0pky"><ul>
+		<li><a href=""></a></li>
+	</ul></td>
+  </tr>
+  <tr>
+    <td></td>
+    <td>Battery Gauge</td>
+    <td></td>
+    <td></td>
+    <td class="tg-0pky"><ul>
+		<li><a href=""></a></li>
+	</ul></td>
+    <td class="tg-0pky"><ul>
+		<li><a href=""></a></li>
+	</ul></td>
+  </tr>
+  <tr>
     <td class="tg-0lax">BH1750</td>
     <td class="tg-0pky">Lightsensor</td>
-    <td class="tg-0pky">Measures ambient light in lux</td>
+    <td class="tg-0pky">Measures ambient light in lux.</td>
     <td class="tg-0pky">I²C</td>
     <td class="tg-0pky"><ul>
 		<li><a href="https://github.com/claws/BH1750">Arduino Library</a></li>
-		<li><a href="https://randomnerdtutorials.com/esp32-bh1750-ambient-light-sensor/">Random Nerd Tutorials</a>
+		<li><a href="https://randomnerdtutorials.com/esp32-bh1750-ambient-light-sensor/">Random Nerd Tutorials</a></li>
 	</ul></td>
     <td class="tg-0pky"><ul><li><a href="https://www.aliexpress.com/item/1005006794832418.html">AliExpress</a></td>
+  </tr>
+  <tr>
+    <td>VL53L0X </td>
+    <td>Time of Flight Distance Sensor</td>
+    <td>Measures distance in mm.</td>
+    <td class="tg-0pky">I²C</td>
+    <td class="tg-0pky"><ul>
+		<li><a href="https://github.com/pololu/vl53l0x-arduino">Arduino Library</a></li>
+		<li><a href="https://www.electronicwings.com/esp32/vl53l0x-sensor-interfacing-with-esp32">Electronic Wings</a></li>
+		<li><a href="https://www.instructables.com/VL53L0X-Laser-Ranging-Sensor-Test/">Instructables</a></li>
+	</ul></td>
+    <td class="tg-0pky"><ul>
+		<li><a href="https://www.aliexpress.com/item/1005006177829793.html">AliExpress</a></li>
+	</ul></td>
   </tr>
   <!--
   <tr>
@@ -84,7 +148,7 @@ TODO: add all components
     <td></td>
     <td class="tg-0pky"><ul>
 		<li><a href=""></a></li>
-		<li><a href=""></a>
+		<li><a href=""></a></li>
 	</ul></td>
     <td class="tg-0pky"><ul>
 		<li><a href=""></a></li>
