@@ -83,7 +83,7 @@ function getBatteryClassName(battery) {
 }
 
 function getWindowText(windowOpening) {
-    if (windowOpening < 75) return 'SLukket';
+    if (windowOpening < 75) return 'Lukket';
     if (windowOpening < 100) return 'Glippe';
     return 'Åpent';
 }
