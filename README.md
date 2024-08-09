@@ -1,6 +1,8 @@
 # DriMon
 Monitoring our greenhouse at Rødtangen, Norway
 
+This README is work-in-progress and consists of a lot of TODOs and notes.  I hope I'll get around to add content.
+
 ## Links
 * [Main site with charts and data](https://rodland.no/drimon/)
 * [Thingspeak Channel 1](https://thingspeak.com/channels/2568299)
@@ -66,13 +68,13 @@ TODO: add all components
   <tr>
     <td class="tg-0lax">BH1750</td>
     <td class="tg-0pky">Lightsensor</td>
-    <td class="tg-0pky">Measures light in lux.  Typically will not measure anything below 0.5lux or higgher than ca 50000lux.</td>
+    <td class="tg-0pky">Measures ambient light in lux</td>
     <td class="tg-0pky">I²C</td>
     <td class="tg-0pky"><ul>
 		<li><a href="https://github.com/claws/BH1750">Arduino Library</a></li>
-		<li><a href=""></a>
+		<li><a href="https://randomnerdtutorials.com/esp32-bh1750-ambient-light-sensor/">Random Nerd Tutorials</a>
 	</ul></td>
-    <td class="tg-0pky"><ul><li><a href=""></a></li><li></td>
+    <td class="tg-0pky"><ul><li><a href="https://www.aliexpress.com/item/1005006794832418.html">AliExpress</a></li><li></td>
   </tr>
   <tr>
     <td></td>
@@ -87,7 +89,6 @@ TODO: add all components
   </tr>
 </tbody>
 </table>
-
 ### esp32
 TODO: many GPIOas, integrated wifi (and bluetooth)
 ### interfaces 
@@ -106,6 +107,7 @@ TODO: how to measure the "openess"?
 TODO: wifi 50 meter outdoor through walls.  Hacked antenna on a 30-pin
 ### light sensor
 TODO: tried 3 different locations - ended up with hald-dome diffuser in roof top.
+Typically will not measure anything below 0.5lux or higgher than ca 50000lux.
 ### Thingspeak
 TODO: describe
 
