@@ -4,7 +4,8 @@ Monitoring our greenhouse at Rødtangen, Norway
 This README is work-in-progress and consists of a lot of TODOs and notes.  I hope I'll get around to add content.
 
 ## Links
-* [Main site with charts and data](https://rodland.no/drimon/)
+* [Charts and data (rodland.no)](https://rodland.no/drimon/)
+* [Charts and data (github)](http://drivhus.rodland.no/)
 * [Thingspeak Channel 1](https://thingspeak.com/channels/2568299)
 * [Thingspeak Channel 2](https://thingspeak.com/channels/2584548)
 * [Thingspeak Channel 3](https://thingspeak.com/channels/2584547)
@@ -59,7 +60,7 @@ TODO: add all components
 <table>
 	<thead>
   <tr>
-    <th>ID</th>
+    <th>SKU/ID</th>
     <th>Component</th>
     <th>Description</th>
     <th>Protocol</th>
@@ -80,39 +81,41 @@ TODO: add all components
     <td class="tg-0pky"><ul><li><a href="https://www.aliexpress.com/item/1005006422498371.html">AliExpress</a></td>
   </tr>
   <tr>
-    <td></td>
+    <td>FIT0601</td>
     <td>Solar Panel</td>
-    <td></td>
+    <td>Monocrystalline Solar Panel (5V 1A)</td>
     <td></td>
     <td class="tg-0pky"><ul>
-		<li><a href=""></a></li>
+		<li><a href="https://www.dfrobot.com/product-1774.html">Product page</a></li>
 	</ul></td>
     <td class="tg-0pky"><ul>
-		<li><a href=""></a></li>
+		<li><a href="https://www.dfrobot.com/product-1774.html">DFRobot</a></li>
 	</ul></td>
   </tr>
   <tr>
-    <td></td>
+    <td>DFR0559</td>
     <td>Battery Charger</td>
-    <td></td>
-    <td></td>
+    <td>Solar Power Manager 5V</td>
+    <td>Charges Li-ion/LiPo batteries</td>
     <td class="tg-0pky"><ul>
-		<li><a href=""></a></li>
+		<li><a href="https://www.dfrobot.com/product-1712.html">Product page</a></li>
+		<li><a href="https://wiki.dfrobot.com/Solar_Power_Manager_5V_SKU__DFR0559">Product wiki</a></li>
 	</ul></td>
     <td class="tg-0pky"><ul>
-		<li><a href=""></a></li>
+		<li><a href="https://www.dfrobot.com/product-1712.html">DFRobot</a></li>
 	</ul></td>
   </tr>
   <tr>
-    <td></td>
+    <td>DFR0563</td>
     <td>Battery Gauge</td>
-    <td></td>
-    <td></td>
+    <td>Gravity: I2C 3.7V Li Battery Fuel Gauge</td>
+    <td>Measures voltage and remaining percentage of battery.  Also includes low battery power alert interrupt (not used).</td>
     <td class="tg-0pky"><ul>
-		<li><a href=""></a></li>
+		<li><a href="https://www.dfrobot.com/product-1734.html">Product page</a></li>
+		<li><a href="https://wiki.dfrobot.com/Gravity__3.7V_Li_Battery_Fuel_Gauge_SKU__DFR0563">Product wiki</a></li>
 	</ul></td>
     <td class="tg-0pky"><ul>
-		<li><a href=""></a></li>
+		<li><a href="https://www.dfrobot.com/product-1734.html">DFRobot</a></li>
 	</ul></td>
   </tr>
   <tr>
@@ -177,6 +180,8 @@ TODO: wifi 50 meter outdoor through walls.  Hacked antenna on a 30-pin
 ### light sensor
 TODO: tried 3 different locations - ended up with hald-dome diffuser in roof top.
 Typically will not measure anything below 0.5lux or higgher than ca 50000lux.
+### battery gauge
+hm - reverse voltage
 ### Thingspeak
 TODO: describe
 
