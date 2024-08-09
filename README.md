@@ -1,14 +1,3 @@
-<style type="text/css">
-.tg  {border-collapse:collapse;border-spacing:0;}
-.tg td{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-  overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg th{border-color:black;border-style:solid;border-width:1px;font-family:Arial, sans-serif;font-size:14px;
-  font-weight:normal;overflow:hidden;padding:10px 5px;word-break:normal;}
-.tg .tg-0lax{text-align:left;vertical-align:top}
-.tg .tg-0pky{border-color:inherit;text-align:left;vertical-align:top}
-</style>
-
-
 # DriMon
 Monitoring our greenhouse at Rødtangen, Norway
 
@@ -62,15 +51,15 @@ TODO: biltema assormtebox
 ### sensors
 #### List of sensors
 TODO: add all components
-<table class="tg">
-<thead>
+<table>
+	<thead>
   <tr>
-    <th class="tg-0lax">ID</th>
-    <th class="tg-0pky">Component</th>
-    <th class="tg-0pky">Description</th>
-    <th class="tg-0pky">Protocol</th>
-    <th class="tg-0pky">Links</th>
-    <th class="tg-0pky">Buy</th>
+    <th>ID</th>
+    <th>Component</th>
+    <th>Description</th>
+    <th>Protocol</th>
+    <th>Links</th>
+    <th>Buy</th>
   </tr>
 </thead>
 <tbody>
@@ -79,16 +68,22 @@ TODO: add all components
     <td class="tg-0pky">Lightsensor</td>
     <td class="tg-0pky">Measures light in lux.  Typically will not measure anything below 0.5lux or higgher than ca 50000lux.</td>
     <td class="tg-0pky">I²C</td>
-    <td class="tg-0pky"><ul><li>[Arduino Library](https://github.com/claws/BH1750)</li></ul></td>
-    <td class="tg-0pky"><ul><li>[]()</li><li></td>
+    <td class="tg-0pky"><ul>
+		<li><a href="https://github.com/claws/BH1750">Arduino Library</a></li>
+		<li><a href=""></a>
+	</ul></td>
+    <td class="tg-0pky"><ul><li><a href=""></a></li><li></td>
   </tr>
   <tr>
-    <td class="tg-0lax"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"></td>
-    <td class="tg-0pky"><ul><li>[]()</li><li>[]()</li></ul></td>
-    <td class="tg-0pky"><ul><li>[]()</li><li></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td></td>
+    <td class="tg-0pky"><ul>
+		<li><a href=""></a></li>
+		<li><a href=""></a>
+	</ul></td>
+    <td class="tg-0pky"><ul><li><a href=""></a></li><li></td>
   </tr>
 </tbody>
 </table>
@@ -124,6 +119,5 @@ ideas on actually controlling:
 - light
 
 
-
-## Other Links
+## Other Links/Inspiration
 TODO: add
