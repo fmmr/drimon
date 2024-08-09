@@ -4,7 +4,7 @@ Monitoring our greenhouse at Rødtangen, Norway
 This README is work-in-progress and consists of a lot of TODOs and notes.  I hope I'll get around to add content.
 
 ## Links
-* [Charts and data (github)](https://drivmon.rodland.no/)
+* [Charts and data (github)](https://drimon.rodland.no/)
 * [Thingspeak Channel 1](https://thingspeak.com/channels/2568299)
 * [Thingspeak Channel 2](https://thingspeak.com/channels/2584548)
 * [Thingspeak Channel 3](https://thingspeak.com/channels/2584547)
