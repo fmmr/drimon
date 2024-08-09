@@ -74,8 +74,9 @@ TODO: add all components
 		<li><a href="https://github.com/claws/BH1750">Arduino Library</a></li>
 		<li><a href="https://randomnerdtutorials.com/esp32-bh1750-ambient-light-sensor/">Random Nerd Tutorials</a>
 	</ul></td>
-    <td class="tg-0pky"><ul><li><a href="https://www.aliexpress.com/item/1005006794832418.html">AliExpress</a></li><li></td>
+    <td class="tg-0pky"><ul><li><a href="https://www.aliexpress.com/item/1005006794832418.html">AliExpress</a></td>
   </tr>
+  <!--
   <tr>
     <td></td>
     <td></td>
@@ -85,10 +86,14 @@ TODO: add all components
 		<li><a href=""></a></li>
 		<li><a href=""></a>
 	</ul></td>
-    <td class="tg-0pky"><ul><li><a href=""></a></li><li></td>
+    <td class="tg-0pky"><ul>
+		<li><a href=""></a></li>
+	</ul></td>
   </tr>
+  -->
 </tbody>
 </table>
+
 ### esp32
 TODO: many GPIOas, integrated wifi (and bluetooth)
 ### interfaces 
