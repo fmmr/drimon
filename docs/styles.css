@@ -111,7 +111,7 @@ body {
     color: red;
 }
 
-.date-links {
+.date-links, .links {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
@@ -121,7 +121,7 @@ body {
     margin-right: 20px;
 }
 
-.date-link {
+.date-link, .link {
     display: inline-block;
     text-decoration: none;
     color: #007bff;
@@ -152,7 +152,7 @@ body {
         margin-left: 0px;
     }
 
-    .date-links {
+    .date-links, .links {
         margin-left: 0px;
         margin-right: 0px;
     }
