@@ -70,8 +70,8 @@ function getDateRange(range) {
     let startDate = '';
     let endDate = '';
 
-    if (range.match(/.*days$/)) {
-        let days = range.substring(0, range.indexOf("-"));
+    if (range.match(/^\d+$/)) {
+        let days = range;
         startDate = moment().subtract(days, 'days').startOf('day').format(format);
     } else {
         switch (range) {

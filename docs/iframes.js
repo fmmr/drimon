@@ -21,6 +21,7 @@ const iframeConfigs = [
 ];
 
 function getUrl(src, title, results, start, end) {
+	// TODO add logic for dynamic=true -> no need if enddate is set.
     return `${src}?timezone=${timezone}&title=${encodeURIComponent(title)}&start=${encodeURIComponent(start)}&end=${encodeURIComponent(end)}&results=${results}&dynamic=true&width=auto&height=auto&xaxis=&round=2`;
 }
 
