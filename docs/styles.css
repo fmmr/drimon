@@ -87,28 +87,20 @@ body {
     border: none;
 }
 
-.high {
+.high, .bat-low {
     color: red;
 }
 
-.low {
+.low, .pressure-low {
     color: blue;
 }
 
-.norm {
-    color: green;
-}
-
-.full {
+.norm, .full, .pressure-high {
     color: green;
 }
 
 .ok {
     color: orange;
-}
-
-.bat-low {
-    color: red;
 }
 
 .date-links, .links {

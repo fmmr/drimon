@@ -47,7 +47,7 @@ async function fetchData() {
         elements.window.title = `${windowOpening}mm`;
 
         elements.pressure.innerHTML = `${pressure} hPa`;
-        elements.pressure.className = `value`;
+        elements.pressure.className = `value ${getPressureClassName(pressure)}`;
 
         elements.light.innerHTML = `${getLightText(light)}`;
         elements.light.title = `${light} lux`;
@@ -80,6 +80,12 @@ function getBatteryClassName(battery) {
     if (battery > 80) return 'full';
     if (battery < 10) return 'bat-low';
     return 'ok';
+}
+
+function getPressureClassName(pressure) {
+    if (pressure > 1010) return 'pressure-high';
+    if (battery < 1000) return 'pressure-low';
+    return '';
 }
 
 function getWindowText(windowOpening) {
