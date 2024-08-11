@@ -77,7 +77,7 @@ function getClassName(value, lowThreshold, highThreshold) {
 }
 
 function getBatteryClassName(battery) {
-    if (battery > 90) return 'full';
+    if (battery > 80) return 'full';
     if (battery < 10) return 'bat-low';
     return 'ok';
 }
