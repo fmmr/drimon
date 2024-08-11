@@ -91,6 +91,6 @@ function getWindowText(windowOpening) {
 function getLightText(light) {
     if (light < 5) return 'Natt';
     if (light < 500) return 'Skumring';
-    if (light < 12000) return 'Skyet';
+    if (light < 9000) return 'Skyet';
     return 'Sol';
 }
