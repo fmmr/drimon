@@ -9,6 +9,7 @@ const initialStart = getURLParameter('startDate') || startDate;
 const initialEnd = getURLParameter('endDate') || "";
 
 fetchData();
+fetchMetData();
 updateIframes(initialResults, initialStart, initialEnd);
 
 // Update data every minute

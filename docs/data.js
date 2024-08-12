@@ -14,11 +14,10 @@ async function fetchData() {
         const responses = await Promise.all([
             fetch(`https://api.thingspeak.com/channels/2568299/feeds/last.json?timezone=${timezone}&status=true`),
             fetch(`https://api.thingspeak.com/channels/2584548/status/last.json?timezone=${timezone}`),
-            fetch(`https://api.thingspeak.com/channels/2584547/status/last.json?timezone=${timezone}`)
+	        fetch(`https://api.thingspeak.com/channels/2584547/status/last.json?timezone=${timezone}`),
         ]);
 
         const [data1, data2, data3] = await Promise.all(responses.map(response => response.json()));
-
         const statuses = [status(data1), status(data2), status(data3)];
         const lastStatus = statuses.sort((a, b) => moment(b.date).diff(moment(a.date)))[0];
 

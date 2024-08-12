@@ -87,25 +87,11 @@ body {
     border: none;
 }
 
-.high, .bat-low {
-    color: red;
-}
 
-.low, .pressure-low {
-    color: blue;
-}
-
-.norm, .full, .pressure-high {
-    color: green;
-}
-
-.ok {
-    color: orange;
-}
 
 .date-links, .links {
-    display: flex;
-    flex-wrap: wrap;
+    display: flex !important;
+    flex-wrap: wrap !important;
     gap: 10px;
     font-size: 0.8em;
     white-space: normal;
@@ -114,14 +100,26 @@ body {
 }
 
 .date-link, .link {
-    display: inline-block;
+    display: inline-block !important;
     text-decoration: none;
     color: #007bff;
     cursor: pointer;
 }
 
-.date-link:hover {
-    text-decoration: underline;
+.norm, .full, .pressure-high {
+    color: green;
+}
+
+.high, .bat-low {
+    color: red;
+}
+
+.low, .pressure-low {
+    color: blue;
+}
+
+.ok {
+    color: orange;
 }
 
 @media (max-width: 768px) {
