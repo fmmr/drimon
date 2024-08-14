@@ -1,6 +1,5 @@
 #include <ThingSpeak.h>
 
-WiFiClient client;
 void postThingSpeak(SensorData& data) {
   digitalWrite(BLUE_LED_PIN, HIGH);
   ThingSpeak.begin(client);
@@ -19,12 +18,12 @@ void postThingSpeak(SensorData& data) {
   // Set the status
   ThingSpeak.setStatus(data.status);
 
-  Serial.println("  Attempting to update ThingSpeak Channel 1...");
+  Serial.println("  Thingspeak: Attempting to update ThingSpeak Channel 1...");
   result = ThingSpeak.writeFields(THINGSPEAK_1_CHANNEL, THINGSPEAK_1_API);
   if (result == 200) {
-    Serial.println("  Channel 1 update successful.");
+    Serial.println("  Thingspeak: Channel 1 update successful.");
   } else {
-    Serial.println("Problem updating channel . HTTP error code " + String(result));
+    Serial.println("  Thingspeak: Problem updating channel 1. HTTP error code " + String(result));
     flashLED(RED_LED_PIN, 2);
   }
 
@@ -40,12 +39,12 @@ void postThingSpeak(SensorData& data) {
   // Set the status
   ThingSpeak.setStatus(data.status);
 
-  Serial.println("  Attempting to update ThingSpeak Channel 2...");
+  Serial.println("  Thingspeak: Attempting to update ThingSpeak Channel 2...");
   result = ThingSpeak.writeFields(THINGSPEAK_2_CHANNEL, THINGSPEAK_2_API);
   if (result == 200) {
-    Serial.println("  Channel 2 update successful.");
+    Serial.println("  Thingspeak: Channel 2 update successful.");
   } else {
-    Serial.println("Problem updating channel. HTTP error code " + String(result));
+    Serial.println("  Thingspeak: Problem updating channel 2. HTTP error code " + String(result));
     flashLED(RED_LED_PIN, 3);
   }
 
@@ -55,16 +54,24 @@ void postThingSpeak(SensorData& data) {
   ThingSpeak.setField(3, data.batteryPercentage);
   ThingSpeak.setField(4, data.timeUsed);
   ThingSpeak.setField(5, data.lux_int);
+  if (FETCHED_MET){ 
+    ThingSpeak.setField(6, data.tempDiff);
+    ThingSpeak.setField(7, data.humidityDiff);
+    ThingSpeak.setField(8, data.metTemp);
+  }
+  else{
+    Serial.println("  Thingspeak: no met data available");
+  }
 
   // Set the status
   ThingSpeak.setStatus(data.status);
 
-  Serial.println("  Attempting to update ThingSpeak Channel 3...");
+  Serial.println("  Thingspeak: Attempting to update ThingSpeak Channel 3...");
   result = ThingSpeak.writeFields(THINGSPEAK_3_CHANNEL, THINGSPEAK_3_API);
   if (result == 200) {
-    Serial.println("  Channel 3 update successful.");
+    Serial.println("  Thingspeak: Channel 3 update successful.");
   } else {
-    Serial.println("Problem updating channel 3. HTTP error code " + String(result));
+    Serial.println("  Thingspeak: Problem updating channel 3. HTTP error code " + String(result));
     flashLED(RED_LED_PIN, 4);
   }
 

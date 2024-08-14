@@ -18,6 +18,8 @@ struct SensorData {
   float termo2;
   float termo3;
 
+  float soilTerm;
+
   int rssi;
 
   float batteryVoltage;
@@ -29,6 +31,11 @@ struct SensorData {
 
   float temperature;
   float humidity;
+
+  float metTemp;
+  float metHumidity;
+  float tempDiff;
+  float humidityDiff;
 
   String status;
   long timeUsed;

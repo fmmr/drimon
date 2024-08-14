@@ -57,9 +57,10 @@
 #define SLEEP_DURATION_NIGHT 900
 
 int dispLine = 0;
-boolean SHOULD_POST = false;
+bool SHOULD_POST = false;
 bool DISPLAY_ON = false;
-boolean TOF_OK = false;
+bool FETCHED_MET = false;
+bool TOF_OK = false;
 
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
 LCD_I2C lcd(0x27, 16, 2);
@@ -74,6 +75,7 @@ DeviceAddress termo2 = { 0x28, 0x0E, 0xE5, 0x6A, 0x00, 0x00, 0x00, 0x8E };  // m
 DeviceAddress termo3 = { 0x28, 0xBE, 0x62, 0x6B, 0x00, 0x00, 0x00, 0x9C };  // farthest
 OneWire oneWire(ONE_WIRE_PIN);
 DallasTemperature sensors(&oneWire);
+WiFiClient client;
 
 
 
@@ -150,6 +152,12 @@ void setup() {
   dispPrint("Measuring...");
   SensorData data = measure(start);
   Serial.println("Measuring: done");
+
+  Serial.println("Fetching met data...");
+  dispPrint("Fetching met data...");
+  fetchMet(data);
+  Serial.println("Fetching met data: done...");
+
   dispPrint("Done!");
 
   Serial.println("Displaying data...");
@@ -161,6 +169,14 @@ void setup() {
   if (SHOULD_POST) {
     postThingSpeak(data);
   }
+  else{
+    Serial.println("NOT Posting data to ThingSpeak...");
+  }
+
+  flashLED(GREEN_LED_PIN, 2);
+
+  beep(40);
+  beep(40);
 
   int sleepDuration = getSleepDuration(data.lux);
   enterDeepSleep(sleepDuration);

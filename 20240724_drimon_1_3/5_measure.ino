@@ -107,6 +107,7 @@ SensorData measure(long start) {
   data.termo1 = total_termo1 / NUM_READINGS;
   data.termo2 = total_termo2 / NUM_READINGS;
   data.termo3 = total_termo3 / NUM_READINGS;
+  data.soilTerm = (total_termo1 + total_termo3) / 2;
 
   data.batteryVoltage = total_batteryVoltage / NUM_READINGS;
   data.batteryPercentage = total_batteryPercentage / NUM_READINGS;
@@ -124,9 +125,8 @@ SensorData measure(long start) {
   data.pressureInt = (int)data.pressure;
 
   data.rssi = total_rssi / NUM_READINGS;
-
   data.status = status(data);
-  data.timeUsed = millis() - start;
 
+  data.timeUsed = millis() - start;
   return data;
 }
