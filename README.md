@@ -181,7 +181,14 @@ TODO: tried 3 different locations - ended up with hald-dome diffuser in roof top
 Typically will not measure anything below 0.5lux or higgher than ca 50000lux.
 ### battery gauge
 hm - reverse voltage
-### Thingspeak
+### thingspeak
+TODO: describe
+### main chart page
+#### iframes
+TODO: describe
+#### data
+TODO: describe
+#### met.no
 TODO: describe
 
 ## Ideas and Future
