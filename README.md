@@ -1,4 +1,6 @@
 # DriMon
+![logo](/docs/drimon.webp)
+
 Monitoring our greenhouse at Rødtangen, Norway
 
 This README is work-in-progress and consists of a lot of TODOs and notes.  I hope I'll get around to add content.
