@@ -153,10 +153,10 @@ void setup() {
   SensorData data = measure(start);
   Serial.println("Measuring: done");
 
-  Serial.println("Fetching met data...");
-  dispPrint("Fetching met data...");
-  fetchMet(data);
-  Serial.println("Fetching met data: done...");
+  // Serial.println("Fetching met data...");
+  // dispPrint("Fetching met data...");
+  // fetchMet(data);
+  // Serial.println("Fetching met data: done...");
 
   dispPrint("Done!");
 
@@ -174,7 +174,6 @@ void setup() {
   }
 
   flashLED(GREEN_LED_PIN, 2);
-
   beep(40);
   beep(40);
 

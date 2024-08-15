@@ -14,7 +14,8 @@ void fetchMet(SensorData& data) {
     //Initializing an HTTPS communication using the secure client
     Serial.println("  [met.no] begin ...");
     if (https.begin(*secureClient, metUrl)) {  // HTTPS
-      https.setTimeout(3);  // hm - this does not work very well....  soem say it1s in second - but can ONLY be set AFTER connecting - so....
+      https.setConnectTimeout(5);
+      https.setTimeout(10);  // hm - this does not work very well....  some say it's in second - but can ONLY be set AFTER connecting - so....
       https.addHeader("User-Agent", "drimon: https://drimon.rodland.no/");
       // start connection and send HTTP header
       Serial.println("  [met.no] GET ...");
