@@ -2,7 +2,7 @@
 
 # DriMon
 
-![logo](/docs/logos/drimon.webp)
+![logo](/docs/logos/1_1000x550.webp)
 
 Monitoring our greenhouse at Rødtangen, Norway
 
