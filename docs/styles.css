@@ -1,167 +1,181 @@
 body {
-    margin: 0;
-    padding: 0;
-    font-family: Arial, sans-serif;
-    overflow-x: hidden;
+	margin: 0;
+	padding: 0;
+	font-family: Arial, sans-serif;
+	overflow-x: hidden;
+}
+
+#chart-container {
+	width: 425px;
+	height: 235px;
+	display: block;
+	position: absolute;
+	bottom: 0;
+	top: 0;
+	left: 0;
+	right: 0;
+	margin: 5px 15px 15px 0;
+	overflow: hidden;
 }
 
 .container {
-    padding: 0;
-    margin: 0;
-    width: 100vw;
-    height: 100vh;
-    box-sizing: border-box;
+	padding: 0;
+	margin: 0;
+	width: 100vw;
+	height: 100vh;
+	box-sizing: border-box;
 }
 
 .compact-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    padding: 10px;
-    background-color: #f1f1f1;
-    border-bottom: 1px solid #ddd;
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	padding: 10px;
+	background-color: #f1f1f1;
+	border-bottom: 1px solid #ddd;
 }
 
 .title {
-    font-size: 1.8em;
-    flex: 0 1 auto;
-    margin-right: 20px;
+	font-size: 1.8em;
+	flex: 0 1 auto;
+	margin-right: 20px;
 }
 
 .data-points {
-    font-size: 1.1em;
-    display: flex;
-    flex-wrap: wrap;
-    flex: 1 1 auto;
-    gap: 15px;
+	font-size: 1.1em;
+	display: flex;
+	flex-wrap: wrap;
+	flex: 1 1 auto;
+	gap: 15px;
 }
 
 .data-point {
-    white-space: nowrap;
+	white-space: nowrap;
 }
 
 .search-container {
-    display: flex;
-    align-items: center;
-    gap: 5px;
+	display: flex;
+	align-items: center;
+	gap: 5px;
 }
 
 #resultsInput {
-    max-width: 80px;
-    padding: 5px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
+	max-width: 80px;
+	padding: 5px;
+	border: 1px solid #ccc;
+	border-radius: 5px;
 }
 
 #updateButton {
-    padding: 5px 10px;
-    border: none;
-    border-radius: 5px;
-    background-color: #007bff;
-    color: white;
-    cursor: pointer;
+	padding: 5px 10px;
+	border: none;
+	border-radius: 5px;
+	background-color: #007bff;
+	color: white;
+	cursor: pointer;
 }
 
 #updateButton:hover {
-    background-color: #0056b3;
+	background-color: #0056b3;
 }
 
 #iframeContainer {
-    display: grid;
-    grid-template-columns: repeat(8, 1fr);
-    grid-template-rows: repeat(4, 1fr);
-    gap: 5px;
-    height: calc(100vh - 50px);
-    overflow: auto;
-    padding: 0 10px;
+	display: grid;
+	grid-template-columns: repeat(8, 1fr);
+	grid-template-rows: repeat(4, 1fr);
+	gap: 5px;
+	height: calc(100vh - 50px);
+	overflow: auto;
+	padding: 0 10px;
 }
 
 .iframe-container {
-    background-color: #f8f9fa;
-    overflow: hidden;
+	background-color: #f8f9fa;
+	overflow: hidden;
 }
 
 .iframe-container iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
+	width: 100%;
+	height: 100%;
+	border: none;
 }
 
 
 
 .date-links, .links {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    gap: 10px;
-    font-size: 0.8em;
-    white-space: normal;
-    margin-left: 20px;
-    margin-right: 20px;
+	display: flex !important;
+	flex-wrap: wrap !important;
+	gap: 10px;
+	font-size: 0.8em;
+	white-space: normal;
+	margin-left: 20px;
+	margin-right: 20px;
 }
 
 .date-link, .link {
-    display: inline-block !important;
-    text-decoration: none;
-    color: #007bff;
-    cursor: pointer;
+	display: inline-block !important;
+	text-decoration: none;
+	color: #007bff;
+	cursor: pointer;
 }
 
 .norm, .full, .pressure-high {
-    color: green;
+	color: green;
 }
 
 .high, .bat-low {
-    color: red;
+	color: red;
 }
 
 .low, .pressure-low {
-    color: blue;
+	color: blue;
 }
 
 .ok {
-    color: orange;
+	color: orange;
 }
 
 @media (max-width: 768px) {
-    #iframeContainer {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        height: auto;
-    }
+	#iframeContainer {
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		height: auto;
+	}
 
-    .iframe-container {
-        height: 200px;
-    }
+	.iframe-container {
+		height: 200px;
+	}
 
-    body {
-        overflow-y: auto;
-    }
+	body {
+		overflow-y: auto;
+	}
 
-    .data-point {
-        margin-left: 0px;
-    }
+	.data-point {
+		margin-left: 0px;
+	}
 
-    .date-links, .links {
-        margin-left: 0px;
-        margin-right: 0px;
-    }
+	.date-links, .links {
+		margin-left: 0px;
+		margin-right: 0px;
+	}
 
-    #resultsInput, #updateButton {
-        display: none;
-    }
+	#resultsInput, #updateButton {
+		display: none;
+	}
 
-    .compact-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
+	.compact-header {
+		flex-direction: column;
+		align-items: flex-start;
+	}
 
-    .title {
-        margin-bottom: 5px;
-        font-size: 1.2em;
-    }
+	.title {
+		margin-bottom: 5px;
+		font-size: 1.2em;
+	}
 
-    .search-container {
-        display: none;
-    }
+	.search-container {
+		display: none;
+	}
+
 }

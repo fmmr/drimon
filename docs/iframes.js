@@ -49,7 +49,6 @@ function updateIframes(results, start, end) {
 		
 		if (startDate){
 			if (start){
-				console.log("HHH");
 				maxStartDate = moment.max(moment(startDate), moment(start)).format(format);
 			}else{
 				maxStartDate = startDate;
@@ -63,8 +62,8 @@ function updateIframes(results, start, end) {
             container.style.height = '200px';
         }
 
+
         const iframe = document.createElement('iframe');
-		console.log("using date: " + maxStartDate + " for " + title)
         iframe.src = getUrl(channel, chart, title, results, maxStartDate, end);
         container.appendChild(iframe);
         iframeContainer.appendChild(container);
