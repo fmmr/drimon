@@ -27,7 +27,7 @@ async function drawChart() {
 		.attr("transform", `translate(${margin.left},${margin.top + title_height})`);
 
 	// the url to fetch data
-	const dataUrl = 'https://thingspeak.com/channels/2568299/field/1.json?&amp;offset=0&amp;timezone=Europe/Paris&amp;start=2024-08-18 00:00:00&amp;results=8000&amp;round=2';
+	const dataUrl = 'https://api.thingspeak.com/channels/2568299/field/1.json?&amp;offset=0&amp;timezone=Europe/Paris&amp;start=2024-08-18 00:00:00&amp;results=8000&amp;round=2';
 	try {
 		const response = await d3.json(dataUrl);
 		if (response == '-1') {
@@ -460,13 +460,13 @@ async function drawChart() {
 
 		$('#loader-gif').remove();
 
-		let url = 'https://thingspeak.com/channels/2568299/feed/last.json?&amp;offset=0&amp;location=true&amp;timezone=Europe/Paris&amp;start=2024-08-18 00:00:00&amp;results=8000&amp;round=2';
+		let url = 'https://api.thingspeak.com/channels/2568299/feed/last.json?&amp;offset=0&amp;location=true&amp;timezone=Europe/Paris&amp;start=2024-08-18 00:00:00&amp;results=8000&amp;round=2';
 		if ("".length > 0) {
-			url = 'https://thingspeak.com/channels/2568299/feed/last_average.json?&amp;offset=0&amp;location=true&amp;average=&amp;timezone=Europe/Paris&amp;start=2024-08-18 00:00:00&amp;results=8000&amp;round=2';
+			url = 'https://api.thingspeak.com/channels/2568299/feed/last_average.json?&amp;offset=0&amp;location=true&amp;average=&amp;timezone=Europe/Paris&amp;start=2024-08-18 00:00:00&amp;results=8000&amp;round=2';
 		} else if ("".length > 0) {
-			url = 'https://thingspeak.com/channels/2568299/feed/last_median.json?&amp;offset=0&amp;location=true&amp;median=&amp;timezone=Europe/Paris&amp;start=2024-08-18 00:00:00&amp;results=8000&amp;round=2';
+			url = 'https://api.thingspeak.com/channels/2568299/feed/last_median.json?&amp;offset=0&amp;location=true&amp;median=&amp;timezone=Europe/Paris&amp;start=2024-08-18 00:00:00&amp;results=8000&amp;round=2';
 		} else if ("".length > 0) {
-			url = 'https://thingspeak.com/channels/2568299/feed/last_sum.json?&amp;offset=0&amp;location=true&amp;sum=&amp;timezone=Europe/Paris&amp;start=2024-08-18 00:00:00&amp;results=8000&amp;round=2';
+			url = 'https://api.thingspeak.com/channels/2568299/feed/last_sum.json?&amp;offset=0&amp;location=true&amp;sum=&amp;timezone=Europe/Paris&amp;start=2024-08-18 00:00:00&amp;results=8000&amp;round=2';
 		}
 
 		if ('true' === 'true' && (''.length < 1)) {
