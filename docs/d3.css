@@ -1,0 +1,141 @@
+/* For multiple series style */
+.multichart-title {
+    text-anchor:middle;
+    font-size: 16px;
+    font-family:"Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
+    fill: #274b6d;
+}
+
+.multichart-copyright {
+    text-anchor:end;
+    fill: #D62020;
+    cursor: pointer;
+    font-size: 10px;
+    font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
+}
+
+.multichart-xaxis {
+    text-anchor: middle;
+    font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
+    fill: #4D759E;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.multichart-yaxis {
+    text-anchor: middle;
+    font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
+    fill: #4D759E;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.multichart-tooltip {
+    background-color: white;
+    border: solid;
+    border-width: 1px;
+    border-radius: 5px;
+    padding: 10px;
+    font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    max-width: 160px;
+}
+
+.multichart-line {
+    stroke-width: 1.5px;
+    fill: none;
+}
+
+.multichart-x-axis-label{
+    font-size: 11px;
+    font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
+    color: #666666;
+}
+.multichart-x-axis-label > line {
+    stroke: #C0D0E0;
+}
+.multichart-x-axis-label.domain {
+    stroke: #C0D0E0;
+}
+
+.multichart-y-axis-label{
+    font-size: 11px;
+    font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
+    color: #666666;
+}
+
+/***********************************************/
+
+/* For other chart style */
+.chart-title {
+    text-anchor: middle;
+    font-size: 16px;
+    font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
+    fill: #274b6d;
+}
+
+.chart-xaxis {
+    text-anchor: middle;
+    font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
+    fill: #4D759E;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.chart-yaxis {
+    text-anchor: middle;
+    font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
+    fill: #4D759E;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.chart-tooltip {
+    background-color: white;
+    border: solid;
+    border-width: 1px;
+    border-radius: 5px;
+    padding: 10px;
+    font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
+    font-size: 12px;
+    max-width: 160px
+}
+
+.chart-copyright {
+    text-anchor:end;
+    fill: #D62020;
+    cursor: pointer;
+    font-size: 10px;
+    font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
+}
+
+.chart-line {
+    fill: none;
+    stroke-width: 1.5px;
+}
+
+.chart-x-axis-label{
+    font-size: 11px;
+    font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
+    color: #666666;
+}
+
+.chart-y-axis-label{
+    font-size: 11px;
+    font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
+    color: #666666;
+}
+
+.chart-x-axis-label > line {
+    stroke: #C0D0E0;
+}
+.chart-x-axis-label.domain {
+    stroke: #C0D0E0;
+}
+
+.chart-y-axis-label > line {
+    stroke: #C0D0E0;
+}
+.chart-y-axis-label.domain {
+    stroke: #C0D0E0;
+}
