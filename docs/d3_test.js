@@ -1,16 +1,7 @@
-drawChart();
 
-async function drawChart() {
+async function drawChart(selector) {
 	const title_height = 16;
 	const reverse_axis_left = 15;
-	const margin = {
-			top: 10,
-			right: 20,
-			bottom: 60,
-			left: 70
-		},
-		width = $('#chart-container').width() - margin.left - margin.right,
-		height = $('#chart-container').height() - margin.top - margin.bottom - title_height;
 	const columnWidthRatio = 0.9;
 	const barWidthRatio = 0.85;
 	const splineTension = 0.8;
@@ -19,19 +10,26 @@ async function drawChart() {
 	const tickValueThreshold = 1e24;
 	let last_date;
 
+	var svg = d3.select(selector).append("svg").attr('width', 400).attr('height', 200);
+    var margin = {top: 20, right: 20, bottom: 35, left: 40};
+    var width = +svg.attr("width") - margin.left - margin.right;
+    var height = +svg.attr("height") - margin.top - margin.bottom;
+    var g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+
 	// add rectangle for chart
-	const svg = d3.select("#chart-container").append("svg")
-		.attr("width", width + margin.left + margin.right)
-		.attr("height", height + margin.top + margin.bottom + title_height)
-		.append("g")
-		.attr("transform", `translate(${margin.left},${margin.top + title_height})`);
+//	var svg = d3.select("#chart-container").append("svg")
+//		.attr("width", width + margin.left + margin.right)
+//		.attr("height", height + margin.top + margin.bottom + title_height)
+//		.append("g")
+//		.attr("transform", `translate(${margin.left},${margin.top + title_height})`);
 
 	// the url to fetch data
 	const dataUrl = 'https://api.thingspeak.com/channels/2568299/field/1.json?&amp;offset=0&amp;timezone=Europe/Paris&amp;start=2024-08-18 00:00:00&amp;results=8000&amp;round=2';
 	try {
 		const response = await d3.json(dataUrl);
 		if (response == '-1') {
-			$('#chart-container').append('This channel is not public.  To embed charts, the channel must be public or a read key must be specified.');
+			$(selector).append('This channel is not public.  To embed charts, the channel must be public or a read key must be specified.');
 		}
 		const responsedata = response.feeds;
 		let data = responsedata
@@ -168,7 +166,7 @@ async function drawChart() {
 		}
 
 		// add interactive tooltip
-		const tooltip = d3.select("#chart-container")
+		const tooltip = d3.select(selector)
 			.append("div")
 			.style("opacity", 0)
 			.attr("class", "tooltip chart-tooltip");
@@ -176,8 +174,9 @@ async function drawChart() {
 
 		function mouseover(type) {
 			return function(event, d) {
+				// console.log(event);
 				tooltip.transition()
-					.duration(200)
+					.duration(100)
 					.style("opacity", 0.8);
 
 				let originalDate = new Date(d.date);
@@ -186,8 +185,8 @@ async function drawChart() {
 						`${originalDate.toDateString()}<br>` +
 						`${originalDate.toTimeString().replace(/\(.*\)/, "")}`
 					)
-					.style("left", calculatePosX(event.pageX) + "px")
-					.style("top", calculatePosY(event.pageY) + "px")
+					.style("left",event.clientX + "px")
+					.style("top", event.clientY + "px")
 					.style("opacity", 0.8)
 					.style("visibility", "visible")
 					.style("position", "absolute");
@@ -204,11 +203,11 @@ async function drawChart() {
 		function mouseleave(d) {
 			tooltip
 				.transition()
-				.duration(500)
+				.duration(700)
 				.style("opacity", 0)
 			tooltip
 				.transition()
-				.delay(500)
+				.delay(700)
 				.style("visibility", "hidden");
 			d3.select(this).attr("stroke", null);
 			d3.select(this).attr("r", "3.5");
@@ -260,13 +259,13 @@ async function drawChart() {
 			.attr("clip-path", "url(#clip)");
 
 
-		let calculatePosX = function(x) {
-			return x > 200 ? x - 200 : x + 20;
-		}
-
-		let calculatePosY = function(y) {
-			return y > height - 30 ? height - 30 : y;
-		}
+//		let calculatePosX = function(x) {
+//			return x > 200 ? x - 200 : x + 20;
+//		}
+//
+//		let calculatePosY = function(y) {
+//			return y > height - 30 ? height - 30 : y;
+//		}
 
 		// copyright
 		svg.append("text")
@@ -350,3 +349,6 @@ async function drawChart() {
 		console.log(error)
 	}
 }
+
+drawChart("#chart1");
+drawChart("#chart2");
