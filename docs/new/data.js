@@ -125,7 +125,7 @@ function getBatteryClassName(battery) {
 
 function getPressureClassName(pressure) {
     if (pressure > 1010) return 'pressure-high';
-    if (battery < 1000) return 'pressure-low';
+    if (pressure < 1000) return 'pressure-low';
     return '';
 }
 
