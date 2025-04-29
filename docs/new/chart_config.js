@@ -8,7 +8,6 @@ const chartConfigs = [
         field: 1, 
         color: '#d62020', // Red for temperature
         row: 1,
-        position: 1, // Position in row, left to right
         category: 'temperature'
     },
     { 
@@ -18,7 +17,6 @@ const chartConfigs = [
         field: 4, 
         color: '#8a5a44', // Brown for physical structure
         row: 1,
-        position: 2,
         startDate: '2024-07-25 18:00:00',
         category: 'structure'
     },
@@ -29,7 +27,6 @@ const chartConfigs = [
         field: 8, 
         color: '#ffb700', // Yellow for light
         row: 1,
-        position: 3,
         startDate: '2024-08-06 17:00:00',
         category: 'light'
     },
@@ -40,7 +37,6 @@ const chartConfigs = [
         field: 3, 
         color: '#4a6741', // Dark green for system
         row: 1,
-        position: 4,
         category: 'system'
     },
 
@@ -52,7 +48,6 @@ const chartConfigs = [
         field: 1, 
         color: '#e57373', // Light red for temp
         row: 2,
-        position: 1,
         category: 'temperature'
     },
     { 
@@ -62,7 +57,6 @@ const chartConfigs = [
         field: 3, 
         color: '#9c27b0', // Purple for difference
         row: 2,
-        position: 2,
         category: 'temperature'
     },
     { 
@@ -72,7 +66,6 @@ const chartConfigs = [
         field: 5, 
         color: '#81d4fa', // Light blue for weather
         row: 2,
-        position: 3,
         category: 'weather'
     },
     { 
@@ -82,7 +75,6 @@ const chartConfigs = [
         field: 6, 
         color: '#0288d1', // Dark blue for weather
         row: 2,
-        position: 4,
         category: 'weather'
     },
     { 
@@ -92,7 +84,6 @@ const chartConfigs = [
         field: 7, 
         color: '#5c6bc0', // Indigo for pressure/weather
         row: 2,
-        position: 5,
         category: 'weather'
     },
 
@@ -104,7 +95,6 @@ const chartConfigs = [
         field: 2, 
         color: '#29b6f6', // Light blue for humidity
         row: 3,
-        position: 1,
         category: 'humidity'
     },
     { 
@@ -114,7 +104,6 @@ const chartConfigs = [
         field: 6, 
         color: '#43a047', // Green for cucumber
         row: 3,
-        position: 2,
         startDate: '2024-07-25 00:00:00',
         category: 'soil'
     },
@@ -125,7 +114,6 @@ const chartConfigs = [
         field: 7, 
         color: '#e53935', // Red for tomato
         row: 3,
-        position: 3,
         startDate: '2024-07-25 00:00:00',
         category: 'soil'
     },
@@ -136,7 +124,6 @@ const chartConfigs = [
         field: 8, 
         color: '#fb8c00', // Orange for paprika
         row: 3,
-        position: 4,
         startDate: '2024-07-25 00:00:00',
         category: 'soil'
     },
@@ -147,7 +134,6 @@ const chartConfigs = [
         field: 3, 
         color: '#66bb6a', // Light green for cucumber
         row: 3,
-        position: 5,
         startDate: '2024-07-25 15:00:00',
         category: 'plants'
     },
@@ -158,7 +144,6 @@ const chartConfigs = [
         field: 5, 
         color: '#ff9800', // Light orange for paprika
         row: 3,
-        position: 6,
         startDate: '2024-07-25 15:00:00',
         category: 'plants'
     },
@@ -171,7 +156,6 @@ const chartConfigs = [
         field: 1, 
         color: '#c62828', // Dark red for temp
         row: 4,
-        position: 1,
         startDate: '2024-07-25 15:00:00',
         category: 'temperature'
     },
@@ -182,7 +166,6 @@ const chartConfigs = [
         field: 2, 
         color: '#ef5350', // Medium red for temp
         row: 4,
-        position: 2,
         startDate: '2024-07-25 15:00:00',
         category: 'temperature'
     },
@@ -193,7 +176,6 @@ const chartConfigs = [
         field: 4, 
         color: '#ff8a65', // Salmon for floor temp
         row: 4,
-        position: 3,
         startDate: '2024-07-25 15:00:00',
         category: 'temperature'
     },
@@ -204,7 +186,6 @@ const chartConfigs = [
         field: 2, 
         color: '#689f38', // Green for system
         row: 4,
-        position: 4,
         category: 'system'
     },
     { 
@@ -214,7 +195,6 @@ const chartConfigs = [
         field: 1, 
         color: '#7cb342', // Light green for system
         row: 4,
-        position: 5,
         startDate: '2024-07-25 15:00:00',
         category: 'system'
     },
@@ -225,7 +205,6 @@ const chartConfigs = [
         field: 5, 
         color: '#ffd600', // Gold for light
         row: 4,
-        position: 6,
         startDate: '2024-08-06 15:00:00',
         category: 'light'
     },
@@ -236,15 +215,14 @@ const chartConfigs = [
         field: 4, 
         color: '#546e7a', // Dark gray for system
         row: 4,
-        position: 7,
         category: 'system'
     }
 ];
 
-// Calculate grid areas based on row and position
+// Calculate grid areas based on row
 // This preserves the existing grid system while making it easier to configure
 (function calculateGridAreas() {
-    // Group charts by row
+    // Group charts by row and maintain original order
     const rowCharts = {};
     chartConfigs.forEach(config => {
         const row = config.row;
@@ -256,7 +234,7 @@ const chartConfigs = [
     
     // Process each row to calculate grid areas
     Object.keys(rowCharts).forEach(rowNum => {
-        const charts = rowCharts[rowNum].sort((a, b) => a.position - b.position);
+        const charts = rowCharts[rowNum]; // Maintain original order (no sorting needed)
         const totalCharts = charts.length;
         
         if (totalCharts === 1) {
