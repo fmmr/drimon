@@ -6,7 +6,7 @@ const chartConfigs = [
         title: 'Temperatur', 
         channel: 2568299, 
         field: 1, 
-        color: '#d62020', // Red for temperature
+        color: '#c62828', // Red for temperature
         row: 1,
         category: 'temperature'
     },
@@ -15,7 +15,7 @@ const chartConfigs = [
         title: 'Vindusåpning', 
         channel: 2568299, 
         field: 4, 
-        color: '#8a5a44', // Brown for physical structure
+        color: '#8a5a44',
         row: 1,
         startDate: '2024-07-25 18:00:00',
         category: 'structure'
@@ -42,120 +42,30 @@ const chartConfigs = [
 
     // Row 2
     { 
-        id: 'chart-out-temp',
-        title: 'Utetemperatur', 
-        channel: 2626867, 
-        field: 1, 
-        color: '#e57373', // Light red for temp
-        row: 2,
-        category: 'temperature'
-    },
-    { 
         id: 'chart-temp-diff',
         title: 'Temperatur Diff', 
         channel: 2626867, 
         field: 3, 
-        color: '#9c27b0', // Purple for difference
+        color: '#c62828',
         row: 2,
         category: 'temperature'
     },
     { 
-        id: 'chart-wind',
-        title: 'Vind', 
+        id: 'chart-out-temp',
+        title: 'Utetemperatur', 
         channel: 2626867, 
-        field: 5, 
-        color: '#81d4fa', // Light blue for weather
+        field: 1, 
+        color: '#c62828',
         row: 2,
-        category: 'weather'
+        category: 'temperature'
     },
-    { 
-        id: 'chart-rain',
-        title: 'Nedbør', 
-        channel: 2626867, 
-        field: 6, 
-        color: '#0288d1', // Dark blue for weather
-        row: 2,
-        category: 'weather'
-    },
-    { 
-        id: 'chart-pressure',
-        title: 'Lufttrykk', 
-        channel: 2568299, 
-        field: 7, 
-        color: '#5c6bc0', // Indigo for pressure/weather
-        row: 2,
-        category: 'weather'
-    },
-
-    // Row 3
-    { 
-        id: 'chart-humidity',
-        title: 'Luftfuktighet', 
-        channel: 2568299, 
-        field: 2, 
-        color: '#29b6f6', // Light blue for humidity
-        row: 3,
-        category: 'humidity'
-    },
-    { 
-        id: 'chart-soil-agurk',
-        title: 'Fuktighet Agurk', 
-        channel: 2584548, 
-        field: 6, 
-        color: '#43a047', // Green for cucumber
-        row: 3,
-        startDate: '2024-07-25 00:00:00',
-        category: 'soil'
-    },
-    { 
-        id: 'chart-soil-tomat',
-        title: 'Fuktighet Tomat', 
-        channel: 2584548, 
-        field: 7, 
-        color: '#e53935', // Red for tomato
-        row: 3,
-        startDate: '2024-07-25 00:00:00',
-        category: 'soil'
-    },
-    { 
-        id: 'chart-soil-paprika',
-        title: 'Fuktighet Paprika', 
-        channel: 2584548, 
-        field: 8, 
-        color: '#fb8c00', // Orange for paprika
-        row: 3,
-        startDate: '2024-07-25 00:00:00',
-        category: 'soil'
-    },
-    { 
-        id: 'chart-agurk',
-        title: 'Agurk', 
-        channel: 2584548, 
-        field: 3, 
-        color: '#66bb6a', // Light green for cucumber
-        row: 3,
-        startDate: '2024-07-25 15:00:00',
-        category: 'plants'
-    },
-    { 
-        id: 'chart-paprika',
-        title: 'Paprika', 
-        channel: 2584548, 
-        field: 5, 
-        color: '#ff9800', // Light orange for paprika
-        row: 3,
-        startDate: '2024-07-25 15:00:00',
-        category: 'plants'
-    },
-
-    // Row 4
     { 
         id: 'chart-bme-temp',
         title: 'BME Temp', 
         channel: 2584548, 
         field: 1, 
-        color: '#c62828', // Dark red for temp
-        row: 4,
+        color: '#c62828',
+        row: 2,
         startDate: '2024-07-25 15:00:00',
         category: 'temperature'
     },
@@ -164,8 +74,8 @@ const chartConfigs = [
         title: 'AHT Temp', 
         channel: 2584548, 
         field: 2, 
-        color: '#ef5350', // Medium red for temp
-        row: 4,
+        color: '#c62828',
+        row: 2,
         startDate: '2024-07-25 15:00:00',
         category: 'temperature'
     },
@@ -174,17 +84,108 @@ const chartConfigs = [
         title: 'Gulv Temp', 
         channel: 2584548, 
         field: 4, 
-        color: '#ff8a65', // Salmon for floor temp
-        row: 4,
+        color: '#c62828',
+        row: 2,
         startDate: '2024-07-25 15:00:00',
         category: 'temperature'
+    },
+    { 
+        id: 'chart-agurk',
+        title: 'Agurk Temp', 
+        channel: 2584548, 
+        field: 3, 
+        color: '#c62828', // Light green for cucumber
+        row: 2,
+        startDate: '2024-07-25 15:00:00',
+        category: 'plants'
+    },
+    { 
+        id: 'chart-paprika',
+        title: 'Padron Temp', 
+        channel: 2584548, 
+        field: 5, 
+        color: '#c62828', // Light orange for paprika
+        row: 2,
+        startDate: '2024-07-25 15:00:00',
+        category: 'plants'
+    },
+
+    // Row 3
+    { 
+        id: 'chart-humidity',
+        title: 'Luftfuktighet', 
+        channel: 2568299, 
+        field: 2, 
+        color: '#5c6bc0',
+        row: 3,
+        category: 'humidity'
+    },
+    { 
+        id: 'chart-pressure',
+        title: 'Lufttrykk', 
+        channel: 2568299, 
+        field: 7, 
+        color: '#5c6bc0',
+        row: 3,
+        category: 'weather'
+    },
+    { 
+        id: 'chart-wind',
+        title: 'Vind', 
+        channel: 2626867, 
+        field: 5, 
+        color: '#5c6bc0',
+        row: 3,
+        category: 'weather'
+    },
+    { 
+        id: 'chart-rain',
+        title: 'Nedbør', 
+        channel: 2626867, 
+        field: 6, 
+        color: '#5c6bc0',
+        row: 3,
+        category: 'weather'
+    },
+
+
+    // Row 4
+    { 
+        id: 'chart-soil-paprika',
+        title: 'Fuktighet Agurk 1', 
+        channel: 2584548, 
+        field: 6, 
+        color: '#43a047',
+        row: 4,
+        startDate: '2024-07-25 00:00:00',
+        category: 'soil'
+    },
+    { 
+        id: 'chart-soil-agurk',
+        title: 'Fuktighet Agurk 2', 
+        channel: 2584548, 
+        field: 7, 
+        color: '#43a047',
+        row: 4,
+        startDate: '2024-07-25 00:00:00',
+        category: 'soil'
+    },
+    { 
+        id: 'chart-soil-tomat',
+        title: 'Fuktighet Padron', 
+        channel: 2584548, 
+        field: 8, 
+        color: '#43a047',
+        row: 4,
+        startDate: '2024-07-25 00:00:00',
+        category: 'soil'
     },
     { 
         id: 'chart-battery-voltage',
         title: 'Batteri (spenning)', 
         channel: 2584547, 
         field: 2, 
-        color: '#689f38', // Green for system
+        color: '#4a6741',
         row: 4,
         category: 'system'
     },
@@ -193,7 +194,7 @@ const chartConfigs = [
         title: 'WiFi', 
         channel: 2584547, 
         field: 1, 
-        color: '#7cb342', // Light green for system
+        color: '#4a6741',
         row: 4,
         startDate: '2024-07-25 15:00:00',
         category: 'system'
@@ -203,7 +204,7 @@ const chartConfigs = [
         title: 'Lys Int', 
         channel: 2584547, 
         field: 5, 
-        color: '#ffd600', // Gold for light
+        color: '#ffb700',
         row: 4,
         startDate: '2024-08-06 15:00:00',
         category: 'light'
@@ -213,7 +214,7 @@ const chartConfigs = [
         title: 'Tid brukt', 
         channel: 2584547, 
         field: 4, 
-        color: '#546e7a', // Dark gray for system
+        color: '#4a6741',
         row: 4,
         category: 'system'
     }
