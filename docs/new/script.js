@@ -36,6 +36,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Set up data refresh
     setInterval(fetchData, 60000);
+    setInterval(fetchMetData, 300000); // Refresh Met data every 5 minutes
 });
 
 // Create containers for all charts

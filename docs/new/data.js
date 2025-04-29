@@ -6,8 +6,49 @@ const elements = {
     pressure: document.getElementById('pressure'),
     light: document.getElementById('light'),
     timeSince: document.getElementById('time-since'),
-    title: document.getElementById('main-title')
+    title: document.getElementById('main-title'),
+    metTemp: document.getElementById('met-temp')
 };
+
+// Function to fetch Met.no weather data
+async function fetchMetData() {
+    try {
+        const metUrl = 'https://api.met.no/weatherapi/nowcast/2.0/complete?lat=59.532213&lon=10.418231';
+        
+        // Direct access with proper headers
+        const response = await fetch(metUrl, {
+            headers: {
+                'Accept': 'application/json',
+                'User-Agent': 'fmr-drimon (https://drimon.rodland.no)' 
+            },
+            mode: 'cors'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`API responded with status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        updateMetDisplay(data);
+    } catch (error) {
+        console.error('Error fetching Met.no data:', error);
+        if (elements.metTemp) {
+            elements.metTemp.innerHTML = 'Feil';
+        }
+    }
+}
+
+function updateMetDisplay(data) {
+    if (!elements.metTemp) return;
+    
+    const temperature = Math.round(data.properties.timeseries[0].data.instant.details.air_temperature * 10) / 10;
+    const createdAt = moment(data.properties.timeseries[0].time);
+    const lastUpdated = createdAt.format('L LTS');
+    
+    elements.metTemp.innerHTML = `${temperature} °C`;
+    elements.metTemp.parentElement.className = `data-chip ${getClassName(temperature, 15, 25)}`;
+    elements.metTemp.parentElement.title = `Ute Temperatur - Oppdatert: ${lastUpdated}`;
+}
 
 async function fetchData() {
     try {
