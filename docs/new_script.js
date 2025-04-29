@@ -23,6 +23,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Create chart containers
     createChartContainers();
     
+    // Create global tooltip container
+    createGlobalTooltip();
+    
     // Load initial data
     fetchData();
     fetchMetData();
@@ -90,7 +93,7 @@ function setupEventListeners() {
         });
     });
     
-    // Handle window resize
+    // Handle window resize to ensure charts adapt
     let resizeTimeout;
     window.addEventListener('resize', () => {
         if (resizeTimeout) {
@@ -98,8 +101,14 @@ function setupEventListeners() {
         }
         
         resizeTimeout = setTimeout(() => {
-            // No need to reload charts as they're responsive with viewBox
+            // Hide tooltip on resize
+            d3.select('#global-chart-tooltip').style('opacity', 0);
         }, 150);
+    });
+    
+    // Handle scroll to hide tooltip
+    document.addEventListener('scroll', () => {
+        d3.select('#global-chart-tooltip').style('opacity', 0);
     });
 }
 
