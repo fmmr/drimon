@@ -1,4 +1,4 @@
-// Configuration for all charts with logical color grouping
+// Configuration for all charts with row-based layout
 const chartConfigs = [
     // Row 1
     { 
@@ -7,7 +7,8 @@ const chartConfigs = [
         channel: 2568299, 
         field: 1, 
         color: '#d62020', // Red for temperature
-        area: '1 / 1 / 2 / 3',
+        row: 1,
+        position: 1, // Position in row, left to right
         category: 'temperature'
     },
     { 
@@ -16,7 +17,8 @@ const chartConfigs = [
         channel: 2568299, 
         field: 4, 
         color: '#8a5a44', // Brown for physical structure
-        area: '1 / 3 / 2 / 5',
+        row: 1,
+        position: 2,
         startDate: '2024-07-25 18:00:00',
         category: 'structure'
     },
@@ -26,7 +28,8 @@ const chartConfigs = [
         channel: 2568299, 
         field: 8, 
         color: '#ffb700', // Yellow for light
-        area: '1 / 5 / 2 / 7',
+        row: 1,
+        position: 3,
         startDate: '2024-08-06 17:00:00',
         category: 'light'
     },
@@ -36,7 +39,8 @@ const chartConfigs = [
         channel: 2584547, 
         field: 3, 
         color: '#4a6741', // Dark green for system
-        area: '1 / 7 / 2 / 9',
+        row: 1,
+        position: 4,
         category: 'system'
     },
 
@@ -47,7 +51,8 @@ const chartConfigs = [
         channel: 2626867, 
         field: 1, 
         color: '#e57373', // Light red for temp
-        area: '2 / 1 / 3 / 3',
+        row: 2,
+        position: 1,
         category: 'temperature'
     },
     { 
@@ -56,7 +61,8 @@ const chartConfigs = [
         channel: 2626867, 
         field: 3, 
         color: '#9c27b0', // Purple for difference
-        area: '2 / 3 / 3 / 5',
+        row: 2,
+        position: 2,
         category: 'temperature'
     },
     { 
@@ -65,7 +71,8 @@ const chartConfigs = [
         channel: 2626867, 
         field: 5, 
         color: '#81d4fa', // Light blue for weather
-        area: '2 / 5 / 3 / 6',
+        row: 2,
+        position: 3,
         category: 'weather'
     },
     { 
@@ -74,7 +81,8 @@ const chartConfigs = [
         channel: 2626867, 
         field: 6, 
         color: '#0288d1', // Dark blue for weather
-        area: '2 / 6 / 3 / 7',
+        row: 2,
+        position: 4,
         category: 'weather'
     },
     { 
@@ -83,7 +91,8 @@ const chartConfigs = [
         channel: 2568299, 
         field: 7, 
         color: '#5c6bc0', // Indigo for pressure/weather
-        area: '2 / 7 / 3 / 9',
+        row: 2,
+        position: 5,
         category: 'weather'
     },
 
@@ -94,7 +103,8 @@ const chartConfigs = [
         channel: 2568299, 
         field: 2, 
         color: '#29b6f6', // Light blue for humidity
-        area: '3 / 1 / 4 / 3',
+        row: 3,
+        position: 1,
         category: 'humidity'
     },
     { 
@@ -103,7 +113,8 @@ const chartConfigs = [
         channel: 2584548, 
         field: 6, 
         color: '#43a047', // Green for cucumber
-        area: '3 / 3 / 4 / 5',
+        row: 3,
+        position: 2,
         startDate: '2024-07-25 00:00:00',
         category: 'soil'
     },
@@ -113,7 +124,8 @@ const chartConfigs = [
         channel: 2584548, 
         field: 7, 
         color: '#e53935', // Red for tomato
-        area: '3 / 5 / 4 / 6',
+        row: 3,
+        position: 3,
         startDate: '2024-07-25 00:00:00',
         category: 'soil'
     },
@@ -123,7 +135,8 @@ const chartConfigs = [
         channel: 2584548, 
         field: 8, 
         color: '#fb8c00', // Orange for paprika
-        area: '3 / 6 / 4 / 7',
+        row: 3,
+        position: 4,
         startDate: '2024-07-25 00:00:00',
         category: 'soil'
     },
@@ -133,7 +146,8 @@ const chartConfigs = [
         channel: 2584548, 
         field: 3, 
         color: '#66bb6a', // Light green for cucumber
-        area: '3 / 7 / 4 / 8',
+        row: 3,
+        position: 5,
         startDate: '2024-07-25 15:00:00',
         category: 'plants'
     },
@@ -143,7 +157,8 @@ const chartConfigs = [
         channel: 2584548, 
         field: 5, 
         color: '#ff9800', // Light orange for paprika
-        area: '3 / 8 / 4 / 9',
+        row: 3,
+        position: 6,
         startDate: '2024-07-25 15:00:00',
         category: 'plants'
     },
@@ -155,7 +170,8 @@ const chartConfigs = [
         channel: 2584548, 
         field: 1, 
         color: '#c62828', // Dark red for temp
-        area: '4 / 1 / 5 / 3',
+        row: 4,
+        position: 1,
         startDate: '2024-07-25 15:00:00',
         category: 'temperature'
     },
@@ -165,7 +181,8 @@ const chartConfigs = [
         channel: 2584548, 
         field: 2, 
         color: '#ef5350', // Medium red for temp
-        area: '4 / 3 / 5 / 4',
+        row: 4,
+        position: 2,
         startDate: '2024-07-25 15:00:00',
         category: 'temperature'
     },
@@ -175,7 +192,8 @@ const chartConfigs = [
         channel: 2584548, 
         field: 4, 
         color: '#ff8a65', // Salmon for floor temp
-        area: '4 / 4 / 5 / 5',
+        row: 4,
+        position: 3,
         startDate: '2024-07-25 15:00:00',
         category: 'temperature'
     },
@@ -185,7 +203,8 @@ const chartConfigs = [
         channel: 2584547, 
         field: 2, 
         color: '#689f38', // Green for system
-        area: '4 / 5 / 5 / 6',
+        row: 4,
+        position: 4,
         category: 'system'
     },
     { 
@@ -194,7 +213,8 @@ const chartConfigs = [
         channel: 2584547, 
         field: 1, 
         color: '#7cb342', // Light green for system
-        area: '4 / 6 / 5 / 7',
+        row: 4,
+        position: 5,
         startDate: '2024-07-25 15:00:00',
         category: 'system'
     },
@@ -204,7 +224,8 @@ const chartConfigs = [
         channel: 2584547, 
         field: 5, 
         color: '#ffd600', // Gold for light
-        area: '4 / 7 / 5 / 8',
+        row: 4,
+        position: 6,
         startDate: '2024-08-06 15:00:00',
         category: 'light'
     },
@@ -214,7 +235,96 @@ const chartConfigs = [
         channel: 2584547, 
         field: 4, 
         color: '#546e7a', // Dark gray for system
-        area: '4 / 8 / 5 / 9',
+        row: 4,
+        position: 7,
         category: 'system'
     }
 ];
+
+// Calculate grid areas based on row and position
+// This preserves the existing grid system while making it easier to configure
+(function calculateGridAreas() {
+    // Group charts by row
+    const rowCharts = {};
+    chartConfigs.forEach(config => {
+        const row = config.row;
+        if (!rowCharts[row]) {
+            rowCharts[row] = [];
+        }
+        rowCharts[row].push(config);
+    });
+    
+    // Process each row to calculate grid areas
+    Object.keys(rowCharts).forEach(rowNum => {
+        const charts = rowCharts[rowNum].sort((a, b) => a.position - b.position);
+        const totalCharts = charts.length;
+        
+        if (totalCharts === 1) {
+            // 1 chart: use all 8 columns
+            charts[0].area = `${rowNum} / 1 / ${Number(rowNum) + 1} / 9`;
+        } 
+        else if (totalCharts === 2) {
+            // 2 charts: 4 columns each (50% width)
+            charts[0].area = `${rowNum} / 1 / ${Number(rowNum) + 1} / 5`;
+            charts[1].area = `${rowNum} / 5 / ${Number(rowNum) + 1} / 9`;
+        }
+        else if (totalCharts === 3) {
+            // 3 charts: first gets 4 columns, others get 2 (50%, 25%, 25%)
+            charts[0].area = `${rowNum} / 1 / ${Number(rowNum) + 1} / 5`;
+            charts[1].area = `${rowNum} / 5 / ${Number(rowNum) + 1} / 7`;
+            charts[2].area = `${rowNum} / 7 / ${Number(rowNum) + 1} / 9`;
+        }
+        else if (totalCharts === 4) {
+            // 4 charts: 2 columns each (25% width)
+            charts[0].area = `${rowNum} / 1 / ${Number(rowNum) + 1} / 3`;
+            charts[1].area = `${rowNum} / 3 / ${Number(rowNum) + 1} / 5`;
+            charts[2].area = `${rowNum} / 5 / ${Number(rowNum) + 1} / 7`;
+            charts[3].area = `${rowNum} / 7 / ${Number(rowNum) + 1} / 9`;
+        }
+        else if (totalCharts >= 5 && totalCharts <= 8) {
+            // 5-8 charts: Calculate how many columns are available
+            const totalColumns = 8;
+            
+            // First determine how many 2-column charts can fit
+            let columnsRemaining = totalColumns;
+            let twoColumnCharts = Math.min(Math.floor(columnsRemaining / 2), totalCharts);
+            
+            // If we can fit all charts as 2-column, reduce until we need to use 1-column
+            while ((twoColumnCharts * 2 + (totalCharts - twoColumnCharts)) > totalColumns) {
+                twoColumnCharts--;
+            }
+            
+            // Calculate grid positions
+            let currentColumn = 1;
+            
+            for (let i = 0; i < totalCharts; i++) {
+                const chart = charts[i];
+                
+                if (i < twoColumnCharts) {
+                    // 2-column chart
+                    chart.area = `${rowNum} / ${currentColumn} / ${Number(rowNum) + 1} / ${currentColumn + 2}`;
+                    currentColumn += 2;
+                } else {
+                    // 1-column chart
+                    chart.area = `${rowNum} / ${currentColumn} / ${Number(rowNum) + 1} / ${currentColumn + 1}`;
+                    currentColumn += 1;
+                }
+            }
+        }
+        else if (totalCharts > 8) {
+            // More than 8 charts: divide evenly
+            const columnWidth = Math.floor(8 / totalCharts);
+            const remainder = 8 % totalCharts;
+            
+            let currentColumn = 1;
+            charts.forEach((chart, index) => {
+                // Give extra column space to the first charts if there's a remainder
+                const extraSpace = index < remainder ? 1 : 0;
+                const width = columnWidth + extraSpace;
+                
+                chart.area = `${rowNum} / ${currentColumn} / ${Number(rowNum) + 1} / ${currentColumn + width}`;
+                currentColumn += width;
+            });
+        }
+    });
+})();
