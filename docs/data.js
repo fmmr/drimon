@@ -6,8 +6,49 @@ const elements = {
     pressure: document.getElementById('pressure'),
     light: document.getElementById('light'),
     timeSince: document.getElementById('time-since'),
-    title: document.getElementById('main-title')
+    title: document.getElementById('main-title'),
+    metTemp: document.getElementById('met-temp')
 };
+
+// Function to fetch Met.no weather data
+async function fetchMetData() {
+    try {
+        const metUrl = 'https://api.met.no/weatherapi/nowcast/2.0/complete?lat=59.532213&lon=10.418231';
+        
+        // Direct access with proper headers
+        const response = await fetch(metUrl, {
+            headers: {
+                'Accept': 'application/json',
+                'User-Agent': 'fmr-drimon (https://drimon.rodland.no)' 
+            },
+            mode: 'cors'
+        });
+        
+        if (!response.ok) {
+            throw new Error(`API responded with status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        updateMetDisplay(data);
+    } catch (error) {
+        console.error('Error fetching Met.no data:', error);
+        if (elements.metTemp) {
+            elements.metTemp.innerHTML = 'Feil';
+        }
+    }
+}
+
+function updateMetDisplay(data) {
+    if (!elements.metTemp) return;
+    
+    const temperature = Math.round(data.properties.timeseries[0].data.instant.details.air_temperature * 10) / 10;
+    const createdAt = moment(data.properties.timeseries[0].time);
+    const lastUpdated = createdAt.format('L LTS');
+    
+    elements.metTemp.innerHTML = `${temperature} °C`;
+    elements.metTemp.parentElement.className = `data-chip ${getClassName(temperature, 15, 25)}`;
+    elements.metTemp.parentElement.title = `Ute Temperatur - Oppdatert: ${lastUpdated}`;
+}
 
 async function fetchData() {
     try {
@@ -33,26 +74,27 @@ async function fetchData() {
         const timeSince = createdAt.fromNow();
 
         elements.temperature.innerHTML = `${temperature} °C`;
-        elements.temperature.className = `value ${getClassName(temperature, 16, 35)}`;
+        elements.temperature.parentElement.className = `data-chip ${getClassName(temperature, 16, 35)}`;
 
         elements.battery.innerHTML = `${battery} %`;
-        elements.battery.className = `value ${getBatteryClassName(battery)}`;
+        elements.battery.parentElement.className = `data-chip ${getBatteryClassName(battery)}`;
 
         elements.batteryVolt.innerHTML = `${batteryVolt} v`;
-        elements.batteryVolt.className = `value ${getBatteryClassName(battery)}`;
+        elements.batteryVolt.parentElement.className = `data-chip ${getBatteryClassName(battery)}`;
 
         elements.window.innerHTML = `${getWindowText(windowOpening)}`;
-        elements.window.className = `value`;
-        elements.window.title = `${windowOpening}mm`;
+        elements.window.parentElement.className = `data-chip`;
+        elements.window.parentElement.title = `${windowOpening}mm`;
 
         elements.pressure.innerHTML = `${pressure} hPa`;
-        elements.pressure.className = `value ${getPressureClassName(pressure)}`;
+        elements.pressure.parentElement.className = `data-chip ${getPressureClassName(pressure)}`;
 
         elements.light.innerHTML = `${getLightText(light)}`;
-        elements.light.title = `${light} lux`;
+        elements.light.parentElement.title = `${light} lux`;
+        elements.light.parentElement.className = `data-chip`;
 
         elements.timeSince.textContent = `${timeSince}`;
-        elements.timeSince.title = `${lastUpdated}`;
+        elements.timeSince.parentElement.title = `${lastUpdated}`;
         elements.title.title = `${lastStatus.status}`;
     } catch (error) {
         console.error('Error fetching data:', error);
@@ -83,7 +125,7 @@ function getBatteryClassName(battery) {
 
 function getPressureClassName(pressure) {
     if (pressure > 1010) return 'pressure-high';
-    if (battery < 1000) return 'pressure-low';
+    if (pressure < 1000) return 'pressure-low';
     return '';
 }
 

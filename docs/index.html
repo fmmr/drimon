@@ -4,58 +4,91 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>DriMon - Fredrik Rødland - 2024</title>
-    <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="header.css">
+    <link rel="stylesheet" href="d3.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/locale/nb.min.js"></script>
+    <script src="d3.min_7.9.0.js"></script>
     <script src="data.js" defer></script>
     <script src="met.js" defer></script>
-    <script src="iframes.js" defer></script>
+    <script src="chart_config.js" defer></script>
+    <script src="chart_renderer.js" defer></script>
     <script src="script.js" defer></script>
     <link rel="canonical" href="https://drimon.rodland.no/" />
-	<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-	<link rel="icon" type="image/png" sizes="48x48" href="/favicon.ico">
-	<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-	<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-	<link rel="manifest" href="/site.webmanifest">
+    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
+    <link rel="manifest" href="site.webmanifest">
 </head>
 <body>
-    <header class="compact-header">
-		<img src="logos/1_100x55.webp" class="title" id="main-title">
-        <div class="data-points" id="infoSection">
-            <div class="data-point"><span class="value" id="time-since">Laster...</span>:</div>
-            <div class="data-point"><span class="value" id="temperature">Laster...</span></div>
-            <div class="data-point"><span class="value" id="light"></span></div>
-            <div class="data-point"><span class="value" id="battery">Laster...</span></div>
-            <div class="data-point"><span class="value" id="batteryVolt">Laster...</span></div>
-            <div class="data-point"><span class="value" id="pressure">Laster...</span></div>
-            <div class="data-point"><span class="value" id="window"></span></div>
+    <header class="modern-header">
+        <!-- Logo Section -->
+        <div class="logo-container">
+            <a href="https://github.com/fmmr/drimon">
+                <img src="logos/1_100x55.webp" class="logo" id="main-title" alt="DriMon">
+            </a>
+            <div class="time-indicator">
+                <span id="time-since">Laster...</span>
+            </div>
         </div>
-        <div class="date-links">
-            <a href="#" class="date-link" data-range="today">i dag</a>
-            <a href="#" class="date-link" data-range="1">2</a>
-            <a href="#" class="date-link" data-range="2">3</a>
-            <a href="#" class="date-link" data-range="6">7</a>
-            <a href="#" class="date-link" data-range="13">14</a>
-            <a href="#" class="date-link" data-range="30">30</a>
-            <a href="#" class="date-link" data-range="yesterday">i går</a>
-            <a href="#" class="date-link" data-range="this-week">uke</a>
-            <a href="#" class="date-link" data-range="last-week">uke-1</a>
-            <a href="#" class="date-link" data-range="this-month">mnd</a>
-            <a href="#" class="date-link" data-range="start">start</a>
+        
+        <!-- Data Info Section -->
+        <div class="data-container" id="infoSection">
+            <div class="data-chip" title="Drivhus Temperatur">
+                <i class="fas fa-thermometer-half mr-1"></i>
+                <span id="temperature">Laster...</span>
+            </div>
+            <a href="https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/1-60206/Norge/Akershus/Asker/R%C3%B8dtangen" class="data-chip" id="met-link" title="Ute Temperatur (yr.no)">
+                <i class="fas fa-cloud-sun mr-1"></i>
+                <span id="met-temp">Laster...</span>
+            </a>
+            <div class="data-chip" title="Lysnivå">
+                <i class="fas fa-sun mr-1"></i>
+                <span id="light"></span>
+            </div>
+            <div class="data-chip" title="Batteri Prosent">
+                <i class="fas fa-battery-half mr-1"></i>
+                <span id="battery">Laster...</span>
+            </div>
+            <div class="data-chip" title="Batteri Spenning">
+                <i class="fas fa-bolt mr-1"></i>
+                <span id="batteryVolt">Laster...</span>
+            </div>
+            <div class="data-chip" title="Lufttrykk">
+                <i class="fas fa-compress-alt mr-1"></i>
+                <span id="pressure">Laster...</span>
+            </div>
+            <div class="data-chip" title="Vindusåpning">
+                <i class="fas fa-window-maximize mr-1"></i>
+                <span id="window"></span>
+            </div>
         </div>
-        <div class="links">
-            <a href="https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/1-60206/Norge/Akershus/Asker/R%C3%B8dtangen" class="link" id="met-link">met</a>
-            <a href="https://github.com/fmmr/drimon" class="link">github</a>
+        
+        <!-- Date Range Links -->
+        <div class="date-ranges">
+            <a href="#" class="date-chip" data-range="today">i dag</a>
+            <a href="#" class="date-chip" data-range="1">2d</a>
+            <a href="#" class="date-chip" data-range="2">3d</a>
+            <a href="#" class="date-chip" data-range="6">7d</a>
+            <a href="#" class="date-chip" data-range="13">14d</a>
+            <a href="#" class="date-chip" data-range="yesterday">i går</a>
+            <a href="#" class="date-chip" data-range="this-week">uke</a>
+            <a href="#" class="date-chip" data-range="last-week">uke-1</a>
+            <a href="#" class="date-chip" data-range="start">start</a>
         </div>
+        
+        <!-- Search Container -->
         <div class="search-container">
-            <input type="number" id="resultsInput" placeholder="Results" min="1">
+            <input type="number" id="resultsInput" placeholder="Resultater" min="1">
             <button id="updateButton">Oppdater</button>
         </div>
     </header>
     <div class="container-fluid">
-        <div id="iframeContainer"></div>
+        <div id="chartGrid" class="chart-grid"></div>
     </div>
 </body>
 </html>

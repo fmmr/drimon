@@ -3,6 +3,11 @@ const timezone = encodeURIComponent("Europe/Paris");
 const updateInterval = 60000; // 1 minute update interval
 const chartUpdateInterval = 15000; // 15 seconds chart update interval
 
+// Fixed height for all charts
+const CHART_HEIGHT = 180;
+const SMALL_CHART_WIDTH = 200;
+const LARGE_CHART_WIDTH = 400;
+
 // Function to create the chart container element
 function createChartContainer(config) {
     const container = document.createElement('div');
@@ -76,6 +81,18 @@ function positionTooltip(event, data) {
     return { x: tooltipX, y: tooltipY };
 }
 
+// Determine if a chart is a wide/double-width chart based on its grid area
+function isWideChart(gridArea) {
+    // Check if the grid area spans multiple columns (e.g., "1 / 1 / 2 / 3")
+    const areaParts = gridArea.split('/');
+    if (areaParts.length >= 4) {
+        const startCol = parseInt(areaParts[1].trim());
+        const endCol = parseInt(areaParts[3].trim());
+        return (endCol - startCol) >= 2;
+    }
+    return false;
+}
+
 // Function to draw a chart using D3.js
 async function drawChart(config, startDate, endDate, results = 8000) {
     const selector = `#${config.id}-container`;
@@ -84,10 +101,20 @@ async function drawChart(config, startDate, endDate, results = 8000) {
     // Ensure global tooltip exists
     const tooltip = createGlobalTooltip();
     
-    // Set fixed dimensions initially, which will be made responsive
-    const width = 400;
-    const height = 200;
-    const margin = {top: 25, right: 20, bottom: 35, left: 40};
+    // Determine if this is a wide chart
+    const isWide = isWideChart(config.area);
+    
+    // Set dimensions based on chart type (wide or narrow)
+    const width = isWide ? LARGE_CHART_WIDTH : SMALL_CHART_WIDTH;
+    const height = CHART_HEIGHT; // Fixed height for all charts
+    
+    // Adjust margins for different chart sizes
+    const margin = {
+        top: 20,              // Smaller top margin
+        right: isWide ? 20 : 15,
+        bottom: 30,           // Smaller bottom margin
+        left: isWide ? 40 : 35  // Smaller left margin for narrow charts
+    };
     
     // Clear any existing chart
     d3.select(selector).selectAll('svg').remove();
@@ -113,7 +140,7 @@ async function drawChart(config, startDate, endDate, results = 8000) {
     // Add title
     svg.append('text')
         .attr('x', width / 2)
-        .attr('y', 15)
+        .attr('y', 12) // Position title closer to top
         .attr("class", "chart-title")
         .text(config.title);
     
@@ -175,7 +202,7 @@ async function drawChart(config, startDate, endDate, results = 8000) {
         // Determine if data is dense (many points in a small time window)
         const timeSpan = d3.max(data, d => d.date) - d3.min(data, d => d.date);
         const avgPointsPerPixel = data.length / chartWidth;
-        const isDenseData = avgPointsPerPixel > 0.5;
+        const isDenseData = avgPointsPerPixel > 0.3; // Adjusted threshold
         
         // Set up scales
         const x = d3.scaleTime()
@@ -189,20 +216,20 @@ async function drawChart(config, startDate, endDate, results = 8000) {
             .domain([dataExtent[0] - ypadding, dataExtent[1] + ypadding])
             .range([chartHeight, 0]);
         
-        // Add x-axis
+        // Add x-axis with fewer ticks for small charts
         const timeRange = d3.max(data, d => d.date) - d3.min(data, d => d.date);
         svg.append("g")
             .attr("transform", `translate(${margin.left},${height - margin.bottom})`)
             .attr("class", "x-axis")
             .call(d3.axisBottom(x)
-                .ticks(4)
+                .ticks(isWide ? 4 : 3) // Fewer ticks for small charts
                 .tickFormat(d => customTickFormat(d, timeRange))
                 .tickSizeOuter(0))
             .selectAll("text")
             .attr("class", "chart-x-axis-label");
         
-        // Add horizontal grid lines
-        const yTicks = y.ticks(5);
+        // Add horizontal grid lines - fewer for small charts
+        const yTicks = y.ticks(isWide ? 5 : 4);
         yTicks.forEach(tickValue => {
             g.append("line")
                 .attr("class", "tick-line")
@@ -214,23 +241,23 @@ async function drawChart(config, startDate, endDate, results = 8000) {
                 .attr("stroke-width", 1);
         });
         
-        // Add y-axis
+        // Add y-axis with fewer ticks for small charts
         svg.append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`)
             .attr("class", "y-axis")
             .call(d3.axisLeft(y)
-                .ticks(5)
+                .ticks(isWide ? 5 : 4) // Fewer ticks for small charts
                 .tickSizeOuter(0))
             .selectAll("text")
             .attr("class", "chart-y-axis-label");
         
-        // Draw the line with increased stroke width
+        // Draw the line with thinner stroke width
         g.append("path")
             .datum(data)
             .attr("class", "chart-line")
             .attr("id", `line-${config.id}`)
             .style("stroke", config.color)
-            .style("stroke-width", isDenseData ? 2.5 : 2) // Thicker line for dense data
+            .style("stroke-width", isDenseData ? 1.5 : 1.2) // Thinner line
             .attr("d", d3.line()
                 .x(d => x(d.date))
                 .y(d => y(d.value)))
@@ -244,7 +271,7 @@ async function drawChart(config, startDate, endDate, results = 8000) {
                 .append("circle")
                 .attr("cx", d => x(d.date))
                 .attr("cy", d => y(d.value))
-                .attr("r", 3)
+                .attr("r", 2.5) // Smaller points
                 .attr("class", "chart-circle")
                 .attr("fill", config.color)
                 .attr("stroke", "#fff")
@@ -252,57 +279,70 @@ async function drawChart(config, startDate, endDate, results = 8000) {
                 .attr("clip-path", `url(#clip-${config.id})`);
         }
         
-        // Add interaction layer for mouse events
-        // This covers the whole chart area to capture all mouse events
-        g.append("rect")
+        // Create a transparent overlay at the SVG level (not the g level) 
+        // for better mouse event capture
+        const overlay = svg.append("rect")
+            .attr("class", "interaction-overlay")
+            .attr("x", margin.left)
+            .attr("y", margin.top)
             .attr("width", chartWidth)
             .attr("height", chartHeight)
-            .attr("fill", "none")
-            .attr("pointer-events", "all")
-            .on("mousemove", function(event) {
-                // Find closest data point to mouse position
-                const mouseX = d3.pointer(event)[0];
-                const x0 = x.invert(mouseX);
-                
-                // Find the closest point in time
-                const bisect = d3.bisector(d => d.date).left;
-                const i = bisect(data, x0, 1);
-                
-                // Handle edge cases
-                if (i <= 0 || i >= data.length) {
-                    let d = (i <= 0) ? data[0] : data[data.length - 1];
-                    showTooltip(d, event);
-                    return;
-                }
-                
-                // Find the two closest points
-                const d0 = data[i - 1];
-                const d1 = data[i];
-                
-                // Select the closer one
-                let d = d0;
-                if (x0 - d0.date > d1.date - x0) {
-                    d = d1;
-                }
-                
-                showTooltip(d, event);
+            .attr("fill", "transparent")
+            .style("pointer-events", "all");
+        
+        // Track whether the mouse is over the chart
+        let isMouseOverChart = false;
+        
+        // Mouse events for the overlay
+        overlay
+            .on("mouseenter", function() {
+                isMouseOverChart = true;
             })
-            .on("mouseout", function() {
-                // Hide tooltip
-                tooltip.transition()
-                    .duration(300)
-                    .style("opacity", 0);
+            .on("mouseleave", function() {
+                isMouseOverChart = false;
+                // Hide tooltip with a delay
+                setTimeout(() => {
+                    if (!isMouseOverChart) {
+                        tooltip.transition()
+                            .duration(300)
+                            .style("opacity", 0);
+                        g.selectAll(".hover-circle").remove();
+                    }
+                }, 100);
+            })
+            .on("mousemove", function(event) {
+                const mouse = d3.pointer(event, this);
                 
-                // Remove hover circle
-                g.selectAll(".hover-circle").remove();
+                // Adjust mouse position to be relative to the chart area
+                const mouseX = mouse[0] - margin.left;
+                
+                // Only process if within chart bounds
+                if (mouseX >= 0 && mouseX <= chartWidth) {
+                    const x0 = x.invert(mouseX);
+                    
+                    // Find closest data point
+                    const bisect = d3.bisector(d => d.date).left;
+                    const i = bisect(data, x0, 1);
+                    
+                    // Handle edge cases
+                    if (i <= 0) {
+                        showTooltip(data[0], event);
+                    } else if (i >= data.length) {
+                        showTooltip(data[data.length - 1], event);
+                    } else {
+                        // Find the closer of the two points
+                        const d0 = data[i - 1];
+                        const d1 = data[i];
+                        const d = (x0 - d0.date > d1.date - x0) ? d1 : d0;
+                        showTooltip(d, event);
+                    }
+                }
             });
             
         // Helper function to show tooltip
         function showTooltip(d, event) {
-            // Display tooltip
-            tooltip.transition()
-                .duration(100)
-                .style("opacity", 0.9);
+            // Display tooltip with forced initial opacity
+            tooltip.style("opacity", 1);
             
             const originalDate = new Date(d.date);
             tooltip.html(
@@ -322,13 +362,13 @@ async function drawChart(config, startDate, endDate, results = 8000) {
                 .attr("class", "hover-circle")
                 .attr("cx", x(d.date))
                 .attr("cy", y(d.value))
-                .attr("r", 5)
+                .attr("r", 4) // Slightly smaller hover circle
                 .attr("fill", config.color)
                 .attr("stroke", "#fff")
-                .attr("stroke-width", 2);
+                .attr("stroke-width", 1.5);
         }
         
-        // Add copyright
+        // Add copyright at the bottom right
         svg.append("text")
             .attr("x", width - margin.right)
             .attr("y", height - 5)
@@ -340,7 +380,7 @@ async function drawChart(config, startDate, endDate, results = 8000) {
         
         // Set up live data updates for this chart
         if (!endDate) {
-            setupLiveUpdates(config, data, x, y, response.channel[fieldName], isDenseData);
+            setupLiveUpdates(config, data, x, y, response.channel[fieldName], isDenseData, isWide);
         }
         
     } catch (error) {
@@ -350,7 +390,7 @@ async function drawChart(config, startDate, endDate, results = 8000) {
 }
 
 // Function to update a chart with new data
-function setupLiveUpdates(config, data, x, y, fieldTitle, isDenseData) {
+function setupLiveUpdates(config, data, x, y, fieldTitle, isDenseData, isWide) {
     const selector = `#${config.id}-container`;
     const lastDataUrl = `https://api.thingspeak.com/channels/${config.channel}/feeds/last.json?timezone=${timezone}`;
     const tooltip = d3.select('#global-chart-tooltip');
@@ -397,21 +437,21 @@ function setupLiveUpdates(config, data, x, y, fieldTitle, isDenseData) {
                 
                 svg.select(".x-axis")
                     .call(d3.axisBottom(x)
-                        .ticks(4)
+                        .ticks(isWide ? 4 : 3)
                         .tickFormat(d => customTickFormat(d, timeRange))
                         .tickSizeOuter(0));
                 
                 svg.select(".y-axis")
                     .call(d3.axisLeft(y)
-                        .ticks(5)
+                        .ticks(isWide ? 5 : 4)
                         .tickSizeOuter(0));
                 
                 // Update grid lines
                 const chartContainer = svg.select("g");
                 chartContainer.selectAll(".tick-line").remove();
                 
-                const yTicks = y.ticks(5);
-                const chartWidth = parseInt(svg.attr("width")) - 60;
+                const yTicks = y.ticks(isWide ? 5 : 4);
+                const chartWidth = parseInt(svg.attr("width")) - (isWide ? 60 : 50);
                 
                 yTicks.forEach(tickValue => {
                     chartContainer.append("line")
@@ -424,10 +464,10 @@ function setupLiveUpdates(config, data, x, y, fieldTitle, isDenseData) {
                         .attr("stroke-width", 1);
                 });
                 
-                // Update line with increased stroke width
+                // Update line with thinner stroke width
                 svg.select(`#line-${config.id}`)
                     .datum(data)
-                    .style("stroke-width", isDenseData ? 2.5 : 2)
+                    .style("stroke-width", isDenseData ? 1.5 : 1.2)
                     .attr("d", d3.line()
                         .x(d => x(d.date))
                         .y(d => y(d.value)));
@@ -449,7 +489,7 @@ function setupLiveUpdates(config, data, x, y, fieldTitle, isDenseData) {
                         .append("circle")
                         .attr("cx", d => x(d.date))
                         .attr("cy", d => y(d.value))
-                        .attr("r", 3)
+                        .attr("r", 2.5)
                         .attr("class", "chart-circle")
                         .attr("fill", config.color)
                         .attr("stroke", "#fff")
