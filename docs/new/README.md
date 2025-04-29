@@ -18,7 +18,7 @@ This directory contains a new implementation of the DriMon dashboard that uses d
 - **d3.css**: Styling for D3 charts
 - **chart_renderer.js**: D3 chart rendering logic
 - **chart_config.js**: Configuration for all charts with category-based coloring
-- **new_script.js**: Main application script
+- **script.js**: Main application script
 - **data.js**: Data fetching and processing for summary display
 - **met.js**: Met.no weather data integration
 
