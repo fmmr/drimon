@@ -2,9 +2,9 @@
     background-color: rgba(255, 255, 255, 0.95);
     border: 1px solid #ccc;
     border-radius: 4px;
-    padding: 8px;
+    padding: 6px;
     font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
-    font-size: 12px;
+    font-size: 11px;
     max-width: 180px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     pointer-events: none;
@@ -13,7 +13,7 @@
 
 .chart-title {
     text-anchor: middle;
-    font-size: 16px;
+    font-size: 12px; /* Smaller title */
     font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
     fill: #274b6d;
     font-weight: bold;
@@ -24,7 +24,7 @@
     font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
     fill: #4D759E;
     font-weight: bold;
-    font-size: 12px;
+    font-size: 11px; /* Smaller axis labels */
 }
 
 .chart-yaxis {
@@ -32,40 +32,40 @@
     font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
     fill: #4D759E;
     font-weight: bold;
-    font-size: 12px;
+    font-size: 11px; /* Smaller axis labels */
 }
 
 .chart-copyright {
     text-anchor: end;
     fill: #339933;
     cursor: pointer;
-    font-size: 8px;
+    font-size: 7px;
     font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
 }
 
 .chart-line {
     fill: none;
-    stroke-width: 2px;
+    stroke-width: 1.5px; /* Thinner line */
 }
 
 .chart-circle {
-    stroke-width: 1.5px;
+    stroke-width: 1px;
     stroke: #fff;
 }
 
 .hover-circle {
-    stroke-width: 2px;
+    stroke-width: 1.5px;
     stroke: #fff;
 }
 
 .chart-x-axis-label {
-    font-size: 11px;
+    font-size: 9px; /* Smaller tick marks */
     font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
     color: #666666;
 }
 
 .chart-y-axis-label {
-    font-size: 11px;
+    font-size: 9px; /* Smaller tick marks */
     font-family: "Lucida Grande", "Lucida Sans Unicode", Verdana, Arial, Helvetica, sans-serif;
     color: #666666;
 }
@@ -93,10 +93,11 @@
     position: relative;
 }
 
+/* Grid with fixed height for charts */
 .chart-grid {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
-    grid-template-rows: repeat(4, 1fr);
+    grid-template-rows: repeat(4, minmax(180px, 1fr));
     gap: 10px;
     height: calc(100vh - 60px);
     overflow: auto;
@@ -109,7 +110,7 @@
     left: 50%;
     transform: translate(-50%, -50%);
     color: #666;
-    font-size: 14px;
+    font-size: 12px;
 }
 
 /* Mobile responsive styles */
@@ -121,12 +122,12 @@
     }
     
     .chart-container {
-        height: 250px !important;
+        height: 200px !important;
         margin-bottom: 10px;
     }
     
     .chart-tooltip {
         max-width: 160px;
-        font-size: 11px;
+        font-size: 10px;
     }
 }
