@@ -33,26 +33,27 @@ async function fetchData() {
         const timeSince = createdAt.fromNow();
 
         elements.temperature.innerHTML = `${temperature} °C`;
-        elements.temperature.className = `value ${getClassName(temperature, 16, 35)}`;
+        elements.temperature.parentElement.className = `data-chip ${getClassName(temperature, 16, 35)}`;
 
         elements.battery.innerHTML = `${battery} %`;
-        elements.battery.className = `value ${getBatteryClassName(battery)}`;
+        elements.battery.parentElement.className = `data-chip ${getBatteryClassName(battery)}`;
 
         elements.batteryVolt.innerHTML = `${batteryVolt} v`;
-        elements.batteryVolt.className = `value ${getBatteryClassName(battery)}`;
+        elements.batteryVolt.parentElement.className = `data-chip ${getBatteryClassName(battery)}`;
 
         elements.window.innerHTML = `${getWindowText(windowOpening)}`;
-        elements.window.className = `value`;
-        elements.window.title = `${windowOpening}mm`;
+        elements.window.parentElement.className = `data-chip`;
+        elements.window.parentElement.title = `${windowOpening}mm`;
 
         elements.pressure.innerHTML = `${pressure} hPa`;
-        elements.pressure.className = `value ${getPressureClassName(pressure)}`;
+        elements.pressure.parentElement.className = `data-chip ${getPressureClassName(pressure)}`;
 
         elements.light.innerHTML = `${getLightText(light)}`;
-        elements.light.title = `${light} lux`;
+        elements.light.parentElement.title = `${light} lux`;
+        elements.light.parentElement.className = `data-chip`;
 
         elements.timeSince.textContent = `${timeSince}`;
-        elements.timeSince.title = `${lastUpdated}`;
+        elements.timeSince.parentElement.title = `${lastUpdated}`;
         elements.title.title = `${lastStatus.status}`;
     } catch (error) {
         console.error('Error fetching data:', error);

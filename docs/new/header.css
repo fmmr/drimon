@@ -1,0 +1,223 @@
+/* Modern header styling */
+.modern-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: auto auto;
+    grid-template-areas: 
+        "logo info search"
+        "nav nav nav";
+    gap: 10px;
+    padding: 8px 15px;
+    background: linear-gradient(to right, #f8f9fa, #e9ecef);
+    border-bottom: 1px solid #dee2e6;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+    align-items: center;
+}
+
+/* Logo styling */
+.logo-container {
+    grid-area: logo;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logo {
+    height: 40px;
+    border-radius: 4px;
+    transition: transform 0.3s ease;
+}
+
+.logo:hover {
+    transform: scale(1.05);
+}
+
+/* Info section styling */
+.data-container {
+    grid-area: info;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+}
+
+.data-chip {
+    display: inline-flex;
+    align-items: center;
+    padding: 4px 8px;
+    background-color: white;
+    border-radius: 16px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    min-width: 50px;
+    justify-content: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    white-space: nowrap;
+}
+
+.data-chip:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
+}
+
+.data-chip[title] {
+    cursor: help;
+}
+
+/* Colors for different states */
+.norm, .full, .pressure-high {
+    color: #28a745;
+    border-left: 3px solid #28a745;
+}
+
+.high, .bat-low {
+    color: #dc3545;
+    border-left: 3px solid #dc3545;
+}
+
+.low, .pressure-low {
+    color: #007bff;
+    border-left: 3px solid #007bff;
+}
+
+.ok {
+    color: #fd7e14;
+    border-left: 3px solid #fd7e14;
+}
+
+/* Time indicator style */
+.time-indicator {
+    font-style: italic;
+    opacity: 0.8;
+    font-size: 0.8rem;
+}
+
+/* Search container styling */
+.search-container {
+    grid-area: search;
+    display: flex;
+    gap: 8px;
+    justify-content: flex-end;
+}
+
+#resultsInput {
+    width: 80px;
+    padding: 5px 10px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    transition: border-color 0.2s ease;
+}
+
+#resultsInput:focus {
+    border-color: #80bdff;
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+#updateButton {
+    padding: 5px 12px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background-color 0.2s ease;
+}
+
+#updateButton:hover {
+    background-color: #0069d9;
+}
+
+/* Navigation bar styling */
+.nav-container {
+    grid-area: nav;
+    display: flex;
+    gap: 5px;
+    align-items: center;
+    border-top: 1px solid #dee2e6;
+    padding-top: 8px;
+}
+
+/* Date range section */
+.date-ranges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    flex: 1;
+}
+
+.date-chip {
+    padding: 3px 8px;
+    background-color: #e9ecef;
+    color: #495057;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    text-align: center;
+    min-width: 32px;
+}
+
+.date-chip:hover, .date-chip.active {
+    background-color: #007bff;
+    color: white;
+}
+
+/* External links section */
+.external-links {
+    display: flex;
+    gap: 10px;
+    margin-left: auto;
+}
+
+.external-link {
+    color: #6c757d;
+    text-decoration: none;
+    font-size: 0.85rem;
+    border-radius: 4px;
+    padding: 3px 8px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.external-link:hover {
+    background-color: #f8f9fa;
+    color: #007bff;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .modern-header {
+        grid-template-columns: auto 1fr;
+        grid-template-areas: 
+            "logo info"
+            "nav nav";
+    }
+    
+    .search-container {
+        display: none;
+    }
+    
+    .data-container {
+        justify-content: flex-start;
+    }
+    
+    .data-chip {
+        padding: 3px 6px;
+        font-size: 0.8rem;
+    }
+    
+    .date-chip {
+        padding: 2px 6px;
+        font-size: 0.7rem;
+    }
+    
+    .external-link {
+        font-size: 0.75rem;
+    }
+}

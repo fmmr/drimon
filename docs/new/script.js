@@ -68,7 +68,7 @@ function setupEventListeners() {
     });
     
     // Date range links
-    document.querySelectorAll('.date-link').forEach(link => {
+    document.querySelectorAll('.date-chip').forEach(link => {
         link.addEventListener('click', event => {
             event.preventDefault();
             const range = event.target.dataset.range;
