@@ -3,12 +3,10 @@ const timezone = encodeURIComponent("Europe/Paris");
 const updateInterval = 60000; // 1 minute update interval
 const chartUpdateInterval = 15000; // 15 seconds chart update interval
 
-// Fixed dimensions for charts
+// Fixed height for all charts
 const CHART_HEIGHT = 180;
-const SMALL_CHART_WIDTH = 200;  // For 1-column charts
-const LARGE_CHART_WIDTH = 400;  // For 2-column charts
-const FULL_CHART_WIDTH = 800;   // For full-width charts
-const MOBILE_CHART_WIDTH = 600; // Standard width for mobile view
+const SMALL_CHART_WIDTH = 200;
+const LARGE_CHART_WIDTH = 400;
 
 // Function to create the chart container element
 function createChartContainer(config) {
@@ -103,45 +101,19 @@ async function drawChart(config, startDate, endDate, results = 8000) {
     // Ensure global tooltip exists
     const tooltip = createGlobalTooltip();
     
-    // Check if we're in mobile view
-    const isMobile = window.innerWidth <= 768;
+    // Determine if this is a wide chart
+    const isWide = isWideChart(config.area);
     
-    // Determine appropriate chart width
-    let width;
-    let isWide;
+    // Set dimensions based on chart type (wide or narrow)
+    const width = isWide ? LARGE_CHART_WIDTH : SMALL_CHART_WIDTH;
+    const height = CHART_HEIGHT; // Fixed height for all charts
     
-    if (isMobile) {
-        // In mobile view, all charts use the same width
-        width = MOBILE_CHART_WIDTH;
-        isWide = true; // Treat all charts as wide in mobile
-    } else {
-        // In desktop view, use width based on grid area
-        isWide = isWideChart(config.area);
-        
-        // Determine if this is a full-width chart (all 8 columns)
-        const areaParts = config.area.split('/');
-        const isFullWidth = areaParts.length >= 4 && 
-                          (parseInt(areaParts[3].trim()) - parseInt(areaParts[1].trim())) >= 8;
-        
-        if (isFullWidth) {
-            width = FULL_CHART_WIDTH;
-        } else if (isWide) {
-            width = LARGE_CHART_WIDTH;
-        } else {
-            width = SMALL_CHART_WIDTH;
-        }
-    }
-    
-    // Determine container height using its computed style
-    const containerHeight = container.clientHeight || (isMobile ? 220 : CHART_HEIGHT);
-    const height = containerHeight - (isMobile ? 2 : 5); // Smaller adjustment for mobile
-    
-    // Adjust margins to use more vertical space
+    // Adjust margins for different chart sizes
     const margin = {
-        top: isMobile ? 10 : 15,                // Even smaller top margin for mobile
+        top: 20,              // Smaller top margin
         right: isWide ? 20 : 15,
-        bottom: isMobile ? 15 : 25,             // Smaller bottom margin for mobile
-        left: isMobile ? 30 : (isWide ? 40 : 35) // Smaller left margin for mobile
+        bottom: 30,           // Smaller bottom margin
+        left: isWide ? 40 : 35  // Smaller left margin for narrow charts
     };
     
     // Clear any existing chart
@@ -153,7 +125,7 @@ async function drawChart(config, startDate, endDate, results = 8000) {
         .attr('width', width)
         .attr('height', height)
         .attr('viewBox', `0 0 ${width} ${height}`)
-        .attr('preserveAspectRatio', 'xMidYMid meet') // Centered both horizontally and vertically
+        .attr('preserveAspectRatio', 'xMidYMid meet')
         .style('width', '100%')
         .style('height', '100%');
     
@@ -161,17 +133,14 @@ async function drawChart(config, startDate, endDate, results = 8000) {
     const g = svg.append("g")
         .attr("transform", `translate(${margin.left},${margin.top})`);
     
-    // Calculate actual drawing dimensions - maximize available space
+    // Calculate actual drawing dimensions
     const chartWidth = width - margin.left - margin.right;
-    
-    // For chartHeight, use almost all of the available container height
-    // This will stretch the chart vertically to fill more space
     const chartHeight = height - margin.top - margin.bottom;
     
-    // Add title - positioned differently based on view
+    // Add title
     svg.append('text')
         .attr('x', width / 2)
-        .attr('y', isMobile ? 8 : 10) // Even closer to top on mobile
+        .attr('y', 12) // Position title closer to top
         .attr("class", "chart-title")
         .text(config.title);
     
@@ -247,22 +216,20 @@ async function drawChart(config, startDate, endDate, results = 8000) {
             .domain([dataExtent[0] - ypadding, dataExtent[1] + ypadding])
             .range([chartHeight, 0]);
         
-        // Add x-axis with even fewer ticks for mobile
+        // Add x-axis with fewer ticks for small charts
         const timeRange = d3.max(data, d => d.date) - d3.min(data, d => d.date);
-        const numXTicks = isMobile ? 2 : (isWide ? 4 : 3); // Fewer ticks on mobile
         svg.append("g")
             .attr("transform", `translate(${margin.left},${height - margin.bottom})`)
             .attr("class", "x-axis")
             .call(d3.axisBottom(x)
-                .ticks(numXTicks)
+                .ticks(isWide ? 4 : 3) // Fewer ticks for small charts
                 .tickFormat(d => customTickFormat(d, timeRange))
                 .tickSizeOuter(0))
             .selectAll("text")
             .attr("class", "chart-x-axis-label");
         
-        // Add horizontal grid lines - even fewer for mobile
-        const numYTicks = isMobile ? 3 : (isWide ? 5 : 4);
-        const yTicks = y.ticks(numYTicks);
+        // Add horizontal grid lines - fewer for small charts
+        const yTicks = y.ticks(isWide ? 5 : 4);
         yTicks.forEach(tickValue => {
             g.append("line")
                 .attr("class", "tick-line")
@@ -274,12 +241,12 @@ async function drawChart(config, startDate, endDate, results = 8000) {
                 .attr("stroke-width", 1);
         });
         
-        // Add y-axis with fewer ticks for mobile
+        // Add y-axis with fewer ticks for small charts
         svg.append("g")
             .attr("transform", `translate(${margin.left},${margin.top})`)
             .attr("class", "y-axis")
             .call(d3.axisLeft(y)
-                .ticks(numYTicks) // Use same ticks value as grid lines
+                .ticks(isWide ? 5 : 4) // Fewer ticks for small charts
                 .tickSizeOuter(0))
             .selectAll("text")
             .attr("class", "chart-y-axis-label");

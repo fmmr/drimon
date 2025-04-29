@@ -91,23 +91,17 @@
     border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     position: relative;
-    height: 100%;
-    width: 100%;
-    display: flex;
-    align-items: stretch;
-    justify-content: center;
 }
 
 /* Grid with fixed height for charts */
 .chart-grid {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
-    grid-template-rows: repeat(4, minmax(150px, 1fr)); /* Reduced minimum height */
+    grid-template-rows: repeat(4, minmax(180px, 1fr));
     gap: 10px;
     height: calc(100vh - 60px);
     overflow: auto;
     padding: 10px;
-    align-items: stretch; /* Stretch items to fill row height */
 }
 
 .loader {
@@ -125,38 +119,15 @@
         display: flex;
         flex-direction: column;
         height: auto;
-        width: 100%;
-        gap: 15px;
     }
     
     .chart-container {
-        height: 220px !important; /* Reduced height for mobile */
-        width: 100% !important;
-        max-width: 100%;
-        margin-bottom: 0; /* Remove margin, use gap instead */
-    }
-    
-    /* Make all SVGs use full container space in mobile view */
-    svg {
-        width: 100% !important;
-        height: 100% !important;
-        max-width: 100%;
-        max-height: 100%;
-    }
-    
-    /* Better spacing for mobile */
-    .chart-title {
-        font-size: 11px; /* Even smaller title */
-        font-weight: 600;
-    }
-    
-    .chart-x-axis-label,
-    .chart-y-axis-label {
-        font-size: 8px !important; /* Smaller axis labels */
+        height: 200px !important;
+        margin-bottom: 10px;
     }
     
     .chart-tooltip {
-        max-width: 140px;
-        font-size: 9px;
+        max-width: 160px;
+        font-size: 10px;
     }
 }
