@@ -104,7 +104,15 @@ function setupEventListeners() {
         resizeTimeout = setTimeout(() => {
             // Hide tooltip on resize
             d3.select('#global-chart-tooltip').style('opacity', 0);
-        }, 150);
+            
+            // Always redraw on resize to ensure proper height filling
+            const startDate = getURLParameter('startDate') || defaultStartDate;
+            const endDate = getURLParameter('endDate') || "";
+            const results = resultsInput.value || defaultResults;
+            
+            // Redraw all charts to ensure they properly fill their containers
+            loadCharts(startDate, endDate, results);
+        }, 250);
     });
     
     // Handle scroll to hide tooltip
