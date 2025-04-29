@@ -29,7 +29,9 @@
     <header class="modern-header">
         <!-- Logo Section -->
         <div class="logo-container">
-            <img src="../logos/1_100x55.webp" class="logo" id="main-title" alt="DriMon">
+            <a href="https://github.com/fmmr/drimon">
+                <img src="../logos/1_100x55.webp" class="logo" id="main-title" alt="DriMon">
+            </a>
         </div>
         
         <!-- Data Info Section -->
@@ -61,40 +63,31 @@
                 <i class="fas fa-window-maximize mr-1"></i>
                 <span id="window"></span>
             </div>
+            <a href="https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/1-60206/Norge/Akershus/Asker/R%C3%B8dtangen" class="data-chip" id="met-link" title="Værvarsel fra Meteorologisk institutt">
+                <i class="fas fa-cloud-sun mr-1"></i>
+                <span>yr.no</span>
+            </a>
+        </div>
+        
+        <!-- Date Range Links -->
+        <div class="date-ranges">
+            <a href="#" class="date-chip" data-range="today">i dag</a>
+            <a href="#" class="date-chip" data-range="1">2d</a>
+            <a href="#" class="date-chip" data-range="2">3d</a>
+            <a href="#" class="date-chip" data-range="6">7d</a>
+            <a href="#" class="date-chip" data-range="13">14d</a>
+            <a href="#" class="date-chip" data-range="30">30d</a>
+            <a href="#" class="date-chip" data-range="yesterday">i går</a>
+            <a href="#" class="date-chip" data-range="this-week">uke</a>
+            <a href="#" class="date-chip" data-range="last-week">uke-1</a>
+            <a href="#" class="date-chip" data-range="this-month">mnd</a>
+            <a href="#" class="date-chip" data-range="start">start</a>
         </div>
         
         <!-- Search Container -->
         <div class="search-container">
             <input type="number" id="resultsInput" placeholder="Resultater" min="1">
             <button id="updateButton">Oppdater</button>
-        </div>
-        
-        <!-- Navigation Bar -->
-        <div class="nav-container">
-            <!-- Date Range Links -->
-            <div class="date-ranges">
-                <a href="#" class="date-chip" data-range="today">i dag</a>
-                <a href="#" class="date-chip" data-range="1">2d</a>
-                <a href="#" class="date-chip" data-range="2">3d</a>
-                <a href="#" class="date-chip" data-range="6">7d</a>
-                <a href="#" class="date-chip" data-range="13">14d</a>
-                <a href="#" class="date-chip" data-range="30">30d</a>
-                <a href="#" class="date-chip" data-range="yesterday">i går</a>
-                <a href="#" class="date-chip" data-range="this-week">uke</a>
-                <a href="#" class="date-chip" data-range="last-week">uke-1</a>
-                <a href="#" class="date-chip" data-range="this-month">mnd</a>
-                <a href="#" class="date-chip" data-range="start">start</a>
-            </div>
-            
-            <!-- External Links -->
-            <div class="external-links">
-                <a href="https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/1-60206/Norge/Akershus/Asker/R%C3%B8dtangen" class="external-link" id="met-link">
-                    <i class="fas fa-cloud-sun"></i> met.no
-                </a>
-                <a href="https://github.com/fmmr/drimon" class="external-link">
-                    <i class="fab fa-github"></i> github
-                </a>
-            </div>
         </div>
     </header>
     <div class="container-fluid">

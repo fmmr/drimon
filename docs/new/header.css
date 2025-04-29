@@ -1,22 +1,18 @@
 /* Modern header styling */
 .modern-header {
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    grid-template-rows: auto auto;
-    grid-template-areas: 
-        "logo info search"
-        "nav nav nav";
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
     gap: 10px;
     padding: 8px 15px;
     background: linear-gradient(to right, #f8f9fa, #e9ecef);
     border-bottom: 1px solid #dee2e6;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
-    align-items: center;
 }
 
 /* Logo styling */
 .logo-container {
-    grid-area: logo;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -26,6 +22,7 @@
     height: 40px;
     border-radius: 4px;
     transition: transform 0.3s ease;
+    cursor: pointer;
 }
 
 .logo:hover {
@@ -34,11 +31,10 @@
 
 /* Info section styling */
 .data-container {
-    grid-area: info;
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
-    justify-content: center;
+    gap: 8px;
+    flex: 1;
 }
 
 .data-chip {
@@ -95,10 +91,9 @@
 
 /* Search container styling */
 .search-container {
-    grid-area: search;
     display: flex;
     gap: 8px;
-    justify-content: flex-end;
+    align-items: center;
 }
 
 #resultsInput {
@@ -133,12 +128,10 @@
 
 /* Navigation bar styling */
 .nav-container {
-    grid-area: nav;
     display: flex;
     gap: 5px;
     align-items: center;
-    border-top: 1px solid #dee2e6;
-    padding-top: 8px;
+    margin-left: auto;
 }
 
 /* Date range section */
@@ -146,7 +139,6 @@
     display: flex;
     flex-wrap: wrap;
     gap: 6px;
-    flex: 1;
 }
 
 .date-chip {
@@ -193,10 +185,8 @@
 /* Responsive styles */
 @media (max-width: 768px) {
     .modern-header {
-        grid-template-columns: auto 1fr;
-        grid-template-areas: 
-            "logo info"
-            "nav nav";
+        flex-direction: column;
+        align-items: flex-start;
     }
     
     .search-container {
@@ -204,20 +194,17 @@
     }
     
     .data-container {
-        justify-content: flex-start;
+        order: 2;
+        margin: 5px 0;
     }
     
-    .data-chip {
+    .date-ranges {
+        order: 3;
+        width: 100%;
+    }
+    
+    .data-chip, .date-chip {
         padding: 3px 6px;
-        font-size: 0.8rem;
-    }
-    
-    .date-chip {
-        padding: 2px 6px;
-        font-size: 0.7rem;
-    }
-    
-    .external-link {
         font-size: 0.75rem;
     }
 }
