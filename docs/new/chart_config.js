@@ -25,7 +25,7 @@ const chartConfigs = [
         title: 'Lys', 
         channel: 2568299, 
         field: 8, 
-        color: '#ffb700', // Yellow for light
+        color: '#e6a500', // Yellow for light
         row: 1,
         startDate: '2024-08-06 17:00:00',
         category: 'light'
@@ -200,16 +200,6 @@ const chartConfigs = [
         category: 'system'
     },
     { 
-        id: 'chart-light-int',
-        title: 'Lys Int', 
-        channel: 2584547, 
-        field: 5, 
-        color: '#ffb700',
-        row: 4,
-        startDate: '2024-08-06 15:00:00',
-        category: 'light'
-    },
-    { 
         id: 'chart-time-used',
         title: 'Tid brukt', 
         channel: 2584547, 
@@ -217,6 +207,16 @@ const chartConfigs = [
         color: '#4a6741',
         row: 4,
         category: 'system'
+    },
+    { 
+        id: 'chart-light-int',
+        title: 'Int', 
+        channel: 2584547, 
+        field: 5, 
+        color: '#e6a500',
+        row: 4,
+        startDate: '2024-08-06 15:00:00',
+        category: 'light'
     }
 ];
 
