@@ -255,10 +255,12 @@ async function fetchTimeRangeData(config, startDateStr, endDateStr, results = 80
                     channel: config.series[index].channel,
                     field: config.series[index].field,
                     color: config.series[index].color,
+                    axis: config.series[index].axis, // Include axis information
                     feeds: data.feeds
                 })),
                 feeds: seriesData[0].feeds, // Use first series for timestamps
-                is_multi_series: true
+                is_multi_series: true,
+                secondYAxis: config.secondYAxis // Pass along second y-axis config
             };
             
             return combinedData;
@@ -391,6 +393,9 @@ function createOrUpdateChart(config, data) {
             filteredValues = filteredValues.concat(seriesFiltered);
             
             // Create dataset for this series
+            const yAxisID = series.axis || 'y';
+            console.log(`Series ${series.title} using axis: ${yAxisID}`);
+            
             datasets.push({
                 label: series.title,
                 data: seriesValues,
@@ -401,7 +406,7 @@ function createOrUpdateChart(config, data) {
                 pointHoverRadius: 4,
                 fill: false,
                 tension: 0.1,
-                yAxisID: series.axis || 'y' // Use specified axis or default to primary y-axis
+                yAxisID: yAxisID // Explicitly set the y-axis ID
             });
         });
     } else {
