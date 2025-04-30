@@ -12,100 +12,91 @@ const elements = {
 
 // Function to fetch Met.no weather data
 async function fetchMetData() {
-    try {
-        // Try direct fetch from YR.no first
-        await fetchDirectFromMetNo();
-    } catch (error) {
-        console.error('Direct Met.no fetch failed, using fallback:', error);
-        try {
-            // Fallback to ThingSpeak channel if direct method fails
-            await fetchFromThingSpeak();
-        } catch (fallbackError) {
-            console.error('Fallback fetch failed:', fallbackError);
-            if (elements.metTemp) {
-                elements.metTemp.innerHTML = 'Feil';
-                elements.metTemp.parentElement.title = 'Kunne ikke hente værdata';
-            }
-        }
-    }
-}
-
-// Direct fetch from Met.no API
-async function fetchDirectFromMetNo() {
     // Røtangen coordinates
     const metUrl = 'https://api.met.no/weatherapi/nowcast/2.0/complete?lat=59.532213&lon=10.418231';
     
-    // Store last successful fetch time in localStorage to honor cache headers
-    const lastFetchTime = localStorage.getItem('lastMetFetchTime');
-    const currentTime = new Date().getTime();
-    
-    // Only fetch directly if we haven't fetched in the last 10 minutes
-    // This respects Met.no's cache policy and avoids unnecessary requests
-    if (lastFetchTime && (currentTime - parseInt(lastFetchTime) < 10 * 60 * 1000)) {
-        // Try to use cached data if available
-        const cachedData = localStorage.getItem('cachedMetData');
-        if (cachedData) {
-            const data = JSON.parse(cachedData);
-            updateMetDisplay(data);
-            return; // Exit early if we can use cached data
+    try {
+        // Check localStorage cache first
+        const lastFetchTime = localStorage.getItem('lastMetFetchTime');
+        const currentTime = new Date().getTime();
+        
+        // Use cached data if it's less than 10 minutes old
+        if (lastFetchTime && (currentTime - parseInt(lastFetchTime) < 10 * 60 * 1000)) {
+            const cachedData = localStorage.getItem('cachedMetData');
+            if (cachedData) {
+                const data = JSON.parse(cachedData);
+                updateMetDisplay(data);
+                return; // Exit early with cached data
+            }
         }
-    }
-    
-    // Set required headers for Met.no API
-    const response = await fetch(metUrl, {
-        headers: {
-            'Accept': 'application/json',
-            'User-Agent': 'drimon/1.0 (https://drimon.rodland.no)' 
-        },
-        // Safari may still block this despite the headers, handled by catch block
-        mode: 'cors'
-    });
-    
-    if (!response.ok) {
-        throw new Error(`Met.no API responded with status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    // Add source information
-    data._source = 'yr.no';
-    
-    // Cache the successful response
-    localStorage.setItem('cachedMetData', JSON.stringify(data));
-    localStorage.setItem('lastMetFetchTime', currentTime.toString());
-    
-    updateMetDisplay(data);
-}
-
-// Fallback to ThingSpeak if direct fetch fails (e.g., CORS issues in Safari)
-async function fetchFromThingSpeak() {
-    const response = await fetch(`https://api.thingspeak.com/channels/2626867/feeds/last.json?timezone=${timezone}`);
-    
-    if (!response.ok) {
-        throw new Error(`ThingSpeak API responded with status: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    // Format data in a compatible way for updateMetDisplay
-    const formattedData = {
-        properties: {
-            timeseries: [{
-                time: data.created_at,
-                data: {
-                    instant: {
-                        details: {
-                            air_temperature: parseFloat(data.field1)
+        
+        // Try direct fetch from YR.no
+        try {
+            // Set required headers for Met.no API
+            const response = await fetch(metUrl, {
+                headers: {
+                    'Accept': 'application/json',
+                    'User-Agent': 'drimon/1.0 (https://drimon.rodland.no)' 
+                },
+                mode: 'cors'
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Met.no API responded with status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            // Add source information
+            data._source = 'yr.no';
+            
+            // Cache the successful response
+            localStorage.setItem('cachedMetData', JSON.stringify(data));
+            localStorage.setItem('lastMetFetchTime', currentTime.toString());
+            
+            updateMetDisplay(data);
+            return;
+        } catch (yrError) {
+            console.error('Direct Met.no fetch failed:', yrError);
+            // Fall through to ThingSpeak fallback
+        }
+        
+        // Fallback to ThingSpeak if direct method fails
+        const thingspeakResponse = await fetch(`https://api.thingspeak.com/channels/2626867/feeds/last.json?timezone=${timezone}`);
+        
+        if (!thingspeakResponse.ok) {
+            throw new Error(`ThingSpeak API responded with status: ${thingspeakResponse.status}`);
+        }
+        
+        const tsData = await thingspeakResponse.json();
+        
+        // Format data in a compatible way for updateMetDisplay
+        const formattedData = {
+            properties: {
+                timeseries: [{
+                    time: tsData.created_at,
+                    data: {
+                        instant: {
+                            details: {
+                                air_temperature: parseFloat(tsData.field1)
+                            }
                         }
                     }
-                }
-            }]
-        },
-        // Add source information for display in the tooltip
-        _source: 'ThingSpeak'
-    };
-    
-    updateMetDisplay(formattedData);
+                }]
+            },
+            // Add source information for display in the tooltip
+            _source: 'ThingSpeak'
+        };
+        
+        updateMetDisplay(formattedData);
+    } catch (error) {
+        // All fetch attempts failed
+        console.error('All weather data fetches failed:', error);
+        if (elements.metTemp) {
+            elements.metTemp.innerHTML = 'Feil';
+            elements.metTemp.parentElement.title = 'Kunne ikke hente værdata';
+        }
+    }
 }
 
 function updateMetDisplay(data) {
