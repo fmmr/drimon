@@ -364,18 +364,19 @@ function createOrUpdateChart(config, data) {
         const currentValue = filteredValues.length > 0 ? filteredValues[filteredValues.length - 1] : null;
         
         // Always prepare the innerHTML, regardless of visibility state
+        // Use shorter labels to save space
         statsEl.innerHTML = `
             <div class="chart-stat">
-                <span class="chart-stat-label">Min:</span>${formatNumber(adjustedMinValue)}${getUnit}
+                <span class="chart-stat-label">L:</span>${formatNumber(adjustedMinValue)}${getUnit}
             </div>
             <div class="chart-stat">
-                <span class="chart-stat-label">Avg:</span>${formatNumber(avgValue)}${getUnit}
+                <span class="chart-stat-label">A:</span>${formatNumber(avgValue)}${getUnit}
             </div>
             <div class="chart-stat">
-                <span class="chart-stat-label">Max:</span>${formatNumber(maxValue)}${getUnit}
+                <span class="chart-stat-label">H:</span>${formatNumber(maxValue)}${getUnit}
             </div>
             <div class="chart-stat chart-stat-current">
-                <span class="chart-stat-label">Nå:</span>${currentValue !== null ? formatNumber(currentValue) + getUnit : '—'}
+                <span class="chart-stat-label">N:</span>${currentValue !== null ? formatNumber(currentValue) + getUnit : '—'}
             </div>
         `;
         
