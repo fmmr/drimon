@@ -920,6 +920,13 @@ function createOrUpdateChart(config, data) {
             options: chartOptions
         });
     }
+    
+    // If this is a multi-series chart, update the title with current values
+    if (data.is_multi_series && data.series && data.series.length > 0 && 
+        typeof window.updateMultiSeriesTitle === 'function') {
+        // Add a small delay to ensure DOM is ready
+        setTimeout(() => window.updateMultiSeriesTitle(config.id, data), 100);
+    }
 }
 
 // Call this when window is resized to properly adjust all charts

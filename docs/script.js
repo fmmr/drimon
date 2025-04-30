@@ -203,7 +203,9 @@ document.addEventListener('DOMContentLoaded', () => {
                             window.chartInstances[config.id].update('none');
                             
                             // Update title with current values
+                            // Run immediately and again after a slight delay (to ensure DOM updates)
                             updateMultiSeriesTitle(config.id, newData);
+                            setTimeout(() => updateMultiSeriesTitle(config.id, newData), 100);
                         } 
                         // Single series chart
                         else if (newData.feeds && newData.feeds.length > 0) {
@@ -223,7 +225,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 60000);
     
     // Helper function to update multi-series chart titles with current values
-    function updateMultiSeriesTitle(chartId, data) {
+    // Export to window so it can be called from chart_renderer.js
+    window.updateMultiSeriesTitle = function(chartId, data) {
         if (!data.is_multi_series || !data.series || data.series.length === 0) return;
         
         const titleEl = document.querySelector(`.chart-title[data-chart-id="${chartId}"]`);
