@@ -13,8 +13,9 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/locale/nb.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="data.js" defer></script>
     <script src="date_utils.js" defer></script>
+    <script src="data.js" defer></script>
+    <script src="weather.js" defer></script>
     <script src="chart_config.js" defer></script>
     <script src="chart_renderer.js" defer></script>
     <script src="script.js" defer></script>
@@ -44,9 +45,12 @@
                     <i class="fas fa-thermometer-half mr-1"></i>
                     <span id="temperature">Laster...</span>
                 </div>
-                <a href="https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/1-60206/Norge/Akershus/Asker/R%C3%B8dtangen" class="data-chip" id="met-link" title="Ute Temperatur (yr.no)">
-                    <span id="met-temp">Laster...</span>
-                </a>
+                <div class="weather-pill-container">
+                    <div id="weather-icon-container" class="weather-icon-container"></div>
+                    <a href="https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/1-60206/Norge/Akershus/Asker/R%C3%B8dtangen" class="data-chip" id="met-link" title="Ute Temperatur (yr.no)">
+                        <span id="met-temp">Laster...</span>
+                    </a>
+                </div>
                 <div class="data-chip" title="Lysnivå">
                     <i class="fas fa-sun mr-1"></i>
                     <span id="light"></span>

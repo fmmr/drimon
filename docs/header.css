@@ -61,21 +61,34 @@
     cursor: help;
 }
 
-/* Weather icon styling */
-.met-weather-icon {
-    display: inline-flex;
+/* Weather pill container and icon styling */
+.weather-pill-container {
+    display: flex;
     align-items: center;
-    justify-content: center;
-    margin-right: 4px;
-    position: relative;
-    top: 1px;
+    margin: 0;
+    padding: 0;
 }
 
-.met-weather-icon img,
-.met-weather-icon object {
+.weather-icon-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 18px;
+    height: 18px;
+    margin-right: -9px; /* Negative margin to overlap with data-chip */
+    z-index: 2; /* Ensure icon is above the data-chip */
+}
+
+.weather-icon-container object,
+.weather-icon-container img {
     width: 16px;
     height: 16px;
     overflow: visible;
+}
+
+.weather-pill-container .data-chip {
+    padding-left: 12px; /* Extra padding to account for the icon */
 }
 
 /* Colors for different states */

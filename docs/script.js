@@ -110,15 +110,13 @@ document.addEventListener('DOMContentLoaded', () => {
         statsToggle.addEventListener('click', toggleStats);
     }
     
-    // Fetch initial data for header
+    // Fetch initial data for header (weather is handled separately in weather.js)
     fetchData();
-    fetchMetData();
     
     // Set up periodic data refresh for header (every minute)
     setInterval(() => {
-        // Update header data
+        // Update header data (weather updates on its own schedule)
         fetchData();
-        fetchMetData();
         
         // Also refresh charts if showing the latest data
         const currentRange = getURLParameter('range') || '1';
