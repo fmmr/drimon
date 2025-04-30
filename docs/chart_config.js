@@ -93,23 +93,27 @@ window.chartConfigs = [
         startDate: '2024-07-25 15:00:00',
         category: 'temperature'
     },
-    { 
-        id: 'chart-agurk',
-        title: 'Agurk Temp', 
-        channel: 2584548, 
-        field: 3, 
-        color: '#c62828', // Light green for cucumber
+    // Multi-series chart combining cucumber and padron temperatures
+    {
+        id: 'chart-plants-temp',
+        title: 'Plante Temperaturer',
+        // Define multiple data series for a single chart
+        series: [
+            {
+                title: 'Agurk',
+                channel: 2584548,
+                field: 3,
+                color: '#43a047'  // Green for cucumber
+            },
+            {
+                title: 'Padron',
+                channel: 2584548,
+                field: 5,
+                color: '#e65100'  // Orange for padron
+            }
+        ],
         row: 2,
-        startDate: '2024-07-25 15:00:00',
-        category: 'temperature'
-    },
-    { 
-        id: 'chart-paprika',
-        title: 'Padron Temp', 
-        channel: 2584548, 
-        field: 5, 
-        color: '#c62828', // Light orange for paprika
-        row: 2,
+        columnSpan: 2, // Make this chart span 2 columns
         startDate: '2024-07-25 15:00:00',
         category: 'temperature'
     },

@@ -230,8 +230,64 @@ window.fetchChartData = async function(config, range = 1, results = 8000) {
 const fetchChartData = window.fetchChartData;
 
 async function fetchTimeRangeData(config, startDateStr, endDateStr, results = 8000) {
+    // Check if this is a multi-series chart
+    if (config.series && Array.isArray(config.series)) {
+        // Fetch data for all series in parallel
+        try {
+            const seriesPromises = config.series.map(series => {
+                return fetchSingleSeries(
+                    series.channel, 
+                    series.field,
+                    startDateStr,
+                    endDateStr,
+                    results
+                );
+            });
+            
+            // Wait for all series data to be fetched
+            const seriesData = await Promise.all(seriesPromises);
+            
+            // Format into a single data structure with multiple series
+            const combinedData = {
+                chart_id: config.id,
+                series: seriesData.map((data, index) => ({
+                    title: config.series[index].title,
+                    channel: config.series[index].channel,
+                    field: config.series[index].field,
+                    color: config.series[index].color,
+                    feeds: data.feeds
+                })),
+                feeds: seriesData[0].feeds, // Use first series for timestamps
+                is_multi_series: true
+            };
+            
+            return combinedData;
+        } catch (error) {
+            console.error(`Error fetching multi-series data for ${config.title}:`, error);
+            return {
+                chart_id: config.id,
+                series: [],
+                feeds: [],
+                is_multi_series: true
+            };
+        }
+    } else {
+        // Single series - use original code
+        return fetchSingleSeries(
+            config.channel, 
+            config.field, 
+            startDateStr, 
+            endDateStr, 
+            results,
+            config.title
+        );
+    }
+}
+
+// Helper function to fetch data for a single series
+async function fetchSingleSeries(channel, field, startDateStr, endDateStr, results, title = "") {
     // Build API URL with appropriate parameters
-    let url = `https://api.thingspeak.com/channels/${config.channel}/fields/${config.field}.json?timezone=Europe/Oslo&results=${results}`;
+    let url = `https://api.thingspeak.com/channels/${channel}/fields/${field}.json?timezone=Europe/Oslo&results=${results}`;
     
     if (startDateStr) {
         url += `&start=${encodeURIComponent(startDateStr)}`;
@@ -250,12 +306,12 @@ async function fetchTimeRangeData(config, startDateStr, endDateStr, results = 80
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error(`Error fetching data for ${config.title}:`, error);
+        console.error(`Error fetching data for channel ${channel} field ${field}:`, error);
         
         // Return empty data structure rather than null to avoid further errors
         return {
-            channel: config.channel,
-            field: config.field,
+            channel: channel,
+            field: field,
             feeds: []
         };
     }
@@ -288,28 +344,105 @@ function createOrUpdateChart(config, data) {
         loadingEl.style.display = 'none';
     }
     
-    // Parse and prepare data
-    const values = data.feeds.map(feed => parseFloat(feed[`field${config.field}`]));
-    const hasNegativeValues = values.some(v => v < 0);
+    // Check if this is a multi-series chart
+    let datasets = [];
+    let filteredValues = [];
+    let timestamps = [];
+    let minValue = Infinity;
+    let maxValue = -Infinity;
+    let avgValue = 0;
+    let hasNegativeValues = false;
     
-    // Calculate data range for better scaling
-    const filteredValues = values.filter(v => !isNaN(v));
-    
-    if (filteredValues.length === 0) {
-        // No valid numeric values
-        const loadingEl = document.getElementById(`loading-${config.id}`);
-        if (loadingEl) {
-            loadingEl.innerHTML = `<div>Ingen gyldige dataverdier</div>`;
+    if (data.is_multi_series) {
+        // Handle multi-series data
+        if (!data.series || data.series.length === 0 || data.series[0].feeds.length === 0) {
+            // No valid data for any series
+            const loadingEl = document.getElementById(`loading-${config.id}`);
+            if (loadingEl) {
+                loadingEl.innerHTML = `<div>Ingen gyldige dataverdier</div>`;
+            }
+            return;
         }
-        return;
+        
+        // Use timestamps from first series for consistency
+        timestamps = data.series[0].feeds.map(feed => feed.created_at);
+        
+        // Process each series data
+        data.series.forEach(series => {
+            // Get values for this series
+            const seriesValues = series.feeds.map(feed => parseFloat(feed[`field${series.field}`]));
+            const seriesFiltered = seriesValues.filter(v => !isNaN(v));
+            
+            // Skip empty series
+            if (seriesFiltered.length === 0) return;
+            
+            // Check for negative values
+            if (seriesFiltered.some(v => v < 0)) {
+                hasNegativeValues = true;
+            }
+            
+            // Update min/max values
+            const seriesMin = Math.min(...seriesFiltered);
+            const seriesMax = Math.max(...seriesFiltered);
+            minValue = Math.min(minValue, seriesMin);
+            maxValue = Math.max(maxValue, seriesMax);
+            
+            // Add to filtered values for overall stats
+            filteredValues = filteredValues.concat(seriesFiltered);
+            
+            // Create dataset for this series
+            datasets.push({
+                label: series.title,
+                data: seriesValues,
+                borderColor: series.color,
+                backgroundColor: `${series.color}20`,
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                fill: false,
+                tension: 0.1
+            });
+        });
+    } else {
+        // Handle single series data (original code)
+        const values = data.feeds.map(feed => parseFloat(feed[`field${config.field}`]));
+        hasNegativeValues = values.some(v => v < 0);
+        
+        // Calculate data range for better scaling
+        filteredValues = values.filter(v => !isNaN(v));
+        
+        if (filteredValues.length === 0) {
+            // No valid numeric values
+            const loadingEl = document.getElementById(`loading-${config.id}`);
+            if (loadingEl) {
+                loadingEl.innerHTML = `<div>Ingen gyldige dataverdier</div>`;
+            }
+            return;
+        }
+        
+        minValue = Math.min(...filteredValues);
+        maxValue = Math.max(...filteredValues);
+        
+        // Store timestamps for cross-chart syncing
+        timestamps = data.feeds.map(feed => feed.created_at);
+        
+        // Create dataset for single series
+        datasets.push({
+            label: config.title,
+            data: values,
+            borderColor: config.color,
+            backgroundColor: hasNegativeValues ? 'rgba(0,0,0,0)' : `${config.color}20`,
+            borderWidth: 2,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            fill: !hasNegativeValues,
+            tension: 0.1
+        });
     }
     
-    const minValue = Math.min(...filteredValues);
-    const maxValue = Math.max(...filteredValues);
-    
-    // Calculate average
+    // Calculate average across all series
     const sum = filteredValues.reduce((acc, val) => acc + val, 0);
-    const avgValue = sum / filteredValues.length;
+    avgValue = sum / filteredValues.length;
     
     // Add 5% padding to min/max values to prevent data points from touching edges
     const range = maxValue - minValue;
@@ -321,19 +454,34 @@ function createOrUpdateChart(config, data) {
     const paddedMinValue = hasNegativeValues ? minValue - paddingAmount : Math.max(0, minValue - paddingAmount);
     const paddedMaxValue = maxValue + paddingAmount;
     
-    // Store timestamps for cross-chart syncing
-    const timestamps = data.feeds.map(feed => feed.created_at);
-    
     // Store raw data for shared tooltips
     window.chartRawData = window.chartRawData || {};
-    window.chartRawData[config.id] = {
-        timestamps: timestamps,
-        values: values,
-        title: config.title,
-        category: config.category,
-        color: config.color,
-        unit: config.unit || ''
-    };
+    
+    if (data.is_multi_series) {
+        // Store data for each series for multi-series charts
+        window.chartRawData[config.id] = {
+            timestamps: timestamps,
+            series: data.series.map(series => ({
+                title: series.title,
+                values: series.feeds.map(feed => parseFloat(feed[`field${series.field}`])),
+                color: series.color
+            })),
+            is_multi_series: true,
+            title: config.title,
+            category: config.category,
+            unit: config.unit || ''
+        };
+    } else {
+        // For single series charts, keep original format
+        window.chartRawData[config.id] = {
+            timestamps: timestamps,
+            values: datasets[0].data,
+            title: config.title,
+            category: config.category,
+            color: config.color,
+            unit: config.unit || ''
+        };
+    }
     
     // Apply chart config minimum value if provided
     let adjustedMinValue = minValue;
@@ -397,18 +545,8 @@ function createOrUpdateChart(config, data) {
     }
     
     const chartData = {
-        labels: data.feeds.map(feed => moment(feed.created_at).format('LT')),
-        datasets: [{
-            label: config.title,
-            data: values,
-            borderColor: config.color,
-            backgroundColor: hasNegativeValues ? 'rgba(0,0,0,0)' : `${config.color}20`, // No fill for charts with negative values
-            borderWidth: 2,
-            pointRadius: 0, // Hide points by default
-            pointHoverRadius: 4,
-            fill: !hasNegativeValues, // Only use fill for positive-only charts
-            tension: 0.1 // Reduced curve for better accuracy
-        }]
+        labels: timestamps.map(timestamp => moment(timestamp).format('LT')),
+        datasets: datasets
     };
     
     // Function for cross-chart highlighting
@@ -504,12 +642,26 @@ function createOrUpdateChart(config, data) {
                 
                 // Only include if close enough (5 minutes)
                 if (minTimeDiff <= 5 * 60 * 1000 && closestIndex !== -1) {
-                    relatedData.push({
-                        title: rawData.title,
-                        value: rawData.values[closestIndex],
-                        unit: getUnitForChart(chartId),
-                        color: rawData.color
-                    });
+                    // Handle both single and multi-series charts
+                    if (rawData.is_multi_series && rawData.series) {
+                        // Add each series in the multi-series chart
+                        rawData.series.forEach(series => {
+                            relatedData.push({
+                                title: `${rawData.title} (${series.title})`,
+                                value: series.values[closestIndex],
+                                unit: getUnitForChart(chartId),
+                                color: series.color
+                            });
+                        });
+                    } else {
+                        // Single series chart
+                        relatedData.push({
+                            title: rawData.title,
+                            value: rawData.values[closestIndex],
+                            unit: getUnitForChart(chartId),
+                            color: rawData.color
+                        });
+                    }
                 }
             }
         });
@@ -592,7 +744,16 @@ function createOrUpdateChart(config, data) {
         
         plugins: {
             legend: {
-                display: false
+                // Only show legend for multi-series charts
+                display: data.is_multi_series,
+                position: 'top',
+                labels: {
+                    boxWidth: 12,
+                    padding: 10,
+                    font: {
+                        size: 10
+                    }
+                }
             },
             tooltip: {
                 mode: 'index',
@@ -608,7 +769,8 @@ function createOrUpdateChart(config, data) {
                 callbacks: {
                     // Customize title to show full date/time
                     title: (tooltipItems) => {
-                        return moment(data.feeds[tooltipItems[0].dataIndex].created_at).format('LLL');
+                        const index = tooltipItems[0].dataIndex;
+                        return moment(timestamps[index]).format('LLL');
                     },
                     
                     // Show data from all related charts in this tooltip
