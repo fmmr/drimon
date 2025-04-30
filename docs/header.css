@@ -65,6 +65,7 @@
 .weather-pill-container {
     display: flex;
     align-items: center;
+    position: relative;
     margin: 0;
     padding: 0;
 }
@@ -73,11 +74,13 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    position: relative;
-    width: 18px;
-    height: 18px;
-    margin-right: -9px; /* Negative margin to overlap with data-chip */
-    z-index: 2; /* Ensure icon is above the data-chip */
+    position: absolute;
+    left: 8px; /* Position inside the pill */
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    z-index: 3; /* Ensure icon is on top */
 }
 
 .weather-icon-container object,
@@ -88,7 +91,7 @@
 }
 
 .weather-pill-container .data-chip {
-    padding-left: 12px; /* Extra padding to account for the icon */
+    padding-left: 28px; /* Extra padding to account for the icon */
 }
 
 /* Colors for different states */

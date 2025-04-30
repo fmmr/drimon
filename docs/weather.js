@@ -174,6 +174,9 @@ function updateWeatherIcon(symbolCode) {
                 <img src="weather-icons/${symbolCode}.svg" alt="${symbolCode}" width="16" height="16">
             </object>
         `;
+        
+        // Make sure the icon container is visible
+        weatherElements.weatherIcon.style.display = 'flex';
         logWeather('Weather icon updated successfully');
     } catch (error) {
         logWeather('Error updating weather icon', error);
