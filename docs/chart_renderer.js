@@ -750,6 +750,33 @@ function createOrUpdateChart(config, data) {
                         display: false, // Don't show grid lines for second axis
                         drawOnChartArea: false
                     },
+                    // Calculate y1 range based on second series values
+                    suggestedMin: function() {
+                        // Find the dataset with y1 axis
+                        const y1Dataset = datasets.find(d => d.yAxisID === 'y1');
+                        if (y1Dataset && y1Dataset.data.length > 0) {
+                            const values = y1Dataset.data.filter(v => !isNaN(v));
+                            if (values.length) {
+                                const min = Math.min(...values);
+                                // Add 5% padding
+                                return Math.max(0, min - (min * 0.05));
+                            }
+                        }
+                        return 0;
+                    }(),
+                    suggestedMax: function() {
+                        // Find the dataset with y1 axis
+                        const y1Dataset = datasets.find(d => d.yAxisID === 'y1');
+                        if (y1Dataset && y1Dataset.data.length > 0) {
+                            const values = y1Dataset.data.filter(v => !isNaN(v));
+                            if (values.length) {
+                                const max = Math.max(...values);
+                                // Add 5% padding
+                                return max + (max * 0.05);
+                            }
+                        }
+                        return 100;
+                    }(),
                     ticks: {
                         font: {
                             size: window.innerWidth <= 768 ? 8 : 9
