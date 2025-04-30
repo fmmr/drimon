@@ -173,9 +173,22 @@ async function fetchData() {
         elements.batteryVolt.innerHTML = `${batteryVolt} v`;
         elements.batteryVolt.parentElement.className = `data-chip ${getBatteryClassName(battery)}`;
 
-        elements.window.innerHTML = `${getWindowText(windowOpening)}`;
+        const windowState = getWindowText(windowOpening);
+        elements.window.innerHTML = `${windowState}`;
         elements.window.parentElement.className = `data-chip`;
         elements.window.parentElement.title = `${windowOpening}mm`;
+        
+        // Update window icon based on state
+        const windowIcon = elements.window.parentElement.querySelector('i');
+        if (windowIcon) {
+            if (windowState === 'Lukket') {
+                windowIcon.className = 'fas fa-window-close mr-1';
+            } else if (windowState === 'Glippe') {
+                windowIcon.className = 'fas fa-grip-lines-vertical mr-1';
+            } else if (windowState === 'Åpent') {
+                windowIcon.className = 'fas fa-window-maximize mr-1';
+            }
+        }
 
         elements.pressure.innerHTML = `${pressure} hPa`;
         elements.pressure.parentElement.className = `data-chip ${getPressureClassName(pressure)}`;
