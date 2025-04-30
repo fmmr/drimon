@@ -24,15 +24,30 @@ window.chartConfigs = [
         category: 'structure',
         minValue: 50  // Set minimum Y-axis value
     },
-    { 
+    // Multi-series chart for light measurements with dual y-axes
+    {
         id: 'chart-light',
         title: 'Lys', 
-        channel: 2568299, 
-        field: 8, 
-        color: '#e6a500', // Yellow for light
+        series: [
+            {
+                title: 'Tak',       // External/ceiling light
+                channel: 2568299, 
+                field: 8,
+                color: '#e6a500',  // Yellow for light
+                axis: 'y'          // Primary y-axis
+            },
+            {
+                title: 'Intern',    // Internal light intensity
+                channel: 2584547, 
+                field: 5,
+                color: '#8a5a00',  // Dark yellow for light intensity
+                axis: 'y1'         // Secondary y-axis
+            }
+        ],
         row: 1,
         startDate: '2024-08-06 17:00:00',
-        category: 'light'
+        category: 'light',
+        secondYAxis: true          // Enable second y-axis
     },
     { 
         id: 'chart-battery',
@@ -213,14 +228,4 @@ window.chartConfigs = [
         row: 4,
         category: 'system'
     },
-    { 
-        id: 'chart-light-int',
-        title: 'Lys Int', 
-        channel: 2584547, 
-        field: 5, 
-        color: '#e6a500',
-        row: 4,
-        startDate: '2024-08-06 15:00:00',
-        category: 'light'
-    }
 ];

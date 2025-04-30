@@ -400,7 +400,8 @@ function createOrUpdateChart(config, data) {
                 pointRadius: 0,
                 pointHoverRadius: 4,
                 fill: false,
-                tension: 0.1
+                tension: 0.1,
+                yAxisID: series.axis || 'y' // Use specified axis or default to primary y-axis
             });
         });
     } else {
@@ -436,7 +437,8 @@ function createOrUpdateChart(config, data) {
             pointRadius: 0,
             pointHoverRadius: 4,
             fill: !hasNegativeValues,
-            tension: 0.1
+            tension: 0.1,
+            yAxisID: 'y' // Always use primary y-axis for single series
         });
     }
     
@@ -681,7 +683,7 @@ function createOrUpdateChart(config, data) {
         layout: {
             padding: {
                 left: 0,
-                right: 2,
+                right: config.secondYAxis ? 20 : 2, // Add more padding if using second y-axis
                 top: 2,
                 bottom: 0
             }
@@ -739,7 +741,35 @@ function createOrUpdateChart(config, data) {
                 border: {
                     display: false
                 }
-            }
+            },
+            // Add secondary Y axis if enabled in config
+            ...(config.secondYAxis && {
+                y1: {
+                    position: 'left', // Put second axis on the opposite side
+                    grid: {
+                        display: false, // Don't show grid lines for second axis
+                        drawOnChartArea: false
+                    },
+                    ticks: {
+                        font: {
+                            size: window.innerWidth <= 768 ? 8 : 9
+                        },
+                        maxTicksLimit: window.innerWidth <= 768 ? 4 : 5,
+                        color: '#8a5a00', // Match the color of the second series
+                        padding: 0,
+                        callback: function(value) {
+                            // Abbreviate large numbers
+                            if (value >= 1000) {
+                                return (value / 1000) + 'k';
+                            }
+                            return value;
+                        }
+                    },
+                    border: {
+                        display: false
+                    }
+                }
+            })
         },
         
         plugins: {
