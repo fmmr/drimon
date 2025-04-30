@@ -127,10 +127,10 @@ html, body {
     padding-left: 4px;
   }
   
-  /* Adjust stats positioning on mobile */
+  /* Mobile stats adjustments */
   .mobile-layout .chart-stats {
-    top: 0;
-    right: 4px;
+    margin-bottom: 1px;
+    padding-bottom: 1px;
   }
 }
 
@@ -150,14 +150,15 @@ html, body {
 
 /* Stats container */
 .chart-stats {
-  position: absolute;
-  right: 2px;
-  top: 1px;
   display: flex;
-  gap: 4px;
+  justify-content: center;
+  gap: 8px;
   font-size: 9px;
   color: #888;
   font-weight: normal;
+  margin-bottom: 2px;
+  padding-bottom: 2px;
+  border-bottom: 1px dotted #eee;
 }
 
 .chart-stat {

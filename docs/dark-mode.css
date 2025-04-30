@@ -130,6 +130,7 @@ html, body {
 /* Dark mode stats */
 [data-theme="dark"] .chart-stats {
     color: #777;
+    border-bottom-color: #333;
 }
 
 /* Loading indicators in dark mode */

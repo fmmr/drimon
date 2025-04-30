@@ -74,7 +74,6 @@ function initializeChartLayout() {
         const statsDiv = document.createElement('div');
         statsDiv.className = 'chart-stats';
         statsDiv.id = `stats-${config.id}`;
-        titleDiv.appendChild(statsDiv);
         
         // Create canvas container
         const canvasContainer = document.createElement('div');
@@ -104,6 +103,7 @@ function initializeChartLayout() {
         canvasContainer.appendChild(loadingDiv);
         
         chartDiv.appendChild(titleDiv);
+        chartDiv.appendChild(statsDiv); // Add stats div below the title
         chartDiv.appendChild(canvasContainer);
         
         chartContainer.appendChild(chartDiv);
