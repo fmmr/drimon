@@ -55,6 +55,26 @@ function updateChartColors(isDark) {
     });
 }
 
+// Function to toggle stats display
+function toggleStats() {
+    // Get current visibility state
+    const isVisible = localStorage.getItem('statsVisible') !== 'false';
+    
+    // Toggle the state
+    localStorage.setItem('statsVisible', isVisible ? 'false' : 'true');
+    
+    // Update button appearance
+    const statsToggle = document.getElementById('statsToggle');
+    if (statsToggle) {
+        statsToggle.classList.toggle('active', !isVisible);
+    }
+    
+    // Update all stat elements' visibility
+    document.querySelectorAll('.chart-stats').forEach(el => {
+        el.style.display = isVisible ? 'none' : 'flex';
+    });
+}
+
 // Initialize app when the DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
     // Apply saved dark mode preference
@@ -72,10 +92,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
     
+    // Apply saved stats display preference
+    const statsVisible = localStorage.getItem('statsVisible') !== 'false';
+    const statsToggle = document.getElementById('statsToggle');
+    if (statsToggle) {
+        statsToggle.classList.toggle('active', statsVisible);
+    }
+    
     // Set up dark mode toggle button
     const darkModeToggle = document.getElementById('darkModeToggle');
     if (darkModeToggle) {
         darkModeToggle.addEventListener('click', toggleDarkMode);
+    }
+    
+    // Set up stats toggle button
+    if (statsToggle) {
+        statsToggle.addEventListener('click', toggleStats);
     }
     
     // Fetch initial data for header

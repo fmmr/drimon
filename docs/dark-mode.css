@@ -93,7 +93,7 @@ html, body {
 }
 
 /* Dark mode toggle button */
-#darkModeToggle {
+#darkModeToggle, #statsToggle {
     margin-left: 10px;
     padding: 4px 8px;
     background-color: var(--pill-bg);
@@ -106,12 +106,18 @@ html, body {
     transition: background-color 0.3s ease;
 }
 
-#darkModeToggle .icon {
+#darkModeToggle .icon, #statsToggle .icon {
     font-size: 14px;
     margin-right: 4px;
 }
 
-#darkModeToggle:hover {
+#darkModeToggle:hover, #statsToggle:hover {
+    background-color: var(--pill-active-bg);
+    color: var(--pill-active-color);
+}
+
+/* Active state for stats toggle */
+#statsToggle.active {
     background-color: var(--pill-active-bg);
     color: var(--pill-active-color);
 }
@@ -119,6 +125,11 @@ html, body {
 /* Chart.js dark mode adjustments */
 [data-theme="dark"] .chart-title {
     color: var(--text-color);
+}
+
+/* Dark mode stats */
+[data-theme="dark"] .chart-stats {
+    color: #777;
 }
 
 /* Loading indicators in dark mode */
