@@ -127,10 +127,38 @@ html, body {
     padding-left: 4px;
   }
   
-  /* Mobile stats adjustments */
+  /* Mobile stats adjustments - more verbose on mobile */
   .mobile-layout .chart-stats {
     margin-bottom: 1px;
     padding-bottom: 1px;
+    font-size: 9px; /* Larger font for mobile */
+    gap: 6px; /* More space between stats */
+  }
+  
+  .mobile-layout .chart-stat {
+    padding: 1px 3px; /* Larger padding */
+  }
+  
+  /* Show full labels on mobile */
+  .mobile-layout .chart-stat-label-low::before {
+    content: 'Min:';
+  }
+  
+  .mobile-layout .chart-stat-label-avg::before {
+    content: 'Avg:';
+  }
+  
+  .mobile-layout .chart-stat-label-high::before {
+    content: 'Max:';
+  }
+  
+  .mobile-layout .chart-stat-label-now::before {
+    content: 'Nå:';
+  }
+  
+  /* Hide short labels on mobile */
+  .mobile-layout .chart-stat-label-short {
+    display: none;
   }
 }
 

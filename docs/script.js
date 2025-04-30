@@ -76,16 +76,28 @@ function toggleStats() {
             // Create placeholder content if empty - will be replaced when charts update
             el.innerHTML = `
                 <div class="chart-stat">
-                    <span class="chart-stat-label">L:</span>—
+                    <span class="chart-stat-label">
+                        <span class="chart-stat-label-short">L:</span>
+                        <span class="chart-stat-label-low"></span>
+                    </span>—
                 </div>
                 <div class="chart-stat">
-                    <span class="chart-stat-label">A:</span>—
+                    <span class="chart-stat-label">
+                        <span class="chart-stat-label-short">A:</span>
+                        <span class="chart-stat-label-avg"></span>
+                    </span>—
                 </div>
                 <div class="chart-stat">
-                    <span class="chart-stat-label">H:</span>—
+                    <span class="chart-stat-label">
+                        <span class="chart-stat-label-short">H:</span>
+                        <span class="chart-stat-label-high"></span>
+                    </span>—
                 </div>
                 <div class="chart-stat chart-stat-current">
-                    <span class="chart-stat-label">N:</span>—
+                    <span class="chart-stat-label">
+                        <span class="chart-stat-label-short">N:</span>
+                        <span class="chart-stat-label-now"></span>
+                    </span>—
                 </div>
             `;
         }

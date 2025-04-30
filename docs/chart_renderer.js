@@ -364,19 +364,31 @@ function createOrUpdateChart(config, data) {
         const currentValue = filteredValues.length > 0 ? filteredValues[filteredValues.length - 1] : null;
         
         // Always prepare the innerHTML, regardless of visibility state
-        // Use shorter labels to save space
+        // Use both short and full labels - CSS will show appropriate one based on viewport
         statsEl.innerHTML = `
             <div class="chart-stat">
-                <span class="chart-stat-label">L:</span>${formatNumber(adjustedMinValue)}${getUnit}
+                <span class="chart-stat-label">
+                    <span class="chart-stat-label-short">L:</span>
+                    <span class="chart-stat-label-low"></span>
+                </span>${formatNumber(adjustedMinValue)}${getUnit}
             </div>
             <div class="chart-stat">
-                <span class="chart-stat-label">A:</span>${formatNumber(avgValue)}${getUnit}
+                <span class="chart-stat-label">
+                    <span class="chart-stat-label-short">A:</span>
+                    <span class="chart-stat-label-avg"></span>
+                </span>${formatNumber(avgValue)}${getUnit}
             </div>
             <div class="chart-stat">
-                <span class="chart-stat-label">H:</span>${formatNumber(maxValue)}${getUnit}
+                <span class="chart-stat-label">
+                    <span class="chart-stat-label-short">H:</span>
+                    <span class="chart-stat-label-high"></span>
+                </span>${formatNumber(maxValue)}${getUnit}
             </div>
             <div class="chart-stat chart-stat-current">
-                <span class="chart-stat-label">N:</span>${currentValue !== null ? formatNumber(currentValue) + getUnit : '—'}
+                <span class="chart-stat-label">
+                    <span class="chart-stat-label-short">N:</span>
+                    <span class="chart-stat-label-now"></span>
+                </span>${currentValue !== null ? formatNumber(currentValue) + getUnit : '—'}
             </div>
         `;
         
