@@ -79,13 +79,13 @@ window.chartConfigs = [
                 title: 'Agurk',
                 channel: 2584548,
                 field: 3,
-                color: '#e63946'  // Bright red for cucumber
+                color: '#e67e22'  // Orange-red for cucumber
             },
             {
                 title: 'Padron',
                 channel: 2584548,
                 field: 5,
-                color: '#9d0208'  // Dark red for padron
+                color: '#9b59b6'  // Purple-red for padron
             }
         ],
         row: 2,
@@ -111,19 +111,19 @@ window.chartConfigs = [
                 title: 'BME',
                 channel: 2584548,
                 field: 1,
-                color: '#e63946'  // Bright red for BME
+                color: '#d35400'  // Burnt orange for BME
             },
             {
                 title: 'AHT',
                 channel: 2584548,
                 field: 2,
-                color: '#9d0208'  // Dark red for AHT
+                color: '#8e44ad'  // Purple for AHT
             },
             {
                 title: 'Gulv',
                 channel: 2584548,
                 field: 4,
-                color: '#6a040f'  // Deep red for floor temperature
+                color: '#c0392b'  // Brick red for floor temperature
             }
         ],
         row: 2,
