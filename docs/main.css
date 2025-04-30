@@ -178,13 +178,12 @@ html, body {
 
 /* When title contains current values */
 .chart-title[data-chart-id] {
-  font-size: 9px; /* Even smaller for titles with values */
+  font-size: 10px; /* Size for titles (without values now) */
   padding: 0 2px;
-  line-height: 1.0;
-  white-space: normal; /* Allow wrapping for these titles */
-  height: auto;
-  max-height: 30px; /* Limit maximum height */
+  line-height: 1.1;
+  white-space: nowrap; /* Back to nowrap since we don't have values here anymore */
   overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Stats container */

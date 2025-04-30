@@ -75,10 +75,8 @@ function initializeChartLayout() {
         titleDiv.textContent = config.title;
         titleDiv.title = config.title; // Add tooltip
         
-        // For multi-series charts, we'll add current values to the title later
-        if (config.series && Array.isArray(config.series) && config.series.length > 1) {
-            titleDiv.dataset.chartId = config.id; // Add a data attribute to find it later
-        }
+        // For multi-series charts, the current values are shown in the legend
+        // (No longer needed to update the title)
         
         // Create stats container (will be populated with data later)
         const statsDiv = document.createElement('div');
@@ -822,10 +820,42 @@ function createOrUpdateChart(config, data) {
                 display: data.is_multi_series === true, // Explicitly check for true to avoid false positives
                 position: 'top',
                 labels: {
-                    boxWidth: 12,
-                    padding: 10,
+                    boxWidth: 8,  // Smaller color boxes
+                    boxHeight: 5, // Custom height for boxes to make them lines instead
+                    padding: 6,   // Less padding
                     font: {
-                        size: 10
+                        size: 8   // Smaller font
+                    },
+                    // Add current values to the labels
+                    generateLabels: function(chart) {
+                        const datasets = chart.data.datasets;
+                        const labels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+                        
+                        // For multi-series charts with data
+                        if (data.is_multi_series && data.series && data.series.length > 0) {
+                            // Update each label with the current value
+                            labels.forEach((label, i) => {
+                                if (i < data.series.length && datasets[i].data.length > 0) {
+                                    const currentValue = datasets[i].data[datasets[i].data.length - 1];
+                                    if (currentValue !== undefined && !isNaN(currentValue)) {
+                                        // Format value based on magnitude
+                                        let formattedValue;
+                                        if (Math.abs(currentValue) >= 10) {
+                                            formattedValue = Math.round(currentValue);
+                                        } else if (Math.abs(currentValue) < 1) {
+                                            formattedValue = currentValue.toFixed(2);
+                                        } else {
+                                            formattedValue = currentValue.toFixed(1);
+                                        }
+                                        
+                                        // Add value to label
+                                        label.text += `: ${formattedValue}`;
+                                    }
+                                }
+                            });
+                        }
+                        
+                        return labels;
                     }
                 }
             },
@@ -921,11 +951,11 @@ function createOrUpdateChart(config, data) {
         });
     }
     
-    // If this is a multi-series chart, update the title with current values
-    if (data.is_multi_series && data.series && data.series.length > 0 && 
-        typeof window.updateMultiSeriesTitle === 'function') {
-        // Add a small delay to ensure DOM is ready
-        setTimeout(() => window.updateMultiSeriesTitle(config.id, data), 100);
+    // If this is a multi-series chart, we'll update the legend with current values
+    // (This is now handled by the generateLabels function in the legend options)
+    // Just update the chart to refresh the legend
+    if (data.is_multi_series && chartInstances[config.id]) {
+        chartInstances[config.id].update('none');
     }
 }
 

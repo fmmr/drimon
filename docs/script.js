@@ -199,13 +199,8 @@ document.addEventListener('DOMContentLoaded', () => {
                                 window.chartInstances[config.id].data.labels = labels;
                             }
                             
-                            // Update the chart
+                            // Update the chart - this will refresh the legend with current values
                             window.chartInstances[config.id].update('none');
-                            
-                            // Update title with current values
-                            // Run immediately and again after a slight delay (to ensure DOM updates)
-                            updateMultiSeriesTitle(config.id, newData);
-                            setTimeout(() => updateMultiSeriesTitle(config.id, newData), 100);
                         } 
                         // Single series chart
                         else if (newData.feeds && newData.feeds.length > 0) {
@@ -224,44 +219,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 60000);
     
-    // Helper function to update multi-series chart titles with current values
-    // Export to window so it can be called from chart_renderer.js
-    window.updateMultiSeriesTitle = function(chartId, data) {
-        if (!data.is_multi_series || !data.series || data.series.length === 0) return;
-        
-        const titleEl = document.querySelector(`.chart-title[data-chart-id="${chartId}"]`);
-        if (!titleEl) return;
-        
-        // Get the original title
-        const originalTitle = titleEl.textContent.split(' [')[0]; // Remove any existing values
-        
-        // Create current values string
-        const currentValues = data.series.map(series => {
-            if (!series.feeds || series.feeds.length === 0) return null;
-            
-            // Get the last value
-            const lastValue = parseFloat(series.feeds[series.feeds.length - 1][`field${series.field}`]);
-            if (isNaN(lastValue)) return null;
-            
-            // Format the value
-            let formattedValue;
-            if (Math.abs(lastValue) >= 10) {
-                formattedValue = Math.round(lastValue);
-            } else if (Math.abs(lastValue) < 1) {
-                formattedValue = lastValue.toFixed(2);
-            } else {
-                formattedValue = lastValue.toFixed(1);
-            }
-            
-            return `${series.title}: ${formattedValue}`;
-        }).filter(val => val !== null).join(', ');
-        
-        // Update the title if we have values
-        if (currentValues) {
-            titleEl.textContent = `${originalTitle} [${currentValues}]`;
-            titleEl.title = `${originalTitle} [${currentValues}]`;
-        }
-    }
+    // NOTE: The updateMultiSeriesTitle function has been removed as this functionality
+    // has been moved to the Chart.js legend with current values
     
     // Add click event to the logo for GitHub link
     const logo = document.getElementById('main-title');
