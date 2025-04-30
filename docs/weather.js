@@ -147,6 +147,24 @@ function updateMetDisplay(data) {
         data.properties.timeseries[0].data.next_1_hours.summary.symbol_code) {
         symbolCode = data.properties.timeseries[0].data.next_1_hours.summary.symbol_code;
         logWeather(`Weather symbol code: ${symbolCode}`);
+    } else {
+        // Fallback for ThingSpeak which doesn't have symbol code
+        // Use a simple algorithm based on temperature to show a sensible icon
+        const temp = data.properties.timeseries[0].data.instant.details.air_temperature;
+        if (temp > 20) {
+            symbolCode = 'clearsky_day'; // Hot day
+        } else if (temp > 15) {
+            symbolCode = 'fair_day'; // Nice day
+        } else if (temp > 10) {
+            symbolCode = 'partlycloudy_day'; // Cool day
+        } else if (temp > 5) {
+            symbolCode = 'cloudy'; // Cold day
+        } else if (temp > 0) {
+            symbolCode = 'rain'; // Very cold
+        } else {
+            symbolCode = 'snow'; // Freezing
+        }
+        logWeather(`No symbol code available, using fallback based on temperature: ${symbolCode}`);
     }
     
     // Update temperature text and pill styling
@@ -168,12 +186,45 @@ function updateWeatherIcon(symbolCode) {
     }
     
     try {
-        // Use object tag for better SVG rendering, especially in Safari
-        weatherElements.weatherIcon.innerHTML = `
-            <object type="image/svg+xml" data="weather-icons/${symbolCode}.svg" width="16" height="16" class="weather-svg">
-                <img src="weather-icons/${symbolCode}.svg" alt="${symbolCode}" width="16" height="16">
-            </object>
-        `;
+        // Detect Safari
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        logWeather(`Updating weather icon with SVG for ${isSafari ? 'Safari' : 'Chrome'} browser`);
+        
+        if (isSafari) {
+            // For Safari, use Font Awesome icons with appropriate colors
+            const weatherIcons = {
+                'clearsky_day': '<i class="fas fa-sun" style="color:#FFD700;"></i>',
+                'clearsky_night': '<i class="fas fa-moon" style="color:#FFD700;"></i>',
+                'clearsky_polartwilight': '<i class="fas fa-sun" style="color:#FFD700;"></i>',
+                'fair_day': '<i class="fas fa-cloud-sun" style="color:#FFD700;"></i>',
+                'fair_night': '<i class="fas fa-cloud-moon" style="color:#FFD700;"></i>',
+                'fair_polartwilight': '<i class="fas fa-cloud-sun" style="color:#FFD700;"></i>',
+                'partlycloudy_day': '<i class="fas fa-cloud-sun" style="color:#87CEEB;"></i>',
+                'partlycloudy_night': '<i class="fas fa-cloud-moon" style="color:#87CEEB;"></i>',
+                'partlycloudy_polartwilight': '<i class="fas fa-cloud-sun" style="color:#87CEEB;"></i>',
+                'cloudy': '<i class="fas fa-cloud" style="color:#87CEEB;"></i>',
+                'rainshowers_day': '<i class="fas fa-cloud-sun-rain" style="color:#4682B4;"></i>',
+                'rainshowers_night': '<i class="fas fa-cloud-moon-rain" style="color:#4682B4;"></i>',
+                'rainshowers_polartwilight': '<i class="fas fa-cloud-sun-rain" style="color:#4682B4;"></i>',
+                'rain': '<i class="fas fa-cloud-rain" style="color:#4682B4;"></i>',
+                'heavyrain': '<i class="fas fa-cloud-showers-heavy" style="color:#4682B4;"></i>',
+                'fog': '<i class="fas fa-smog" style="color:#D3D3D3;"></i>',
+                'snow': '<i class="fas fa-snowflake" style="color:white;"></i>',
+                'sleet': '<i class="fas fa-cloud-meatball" style="color:#87CEEB;"></i>',
+                'default': '<i class="fas fa-cloud" style="color:#87CEEB;"></i>'
+            };
+            
+            // Use a default icon if we don't have a specific icon for this symbol code
+            const iconHTML = weatherIcons[symbolCode] || weatherIcons['default'];
+            weatherElements.weatherIcon.innerHTML = iconHTML;
+        } else {
+            // For Chrome and other browsers, use the SVG from weather-icons folder
+            weatherElements.weatherIcon.innerHTML = `
+                <object type="image/svg+xml" data="weather-icons/${symbolCode}.svg" width="16" height="16" class="weather-svg">
+                    <img src="weather-icons/${symbolCode}.svg" alt="${symbolCode}" width="16" height="16">
+                </object>
+            `;
+        }
         
         // Make sure the icon container is visible
         weatherElements.weatherIcon.style.display = 'flex';
