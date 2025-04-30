@@ -86,25 +86,28 @@ window.chartConfigs = [
         row: 2,
         category: 'temperature'
     },
-    { 
-        id: 'chart-bme-temp',
-        title: 'BME Temp', 
-        channel: 2584548, 
-        field: 1, 
-        color: '#c62828',
+    // Multi-series chart combining BME and AHT temperature sensors
+    {
+        id: 'chart-sensors-temp',
+        title: 'Sensor Temperaturer',
+        // Define multiple data series for a single chart
+        series: [
+            {
+                title: 'BME',
+                channel: 2584548,
+                field: 1,
+                color: '#e63946'  // Bright red for BME
+            },
+            {
+                title: 'AHT',
+                channel: 2584548,
+                field: 2,
+                color: '#9d0208'  // Dark red for AHT
+            }
+        ],
         row: 2,
         startDate: '2024-07-25 15:00:00',
-        category: 'temperature'
-    },
-    { 
-        id: 'chart-aht-temp',
-        title: 'AHT Temp', 
-        channel: 2584548, 
-        field: 2, 
-        color: '#c62828',
-        row: 2,
-        startDate: '2024-07-25 15:00:00',
-        category: 'temperature'
+        category: 'detail-temperature'  // Custom category to separate from other temperature charts
     },
     { 
         id: 'chart-floor-temp',

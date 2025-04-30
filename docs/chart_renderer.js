@@ -597,7 +597,7 @@ function createOrUpdateChart(config, data) {
     
     // Get chart units based on ID
     function getUnitForChart(chartId) {
-        if (chartId.includes('temp') || chartId.includes('plant')) return '°C';
+        if (chartId.includes('temp') || chartId.includes('plant') || chartId.includes('sensors')) return '°C';
         if (chartId.includes('humidity')) return '%';
         if (chartId.includes('pressure')) return 'hPa';
         if (chartId.includes('wind')) return 'm/s';
