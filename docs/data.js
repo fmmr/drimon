@@ -124,22 +124,15 @@ function updateMetDisplay(data) {
     
     // Update weather icon if we have a symbol code
     if (symbolCode) {
-        // Create or update the icon
-        let iconElem = document.getElementById('met-icon');
-        if (!iconElem) {
-            // Create icon container if it doesn't exist
-            iconElem = document.createElement('div');
-            iconElem.id = 'met-icon';
-            iconElem.className = 'met-weather-icon';
-            
-            // Insert before the temperature text
-            elements.metTemp.parentElement.insertBefore(iconElem, elements.metTemp);
-        }
+        // Get the icon container that's separate from the link
+        const iconContainer = document.getElementById('met-icon-container');
         
-        // Set the icon using the SVG with object tag for better Safari compatibility
-        iconElem.innerHTML = `<object type="image/svg+xml" data="weather-icons/${symbolCode}.svg" width="16" height="16">
-            <img src="weather-icons/${symbolCode}.svg" alt="${symbolCode}" width="16" height="16">
-        </object>`;
+        if (iconContainer) {
+            // Set the icon using the SVG with object tag for better Safari compatibility
+            iconContainer.innerHTML = `<object type="image/svg+xml" data="weather-icons/${symbolCode}.svg" width="16" height="16">
+                <img src="weather-icons/${symbolCode}.svg" alt="${symbolCode}" width="16" height="16">
+            </object>`;
+        }
     }
 }
 
