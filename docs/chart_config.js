@@ -54,6 +54,29 @@ window.chartConfigs = [
         row: 2,
         category: 'temperature'
     },
+    // Multi-series chart combining cucumber and padron temperatures (positioned as 2nd chart in row 2)
+    {
+        id: 'chart-plants-temp',
+        title: 'Plante Temperaturer',
+        // Define multiple data series for a single chart
+        series: [
+            {
+                title: 'Agurk',
+                channel: 2584548,
+                field: 3,
+                color: '#43a047'  // Green for cucumber
+            },
+            {
+                title: 'Padron',
+                channel: 2584548,
+                field: 5,
+                color: '#e65100'  // Orange for padron
+            }
+        ],
+        row: 2,
+        startDate: '2024-07-25 15:00:00',
+        category: 'temperature'
+    },
     { 
         id: 'chart-out-temp',
         title: 'Utetemperatur', 
@@ -90,30 +113,6 @@ window.chartConfigs = [
         field: 4, 
         color: '#c62828',
         row: 2,
-        startDate: '2024-07-25 15:00:00',
-        category: 'temperature'
-    },
-    // Multi-series chart combining cucumber and padron temperatures
-    {
-        id: 'chart-plants-temp',
-        title: 'Plante Temperaturer',
-        // Define multiple data series for a single chart
-        series: [
-            {
-                title: 'Agurk',
-                channel: 2584548,
-                field: 3,
-                color: '#43a047'  // Green for cucumber
-            },
-            {
-                title: 'Padron',
-                channel: 2584548,
-                field: 5,
-                color: '#e65100'  // Orange for padron
-            }
-        ],
-        row: 2,
-        columnSpan: 2, // Make this chart span 2 columns
         startDate: '2024-07-25 15:00:00',
         category: 'temperature'
     },

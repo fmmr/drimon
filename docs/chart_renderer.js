@@ -745,7 +745,7 @@ function createOrUpdateChart(config, data) {
         plugins: {
             legend: {
                 // Only show legend for multi-series charts
-                display: data.is_multi_series,
+                display: data.is_multi_series === true, // Explicitly check for true to avoid false positives
                 position: 'top',
                 labels: {
                     boxWidth: 12,
