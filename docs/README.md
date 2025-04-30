@@ -26,7 +26,7 @@ The system consists of:
 
 The web interface uses:
 
-- **D3.js**: For interactive data visualization and charts
+- **Chart.js**: For interactive data visualization and charts
 - **Modern HTML/CSS**: Responsive design optimized for both desktop and mobile
 - **Vanilla JavaScript**: For DOM manipulation and data fetching
 - **Moment.js**: For date handling and formatting
@@ -36,16 +36,24 @@ The web interface uses:
 
 - `index.html`: Main entry point and layout
 - `header.css`: Styling for the modern header with data chips
-- `d3.css`: Chart styling
+- `main.css`: Main styling and chart layout
 - `chart_config.js`: Configuration for all charts with row-based layout
-- `chart_renderer.js`: Core chart rendering using D3.js
-- `data.js`: Data fetching and processing from ThingSpeak
+- `chart_renderer.js`: Core chart rendering using Chart.js
+- `data.js`: Data fetching and processing from ThingSpeak and YR.no
+- `date_utils.js`: Date range handling and URL parameter parsing
 - `script.js`: Main application logic and UI interaction
-- `met.js`: Integration with met.no weather data
 
 ### Chart Configuration
 
-Charts are configured using a row-based layout system that automatically calculates grid positions. Each chart belongs to a specific row and the system handles responsive layout.
+Charts are configured using a row-based layout system that automatically calculates grid positions. Each chart belongs to a specific row and category, with responsive layouts for both desktop and mobile devices.
+
+### Mobile Support
+
+The interface includes enhanced mobile support:
+- Single-column chart layout on small screens
+- Category-based chart sorting (available only on mobile)
+- Touch-friendly controls
+- Optimized performance for mobile devices
 
 ## Development
 

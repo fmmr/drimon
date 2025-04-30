@@ -92,8 +92,35 @@
 /* Search container styling */
 .search-container {
     display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.results-container {
+    display: flex;
     gap: 8px;
     align-items: center;
+}
+
+.sort-container {
+    display: none; /* Hidden by default on desktop */
+    align-items: center;
+}
+
+#sortSelect {
+    padding: 5px 8px;
+    border: 1px solid #ced4da;
+    border-radius: 4px;
+    font-size: 0.85rem;
+    background-color: white;
+    cursor: pointer;
+    transition: border-color 0.2s ease;
+}
+
+#sortSelect:focus {
+    border-color: #80bdff;
+    outline: none;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
 #resultsInput {
@@ -197,15 +224,71 @@
         flex-direction: column;
         align-items: flex-start;
         background: #f8f9fa;
+        padding: 6px 10px;
+        gap: 5px;
+        position: sticky;
+        top: 0;
+        z-index: 10;
     }
     
     .search-container {
-        display: none;
+        width: 100%;
+        margin-top: 5px;
+        display: flex;
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .sort-container {
+        display: flex; /* Show on mobile */
+        width: auto;
+    }
+    
+    #sortSelect {
+        width: auto;
+        font-size: 0.8rem;
+        padding: 3px 6px;
+        background-color: #f1f3f5;
+    }
+    
+    .results-container {
+        width: auto;
+        display: flex;
+        justify-content: flex-end;
+        gap: 5px;
+    }
+    
+    #resultsInput {
+        width: 70px;
+        font-size: 0.8rem;
+        padding: 3px 6px;
+    }
+    
+    #updateButton {
+        font-size: 0.8rem;
+        padding: 3px 8px;
+    }
+    
+    .logo-container {
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .logo {
+        height: 30px;
+    }
+    
+    .time-indicator {
+        font-size: 0.7rem;
     }
     
     .data-container {
         order: 2;
-        margin: 5px 0;
+        margin: 0;
         display: flex;
         flex-wrap: nowrap;
         overflow-x: auto;
@@ -214,6 +297,7 @@
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none; /* Firefox */
         -ms-overflow-style: none; /* IE and Edge */
+        padding: 3px 0;
     }
     
     /* Hide scrollbar for Chrome, Safari and Opera */
@@ -231,6 +315,7 @@
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none; /* Firefox */
         -ms-overflow-style: none; /* IE and Edge */
+        padding: 3px 0;
     }
     
     /* Hide scrollbar for Chrome, Safari and Opera */
@@ -239,11 +324,12 @@
     }
     
     .data-chip, .date-chip {
-        padding: 3px 6px;
-        font-size: 0.75rem;
+        padding: 2px 6px;
+        font-size: 0.7rem;
         flex: 0 0 auto;
         position: relative;
         display: inline-flex;
+        min-width: 40px;
     }
     
     /* Add space for comfortable scrolling */

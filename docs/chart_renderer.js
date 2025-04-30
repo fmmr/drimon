@@ -1,529 +1,722 @@
-// Chart rendering functions using D3.js
-const timezone = encodeURIComponent("Europe/Paris");
-const updateInterval = 60000; // 1 minute update interval
-const chartUpdateInterval = 15000; // 15 seconds chart update interval
+// Global Chart.js configuration
+Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
+Chart.defaults.font.size = 12;
+Chart.defaults.color = '#666';
+Chart.defaults.responsive = true;
+Chart.defaults.maintainAspectRatio = false;
 
-// Fixed height for all charts
-const CHART_HEIGHT = 180;
-const SMALL_CHART_WIDTH = 200;
-const LARGE_CHART_WIDTH = 400;
+// Store all created charts to allow updates
+// Export as a global variable for access by script.js
+window.chartInstances = {};
+const chartInstances = window.chartInstances;
 
-// Function to create the chart container element
-function createChartContainer(config) {
-    const container = document.createElement('div');
-    container.id = config.id + '-container';
-    container.classList.add('chart-container');
-    container.style.gridArea = config.area;
+// Initialize the charts layout
+function initializeChartLayout() {
+    const chartContainer = document.getElementById('chartContainer');
+    chartContainer.innerHTML = '';
     
-    // Add loading indicator
-    const loader = document.createElement('div');
-    loader.classList.add('loader');
-    loader.textContent = 'Laster...';
-    loader.id = config.id + '-loader';
-    container.appendChild(loader);
-    
-    return container;
-}
-
-// Function to create a fixed tooltip container for the page
-function createGlobalTooltip() {
-    // Create tooltip if it doesn't exist
-    if (!document.getElementById('global-chart-tooltip')) {
-        const tooltip = document.createElement('div');
-        tooltip.id = 'global-chart-tooltip';
-        tooltip.className = 'chart-tooltip';
-        tooltip.style.opacity = 0;
-        tooltip.style.position = 'fixed'; // Fixed position so it can float above charts
-        tooltip.style.pointerEvents = 'none';
-        tooltip.style.zIndex = 1000;
-        document.body.appendChild(tooltip);
-    }
-    return d3.select('#global-chart-tooltip');
-}
-
-// Function to intelligently position tooltip based on mouse position
-function positionTooltip(event, data) {
-    const tooltip = d3.select('#global-chart-tooltip');
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    
-    // Get mouse position
-    const mouseX = event.clientX;
-    const mouseY = event.clientY;
-    
-    // Estimate tooltip dimensions (or get actual if available)
-    const tooltipWidth = tooltip.node().offsetWidth || 180;
-    const tooltipHeight = tooltip.node().offsetHeight || 80;
-    
-    // Default positions
-    let tooltipX, tooltipY;
-    
-    // Horizontal positioning: if mouse is in the right half of the viewport, 
-    // show tooltip to the left of the cursor, otherwise to the right
-    if (mouseX > viewportWidth / 2) {
-        tooltipX = mouseX - tooltipWidth - 10; // Show to the left of cursor
-    } else {
-        tooltipX = mouseX + 10; // Show to the right of cursor
-    }
-    
-    // Vertical positioning: if mouse is in the bottom half of the viewport, 
-    // show tooltip above cursor, otherwise below
-    if (mouseY > viewportHeight / 2) {
-        tooltipY = mouseY - tooltipHeight - 10; // Show above cursor
-    } else {
-        tooltipY = mouseY + 10; // Show below cursor
-    }
-    
-    // Final bounds check to ensure tooltip is fully visible
-    tooltipX = Math.max(10, Math.min(viewportWidth - tooltipWidth - 10, tooltipX));
-    tooltipY = Math.max(10, Math.min(viewportHeight - tooltipHeight - 10, tooltipY));
-    
-    return { x: tooltipX, y: tooltipY };
-}
-
-// Determine if a chart is a wide/double-width chart based on its grid area
-function isWideChart(gridArea) {
-    // Check if the grid area spans multiple columns (e.g., "1 / 1 / 2 / 3")
-    const areaParts = gridArea.split('/');
-    if (areaParts.length >= 4) {
-        const startCol = parseInt(areaParts[1].trim());
-        const endCol = parseInt(areaParts[3].trim());
-        return (endCol - startCol) >= 2;
-    }
-    return false;
-}
-
-// Function to draw a chart using D3.js
-async function drawChart(config, startDate, endDate, results = 8000) {
-    const selector = `#${config.id}-container`;
-    const container = document.querySelector(selector);
-    
-    // Ensure global tooltip exists
-    const tooltip = createGlobalTooltip();
-    
-    // Determine if this is a wide chart
-    const isWide = isWideChart(config.area);
-    
-    // Set dimensions based on chart type (wide or narrow)
-    const width = isWide ? LARGE_CHART_WIDTH : SMALL_CHART_WIDTH;
-    const height = CHART_HEIGHT; // Fixed height for all charts
-    
-    // Adjust margins for different chart sizes
-    const margin = {
-        top: 20,              // Smaller top margin
-        right: isWide ? 20 : 15,
-        bottom: 30,           // Smaller bottom margin
-        left: isWide ? 40 : 35  // Smaller left margin for narrow charts
-    };
-    
-    // Clear any existing chart
-    d3.select(selector).selectAll('svg').remove();
-    
-    // Create the SVG
-    const svg = d3.select(selector)
-        .append("svg")
-        .attr('width', width)
-        .attr('height', height)
-        .attr('viewBox', `0 0 ${width} ${height}`)
-        .attr('preserveAspectRatio', 'xMidYMid meet')
-        .style('width', '100%')
-        .style('height', '100%');
-    
-    // Main chart group with margins
-    const g = svg.append("g")
-        .attr("transform", `translate(${margin.left},${margin.top})`);
-    
-    // Calculate actual drawing dimensions
-    const chartWidth = width - margin.left - margin.right;
-    const chartHeight = height - margin.top - margin.bottom;
-    
-    // Add title
-    svg.append('text')
-        .attr('x', width / 2)
-        .attr('y', 12) // Position title closer to top
-        .attr("class", "chart-title")
-        .text(config.title);
-    
-    // Clip path to prevent drawing outside chart area
-    svg.append("defs").append("clipPath")
-        .attr("id", `clip-${config.id}`)
-        .append("rect")
-        .attr("x", 0)
-        .attr("y", 0)
-        .attr("width", chartWidth)
-        .attr("height", chartHeight);
-    
-    // Build the API URL
-    let url = `https://api.thingspeak.com/channels/${config.channel}/fields/${config.field}.json?`;
-    url += `timezone=${timezone}&round=2&results=${results}`;
-    
-    // Add time parameters if provided
-    if (startDate) {
-        // Use max of config.startDate and startDate if config has a startDate
-        if (config.startDate) {
-            const configStart = moment(config.startDate);
-            const requestStart = moment(startDate);
-            startDate = moment.max(configStart, requestStart).format('YYYY-MM-DD HH:mm:ss');
+    // Group charts by row (1-4) for organization for desktop view
+    const rowGroups = {};
+    window.chartConfigs.forEach(config => {
+        if (!rowGroups[config.row]) {
+            rowGroups[config.row] = [];
         }
-        url += `&start=${encodeURIComponent(startDate)}`;
-    } else if (config.startDate) {
-        url += `&start=${encodeURIComponent(config.startDate)}`;
+        rowGroups[config.row].push(config);
+    });
+    
+    // Calculate grid positions for each chart (for desktop view)
+    calculateGridPositions(rowGroups);
+    
+    // Determine if we're in mobile mode (for class distinction)
+    const isMobile = window.innerWidth <= 768;
+    
+    // For mobile sort by rows, then by column position to ensure a logical order
+    let orderedConfigs = [...window.chartConfigs];
+    
+    if (isMobile) {
+        // Sort by row and then by column position
+        orderedConfigs.sort((a, b) => {
+            // First sort by row
+            if (a.row !== b.row) {
+                return a.row - b.row;
+            }
+            
+            // If same row, sort by grid column (leftmost first)
+            const aColStart = parseInt(a.gridColumn.split('/')[0].trim());
+            const bColStart = parseInt(b.gridColumn.split('/')[0].trim());
+            return aColStart - bColStart;
+        });
     }
     
-    if (endDate) {
-        url += `&end=${encodeURIComponent(endDate)}`;
+    // Add all charts to the container at once
+    orderedConfigs.forEach(config => {
+        // Create chart div
+        const chartDiv = document.createElement('div');
+        chartDiv.className = 'chart';
+        
+        // Only set grid positions if not mobile (CSS will override these in mobile mode)
+        if (!isMobile) {
+            chartDiv.style.gridRow = config.gridRow;
+            chartDiv.style.gridColumn = config.gridColumn;
+        }
+        
+        // Add a data attribute for the row for potential filtering
+        chartDiv.setAttribute('data-row', config.row);
+        chartDiv.setAttribute('data-category', config.category || '');
+        
+        // Create title
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'chart-title';
+        titleDiv.textContent = config.title;
+        titleDiv.title = config.title; // Add tooltip
+        
+        // Create canvas container
+        const canvasContainer = document.createElement('div');
+        canvasContainer.className = 'chart-canvas-container';
+        
+        // Create canvas
+        const canvas = document.createElement('canvas');
+        canvas.id = config.id;
+        
+        // Add loading indicator - always visible initially
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'loading-indicator';
+        loadingDiv.id = `loading-${config.id}`;
+        loadingDiv.style.display = 'block'; // Ensure it's visible
+        
+        const spinner = document.createElement('div');
+        spinner.className = 'loading-spinner';
+        
+        const loadingText = document.createElement('div');
+        loadingText.textContent = 'Laster data...';
+        
+        // Assemble the DOM structure
+        loadingDiv.appendChild(spinner);
+        loadingDiv.appendChild(loadingText);
+        
+        canvasContainer.appendChild(canvas);
+        canvasContainer.appendChild(loadingDiv);
+        
+        chartDiv.appendChild(titleDiv);
+        chartDiv.appendChild(canvasContainer);
+        
+        chartContainer.appendChild(chartDiv);
+    });
+    
+    // Add window resize handler (but avoid duplicate listeners)
+    window.removeEventListener('resize', window.resizeAllCharts);
+    window.addEventListener('resize', window.resizeAllCharts);
+    
+    // Add a class to the container based on viewport
+    chartContainer.classList.toggle('mobile-layout', isMobile);
+}
+
+// Calculate grid positions for each chart
+function calculateGridPositions(rowGroups) {
+    // Process each row
+    Object.keys(rowGroups).sort().forEach(rowNum => {
+        const chartsInRow = rowGroups[rowNum];
+        const totalCharts = chartsInRow.length;
+        
+        // Each chart occupies one grid row based on its row number
+        const gridRow = rowNum;
+        
+        // For charts in this row, assign grid columns
+        let columnStart = 1; // Grid columns start at 1
+        
+        // Apply specific span rules based on number of charts in row
+        const spans = [];
+        
+        // Follow the rules specified:
+        switch (totalCharts) {
+            case 1: // 1 chart: span 8
+                spans.push(8);
+                break;
+                
+            case 2: // 2 charts: each span 4
+                spans.push(4, 4);
+                break;
+                
+            case 3: // 3 charts: leftmost spans 4, the next 2 spans 2
+                spans.push(4, 2, 2);
+                break;
+                
+            case 4: // 4 charts: each span 2
+                spans.push(2, 2, 2, 2);
+                break;
+                
+            case 5: // 5 charts: 3 leftmost spans 2, the next 2 spans 1
+                spans.push(2, 2, 2, 1, 1);
+                break;
+                
+            case 6: // 6 charts: 2 leftmost spans 2, the next 4 spans 1
+                spans.push(2, 2, 1, 1, 1, 1);
+                break;
+                
+            case 7: // 7 charts: leftmost spans 2, the next 6 spans 1
+                spans.push(2, 1, 1, 1, 1, 1, 1);
+                break;
+                
+            case 8: // 8 charts: all spans 1
+                for (let i = 0; i < 8; i++) spans.push(1);
+                break;
+                
+            default: // More than 8 charts (shouldn't happen, but just in case)
+                // Distribute evenly
+                const baseWidth = Math.floor(8 / totalCharts);
+                spans.push(...new Array(totalCharts).fill(baseWidth));
+                // Distribute remainder to first charts
+                const remainder = 8 - (baseWidth * totalCharts);
+                for (let i = 0; i < remainder; i++) {
+                    spans[i]++;
+                }
+                break;
+        }
+        
+        // Assign grid column positions to each chart
+        chartsInRow.forEach((chart, index) => {
+            const columnSpan = spans[index];
+            
+            // Set the grid position
+            chart.gridRow = gridRow;
+            chart.gridColumn = `${columnStart} / span ${columnSpan}`;
+            
+            // Move to next column
+            columnStart += columnSpan;
+        });
+    });
+}
+
+// Fetch data from ThingSpeak API
+// Export this function for use by script.js
+window.fetchChartData = async function(config, range = 1, results = 8000) {
+    // Get date range either from range parameter or URL
+    let startDateStr, endDateStr;
+    
+    if (typeof range === 'string') {
+        const dateRange = getDateRange(range);
+        startDateStr = dateRange.startDate;
+        endDateStr = dateRange.endDate;
+    } else if (typeof range === 'number') {
+        // Backward compatibility for numeric ranges
+        const dateRange = getDateRange(range.toString());
+        startDateStr = dateRange.startDate;
+        endDateStr = dateRange.endDate;
+    } else {
+        // Default to last 24 hours
+        const now = moment();
+        startDateStr = now.subtract(1, 'days').format(format);
+        endDateStr = '';
+    }
+    
+    // Use the start date from the configuration if specified and we're using 'start' range
+    if (range === 'start' && config.startDate) {
+        startDateStr = config.startDate;
+    }
+    
+    return fetchTimeRangeData(config, startDateStr, endDateStr, results);
+};
+
+// Local reference to the function
+const fetchChartData = window.fetchChartData;
+
+async function fetchTimeRangeData(config, startDateStr, endDateStr, results = 8000) {
+    // Build API URL with appropriate parameters
+    let url = `https://api.thingspeak.com/channels/${config.channel}/fields/${config.field}.json?timezone=Europe/Oslo&results=${results}`;
+    
+    if (startDateStr) {
+        url += `&start=${encodeURIComponent(startDateStr)}`;
+    }
+    
+    if (endDateStr) {
+        url += `&end=${encodeURIComponent(endDateStr)}`;
     }
     
     try {
-        // Fetch the data
-        const response = await d3.json(url);
-        const fieldName = `field${config.field}`;
-        
-        // Process data
-        let data = response.feeds
-            .filter(d => {
-                const value = parseFloat(d[fieldName]);
-                return !isNaN(value) && isFinite(value);
-            })
-            .map(d => ({
-                date: Date.parse(d.created_at),
-                value: parseFloat(d[fieldName])
-            }));
-        
-        if (data.length === 0) {
-            // No data, show a message
-            container.querySelector('.loader').textContent = 'Ingen data';
-            return;
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`API responded with status ${response.status}`);
         }
         
-        // Hide loader
-        container.querySelector('.loader').style.display = 'none';
-        
-        // Determine if data is dense (many points in a small time window)
-        const timeSpan = d3.max(data, d => d.date) - d3.min(data, d => d.date);
-        const avgPointsPerPixel = data.length / chartWidth;
-        const isDenseData = avgPointsPerPixel > 0.3; // Adjusted threshold
-        
-        // Set up scales
-        const x = d3.scaleTime()
-            .domain(d3.extent(data, d => d.date))
-            .range([0, chartWidth]);
-        
-        const dataExtent = d3.extent(data, d => d.value);
-        const ypadding = (dataExtent[1] - dataExtent[0]) * 0.05;
-        
-        const y = d3.scaleLinear()
-            .domain([dataExtent[0] - ypadding, dataExtent[1] + ypadding])
-            .range([chartHeight, 0]);
-        
-        // Add x-axis with fewer ticks for small charts
-        const timeRange = d3.max(data, d => d.date) - d3.min(data, d => d.date);
-        svg.append("g")
-            .attr("transform", `translate(${margin.left},${height - margin.bottom})`)
-            .attr("class", "x-axis")
-            .call(d3.axisBottom(x)
-                .ticks(isWide ? 4 : 3) // Fewer ticks for small charts
-                .tickFormat(d => customTickFormat(d, timeRange))
-                .tickSizeOuter(0))
-            .selectAll("text")
-            .attr("class", "chart-x-axis-label");
-        
-        // Add horizontal grid lines - fewer for small charts
-        const yTicks = y.ticks(isWide ? 5 : 4);
-        yTicks.forEach(tickValue => {
-            g.append("line")
-                .attr("class", "tick-line")
-                .attr("y1", y(tickValue))
-                .attr("x1", 0)
-                .attr("y2", y(tickValue))
-                .attr("x2", chartWidth)
-                .attr("stroke", "#e0e0e0")
-                .attr("stroke-width", 1);
-        });
-        
-        // Add y-axis with fewer ticks for small charts
-        svg.append("g")
-            .attr("transform", `translate(${margin.left},${margin.top})`)
-            .attr("class", "y-axis")
-            .call(d3.axisLeft(y)
-                .ticks(isWide ? 5 : 4) // Fewer ticks for small charts
-                .tickSizeOuter(0))
-            .selectAll("text")
-            .attr("class", "chart-y-axis-label");
-        
-        // Draw the line with thinner stroke width
-        g.append("path")
-            .datum(data)
-            .attr("class", "chart-line")
-            .attr("id", `line-${config.id}`)
-            .style("stroke", config.color)
-            .style("stroke-width", isDenseData ? 1.5 : 1.2) // Thinner line
-            .attr("d", d3.line()
-                .x(d => x(d.date))
-                .y(d => y(d.value)))
-            .attr("clip-path", `url(#clip-${config.id})`);
-        
-        // Add data points - only if not too dense
-        if (!isDenseData) {
-            g.selectAll(".chart-circle")
-                .data(data)
-                .enter()
-                .append("circle")
-                .attr("cx", d => x(d.date))
-                .attr("cy", d => y(d.value))
-                .attr("r", 2.5) // Smaller points
-                .attr("class", "chart-circle")
-                .attr("fill", config.color)
-                .attr("stroke", "#fff")
-                .attr("stroke-width", 1)
-                .attr("clip-path", `url(#clip-${config.id})`);
-        }
-        
-        // Create a transparent overlay at the SVG level (not the g level) 
-        // for better mouse event capture
-        const overlay = svg.append("rect")
-            .attr("class", "interaction-overlay")
-            .attr("x", margin.left)
-            .attr("y", margin.top)
-            .attr("width", chartWidth)
-            .attr("height", chartHeight)
-            .attr("fill", "transparent")
-            .style("pointer-events", "all");
-        
-        // Track whether the mouse is over the chart
-        let isMouseOverChart = false;
-        
-        // Mouse events for the overlay
-        overlay
-            .on("mouseenter", function() {
-                isMouseOverChart = true;
-            })
-            .on("mouseleave", function() {
-                isMouseOverChart = false;
-                // Hide tooltip with a delay
-                setTimeout(() => {
-                    if (!isMouseOverChart) {
-                        tooltip.transition()
-                            .duration(300)
-                            .style("opacity", 0);
-                        g.selectAll(".hover-circle").remove();
-                    }
-                }, 100);
-            })
-            .on("mousemove", function(event) {
-                const mouse = d3.pointer(event, this);
-                
-                // Adjust mouse position to be relative to the chart area
-                const mouseX = mouse[0] - margin.left;
-                
-                // Only process if within chart bounds
-                if (mouseX >= 0 && mouseX <= chartWidth) {
-                    const x0 = x.invert(mouseX);
-                    
-                    // Find closest data point
-                    const bisect = d3.bisector(d => d.date).left;
-                    const i = bisect(data, x0, 1);
-                    
-                    // Handle edge cases
-                    if (i <= 0) {
-                        showTooltip(data[0], event);
-                    } else if (i >= data.length) {
-                        showTooltip(data[data.length - 1], event);
-                    } else {
-                        // Find the closer of the two points
-                        const d0 = data[i - 1];
-                        const d1 = data[i];
-                        const d = (x0 - d0.date > d1.date - x0) ? d1 : d0;
-                        showTooltip(d, event);
-                    }
-                }
-            });
-            
-        // Helper function to show tooltip
-        function showTooltip(d, event) {
-            // Display tooltip with forced initial opacity
-            tooltip.style("opacity", 1);
-            
-            const originalDate = new Date(d.date);
-            tooltip.html(
-                `${response.channel[fieldName]}: <b>${d.value}</b><br>` +
-                `${originalDate.toDateString()}<br>` +
-                `${originalDate.toTimeString().replace(/\([^)]*\)/, '')}`
-            );
-            
-            // Position tooltip based on mouse location in viewport
-            const pos = positionTooltip(event, d);
-            tooltip.style("left", pos.x + "px")
-                   .style("top", pos.y + "px");
-            
-            // Add hover circle at data point
-            g.selectAll(".hover-circle").remove();
-            g.append("circle")
-                .attr("class", "hover-circle")
-                .attr("cx", x(d.date))
-                .attr("cy", y(d.value))
-                .attr("r", 4) // Slightly smaller hover circle
-                .attr("fill", config.color)
-                .attr("stroke", "#fff")
-                .attr("stroke-width", 1.5);
-        }
-        
-        // Add copyright at the bottom right
-        svg.append("text")
-            .attr("x", width - margin.right)
-            .attr("y", height - 5)
-            .attr("class", "chart-copyright")
-            .text("drimon")
-            .on("click", () => {
-                window.location.href = "https://drimon.rodland.no/";
-            });
-        
-        // Set up live data updates for this chart
-        if (!endDate) {
-            setupLiveUpdates(config, data, x, y, response.channel[fieldName], isDenseData, isWide);
-        }
-        
+        const data = await response.json();
+        return data;
     } catch (error) {
-        console.error(`Error loading chart ${config.id}:`, error);
-        container.querySelector('.loader').textContent = 'Feil ved lasting av data';
+        console.error(`Error fetching data for ${config.title}:`, error);
+        
+        // Return empty data structure rather than null to avoid further errors
+        return {
+            channel: config.channel,
+            field: config.field,
+            feeds: []
+        };
     }
 }
 
-// Function to update a chart with new data
-function setupLiveUpdates(config, data, x, y, fieldTitle, isDenseData, isWide) {
-    const selector = `#${config.id}-container`;
-    const lastDataUrl = `https://api.thingspeak.com/channels/${config.channel}/feeds/last.json?timezone=${timezone}`;
-    const tooltip = d3.select('#global-chart-tooltip');
+// Create or update a Chart.js chart
+function createOrUpdateChart(config, data) {
+    // Get the loading element
+    const loadingEl = document.getElementById(`loading-${config.id}`);
     
-    // Store the last date to avoid duplicates
-    let lastDate = data.length > 0 ? data[data.length - 1].date : null;
+    // Reset loading element to its initial state
+    if (loadingEl) {
+        loadingEl.innerHTML = `
+            <div class="loading-spinner"></div>
+            <div>Laster data...</div>
+        `;
+        loadingEl.style.display = 'block';
+    }
     
-    const updateInterval = setInterval(async () => {
-        try {
-            const response = await d3.json(lastDataUrl);
-            if (!response) return;
-            
-            const fieldName = `field${config.field}`;
-            const newValue = parseFloat(response[fieldName]);
-            const newDate = Date.parse(response.created_at);
-            
-            // Only update if we have a valid value and it's newer than what we have
-            if (!isNaN(newValue) && isFinite(newValue) && (newDate !== lastDate)) {
-                const newPoint = {
-                    date: newDate,
-                    value: newValue
-                };
-                
-                // Add the new point
-                data.push(newPoint);
-                lastDate = newDate;
-                
-                // Remove oldest point if we have too many
-                const maxPoints = 8000;
-                if (data.length > maxPoints) {
-                    data.shift();
+    if (!data || !data.feeds || data.feeds.length === 0) {
+        // No data available
+        if (loadingEl) {
+            loadingEl.innerHTML = `<div>Ingen data tilgjengelig</div>`;
+        }
+        return;
+    }
+    
+    // Hide loading indicator when data is available
+    if (loadingEl) {
+        loadingEl.style.display = 'none';
+    }
+    
+    // Parse and prepare data
+    const values = data.feeds.map(feed => parseFloat(feed[`field${config.field}`]));
+    const hasNegativeValues = values.some(v => v < 0);
+    
+    // Calculate data range for better scaling
+    const filteredValues = values.filter(v => !isNaN(v));
+    
+    if (filteredValues.length === 0) {
+        // No valid numeric values
+        const loadingEl = document.getElementById(`loading-${config.id}`);
+        if (loadingEl) {
+            loadingEl.innerHTML = `<div>Ingen gyldige dataverdier</div>`;
+        }
+        return;
+    }
+    
+    const minValue = Math.min(...filteredValues);
+    const maxValue = Math.max(...filteredValues);
+    
+    // Add 5% padding to min/max values to prevent data points from touching edges
+    const range = maxValue - minValue;
+    
+    // Handle case where min and max are identical or very small range
+    const paddingAmount = range < 0.1 ? (Math.abs(minValue) * 0.05 || 0.1) : range * 0.05;
+    
+    // Don't go below zero for non-negative data sets
+    const paddedMinValue = hasNegativeValues ? minValue - paddingAmount : Math.max(0, minValue - paddingAmount);
+    const paddedMaxValue = maxValue + paddingAmount;
+    
+    const chartData = {
+        labels: data.feeds.map(feed => moment(feed.created_at).format('LT')),
+        datasets: [{
+            label: config.title,
+            data: values,
+            borderColor: config.color,
+            backgroundColor: hasNegativeValues ? 'rgba(0,0,0,0)' : `${config.color}20`, // No fill for charts with negative values
+            borderWidth: 2,
+            pointRadius: 0, // Hide points by default
+            pointHoverRadius: 4,
+            fill: !hasNegativeValues, // Only use fill for positive-only charts
+            tension: 0.1 // Reduced curve for better accuracy
+        }]
+    };
+    
+    // Optimized chart options for better rendering
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: false, // Disable animation for immediate rendering
+        
+        layout: {
+            padding: {
+                left: 0,
+                right: 2,
+                top: 2,
+                bottom: 0
+            }
+        },
+        
+        scales: {
+            x: {
+                grid: {
+                    display: false // No X grid lines
+                },
+                ticks: {
+                    maxRotation: 0,
+                    autoSkip: true,
+                    maxTicksLimit: 6,
+                    font: {
+                        size: 9
+                    },
+                    color: '#666'
+                },
+                border: {
+                    display: false
                 }
-                
-                // Update scales
-                x.domain(d3.extent(data, d => d.date));
-                
-                const dataExtent = d3.extent(data, d => d.value);
-                const ypadding = (dataExtent[1] - dataExtent[0]) * 0.05;
-                y.domain([dataExtent[0] - ypadding, dataExtent[1] + ypadding]);
-                
-                // Update axes
-                const svg = d3.select(selector).select("svg");
-                const timeRange = d3.max(data, d => d.date) - d3.min(data, d => d.date);
-                
-                svg.select(".x-axis")
-                    .call(d3.axisBottom(x)
-                        .ticks(isWide ? 4 : 3)
-                        .tickFormat(d => customTickFormat(d, timeRange))
-                        .tickSizeOuter(0));
-                
-                svg.select(".y-axis")
-                    .call(d3.axisLeft(y)
-                        .ticks(isWide ? 5 : 4)
-                        .tickSizeOuter(0));
-                
-                // Update grid lines
-                const chartContainer = svg.select("g");
-                chartContainer.selectAll(".tick-line").remove();
-                
-                const yTicks = y.ticks(isWide ? 5 : 4);
-                const chartWidth = parseInt(svg.attr("width")) - (isWide ? 60 : 50);
-                
-                yTicks.forEach(tickValue => {
-                    chartContainer.append("line")
-                        .attr("class", "tick-line")
-                        .attr("y1", y(tickValue))
-                        .attr("x1", 0)
-                        .attr("y2", y(tickValue))
-                        .attr("x2", chartWidth)
-                        .attr("stroke", "#e0e0e0")
-                        .attr("stroke-width", 1);
-                });
-                
-                // Update line with thinner stroke width
-                svg.select(`#line-${config.id}`)
-                    .datum(data)
-                    .style("stroke-width", isDenseData ? 1.5 : 1.2)
-                    .attr("d", d3.line()
-                        .x(d => x(d.date))
-                        .y(d => y(d.value)));
-                
-                // Update circles only if not dense data
-                if (!isDenseData) {
-                    const circles = chartContainer.selectAll(".chart-circle")
-                        .data(data);
-                    
-                    // Remove old circles
-                    circles.exit().remove();
-                    
-                    // Update existing circles
-                    circles.attr("cx", d => x(d.date))
-                        .attr("cy", d => y(d.value));
-                    
-                    // Add new circles
-                    circles.enter()
-                        .append("circle")
-                        .attr("cx", d => x(d.date))
-                        .attr("cy", d => y(d.value))
-                        .attr("r", 2.5)
-                        .attr("class", "chart-circle")
-                        .attr("fill", config.color)
-                        .attr("stroke", "#fff")
-                        .attr("stroke-width", 1)
-                        .attr("clip-path", `url(#clip-${config.id})`);
+            },
+            y: {
+                position: window.innerWidth <= 768 ? 'left' : 'right', // Position scale on left for mobile, right for desktop
+                grid: {
+                    color: 'rgba(0, 0, 0, 0.05)',
+                    lineWidth: 1,
+                    drawBorder: false
+                },
+                // Dynamic scale based on data range with padding
+                suggestedMin: paddedMinValue,
+                suggestedMax: paddedMaxValue,
+                beginAtZero: false, // Never force zero as we want to scale to data
+                ticks: {
+                    font: {
+                        size: window.innerWidth <= 768 ? 8 : 9
+                    },
+                    maxTicksLimit: window.innerWidth <= 768 ? 4 : 5,
+                    color: '#666',
+                    padding: 0,
+                    callback: function(value) {
+                        // Abbreviate large numbers
+                        if (value >= 1000) {
+                            return (value / 1000) + 'k';
+                        }
+                        return value;
+                    }
+                },
+                border: {
+                    display: false
                 }
             }
-            
-        } catch (error) {
-            console.error(`Error updating chart ${config.id}:`, error);
+        },
+        
+        plugins: {
+            legend: {
+                display: false
+            },
+            tooltip: {
+                mode: 'index',
+                intersect: false,
+                titleFont: {
+                    size: 11
+                },
+                bodyFont: {
+                    size: 11
+                },
+                padding: 6,
+                callbacks: {
+                    title: (tooltipItems) => {
+                        return moment(data.feeds[tooltipItems[0].dataIndex].created_at).format('LLL');
+                    }
+                }
+            }
         }
-    }, chartUpdateInterval);
-}
-
-// Custom tick format function for x-axis dates
-function customTickFormat(date, timeRange) {
-    const formatSecond = d3.timeFormat("%H:%M:%S");
-    const formatMinute = d3.timeFormat("%H:%M");
-    const formatDate = d3.timeFormat("%d %b");
+    };
     
-    // If it's midnight, show the date
-    if (date.getHours() === 0 && date.getMinutes() === 0) {
-        return formatDate(date);
-    } 
-    // If less than 5 minutes range, show seconds
-    else if (timeRange <= 5 * 60 * 1000) {
-        return formatSecond(date);
-    } 
-    // If less than 15 days range, show hours & minutes
-    else if (timeRange <= 15 * 24 * 60 * 60 * 1000) {
-        return formatMinute(date);
-    } 
-    // Otherwise just show date
-    else {
-        return formatDate(date);
+    // Create or update chart
+    const canvas = document.getElementById(config.id);
+    if (!canvas) return;
+    
+    if (chartInstances[config.id]) {
+        // Update existing chart
+        chartInstances[config.id].data = chartData;
+        chartInstances[config.id].options = chartOptions;
+        chartInstances[config.id].update('none');
+    } else {
+        // Create new chart
+        chartInstances[config.id] = new Chart(canvas, {
+            type: 'line',
+            data: chartData,
+            options: chartOptions
+        });
     }
 }
+
+// Call this when window is resized to properly adjust all charts
+// Expose globally for script.js
+window.resizeAllCharts = function() {
+    // Check if layout mode (mobile/desktop) has changed
+    const wasMobile = document.getElementById('chartContainer').classList.contains('mobile-layout');
+    const isMobile = window.innerWidth <= 768;
+    
+    // If layout has changed, reinitialize the entire chart layout
+    if (wasMobile !== isMobile) {
+        // Properly destroy all existing chart instances
+        Object.keys(chartInstances).forEach(id => {
+            if (chartInstances[id]) {
+                chartInstances[id].destroy();
+                chartInstances[id] = null;
+            }
+        });
+        
+        // Clear chart instances
+        Object.keys(chartInstances).forEach(key => delete chartInstances[key]);
+        
+        // Reinitialize layout
+        const currentRange = getURLParameter('range') || '1';
+        const currentResults = parseInt(getURLParameter('results')) || 8000;
+        loadAllCharts(currentRange, currentResults);
+        return;
+    }
+    
+    // For each chart instance, resize and update without animation
+    Object.keys(chartInstances).forEach(id => {
+        if (chartInstances[id]) {
+            const chart = chartInstances[id];
+            
+            // Disable animation
+            chart.options.animation = false;
+            
+            // Force resize and update
+            chart.resize();
+            chart.update('none');
+        }
+    });
+}
+
+// Load data for all charts
+async function loadAllCharts(range = 1, results = 8000) {
+    // Initialize chart layout first
+    initializeChartLayout();
+    
+    // Fetch all chart data in parallel
+    const dataPromises = window.chartConfigs.map(config => fetchChartData(config, range, results));
+    
+    // Wait for all data to be fetched
+    const allData = await Promise.all(dataPromises);
+    
+    // Render all charts with their respective data
+    window.chartConfigs.forEach((config, index) => {
+        createOrUpdateChart(config, allData[index]);
+    });
+}
+
+// Refresh all charts - expose globally for script.js
+window.refreshCharts = function(range, results) {
+    // Properly destroy all existing chart instances first
+    Object.keys(chartInstances).forEach(id => {
+        if (chartInstances[id]) {
+            chartInstances[id].destroy();
+            chartInstances[id] = null;
+        }
+    });
+    
+    // Clear chart instances object
+    Object.keys(chartInstances).forEach(key => delete chartInstances[key]);
+    
+    // Now load all charts with new parameters
+    loadAllCharts(range, results);
+}
+
+// Handle date range selection
+function setupDateRangeHandlers() {
+    const dateChips = document.querySelectorAll('.date-chip');
+    
+    // Get range and results from URL parameters or use defaults
+    let currentRange = getURLParameter('range') || '1'; // Default to 2 days
+    let currentResults = parseInt(getURLParameter('results')) || 8000; // Default to 8000 results
+    
+    // Set active state for current range
+    const activeChip = document.querySelector(`.date-chip[data-range="${currentRange}"]`);
+    if (activeChip) {
+        activeChip.classList.add('active');
+    } else {
+        // Default to "2d" if no matching chip is found
+        const defaultChip = document.querySelector('.date-chip[data-range="1"]');
+        if (defaultChip) {
+            defaultChip.classList.add('active');
+        }
+    }
+    
+    // Add click handlers to all date range chips
+    dateChips.forEach(chip => {
+        chip.addEventListener('click', (e) => {
+            e.preventDefault();
+            
+            // Remove active class from all chips
+            dateChips.forEach(c => c.classList.remove('active'));
+            
+            // Add active class to clicked chip
+            chip.classList.add('active');
+            
+            // Get selected range
+            const range = chip.getAttribute('data-range');
+            currentRange = range;
+            
+            // Update URL with new parameters
+            const url = new URL(window.location.href);
+            url.searchParams.set('range', range);
+            
+            if (currentResults !== 8000) {
+                url.searchParams.set('results', currentResults);
+            } else {
+                url.searchParams.delete('results');
+            }
+            
+            // Update browser history without reloading
+            window.history.replaceState({}, '', url);
+            
+            // Refresh charts with new range and current results
+            window.refreshCharts(currentRange, currentResults);
+        });
+    });
+    
+    // Handle results input and update button
+    const resultsInput = document.getElementById('resultsInput');
+    const updateButton = document.getElementById('updateButton');
+    
+    if (resultsInput && updateButton) {
+        resultsInput.value = currentResults;
+        
+        updateButton.addEventListener('click', () => {
+            const newResults = parseInt(resultsInput.value) || 8000;
+            currentResults = newResults;
+            
+            // Update URL with new parameters
+            const url = new URL(window.location.href);
+            
+            if (newResults !== 8000) {
+                url.searchParams.set('results', newResults);
+            } else {
+                url.searchParams.delete('results');
+            }
+            
+            // Update browser history without reloading
+            window.history.replaceState({}, '', url);
+            
+            // Refresh charts 
+            window.refreshCharts(currentRange, currentResults);
+        });
+        
+        // Also update when pressing Enter in the input
+        resultsInput.addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') {
+                const newResults = parseInt(resultsInput.value) || 8000;
+                currentResults = newResults;
+                
+                // Update URL
+                const url = new URL(window.location.href);
+                if (newResults !== 8000) {
+                    url.searchParams.set('results', newResults);
+                } else {
+                    url.searchParams.delete('results');
+                }
+                window.history.replaceState({}, '', url);
+                
+                // Refresh charts
+                window.refreshCharts(currentRange, currentResults);
+            }
+        });
+    }
+}
+
+// Sort charts by category - only on mobile devices
+function sortChartsByCategory(category) {
+    // Only apply sorting on mobile (to avoid issues on desktop grid layout)
+    if (window.innerWidth > 768) {
+        return;
+    }
+    
+    const chartContainer = document.getElementById('chartContainer');
+    const charts = Array.from(chartContainer.querySelectorAll('.chart'));
+    
+    // Save references to the chart instances and their canvases
+    // to avoid destroying them when we move elements
+    const chartData = {};
+    charts.forEach(chart => {
+        const id = chart.querySelector('canvas').id;
+        chartData[id] = {
+            instance: window.chartInstances[id],
+            canvasId: id
+        };
+    });
+    
+    // Create a sortable array of chart elements with their metadata
+    const chartElements = charts.map(chart => {
+        return {
+            element: chart,
+            row: parseInt(chart.getAttribute('data-row')),
+            category: chart.getAttribute('data-category'),
+            id: chart.querySelector('canvas').id
+        };
+    });
+    
+    // Sort charts based on category
+    if (category === 'row') {
+        // Sort by row number and then by column position
+        chartElements.sort((a, b) => {
+            if (a.row !== b.row) {
+                return a.row - b.row;
+            }
+            
+            const aCol = parseInt(a.element.style.gridColumn.split('/')[0]) || 0;
+            const bCol = parseInt(b.element.style.gridColumn.split('/')[0]) || 0;
+            return aCol - bCol;
+        });
+    } else {
+        // Sort by category (matching category first, then other charts by row)
+        chartElements.sort((a, b) => {
+            const aMatches = a.category === category;
+            const bMatches = b.category === category;
+            
+            if (aMatches && !bMatches) return -1;
+            if (!aMatches && bMatches) return 1;
+            
+            // If both match or don't match the category, sort by row
+            return a.row - b.row;
+        });
+    }
+    
+    // Remove all charts from container, but DO NOT destroy Chart instances
+    charts.forEach(chart => chart.remove());
+    
+    // Reattach charts in the new order
+    chartElements.forEach(item => {
+        chartContainer.appendChild(item.element);
+    });
+    
+    // Store the current sort preference
+    localStorage.setItem('chartSortPreference', category);
+}
+
+// Initialize chart system when the DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    setupDateRangeHandlers();
+    
+    // Get range and results from URL parameters or use defaults
+    const range = getURLParameter('range') || '1';
+    const results = parseInt(getURLParameter('results')) || 8000;
+    
+    // Load charts with URL parameters
+    loadAllCharts(range, results);
+    
+    // Set up category sorter
+    const sortSelect = document.getElementById('sortSelect');
+    if (sortSelect) {
+        // Try to restore last used sort preference
+        const lastSort = localStorage.getItem('chartSortPreference');
+        if (lastSort) {
+            sortSelect.value = lastSort;
+            
+            // Hide the sorting hint if user has already used sorting
+            const chartContainer = document.getElementById('chartContainer');
+            if (chartContainer) {
+                chartContainer.classList.add('hint-hidden');
+            }
+        }
+        
+        sortSelect.addEventListener('change', () => {
+            const category = sortSelect.value;
+            sortChartsByCategory(category);
+            
+            // Hide the sorting hint after user has sorted
+            const chartContainer = document.getElementById('chartContainer');
+            if (chartContainer) {
+                chartContainer.classList.add('hint-hidden');
+            }
+        });
+        
+        // Apply the initial sort if we're in mobile mode and a preference exists
+        if (window.innerWidth <= 768 && lastSort) {
+            setTimeout(() => sortChartsByCategory(lastSort), 500);
+        }
+    }
+});

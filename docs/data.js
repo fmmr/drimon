@@ -12,28 +12,89 @@ const elements = {
 
 // Function to fetch Met.no weather data
 async function fetchMetData() {
+    // Røtangen coordinates
+    const metUrl = 'https://api.met.no/weatherapi/nowcast/2.0/complete?lat=59.532213&lon=10.418231';
+    
     try {
-        const metUrl = 'https://api.met.no/weatherapi/nowcast/2.0/complete?lat=59.532213&lon=10.418231';
+        // Check localStorage cache first
+        const lastFetchTime = localStorage.getItem('lastMetFetchTime');
+        const currentTime = new Date().getTime();
         
-        // Direct access with proper headers
-        const response = await fetch(metUrl, {
-            headers: {
-                'Accept': 'application/json',
-                'User-Agent': 'fmr-drimon (https://drimon.rodland.no)' 
-            },
-            mode: 'cors'
-        });
-        
-        if (!response.ok) {
-            throw new Error(`API responded with status: ${response.status}`);
+        // Use cached data if it's less than 10 minutes old
+        if (lastFetchTime && (currentTime - parseInt(lastFetchTime) < 10 * 60 * 1000)) {
+            const cachedData = localStorage.getItem('cachedMetData');
+            if (cachedData) {
+                const data = JSON.parse(cachedData);
+                updateMetDisplay(data);
+                return; // Exit early with cached data
+            }
         }
         
-        const data = await response.json();
-        updateMetDisplay(data);
+        // Try direct fetch from YR.no
+        try {
+            // Set required headers for Met.no API
+            const response = await fetch(metUrl, {
+                headers: {
+                    'Accept': 'application/json',
+                    'User-Agent': 'drimon/1.0 (https://drimon.rodland.no)' 
+                },
+                mode: 'cors'
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Met.no API responded with status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            
+            // Add source information
+            data._source = 'yr.no';
+            
+            // Cache the successful response
+            localStorage.setItem('cachedMetData', JSON.stringify(data));
+            localStorage.setItem('lastMetFetchTime', currentTime.toString());
+            
+            updateMetDisplay(data);
+            return;
+        } catch (yrError) {
+            console.error('Direct Met.no fetch failed:', yrError);
+            // Fall through to ThingSpeak fallback
+        }
+        
+        // Fallback to ThingSpeak if direct method fails
+        const thingspeakResponse = await fetch(`https://api.thingspeak.com/channels/2626867/feeds/last.json?timezone=${timezone}`);
+        
+        if (!thingspeakResponse.ok) {
+            throw new Error(`ThingSpeak API responded with status: ${thingspeakResponse.status}`);
+        }
+        
+        const tsData = await thingspeakResponse.json();
+        
+        // Format data in a compatible way for updateMetDisplay
+        const formattedData = {
+            properties: {
+                timeseries: [{
+                    time: tsData.created_at,
+                    data: {
+                        instant: {
+                            details: {
+                                air_temperature: parseFloat(tsData.field1)
+                            }
+                        }
+                    }
+                }]
+            },
+            // Add source information for display in the tooltip
+            _source: 'ThingSpeak'
+        };
+        
+        updateMetDisplay(formattedData);
     } catch (error) {
-        console.error('Error fetching Met.no data:', error);
+        // All fetch attempts failed
+        console.error('All weather data fetches failed:', error);
         if (elements.metTemp) {
             elements.metTemp.innerHTML = 'Feil';
+            elements.metTemp.parentElement.title = 'Kunne ikke hente værdata';
         }
     }
 }
@@ -45,9 +106,12 @@ function updateMetDisplay(data) {
     const createdAt = moment(data.properties.timeseries[0].time);
     const lastUpdated = createdAt.format('L LTS');
     
+    // Determine the data source
+    const dataSource = data._source ? data._source : 'yr.no';
+    
     elements.metTemp.innerHTML = `${temperature} °C`;
     elements.metTemp.parentElement.className = `data-chip ${getClassName(temperature, 15, 25)}`;
-    elements.metTemp.parentElement.title = `Ute Temperatur - Oppdatert: ${lastUpdated}`;
+    elements.metTemp.parentElement.title = `Ute Temperatur - Oppdatert: ${lastUpdated} (Kilde: ${dataSource})`;
 }
 
 async function fetchData() {
