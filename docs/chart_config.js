@@ -86,7 +86,7 @@ window.chartConfigs = [
         row: 2,
         category: 'temperature'
     },
-    // Multi-series chart combining BME and AHT temperature sensors
+    // Multi-series chart combining BME, AHT, and Floor temperature sensors
     {
         id: 'chart-sensors-temp',
         title: 'Sensor Temperaturer',
@@ -103,21 +103,17 @@ window.chartConfigs = [
                 channel: 2584548,
                 field: 2,
                 color: '#9d0208'  // Dark red for AHT
+            },
+            {
+                title: 'Gulv',
+                channel: 2584548,
+                field: 4,
+                color: '#6a040f'  // Deep red for floor temperature
             }
         ],
         row: 2,
         startDate: '2024-07-25 15:00:00',
         category: 'detail-temperature'  // Custom category to separate from other temperature charts
-    },
-    { 
-        id: 'chart-floor-temp',
-        title: 'Gulv Temp', 
-        channel: 2584548, 
-        field: 4, 
-        color: '#c62828',
-        row: 2,
-        startDate: '2024-07-25 15:00:00',
-        category: 'temperature'
     },
 
     // Row 3
