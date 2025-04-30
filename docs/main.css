@@ -258,3 +258,18 @@ html, body {
   border-radius: 50%;
   margin-right: 4px;
 }
+
+/* Weather icon styles */
+.weather-icon-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background-color: transparent;
+}
+
+.weather-svg {
+  width: 16px;
+  height: 16px;
+}
