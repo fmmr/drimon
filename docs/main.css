@@ -152,8 +152,8 @@ html, body {
 .chart-stats {
   display: flex;
   justify-content: center;
-  gap: 10px;
-  font-size: 10px;
+  gap: 8px;
+  font-size: 9.5px; /* Slightly smaller for better fit */
   color: #666;
   font-weight: normal;
   margin-bottom: 4px;

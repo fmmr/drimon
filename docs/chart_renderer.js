@@ -344,12 +344,14 @@ function createOrUpdateChart(config, data) {
     // Format values for display
     const getUnit = config.unit || '';
     const formatNumber = (val) => {
-        // Determine appropriate precision based on value range
-        let precision = 1; // Default to 1 decimal place
-        if (range < 1) {
-            precision = 2; // More precision for small ranges
+        // Use the helper function to determine if we should use integers
+        if (shouldUseIntegerValues(config) || range >= 10) {
+            return Math.round(val).toString();
+        } else if (range < 1) {
+            return val.toFixed(2); // More precision for very small ranges
+        } else {
+            return val.toFixed(1); // Default to 1 decimal place
         }
-        return val.toFixed(precision);
     };
     
     // Check if stats display is enabled
@@ -455,6 +457,16 @@ function createOrUpdateChart(config, data) {
         if (chartId.includes('wifi')) return 'dBm';
         if (chartId.includes('soil')) return '%';
         return '';
+    }
+    
+    // Determine which charts should have integer values only
+    function shouldUseIntegerValues(config) {
+        // These chart types typically have large numbers or don't need decimal precision
+        return config.id.includes('light') || 
+               config.id.includes('window') ||
+               config.id.includes('wifi') ||
+               config.id.includes('soil') ||
+               config.id.includes('pressure');
     }
     
     // Function to get all related chart data (same category)
@@ -610,7 +622,20 @@ function createOrUpdateChart(config, data) {
                             if (item.title === config.title) return;
                             
                             // Create colored line for each related value
-                            const formattedValue = Math.round(item.value * 10) / 10;
+                            let formattedValue;
+                            // Use similar rules as the main formatNumber function
+                            if (item.title.toLowerCase().includes('light') || 
+                                item.title.toLowerCase().includes('wifi') || 
+                                item.title.toLowerCase().includes('window') ||
+                                item.title.toLowerCase().includes('soil') ||
+                                item.title.toLowerCase().includes('pressure') ||
+                                Math.abs(item.value) >= 10) {
+                                formattedValue = Math.round(item.value);
+                            } else if (Math.abs(item.value) < 1) {
+                                formattedValue = item.value.toFixed(2);
+                            } else {
+                                formattedValue = item.value.toFixed(1);
+                            }
                             lines.push(`${item.title}: ${formattedValue} ${item.unit}`);
                         });
                         
