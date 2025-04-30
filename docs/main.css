@@ -176,6 +176,12 @@ html, body {
   position: relative; /* For the stats positioning */
 }
 
+/* When title contains current values */
+.chart-title[data-chart-id] {
+  font-size: 10px; /* Even smaller for titles with values */
+  padding: 0 2px;
+}
+
 /* Stats container */
 .chart-stats {
   display: flex;

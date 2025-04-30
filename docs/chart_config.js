@@ -179,19 +179,19 @@ window.chartConfigs = [
                 title: 'Agurk 1',
                 channel: 2584548, 
                 field: 6,
-                color: '#2e7d32'  // Dark green
+                color: '#1976d2'  // Blue-green
             },
             {
                 title: 'Agurk 2',
                 channel: 2584548, 
                 field: 7,
-                color: '#43a047'  // Medium green
+                color: '#388e3c'  // Medium green
             },
             {
                 title: 'Padron',
                 channel: 2584548, 
                 field: 8,
-                color: '#66bb6a'  // Light green
+                color: '#f9a825'  // Yellow-green
             }
         ],
         row: 4,

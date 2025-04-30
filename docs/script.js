@@ -177,14 +177,43 @@ document.addEventListener('DOMContentLoaded', () => {
             window.chartConfigs.forEach(async (config) => {
                 try {
                     const newData = await fetchChartData(config, currentRange, currentResults);
-                    if (window.chartInstances[config.id] && newData && newData.feeds && newData.feeds.length > 0) {
-                        // Update chart data and refresh
-                        const values = newData.feeds.map(feed => parseFloat(feed[`field${config.field}`]));
-                        const labels = newData.feeds.map(feed => moment(feed.created_at).format('LT'));
-                        
-                        window.chartInstances[config.id].data.labels = labels;
-                        window.chartInstances[config.id].data.datasets[0].data = values;
-                        window.chartInstances[config.id].update('none'); // Update without animation
+                    if (window.chartInstances[config.id] && newData) {
+                        // Check if it's a multi-series chart
+                        if (newData.is_multi_series && newData.series && newData.series.length > 0) {
+                            // Update each series
+                            for (let i = 0; i < newData.series.length; i++) {
+                                const series = newData.series[i];
+                                if (series && series.feeds && series.feeds.length > 0) {
+                                    const values = series.feeds.map(feed => parseFloat(feed[`field${series.field}`]));
+                                    
+                                    // Update dataset if it exists
+                                    if (window.chartInstances[config.id].data.datasets[i]) {
+                                        window.chartInstances[config.id].data.datasets[i].data = values;
+                                    }
+                                }
+                            }
+                            
+                            // Update labels from first series
+                            if (newData.series[0] && newData.series[0].feeds && newData.series[0].feeds.length > 0) {
+                                const labels = newData.series[0].feeds.map(feed => moment(feed.created_at).format('LT'));
+                                window.chartInstances[config.id].data.labels = labels;
+                            }
+                            
+                            // Update the chart
+                            window.chartInstances[config.id].update('none');
+                            
+                            // Update title with current values
+                            updateMultiSeriesTitle(config.id, newData);
+                        } 
+                        // Single series chart
+                        else if (newData.feeds && newData.feeds.length > 0) {
+                            const values = newData.feeds.map(feed => parseFloat(feed[`field${config.field}`]));
+                            const labels = newData.feeds.map(feed => moment(feed.created_at).format('LT'));
+                            
+                            window.chartInstances[config.id].data.labels = labels;
+                            window.chartInstances[config.id].data.datasets[0].data = values;
+                            window.chartInstances[config.id].update('none'); // Update without animation
+                        }
                     }
                 } catch (e) {
                     console.error(`Error updating chart ${config.id}:`, e);
@@ -192,6 +221,44 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     }, 60000);
+    
+    // Helper function to update multi-series chart titles with current values
+    function updateMultiSeriesTitle(chartId, data) {
+        if (!data.is_multi_series || !data.series || data.series.length === 0) return;
+        
+        const titleEl = document.querySelector(`.chart-title[data-chart-id="${chartId}"]`);
+        if (!titleEl) return;
+        
+        // Get the original title
+        const originalTitle = titleEl.textContent.split(' [')[0]; // Remove any existing values
+        
+        // Create current values string
+        const currentValues = data.series.map(series => {
+            if (!series.feeds || series.feeds.length === 0) return null;
+            
+            // Get the last value
+            const lastValue = parseFloat(series.feeds[series.feeds.length - 1][`field${series.field}`]);
+            if (isNaN(lastValue)) return null;
+            
+            // Format the value
+            let formattedValue;
+            if (Math.abs(lastValue) >= 10) {
+                formattedValue = Math.round(lastValue);
+            } else if (Math.abs(lastValue) < 1) {
+                formattedValue = lastValue.toFixed(2);
+            } else {
+                formattedValue = lastValue.toFixed(1);
+            }
+            
+            return `${series.title}: ${formattedValue}`;
+        }).filter(val => val !== null).join(', ');
+        
+        // Update the title if we have values
+        if (currentValues) {
+            titleEl.textContent = `${originalTitle} [${currentValues}]`;
+            titleEl.title = `${originalTitle} [${currentValues}]`;
+        }
+    }
     
     // Add click event to the logo for GitHub link
     const logo = document.getElementById('main-title');

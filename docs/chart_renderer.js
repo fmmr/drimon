@@ -75,6 +75,11 @@ function initializeChartLayout() {
         titleDiv.textContent = config.title;
         titleDiv.title = config.title; // Add tooltip
         
+        // For multi-series charts, we'll add current values to the title later
+        if (config.series && Array.isArray(config.series) && config.series.length > 1) {
+            titleDiv.dataset.chartId = config.id; // Add a data attribute to find it later
+        }
+        
         // Create stats container (will be populated with data later)
         const statsDiv = document.createElement('div');
         statsDiv.className = 'chart-stats';
@@ -1174,6 +1179,21 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Load charts with URL parameters
     loadAllCharts(range, results);
+    
+    // Add a failsafe for charts disappearing
+    setInterval(() => {
+        const chartContainer = document.getElementById('chartContainer');
+        if (chartContainer && chartContainer.children.length === 0) {
+            console.log('Charts disappeared, reloading...');
+            
+            // Get current range and results
+            const currentRange = getURLParameter('range') || '1';
+            const currentResults = parseInt(getURLParameter('results')) || 8000;
+            
+            // Reload all charts
+            loadAllCharts(currentRange, currentResults);
+        }
+    }, 30000); // Check every 30 seconds
     
     // Set up category sorter
     const sortSelect = document.getElementById('sortSelect');
