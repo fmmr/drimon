@@ -358,22 +358,21 @@ function createOrUpdateChart(config, data) {
     // Update stats 
     const statsEl = document.getElementById(`stats-${config.id}`);
     if (statsEl) {
-        if (statsVisible) {
-            statsEl.innerHTML = `
-                <div class="chart-stat">
-                    <span class="chart-stat-label">L:</span>${formatNumber(adjustedMinValue)}${getUnit}
-                </div>
-                <div class="chart-stat">
-                    <span class="chart-stat-label">A:</span>${formatNumber(avgValue)}${getUnit}
-                </div>
-                <div class="chart-stat">
-                    <span class="chart-stat-label">H:</span>${formatNumber(maxValue)}${getUnit}
-                </div>
-            `;
-            statsEl.style.display = 'flex';
-        } else {
-            statsEl.style.display = 'none';
-        }
+        // Always prepare the innerHTML, regardless of visibility state
+        statsEl.innerHTML = `
+            <div class="chart-stat">
+                <span class="chart-stat-label">L:</span>${formatNumber(adjustedMinValue)}${getUnit}
+            </div>
+            <div class="chart-stat">
+                <span class="chart-stat-label">A:</span>${formatNumber(avgValue)}${getUnit}
+            </div>
+            <div class="chart-stat">
+                <span class="chart-stat-label">H:</span>${formatNumber(maxValue)}${getUnit}
+            </div>
+        `;
+        
+        // Now set display based on visibility preference
+        statsEl.style.display = statsVisible ? 'flex' : 'none';
     }
     
     const chartData = {

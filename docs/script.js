@@ -69,9 +69,38 @@ function toggleStats() {
         statsToggle.classList.toggle('active', !isVisible);
     }
     
-    // Update all stat elements' visibility
+    // Update all stat elements' visibility - ensure they have content before showing
     document.querySelectorAll('.chart-stats').forEach(el => {
+        // First ensure the elements have content if toggling to visible
+        if (!isVisible && el.innerHTML.trim() === '') {
+            // Create placeholder content if empty - will be replaced when charts update
+            el.innerHTML = `
+                <div class="chart-stat">
+                    <span class="chart-stat-label">L:</span>—
+                </div>
+                <div class="chart-stat">
+                    <span class="chart-stat-label">A:</span>—
+                </div>
+                <div class="chart-stat">
+                    <span class="chart-stat-label">H:</span>—
+                </div>
+            `;
+        }
+        
+        // Now set display style
         el.style.display = isVisible ? 'none' : 'flex';
+        
+        // Ensure stats get proper height allocation
+        if (!isVisible) {
+            // Force a reflow to ensure height is allocated
+            setTimeout(() => {
+                if (window.chartInstances) {
+                    Object.values(window.chartInstances).forEach(chart => {
+                        if (chart) chart.resize();
+                    });
+                }
+            }, 10);
+        }
     });
 }
 
