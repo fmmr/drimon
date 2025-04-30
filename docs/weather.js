@@ -42,12 +42,45 @@ async function fetchMetData() {
             }
         }
         
-        // Safari detection (Safari has issues with the Met.no API due to CORS/preflight limitations)
-        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-        logWeather(`Browser detection: ${isSafari ? 'Safari' : 'Not Safari'}`);
-        
-        // For non-Safari browsers, try direct fetch from YR.no
-        if (!isSafari) {
+        // As per Met.no documentation, we need a proxy server
+        // Based on met.no docs, the best approach is to use a proxy server
+        try {
+            // Using an API proxy specifically for weather data
+            // This is a technique recommended in the Met.no documentation
+            logWeather('Attempting to fetch weather data via proxy server');
+            
+            // Using a CORS proxy to access the Met.no API - this should work in all browsers
+            // In a production environment, this should be replaced with a proper server-side proxy
+            const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
+            const response = await fetch(proxyUrl + metUrl, {
+                headers: {
+                    'Accept': 'application/json',
+                    'User-Agent': 'drimon/1.0 (https://drimon.rodland.no)',
+                    'Origin': 'https://drimon.rodland.no'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error(`Proxy API responded with status: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            logWeather('Successfully fetched data via proxy server');
+            
+            // Add source information
+            data._source = 'yr.no (proxy)';
+            
+            // Cache the successful response
+            localStorage.setItem('cachedMetData', JSON.stringify(data));
+            localStorage.setItem('lastMetFetchTime', currentTime.toString());
+            logWeather('Cached new weather data');
+            
+            updateMetDisplay(data);
+            return;
+        } catch (proxyError) {
+            logWeather('Proxy fetch failed, trying direct API', proxyError);
+            
+            // Fall back to direct API call for browsers that support it
             try {
                 logWeather('Attempting direct fetch from Met.no API');
                 
@@ -65,7 +98,7 @@ async function fetchMetData() {
                 }
                 
                 const data = await response.json();
-                logWeather('Successfully fetched data from Met.no API');
+                logWeather('Successfully fetched data from Met.no API directly');
                 
                 // Add source information
                 data._source = 'yr.no';
@@ -77,12 +110,10 @@ async function fetchMetData() {
                 
                 updateMetDisplay(data);
                 return;
-            } catch (yrError) {
-                logWeather('Direct Met.no fetch failed, falling back to ThingSpeak', yrError);
+            } catch (directError) {
+                logWeather('Direct API fetch also failed', directError);
                 // Fall through to ThingSpeak fallback
             }
-        } else {
-            logWeather('Safari detected, skipping direct Met.no fetch to avoid CORS issues');
         }
         
         // Fallback to ThingSpeak if direct method fails or using Safari
