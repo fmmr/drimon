@@ -136,8 +136,10 @@ function updateMetDisplay(data) {
             elements.metTemp.parentElement.insertBefore(iconElem, elements.metTemp);
         }
         
-        // Set the icon using the SVG
-        iconElem.innerHTML = `<img src="weather-icons/${symbolCode}.svg" alt="${symbolCode}" width="16" height="16">`;
+        // Set the icon using the SVG with object tag for better Safari compatibility
+        iconElem.innerHTML = `<object type="image/svg+xml" data="weather-icons/${symbolCode}.svg" width="16" height="16">
+            <img src="weather-icons/${symbolCode}.svg" alt="${symbolCode}" width="16" height="16">
+        </object>`;
     }
 }
 

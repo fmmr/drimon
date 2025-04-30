@@ -71,9 +71,11 @@
     top: 1px;
 }
 
-.met-weather-icon img {
+.met-weather-icon img,
+.met-weather-icon object {
     width: 16px;
     height: 16px;
+    overflow: visible;
 }
 
 /* Colors for different states */
