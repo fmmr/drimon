@@ -11,8 +11,7 @@ window.chartConfigs = [
         field: 1, 
         color: '#c62828', // Red for temperature
         row: 1,
-        category: 'temperature',
-        cols: 3 // Number of columns this chart should span
+        category: 'temperature'
     },
     { 
         id: 'chart-window',
@@ -23,7 +22,7 @@ window.chartConfigs = [
         row: 1,
         startDate: '2024-07-25 18:00:00',
         category: 'structure',
-        cols: 3
+        minValue: 50  // Set minimum Y-axis value
     },
     { 
         id: 'chart-light',
@@ -33,8 +32,7 @@ window.chartConfigs = [
         color: '#e6a500', // Yellow for light
         row: 1,
         startDate: '2024-08-06 17:00:00',
-        category: 'light',
-        cols: 3
+        category: 'light'
     },
     { 
         id: 'chart-battery',
@@ -43,8 +41,7 @@ window.chartConfigs = [
         field: 3, 
         color: '#4a6741', // Dark green for system
         row: 1,
-        category: 'system',
-        cols: 3
+        category: 'system'
     },
 
     // Row 2
@@ -55,8 +52,7 @@ window.chartConfigs = [
         field: 3, 
         color: '#c62828',
         row: 2,
-        category: 'temperature',
-        cols: 2
+        category: 'temperature'
     },
     { 
         id: 'chart-out-temp',
@@ -65,8 +61,7 @@ window.chartConfigs = [
         field: 1, 
         color: '#c62828',
         row: 2,
-        category: 'temperature',
-        cols: 2
+        category: 'temperature'
     },
     { 
         id: 'chart-bme-temp',
@@ -76,8 +71,7 @@ window.chartConfigs = [
         color: '#c62828',
         row: 2,
         startDate: '2024-07-25 15:00:00',
-        category: 'temperature',
-        cols: 2
+        category: 'temperature'
     },
     { 
         id: 'chart-aht-temp',
@@ -87,8 +81,7 @@ window.chartConfigs = [
         color: '#c62828',
         row: 2,
         startDate: '2024-07-25 15:00:00',
-        category: 'temperature',
-        cols: 2
+        category: 'temperature'
     },
     { 
         id: 'chart-floor-temp',
@@ -98,8 +91,7 @@ window.chartConfigs = [
         color: '#c62828',
         row: 2,
         startDate: '2024-07-25 15:00:00',
-        category: 'temperature',
-        cols: 2
+        category: 'temperature'
     },
     { 
         id: 'chart-agurk',
@@ -109,8 +101,7 @@ window.chartConfigs = [
         color: '#c62828', // Light green for cucumber
         row: 2,
         startDate: '2024-07-25 15:00:00',
-        category: 'temperature',
-        cols: 2
+        category: 'temperature'
     },
     { 
         id: 'chart-paprika',
@@ -120,8 +111,7 @@ window.chartConfigs = [
         color: '#c62828', // Light orange for paprika
         row: 2,
         startDate: '2024-07-25 15:00:00',
-        category: 'temperature',
-        cols: 2
+        category: 'temperature'
     },
 
     // Row 3
@@ -132,8 +122,7 @@ window.chartConfigs = [
         field: 2, 
         color: '#5c6bc0',
         row: 3,
-        category: 'humidity',
-        cols: 3
+        category: 'weather'
     },
     { 
         id: 'chart-pressure',
@@ -142,8 +131,7 @@ window.chartConfigs = [
         field: 7, 
         color: '#5c6bc0',
         row: 3,
-        category: 'weather',
-        cols: 3
+        category: 'weather'
     },
     { 
         id: 'chart-wind',
@@ -152,8 +140,7 @@ window.chartConfigs = [
         field: 5, 
         color: '#5c6bc0',
         row: 3,
-        category: 'weather',
-        cols: 3
+        category: 'weather'
     },
     { 
         id: 'chart-rain',
@@ -162,8 +149,7 @@ window.chartConfigs = [
         field: 6, 
         color: '#5c6bc0',
         row: 3,
-        category: 'weather',
-        cols: 3
+        category: 'weather'
     },
 
     // Row 4
@@ -175,8 +161,7 @@ window.chartConfigs = [
         color: '#43a047',
         row: 4,
         startDate: '2024-07-25 00:00:00',
-        category: 'soil',
-        cols: 2
+        category: 'soil'
     },
     { 
         id: 'chart-soil-agurk',
@@ -186,8 +171,7 @@ window.chartConfigs = [
         color: '#43a047',
         row: 4,
         startDate: '2024-07-25 00:00:00',
-        category: 'soil',
-        cols: 2
+        category: 'soil'
     },
     { 
         id: 'chart-soil-tomat',
@@ -197,8 +181,7 @@ window.chartConfigs = [
         color: '#43a047',
         row: 4,
         startDate: '2024-07-25 00:00:00',
-        category: 'soil',
-        cols: 2
+        category: 'soil'
     },
     { 
         id: 'chart-battery-voltage',
@@ -207,8 +190,7 @@ window.chartConfigs = [
         field: 2, 
         color: '#4a6741',
         row: 4,
-        category: 'system',
-        cols: 2
+        category: 'system'
     },
     { 
         id: 'chart-wifi',
@@ -218,8 +200,7 @@ window.chartConfigs = [
         color: '#4a6741',
         row: 4,
         startDate: '2024-07-25 15:00:00',
-        category: 'system',
-        cols: 2
+        category: 'system'
     },
     { 
         id: 'chart-time-used',
@@ -228,8 +209,7 @@ window.chartConfigs = [
         field: 4, 
         color: '#4a6741',
         row: 4,
-        category: 'system',
-        cols: 2
+        category: 'system'
     },
     { 
         id: 'chart-light-int',
@@ -239,7 +219,6 @@ window.chartConfigs = [
         color: '#e6a500',
         row: 4,
         startDate: '2024-08-06 15:00:00',
-        category: 'light',
-        cols: 2
+        category: 'light'
     }
 ];

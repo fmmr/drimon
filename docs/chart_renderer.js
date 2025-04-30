@@ -70,6 +70,12 @@ function initializeChartLayout() {
         titleDiv.textContent = config.title;
         titleDiv.title = config.title; // Add tooltip
         
+        // Create stats container (will be populated with data later)
+        const statsDiv = document.createElement('div');
+        statsDiv.className = 'chart-stats';
+        statsDiv.id = `stats-${config.id}`;
+        titleDiv.appendChild(statsDiv);
+        
         // Create canvas container
         const canvasContainer = document.createElement('div');
         canvasContainer.className = 'chart-canvas-container';
@@ -180,6 +186,9 @@ function calculateGridPositions(rowGroups) {
             // Set the grid position
             chart.gridRow = gridRow;
             chart.gridColumn = `${columnStart} / span ${columnSpan}`;
+            
+            // Store column span for tick calculations
+            chart.columnSpan = columnSpan;
             
             // Move to next column
             columnStart += columnSpan;
@@ -298,6 +307,10 @@ function createOrUpdateChart(config, data) {
     const minValue = Math.min(...filteredValues);
     const maxValue = Math.max(...filteredValues);
     
+    // Calculate average
+    const sum = filteredValues.reduce((acc, val) => acc + val, 0);
+    const avgValue = sum / filteredValues.length;
+    
     // Add 5% padding to min/max values to prevent data points from touching edges
     const range = maxValue - minValue;
     
@@ -321,6 +334,47 @@ function createOrUpdateChart(config, data) {
         color: config.color,
         unit: config.unit || ''
     };
+    
+    // Apply chart config minimum value if provided
+    let adjustedMinValue = minValue;
+    if (config.minValue !== undefined && minValue < config.minValue) {
+        adjustedMinValue = config.minValue;
+    }
+    
+    // Format values for display
+    const getUnit = config.unit || '';
+    const formatNumber = (val) => {
+        // Determine appropriate precision based on value range
+        let precision = 1; // Default to 1 decimal place
+        if (range < 1) {
+            precision = 2; // More precision for small ranges
+        }
+        return val.toFixed(precision);
+    };
+    
+    // Check if stats display is enabled
+    const statsVisible = localStorage.getItem('statsVisible') !== 'false';
+    
+    // Update stats 
+    const statsEl = document.getElementById(`stats-${config.id}`);
+    if (statsEl) {
+        if (statsVisible) {
+            statsEl.innerHTML = `
+                <div class="chart-stat">
+                    <span class="chart-stat-label">L:</span>${formatNumber(adjustedMinValue)}${getUnit}
+                </div>
+                <div class="chart-stat">
+                    <span class="chart-stat-label">A:</span>${formatNumber(avgValue)}${getUnit}
+                </div>
+                <div class="chart-stat">
+                    <span class="chart-stat-label">H:</span>${formatNumber(maxValue)}${getUnit}
+                </div>
+            `;
+            statsEl.style.display = 'flex';
+        } else {
+            statsEl.style.display = 'none';
+        }
+    }
     
     const chartData = {
         labels: data.feeds.map(feed => moment(feed.created_at).format('LT')),
@@ -433,6 +487,9 @@ function createOrUpdateChart(config, data) {
         return relatedData;
     }
     
+    // Check if this chart has a minimum value configuration
+    const hasMinValue = config.minValue !== undefined;
+    
     // Optimized chart options for better rendering
     const chartOptions = {
         responsive: true,
@@ -456,7 +513,11 @@ function createOrUpdateChart(config, data) {
                 ticks: {
                     maxRotation: 0,
                     autoSkip: true,
-                    maxTicksLimit: 6,
+                    // Mobile: always use 6 ticks since all charts are full width
+                    // Desktop: Use columnSpan to determine tick count
+                    // - Small charts (span 1): 4 ticks
+                    // - Larger charts (span 2+): 6 ticks
+                    maxTicksLimit: window.innerWidth <= 768 ? 6 : ((config.columnSpan && config.columnSpan >= 2) ? 6 : 4),
                     font: {
                         size: 9
                     },
@@ -474,7 +535,8 @@ function createOrUpdateChart(config, data) {
                     drawBorder: false
                 },
                 // Dynamic scale based on data range with padding
-                suggestedMin: paddedMinValue,
+                min: hasMinValue ? config.minValue : undefined, // Use hard minimum if configured
+                suggestedMin: hasMinValue ? undefined : paddedMinValue, // Only use suggestedMin if no minValue configured
                 suggestedMax: paddedMaxValue,
                 beginAtZero: false, // Never force zero as we want to scale to data
                 ticks: {
