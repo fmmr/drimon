@@ -170,35 +170,33 @@ window.chartConfigs = [
     },
 
     // Row 4
-    { 
-        id: 'chart-soil-paprika',
-        title: 'Fuktighet Agurk 1', 
-        channel: 2584548, 
-        field: 6, 
-        color: '#43a047',
+    // Multi-series chart for soil moisture
+    {
+        id: 'chart-soil-moisture',
+        title: 'Jordfuktighet', 
+        series: [
+            {
+                title: 'Agurk 1',
+                channel: 2584548, 
+                field: 6,
+                color: '#2e7d32'  // Dark green
+            },
+            {
+                title: 'Agurk 2',
+                channel: 2584548, 
+                field: 7,
+                color: '#43a047'  // Medium green
+            },
+            {
+                title: 'Padron',
+                channel: 2584548, 
+                field: 8,
+                color: '#66bb6a'  // Light green
+            }
+        ],
         row: 4,
         startDate: '2024-07-25 00:00:00',
-        category: 'soil'
-    },
-    { 
-        id: 'chart-soil-agurk',
-        title: 'Fuktighet Agurk 2', 
-        channel: 2584548, 
-        field: 7, 
-        color: '#43a047',
-        row: 4,
-        startDate: '2024-07-25 00:00:00',
-        category: 'soil'
-    },
-    { 
-        id: 'chart-soil-tomat',
-        title: 'Fuktighet Padron', 
-        channel: 2584548, 
-        field: 8, 
-        color: '#43a047',
-        row: 4,
-        startDate: '2024-07-25 00:00:00',
-        category: 'soil'
+        category: 'soil-moisture'  // Custom category to separate from other soil charts
     },
     { 
         id: 'chart-battery-voltage',
