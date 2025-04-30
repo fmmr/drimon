@@ -118,7 +118,7 @@ function updateMetDisplay(data) {
     }
     
     // Update temperature text
-    elements.metTemp.innerHTML = `${temperature} °C`;
+    elements.metTemp.innerHTML = `yr: ${temperature} °C`;
     elements.metTemp.parentElement.className = `data-chip ${getClassName(temperature, 15, 25)}`;
     elements.metTemp.parentElement.title = `Ute Temperatur - Oppdatert: ${lastUpdated} (Kilde: ${dataSource})`;
     
