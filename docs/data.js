@@ -164,11 +164,53 @@ async function fetchData() {
         const lastUpdated = createdAt.format('L LTS');
         const timeSince = createdAt.fromNow();
 
+        // Update temperature with dynamic icon
         elements.temperature.innerHTML = `${temperature} °C`;
         elements.temperature.parentElement.className = `data-chip ${getClassName(temperature, 16, 35)}`;
+        
+        // Update temperature icon based on value
+        const tempIcon = elements.temperature.parentElement.querySelector('i');
+        if (tempIcon) {
+            if (temperature < 5) {
+                tempIcon.className = 'fas fa-thermometer-empty mr-1'; // Very cold
+            } else if (temperature < 10) {
+                tempIcon.className = 'fas fa-thermometer-quarter mr-1'; // Cold
+            } else if (temperature < 15) {
+                tempIcon.className = 'fas fa-thermometer-quarter mr-1'; // Cool
+            } else if (temperature < 20) {
+                tempIcon.className = 'fas fa-thermometer-half mr-1'; // Moderate
+            } else if (temperature < 25) {
+                tempIcon.className = 'fas fa-thermometer-half mr-1'; // Warm
+            } else if (temperature < 30) {
+                tempIcon.className = 'fas fa-thermometer-three-quarters mr-1'; // Hot
+            } else if (temperature < 33) {
+                tempIcon.className = 'fas fa-thermometer-full mr-1'; // Very hot
+            } else {
+                tempIcon.className = 'fas fa-fire mr-1'; // Extreme heat
+            }
+        }
 
+        // Update battery with dynamic icon
         elements.battery.innerHTML = `${battery} %`;
         elements.battery.parentElement.className = `data-chip ${getBatteryClassName(battery)}`;
+        
+        // Update battery icon based on level
+        const batteryIcon = elements.battery.parentElement.querySelector('i');
+        if (batteryIcon) {
+            if (battery < 10) {
+                batteryIcon.className = 'fas fa-battery-empty mr-1';
+            } else if (battery < 25) {
+                batteryIcon.className = 'fas fa-battery-quarter mr-1';
+            } else if (battery < 50) {
+                batteryIcon.className = 'fas fa-battery-quarter mr-1';
+            } else if (battery < 75) {
+                batteryIcon.className = 'fas fa-battery-half mr-1';
+            } else if (battery < 95) {
+                batteryIcon.className = 'fas fa-battery-three-quarters mr-1';
+            } else {
+                batteryIcon.className = 'fas fa-battery-full mr-1';
+            }
+        }
 
         elements.batteryVolt.innerHTML = `${batteryVolt} v`;
         elements.batteryVolt.parentElement.className = `data-chip ${getBatteryClassName(battery)}`;
