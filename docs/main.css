@@ -164,15 +164,15 @@ html, body {
 
 /* Chart title */
 .chart-title {
-  font-size: 13px;
+  font-size: 11px;  /* Reduced from 13px */
   font-weight: 600;
   color: #444;
-  margin-bottom: 5px;
+  margin-bottom: 3px;  /* Reduced from 5px */
   text-align: center;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.2;
+  line-height: 1.1;  /* Reduced from 1.2 */
   position: relative; /* For the stats positioning */
 }
 

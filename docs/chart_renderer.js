@@ -54,6 +54,11 @@ function initializeChartLayout() {
         const chartDiv = document.createElement('div');
         chartDiv.className = 'chart';
         
+        // Add multi-series class if needed
+        if (config.series && Array.isArray(config.series) && config.series.length > 1) {
+            chartDiv.classList.add('multi-series');
+        }
+        
         // Only set grid positions if not mobile (CSS will override these in mobile mode)
         if (!isMobile) {
             chartDiv.style.gridRow = config.gridRow;
@@ -539,12 +544,14 @@ function createOrUpdateChart(config, data) {
                     <span class="chart-stat-label-high"></span>
                 </span>${formatNumber(maxValue)}${getUnit}
             </div>
+            ${!data.is_multi_series ? `
             <div class="chart-stat chart-stat-current">
                 <span class="chart-stat-label">
                     <span class="chart-stat-label-short">N:</span>
                     <span class="chart-stat-label-now"></span>
                 </span>${currentValue !== null ? formatNumber(currentValue) + getUnit : '—'}
             </div>
+            ` : ''}
         `;
         
         // Now set display based on visibility preference

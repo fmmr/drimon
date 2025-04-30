@@ -111,19 +111,19 @@ window.chartConfigs = [
                 title: 'BME',
                 channel: 2584548,
                 field: 1,
-                color: '#d35400'  // Burnt orange for BME
+                color: '#e67e22'  // Orange-red - reused from plant temp chart
             },
             {
                 title: 'AHT',
                 channel: 2584548,
                 field: 2,
-                color: '#8e44ad'  // Purple for AHT
+                color: '#9b59b6'  // Purple-red - reused from plant temp chart
             },
             {
                 title: 'Gulv',
                 channel: 2584548,
                 field: 4,
-                color: '#c0392b'  // Brick red for floor temperature
+                color: '#2980b9'  // Blue for floor temperature - more contrast
             }
         ],
         row: 2,
