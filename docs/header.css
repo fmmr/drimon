@@ -61,21 +61,14 @@
     cursor: help;
 }
 
-/* Weather container for icon and pill */
-.weather-container {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-}
-
 /* Weather icon styling */
 .met-weather-icon {
-    display: flex;
+    display: inline-flex;
     align-items: center;
     justify-content: center;
+    margin-right: 4px;
     position: relative;
-    width: 16px;
-    height: 16px;
+    top: 1px;
 }
 
 .met-weather-icon img,

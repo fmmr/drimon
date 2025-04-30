@@ -132,11 +132,6 @@ html, body {
     margin-bottom: 1px;
     padding-bottom: 1px;
   }
-  
-  /* Mobile weather container adjustments */
-  .weather-container {
-    flex: 0 0 auto;
-  }
 }
 
 /* Chart title */

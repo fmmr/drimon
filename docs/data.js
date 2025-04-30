@@ -30,35 +30,40 @@ async function fetchMetData() {
             }
         }
         
-        // Try direct fetch from YR.no
-        try {
-            // Set required headers for Met.no API
-            const response = await fetch(metUrl, {
-                headers: {
-                    'Accept': 'application/json',
-                    'User-Agent': 'drimon/1.0 (https://drimon.rodland.no)' 
-                },
-                mode: 'cors'
-            });
-            
-            if (!response.ok) {
-                throw new Error(`Met.no API responded with status: ${response.status}`);
+        // Only attempt direct YR.no fetch if this isn't Safari
+        // Safari has CORS issues with the API due to preflight requirements
+        const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        
+        if (!isSafari) {
+            try {
+                // Set required headers for Met.no API
+                const response = await fetch(metUrl, {
+                    headers: {
+                        'Accept': 'application/json',
+                        'User-Agent': 'drimon/1.0 (https://drimon.rodland.no)' 
+                    },
+                    mode: 'cors'
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`Met.no API responded with status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Add source information
+                data._source = 'yr.no';
+                
+                // Cache the successful response
+                localStorage.setItem('cachedMetData', JSON.stringify(data));
+                localStorage.setItem('lastMetFetchTime', currentTime.toString());
+                
+                updateMetDisplay(data);
+                return;
+            } catch (yrError) {
+                console.error('Direct Met.no fetch failed:', yrError);
+                // Fall through to ThingSpeak fallback
             }
-            
-            const data = await response.json();
-            
-            // Add source information
-            data._source = 'yr.no';
-            
-            // Cache the successful response
-            localStorage.setItem('cachedMetData', JSON.stringify(data));
-            localStorage.setItem('lastMetFetchTime', currentTime.toString());
-            
-            updateMetDisplay(data);
-            return;
-        } catch (yrError) {
-            console.error('Direct Met.no fetch failed:', yrError);
-            // Fall through to ThingSpeak fallback
         }
         
         // Fallback to ThingSpeak if direct method fails
@@ -124,15 +129,44 @@ function updateMetDisplay(data) {
     
     // Update weather icon if we have a symbol code
     if (symbolCode) {
-        // Get the icon container that's separate from the link
-        const iconContainer = document.getElementById('met-icon-container');
-        
-        if (iconContainer) {
-            // Set the icon using the SVG with object tag for better Safari compatibility
-            iconContainer.innerHTML = `<object type="image/svg+xml" data="weather-icons/${symbolCode}.svg" width="16" height="16">
-                <img src="weather-icons/${symbolCode}.svg" alt="${symbolCode}" width="16" height="16">
-            </object>`;
+        // Create or update the icon
+        let iconElem = document.getElementById('met-icon');
+        if (!iconElem) {
+            // Create icon container if it doesn't exist
+            iconElem = document.createElement('div');
+            iconElem.id = 'met-icon';
+            iconElem.className = 'met-weather-icon';
+            
+            // Insert before the temperature text
+            elements.metTemp.parentElement.insertBefore(iconElem, elements.metTemp);
         }
+        
+        // Since Safari/iOS has CORS issues, we'll use an inline SVG approach
+        const weatherIcons = {
+            'clearsky_day': '<i class="fas fa-sun" style="color:#FFD700;"></i>',
+            'clearsky_night': '<i class="fas fa-moon" style="color:#FFD700;"></i>',
+            'clearsky_polartwilight': '<i class="fas fa-sun" style="color:#FFD700;"></i>',
+            'fair_day': '<i class="fas fa-cloud-sun" style="color:#FFD700;"></i>',
+            'fair_night': '<i class="fas fa-cloud-moon" style="color:#FFD700;"></i>',
+            'fair_polartwilight': '<i class="fas fa-cloud-sun" style="color:#FFD700;"></i>',
+            'partlycloudy_day': '<i class="fas fa-cloud-sun" style="color:#87CEEB;"></i>',
+            'partlycloudy_night': '<i class="fas fa-cloud-moon" style="color:#87CEEB;"></i>',
+            'partlycloudy_polartwilight': '<i class="fas fa-cloud-sun" style="color:#87CEEB;"></i>',
+            'cloudy': '<i class="fas fa-cloud" style="color:#87CEEB;"></i>',
+            'rainshowers_day': '<i class="fas fa-cloud-sun-rain" style="color:#4682B4;"></i>',
+            'rainshowers_night': '<i class="fas fa-cloud-moon-rain" style="color:#4682B4;"></i>',
+            'rainshowers_polartwilight': '<i class="fas fa-cloud-sun-rain" style="color:#4682B4;"></i>',
+            'rain': '<i class="fas fa-cloud-rain" style="color:#4682B4;"></i>',
+            'heavyrain': '<i class="fas fa-cloud-showers-heavy" style="color:#4682B4;"></i>',
+            'fog': '<i class="fas fa-smog" style="color:#D3D3D3;"></i>',
+            'snow': '<i class="fas fa-snowflake" style="color:white;"></i>',
+            'sleet': '<i class="fas fa-cloud-meatball" style="color:#87CEEB;"></i>',
+            'default': '<i class="fas fa-cloud" style="color:#87CEEB;"></i>'
+        };
+        
+        // Use FA icon if available, otherwise use default cloud
+        const iconHTML = weatherIcons[symbolCode] || weatherIcons['default'];
+        iconElem.innerHTML = iconHTML;
     }
 }
 
