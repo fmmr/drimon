@@ -1,6 +1,8 @@
 // Configuration for all charts with row-based layout
 // Make available globally for script.js
 window.chartConfigs = [
+    // Define chart groupings for linked tooltips
+    // Groups: temperature, humidity, weather, system, light, soil
     // Row 1
     { 
         id: 'chart-temp',

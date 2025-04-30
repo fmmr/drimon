@@ -61,6 +61,21 @@
     cursor: help;
 }
 
+/* Weather icon styling */
+.met-weather-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 4px;
+    position: relative;
+    top: 1px;
+}
+
+.met-weather-icon img {
+    width: 16px;
+    height: 16px;
+}
+
 /* Colors for different states */
 .norm, .full, .pressure-high {
     color: #28a745;

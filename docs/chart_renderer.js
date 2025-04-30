@@ -308,6 +308,20 @@ function createOrUpdateChart(config, data) {
     const paddedMinValue = hasNegativeValues ? minValue - paddingAmount : Math.max(0, minValue - paddingAmount);
     const paddedMaxValue = maxValue + paddingAmount;
     
+    // Store timestamps for cross-chart syncing
+    const timestamps = data.feeds.map(feed => feed.created_at);
+    
+    // Store raw data for shared tooltips
+    window.chartRawData = window.chartRawData || {};
+    window.chartRawData[config.id] = {
+        timestamps: timestamps,
+        values: values,
+        title: config.title,
+        category: config.category,
+        color: config.color,
+        unit: config.unit || ''
+    };
+    
     const chartData = {
         labels: data.feeds.map(feed => moment(feed.created_at).format('LT')),
         datasets: [{
@@ -322,6 +336,102 @@ function createOrUpdateChart(config, data) {
             tension: 0.1 // Reduced curve for better accuracy
         }]
     };
+    
+    // Function for cross-chart highlighting
+    function syncTooltips(chart, dataIndex) {
+        // Skip if invalid index
+        if (dataIndex === null || dataIndex === undefined) return;
+        
+        // Get the timestamp for this data point
+        const timestamp = timestamps[dataIndex];
+        if (!timestamp) return;
+        
+        // Sync tooltips across all charts
+        Object.values(chartInstances).forEach(otherChart => {
+            if (!otherChart || otherChart === chart) return;
+            
+            // Get raw data for this chart
+            const chartId = otherChart.canvas.id;
+            const rawData = window.chartRawData[chartId];
+            if (!rawData || !rawData.timestamps) return;
+            
+            // Find the closest timestamp in the other chart
+            let closestIndex = -1;
+            let minTimeDiff = Infinity;
+            
+            rawData.timestamps.forEach((time, idx) => {
+                const timeDiff = Math.abs(new Date(time) - new Date(timestamp));
+                if (timeDiff < minTimeDiff) {
+                    minTimeDiff = timeDiff;
+                    closestIndex = idx;
+                }
+            });
+            
+            // Only sync if the time difference is within 5 minutes
+            if (minTimeDiff <= 5 * 60 * 1000 && closestIndex !== -1) {
+                const activeElements = otherChart.getElementsAtEventForMode(
+                    { x: otherChart.scales.x.getPixelForValue(closestIndex), y: otherChart.chartArea.top },
+                    'nearest',
+                    { intersect: false },
+                    false
+                );
+                
+                // Activate the tooltip on the other chart
+                otherChart.tooltip.setActiveElements(activeElements, { x: 0, y: 0 });
+                otherChart.update('none');
+            }
+        });
+    }
+    
+    // Get chart units based on ID
+    function getUnitForChart(chartId) {
+        if (chartId.includes('temp')) return '°C';
+        if (chartId.includes('humidity')) return '%';
+        if (chartId.includes('pressure')) return 'hPa';
+        if (chartId.includes('wind')) return 'm/s';
+        if (chartId.includes('rain')) return 'mm';
+        if (chartId.includes('battery')) return chartId.includes('voltage') ? 'V' : '%';
+        if (chartId.includes('light')) return 'lux';
+        if (chartId.includes('window')) return 'mm';
+        if (chartId.includes('wifi')) return 'dBm';
+        if (chartId.includes('soil')) return '%';
+        return '';
+    }
+    
+    // Function to get all related chart data (same category)
+    function getRelatedChartData(category, timestamp) {
+        if (!category || !timestamp) return [];
+        
+        const relatedData = [];
+        
+        Object.entries(window.chartRawData).forEach(([chartId, rawData]) => {
+            if (rawData.category === category) {
+                // Find closest timestamp
+                let closestIndex = -1;
+                let minTimeDiff = Infinity;
+                
+                rawData.timestamps.forEach((time, idx) => {
+                    const timeDiff = Math.abs(new Date(time) - new Date(timestamp));
+                    if (timeDiff < minTimeDiff) {
+                        minTimeDiff = timeDiff;
+                        closestIndex = idx;
+                    }
+                });
+                
+                // Only include if close enough (5 minutes)
+                if (minTimeDiff <= 5 * 60 * 1000 && closestIndex !== -1) {
+                    relatedData.push({
+                        title: rawData.title,
+                        value: rawData.values[closestIndex],
+                        unit: getUnitForChart(chartId),
+                        color: rawData.color
+                    });
+                }
+            }
+        });
+        
+        return relatedData;
+    }
     
     // Optimized chart options for better rendering
     const chartOptions = {
@@ -402,12 +512,53 @@ function createOrUpdateChart(config, data) {
                     size: 11
                 },
                 padding: 6,
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
                 callbacks: {
+                    // Customize title to show full date/time
                     title: (tooltipItems) => {
                         return moment(data.feeds[tooltipItems[0].dataIndex].created_at).format('LLL');
+                    },
+                    
+                    // Show data from all related charts in this tooltip
+                    afterBody: (tooltipItems) => {
+                        if (!config.category || !tooltipItems.length) return [];
+                        
+                        // Get timestamp for this tooltip
+                        const dataIndex = tooltipItems[0].dataIndex;
+                        if (dataIndex === undefined || !timestamps[dataIndex]) return [];
+                        
+                        const timestamp = timestamps[dataIndex];
+                        
+                        // Find all related data points from same category
+                        const relatedData = getRelatedChartData(config.category, timestamp);
+                        
+                        // Don't show anything if there's only this chart
+                        if (relatedData.length <= 1) return [];
+                        
+                        // Format lines for tooltip
+                        const lines = ['', '— Andre verdier —'];
+                        
+                        relatedData.forEach(item => {
+                            // Skip the current chart
+                            if (item.title === config.title) return;
+                            
+                            // Create colored line for each related value
+                            const formattedValue = Math.round(item.value * 10) / 10;
+                            lines.push(`${item.title}: ${formattedValue} ${item.unit}`);
+                        });
+                        
+                        return lines;
                     }
                 }
             }
+        },
+        
+        // Custom handler for hover events
+        onHover: (event, elements, chart) => {
+            if (!elements || !elements.length) return;
+            
+            const dataIndex = elements[0].index;
+            syncTooltips(chart, dataIndex);
         }
     };
     

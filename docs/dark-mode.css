@@ -1,0 +1,143 @@
+/* Dark mode styles */
+:root {
+    /* Light mode colors (default) */
+    --bg-color: #f8f9fa;
+    --text-color: #333;
+    --header-bg: linear-gradient(to right, #f8f9fa, #e9ecef);
+    --chip-bg: white;
+    --chip-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    --chart-bg: white;
+    --chart-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    --grid-color: rgba(0, 0, 0, 0.05);
+    --pill-bg: #f0f0f0;
+    --pill-color: #333;
+    --pill-border: #d0d0d0;
+    --pill-active-bg: #007bff;
+    --pill-active-color: white;
+    --input-border: #ced4da;
+    --button-bg: #28a745;
+    --button-hover: #218838;
+    --tooltip-bg: rgba(0, 0, 0, 0.7);
+    --tooltip-color: white;
+}
+
+/* Dark mode colors */
+[data-theme="dark"] {
+    --bg-color: #121212;
+    --text-color: #e0e0e0;
+    --header-bg: linear-gradient(to right, #121212, #1e1e1e);
+    --chip-bg: #2d2d2d;
+    --chip-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --chart-bg: #1e1e1e;
+    --chart-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+    --grid-color: rgba(255, 255, 255, 0.05);
+    --pill-bg: #2d2d2d;
+    --pill-color: #e0e0e0;
+    --pill-border: #444;
+    --pill-active-bg: #0056b3;
+    --pill-active-color: white;
+    --input-border: #444;
+    --button-bg: #28a745;
+    --button-hover: #218838;
+    --tooltip-bg: rgba(0, 0, 0, 0.8);
+    --tooltip-color: white;
+}
+
+/* Applied styles */
+html, body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.modern-header {
+    background: var(--header-bg);
+    border-bottom: 1px solid var(--pill-border);
+    transition: background 0.3s ease;
+}
+
+.data-chip {
+    background-color: var(--chip-bg);
+    box-shadow: var(--chip-shadow);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.chart {
+    background-color: var(--chart-bg);
+    box-shadow: var(--chart-shadow);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.date-chip {
+    background-color: var(--pill-bg);
+    color: var(--pill-color);
+    border: 1px solid var(--pill-border);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.date-chip:hover, .date-chip.active {
+    background-color: var(--pill-active-bg);
+    color: var(--pill-active-color);
+}
+
+#resultsInput {
+    background-color: var(--chip-bg);
+    color: var(--text-color);
+    border-color: var(--input-border);
+}
+
+#sortSelect {
+    background-color: var(--chip-bg);
+    color: var(--text-color);
+    border-color: var(--input-border);
+}
+
+/* Dark mode toggle button */
+#darkModeToggle {
+    margin-left: 10px;
+    padding: 4px 8px;
+    background-color: var(--pill-bg);
+    color: var(--pill-color);
+    border: 1px solid var(--pill-border);
+    border-radius: 50px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.3s ease;
+}
+
+#darkModeToggle .icon {
+    font-size: 14px;
+    margin-right: 4px;
+}
+
+#darkModeToggle:hover {
+    background-color: var(--pill-active-bg);
+    color: var(--pill-active-color);
+}
+
+/* Chart.js dark mode adjustments */
+[data-theme="dark"] .chart-title {
+    color: var(--text-color);
+}
+
+/* Loading indicators in dark mode */
+[data-theme="dark"] .loading-indicator {
+    color: #aaa;
+}
+
+[data-theme="dark"] .loading-spinner {
+    border: 3px solid #222;
+    border-top: 3px solid #3498db;
+}
+
+/* Dark mode adjustments for mobile */
+@media (max-width: 768px) {
+    [data-theme="dark"] .modern-header {
+        background: #1a1a1a;
+    }
+    
+    [data-theme="dark"] #sortSelect {
+        background-color: #222;
+    }
+}

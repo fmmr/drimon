@@ -109,9 +109,36 @@ function updateMetDisplay(data) {
     // Determine the data source
     const dataSource = data._source ? data._source : 'yr.no';
     
+    // Get weather symbol code if available
+    let symbolCode = '';
+    if (data.properties.timeseries[0].data.next_1_hours && 
+        data.properties.timeseries[0].data.next_1_hours.summary && 
+        data.properties.timeseries[0].data.next_1_hours.summary.symbol_code) {
+        symbolCode = data.properties.timeseries[0].data.next_1_hours.summary.symbol_code;
+    }
+    
+    // Update temperature text
     elements.metTemp.innerHTML = `${temperature} °C`;
     elements.metTemp.parentElement.className = `data-chip ${getClassName(temperature, 15, 25)}`;
     elements.metTemp.parentElement.title = `Ute Temperatur - Oppdatert: ${lastUpdated} (Kilde: ${dataSource})`;
+    
+    // Update weather icon if we have a symbol code
+    if (symbolCode) {
+        // Create or update the icon
+        let iconElem = document.getElementById('met-icon');
+        if (!iconElem) {
+            // Create icon container if it doesn't exist
+            iconElem = document.createElement('div');
+            iconElem.id = 'met-icon';
+            iconElem.className = 'met-weather-icon';
+            
+            // Insert before the temperature text
+            elements.metTemp.parentElement.insertBefore(iconElem, elements.metTemp);
+        }
+        
+        // Set the icon using the SVG
+        iconElem.innerHTML = `<img src="weather-icons/${symbolCode}.svg" alt="${symbolCode}" width="16" height="16">`;
+    }
 }
 
 async function fetchData() {
