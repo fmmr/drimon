@@ -145,7 +145,7 @@ html, body {
   }
   
   .mobile-layout .chart-stat-label-avg::before {
-    content: 'Avg:';
+    content: 'Snitt:';
   }
   
   .mobile-layout .chart-stat-label-high::before {
