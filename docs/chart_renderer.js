@@ -637,14 +637,21 @@ function createOrUpdateChart(config, data) {
                config.id.includes('pressure');
     }
     
-    // Function to get all related chart data (same category)
-    function getRelatedChartData(category, timestamp) {
-        if (!category || !timestamp) return [];
+    // Function to get all related chart data (same category and related categories)
+    function getRelatedChartData(category, timestamp, config) {
+        if (!timestamp) return [];
         
         const relatedData = [];
+        const categoriesToInclude = [category]; // Always include the main category
+        
+        // Add related categories if specified in the config
+        if (config && config.relatedCategories && Array.isArray(config.relatedCategories)) {
+            categoriesToInclude.push(...config.relatedCategories);
+        }
         
         Object.entries(window.chartRawData).forEach(([chartId, rawData]) => {
-            if (rawData.category === category) {
+            // Check if chart's category is one we should include
+            if (categoriesToInclude.includes(rawData.category)) {
                 // Find closest timestamp
                 let closestIndex = -1;
                 let minTimeDiff = Infinity;
@@ -667,7 +674,8 @@ function createOrUpdateChart(config, data) {
                                 title: `${rawData.title} (${series.title})`,
                                 value: series.values[closestIndex],
                                 unit: getUnitForChart(chartId),
-                                color: series.color
+                                color: series.color,
+                                category: rawData.category // Store the category for grouping
                             });
                         });
                     } else {
@@ -676,7 +684,8 @@ function createOrUpdateChart(config, data) {
                             title: rawData.title,
                             value: rawData.values[closestIndex],
                             unit: getUnitForChart(chartId),
-                            color: rawData.color
+                            color: rawData.color,
+                            category: rawData.category // Store the category for grouping
                         });
                     }
                 }
@@ -886,7 +895,7 @@ function createOrUpdateChart(config, data) {
                     
                     // Show data from all related charts in this tooltip
                     afterBody: (tooltipItems) => {
-                        if (!config.category || !tooltipItems.length) return [];
+                        if (!tooltipItems.length) return [];
                         
                         // Get timestamp for this tooltip
                         const dataIndex = tooltipItems[0].dataIndex;
@@ -894,8 +903,8 @@ function createOrUpdateChart(config, data) {
                         
                         const timestamp = timestamps[dataIndex];
                         
-                        // Find all related data points from same category
-                        const relatedData = getRelatedChartData(config.category, timestamp);
+                        // Find all related data points from same category and related categories
+                        const relatedData = getRelatedChartData(config.category, timestamp, config);
                         
                         // Create a map of chart titles we're already showing in this tooltip
                         const visibleTitles = new Set();
@@ -919,26 +928,72 @@ function createOrUpdateChart(config, data) {
                         // Don't show anything if there are no other charts to display
                         if (filteredRelatedData.length === 0) return [];
                         
-                        // Format lines for tooltip
-                        const lines = ['', '— Andre verdier —'];
+                        // Group data by category for better organization
+                        const dataByCategory = {};
                         
+                        // Group related data by category
                         filteredRelatedData.forEach(item => {
-                            // Format value based on content
-                            let formattedValue;
-                            // Use similar rules as the main formatNumber function
-                            if (item.title.toLowerCase().includes('light') || 
-                                item.title.toLowerCase().includes('wifi') || 
-                                item.title.toLowerCase().includes('window') ||
-                                item.title.toLowerCase().includes('soil') ||
-                                item.title.toLowerCase().includes('pressure') ||
-                                Math.abs(item.value) >= 10) {
-                                formattedValue = Math.round(item.value);
-                            } else if (Math.abs(item.value) < 1) {
-                                formattedValue = item.value.toFixed(2);
-                            } else {
-                                formattedValue = item.value.toFixed(1);
+                            const category = item.category || 'other';
+                            if (!dataByCategory[category]) {
+                                dataByCategory[category] = [];
                             }
-                            lines.push(`${item.title}: ${formattedValue} ${item.unit}`);
+                            dataByCategory[category].push(item);
+                        });
+                        
+                        // Format lines for tooltip with category headers
+                        const lines = [];
+                        let isFirstCategory = true;
+                        
+                        // Add each category section
+                        Object.entries(dataByCategory).forEach(([category, items]) => {
+                            if (items.length === 0) return;
+                            
+                            // Add spacing between categories
+                            if (!isFirstCategory) {
+                                lines.push('');
+                            }
+                            
+                            // Add category header
+                            let headerText = '— Andre verdier —'; // Default header
+                            
+                            // Try to get more specific headers based on category
+                            if (category === 'temperature') {
+                                headerText = '— Temperaturer —';
+                            } else if (category === 'weather') {
+                                headerText = '— Vær —';
+                            } else if (category === 'structure') {
+                                headerText = '— Struktur —';
+                            } else if (category === 'light') {
+                                headerText = '— Lys —';
+                            } else if (category === 'system') {
+                                headerText = '— System —';
+                            } else if (category === 'soil') {
+                                headerText = '— Jord —';
+                            }
+                            
+                            lines.push('', headerText);
+                            
+                            // Add each data item
+                            items.forEach(item => {
+                                // Format value based on content
+                                let formattedValue;
+                                // Use similar rules as the main formatNumber function
+                                if (item.title.toLowerCase().includes('light') || 
+                                    item.title.toLowerCase().includes('wifi') || 
+                                    item.title.toLowerCase().includes('window') ||
+                                    item.title.toLowerCase().includes('soil') ||
+                                    item.title.toLowerCase().includes('pressure') ||
+                                    Math.abs(item.value) >= 10) {
+                                    formattedValue = Math.round(item.value);
+                                } else if (Math.abs(item.value) < 1) {
+                                    formattedValue = item.value.toFixed(2);
+                                } else {
+                                    formattedValue = item.value.toFixed(1);
+                                }
+                                lines.push(`${item.title}: ${formattedValue} ${item.unit}`);
+                            });
+                            
+                            isFirstCategory = false;
                         });
                         
                         return lines;

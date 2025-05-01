@@ -22,7 +22,8 @@ window.chartConfigs = [
         row: 1,
         startDate: '2024-07-25 18:00:00',
         category: 'structure',
-        minValue: 50  // Set minimum Y-axis value
+        minValue: 50,  // Set minimum Y-axis value
+        relatedCategories: ['temperature']  // Show temperature values in tooltip
     },
     // Multi-series chart for light measurements with dual y-axes
     {
