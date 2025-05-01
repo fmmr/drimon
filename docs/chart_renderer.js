@@ -897,17 +897,33 @@ function createOrUpdateChart(config, data) {
                         // Find all related data points from same category
                         const relatedData = getRelatedChartData(config.category, timestamp);
                         
-                        // Don't show anything if there's only this chart
-                        if (relatedData.length <= 1) return [];
+                        // Create a map of chart titles we're already showing in this tooltip
+                        const visibleTitles = new Set();
+                        
+                        // For multi-series charts, track all series being shown in the main tooltip
+                        tooltipItems.forEach(item => {
+                            const dataset = item.dataset;
+                            if (dataset && dataset.label) {
+                                // For multi-series charts, store both the chart title and the series combo
+                                if (data.is_multi_series) {
+                                    visibleTitles.add(`${config.title} (${dataset.label.split(':')[0].trim()})`);
+                                } else {
+                                    visibleTitles.add(config.title);
+                                }
+                            }
+                        });
+                        
+                        // Filter out values that are already shown in the tooltip
+                        const filteredRelatedData = relatedData.filter(item => !visibleTitles.has(item.title));
+                        
+                        // Don't show anything if there are no other charts to display
+                        if (filteredRelatedData.length === 0) return [];
                         
                         // Format lines for tooltip
                         const lines = ['', '— Andre verdier —'];
                         
-                        relatedData.forEach(item => {
-                            // Skip the current chart
-                            if (item.title === config.title) return;
-                            
-                            // Create colored line for each related value
+                        filteredRelatedData.forEach(item => {
+                            // Format value based on content
                             let formattedValue;
                             // Use similar rules as the main formatNumber function
                             if (item.title.toLowerCase().includes('light') || 
