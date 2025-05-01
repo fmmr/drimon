@@ -48,6 +48,28 @@
             
             // Mount the header to the DOM
             headerMountPoint.appendChild(header);
+
+            // Initialize the page after header is created
+            // This ensures all event handlers are attached to the newly created header elements
+            if (typeof toggleDarkMode === 'function' && 
+                typeof toggleStats === 'function' && 
+                typeof setupDateRangeHandlers === 'function') {
+                
+                // Set up dark mode toggle button (from script.js)
+                const darkModeToggle = document.getElementById('darkModeToggle');
+                if (darkModeToggle) {
+                    darkModeToggle.addEventListener('click', toggleDarkMode);
+                }
+                
+                // Set up stats toggle button (from script.js)
+                const statsToggle = document.getElementById('statsToggle');
+                if (statsToggle) {
+                    statsToggle.addEventListener('click', toggleStats);
+                }
+                
+                // Set up date range handlers (from chart_renderer.js)
+                setupDateRangeHandlers();
+            }
         });
     </script>
 </body>

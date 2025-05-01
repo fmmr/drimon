@@ -1166,7 +1166,8 @@ function sortChartsByCategory(category) {
 
 // Initialize chart system when the DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    setupDateRangeHandlers();
+    // We'll skip setupDateRangeHandlers() here since it's now called in index.html
+    // after the header is created dynamically
     
     // Get range and results from URL parameters or use defaults
     const range = getURLParameter('range') || '1';

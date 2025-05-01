@@ -158,16 +158,8 @@ document.addEventListener('DOMContentLoaded', () => {
         statsToggle.classList.toggle('active', statsVisible);
     }
     
-    // Set up dark mode toggle button
-    const darkModeToggle = document.getElementById('darkModeToggle');
-    if (darkModeToggle) {
-        darkModeToggle.addEventListener('click', toggleDarkMode);
-    }
-    
-    // Set up stats toggle button
-    if (statsToggle) {
-        statsToggle.addEventListener('click', toggleStats);
-    }
+    // Note: The event handlers for darkModeToggle and statsToggle are now set up
+    // in the index.html file after the header is created dynamically
     
     // Fetch initial data for header (weather is handled separately in weather.js)
     fetchData();
