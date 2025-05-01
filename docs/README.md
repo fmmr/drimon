@@ -141,13 +141,50 @@ To run the tests:
    - **Automated Tests**: Run full test suites with detailed reporting
    - **Chart Tests**: Test chart-specific components and functionality
 
-### Integration Testing
+### Test Mode
 
-For integration testing and end-to-end validation:
+DriMon includes a comprehensive test mode with debug tools. To activate:
 
-- The main application can be run in test mode by appending `?test=true` to the URL
-- This enables verbose console logging and exposes debugging tools
-- Network requests still go to production endpoints but can be monitored
+1. Append `?test=true` to any DriMon URL (e.g., `https://drimon.rodland.no/?test=true`)
+2. Optional: Set log level with `&logLevel=verbose` (options: `info`, `debug`, `verbose`)
+
+Test Mode Features:
+
+#### Enhanced Logging
+- Timestamped console output with elapsed time tracking
+- Log level filtering (info, debug, verbose)
+- Internal event tracking for diagnostics
+
+#### Debug Panel
+- Access via the 🔍 button in the bottom right corner
+- View recent events, errors, and log messages
+- Monitor and inspect network requests in real-time
+- Track component rendering performance
+
+#### Network Monitoring
+- All API calls are automatically logged and can be inspected
+- Response data and timing information available
+- Error tracking for failed requests
+
+#### Component Tracking
+- Performance metrics for all rendered components
+- Render time measurement
+- Component hierarchy visualization
+
+#### Usage Examples
+
+```
+# Basic test mode
+https://drimon.rodland.no/?test=true
+
+# Test mode with verbose logging
+https://drimon.rodland.no/?test=true&logLevel=verbose
+
+# Test mode with debug level logging
+https://drimon.rodland.no/?test=true&logLevel=debug
+```
+
+The debug panel provides an interactive interface for exploring the application's inner workings without affecting production functionality.
 
 ## Deployment
 
