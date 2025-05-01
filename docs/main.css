@@ -100,6 +100,46 @@ html, body {
   overflow: hidden;
 }
 
+/* Styling for chart legends */
+.chart .chartjs-legend-container {
+  margin-top: 2px;
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: center;
+  padding: 0 2px;
+}
+
+.chart .chartjs-legend {
+  font-size: 8px;
+  line-height: 1.2;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+/* Style for legend color boxes to make them appear as lines - handles various Chart.js DOM structures */
+.chart-js-legend li span,
+li.chartjs-legend-item span,
+.chartjs-legend-element span {
+  display: inline-block !important;
+  height: 2px !important; /* Force thin height */
+  width: 12px !important; /* Consistent width */
+  margin-right: 4px !important;
+  vertical-align: middle !important;
+  border-radius: 0 !important; /* Ensure it's a line, not rounded */
+}
+
+/* Additional selector for Chart.js v3+ */
+.chart canvas + ul li .chartjs-legend-item-symbol,
+.chart .chartjs-legend-item-symbol {
+  height: 2px !important;
+  width: 12px !important;
+  border-radius: 0 !important;
+  margin-top: 0 !important; /* Align with text */
+  position: relative !important;
+  top: -1px !important; /* Fine-tune vertical alignment */
+}
+
 /* Mobile-specific chart styling */
 @media (max-width: 768px) {
   .chart {
@@ -205,10 +245,10 @@ html, body {
 .chart-stat {
   display: flex;
   align-items: center;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05); /* Line instead of box */
   padding: 0px 2px;
   white-space: nowrap; /* Prevent wrapping of text */
   font-size: 7.5px; /* Smaller text */
+  font-weight: 500; /* Make a bit bolder for better readability */
 }
 
 .chart-stat-label {
@@ -219,8 +259,8 @@ html, body {
 
 /* Highlight the current value */
 .chart-stat-current {
-  border-bottom-color: rgba(0, 128, 0, 0.2);
-  font-weight: 500;
+  font-weight: 600;
+  color: #006000;
 }
 
 /* Dark mode adjustments */
@@ -233,9 +273,7 @@ html, body {
   border-bottom-color: rgba(255, 255, 255, 0.1);
 }
 
-[data-theme="dark"] .chart-stat-current {
-  border-bottom-color: rgba(0, 180, 0, 0.2);
-}
+/* Moved to dark-mode.css for better organization */
 
 /* Chart canvas container */
 .chart-canvas-container {

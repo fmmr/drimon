@@ -129,8 +129,57 @@ html, body {
 
 /* Dark mode stats */
 [data-theme="dark"] .chart-stats {
-    color: #777;
+    color: #aaa;
     border-bottom-color: #333;
+}
+
+/* Improve stat readability in dark mode */
+[data-theme="dark"] .chart-stat {
+    color: #c0c0c0;
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+    letter-spacing: 0.2px;
+    border-bottom: none; /* Remove the underline */
+}
+
+[data-theme="dark"] .chart-stat-current {
+    color: #d5ffd5;
+    border-bottom: none; /* Remove the underline */
+}
+
+/* Improve legend readability in dark mode for multi-series charts */
+[data-theme="dark"] .chart .chart-js-legend,
+[data-theme="dark"] .chart ul.chartjs-legend {
+    color: #c0c0c0;
+}
+
+/* Apply text shadow to chart legend in dark mode */
+[data-theme="dark"] .chart .chartjs-legend-item {
+    color: #c0c0c0;
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+    letter-spacing: 0.2px;
+}
+
+/* Override Chart.js default text color in dark mode */
+[data-theme="dark"] .chart canvas {
+    color: #c0c0c0 !important;
+}
+
+/* Make sure legend text is visible in dark mode */
+[data-theme="dark"] .chart-legend span {
+    color: #c0c0c0 !important;
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
+    letter-spacing: 0.2px;
+}
+
+/* Improve Chart.js legend - these are the actual elements that Chart.js generates */
+[data-theme="dark"] .chart-js-legend li {
+    font-weight: 500 !important;
+}
+
+/* Ensure legend text is bright enough in dark mode */
+[data-theme="dark"] ul.legend-ul li {
+    color: #c0c0c0;
+    text-shadow: 0 0 2px rgba(0, 0, 0, 0.8);
 }
 
 /* Loading indicators in dark mode */

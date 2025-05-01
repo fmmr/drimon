@@ -820,12 +820,16 @@ function createOrUpdateChart(config, data) {
                 display: data.is_multi_series === true, // Explicitly check for true to avoid false positives
                 position: 'top',
                 labels: {
-                    boxWidth: 8,  // Smaller color boxes
-                    boxHeight: 5, // Custom height for boxes to make them lines instead
+                    boxWidth: 12, // Bit longer line
+                    boxHeight: 2, // Very thin line instead of box
                     padding: 6,   // Less padding
                     font: {
-                        size: 8   // Smaller font
+                        size: 8,  // Smaller font
+                        weight: 500 // Make labels slightly bolder
                     },
+                    color: document.documentElement.getAttribute('data-theme') === 'dark' ? '#c0c0c0' : undefined,
+                    usePointStyle: false, // Don't use point style (use line style)
+                    
                     // Add current values to the labels
                     generateLabels: function(chart) {
                         const datasets = chart.data.datasets;
@@ -850,6 +854,9 @@ function createOrUpdateChart(config, data) {
                                         
                                         // Add value to label
                                         label.text += `: ${formattedValue}`;
+                                        
+                                        // Store the value in the label object for custom rendering if needed
+                                        label.value = formattedValue;
                                     }
                                 }
                             });

@@ -43,11 +43,21 @@ function updateChartColors(isDark) {
         
         // Update tick colors
         if (chart.options.scales.y.ticks) {
-            chart.options.scales.y.ticks.color = isDark ? '#aaa' : '#666';
+            chart.options.scales.y.ticks.color = isDark ? '#c0c0c0' : '#666';
         }
         
         if (chart.options.scales.x.ticks) {
-            chart.options.scales.x.ticks.color = isDark ? '#aaa' : '#666';
+            chart.options.scales.x.ticks.color = isDark ? '#c0c0c0' : '#666';
+        }
+        
+        // Update legend colors for better readability in dark mode
+        if (chart.options.plugins && chart.options.plugins.legend && chart.options.plugins.legend.labels) {
+            chart.options.plugins.legend.labels.color = isDark ? '#c0c0c0' : '#666';
+            
+            // Make legend text slightly bolder in dark mode
+            if (chart.options.plugins.legend.labels.font) {
+                chart.options.plugins.legend.labels.font.weight = isDark ? 500 : 400;
+            }
         }
         
         // Update without animation
