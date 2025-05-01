@@ -1,20 +1,34 @@
 // YR.no weather integration - minimal implementation
 const DEBUG_WEATHER = false; // Set to true to enable debug logging
 
-// DOM elements
-const weatherIcon = document.getElementById('weather-icon-container');
-const metTemp = document.getElementById('met-temp');
-const metLink = document.getElementById('met-link');
+// Get weather elements function for dynamic access
+function getWeatherElements() {
+    return {
+        weatherIcon: document.getElementById('weather-icon-container'),
+        metTemp: document.getElementById('met-temp'),
+        metLink: document.getElementById('met-link')
+    };
+}
 
 // Logger function
 const log = (msg, data) => DEBUG_WEATHER && console.log(`[Weather] ${msg}`, data || '');
 
 // Weather data fetching function
 async function fetchWeather() {
+    // Get elements dynamically
+    const elements = getWeatherElements();
+    
+    // If elements aren't loaded yet, try again later
+    if (!elements.metTemp || !elements.weatherIcon) {
+        log('Weather elements not ready yet, retrying in 500ms');
+        setTimeout(fetchWeather, 500);
+        return;
+    }
+    
     // Skip for Safari
     if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
-        if (metLink) metLink.style.display = 'none';
-        if (weatherIcon) weatherIcon.style.display = 'none';
+        if (elements.metLink) elements.metLink.style.display = 'none';
+        if (elements.weatherIcon) elements.weatherIcon.style.display = 'none';
         return;
     }
     
@@ -79,37 +93,39 @@ async function fetchWeather() {
         
     } catch (error) {
         log('Weather data fetch failed', error);
-        if (metTemp) {
-            metTemp.innerHTML = 'Feil';
-            metLink.title = 'Kunne ikke hente værdata';
+        const elements = getWeatherElements();
+        if (elements.metTemp) {
+            elements.metTemp.innerHTML = 'Feil';
+            if (elements.metLink) elements.metLink.title = 'Kunne ikke hente værdata';
         }
     }
 }
 
 // Update the UI with weather data
 function updateDisplay(data) {
-    if (!metTemp) return;
+    const elements = getWeatherElements();
+    if (!elements.metTemp) return;
     
     const temperature = Math.round(data.properties.timeseries[0].data.instant.details.air_temperature * 10) / 10;
     const lastUpdated = moment(data.properties.timeseries[0].time).format('L LTS');
     const source = data._source || 'yr.no';
     
     // Update temperature display
-    metTemp.innerHTML = `yr: ${temperature} °C`;
-    metLink.className = `data-chip ${temperature > 25 ? 'high' : temperature < 15 ? 'low' : 'norm'}`;
-    metLink.title = `Ute Temperatur - Oppdatert: ${lastUpdated} (Kilde: ${source})`;
+    elements.metTemp.innerHTML = `yr: ${temperature} °C`;
+    elements.metLink.className = `data-chip ${temperature > 25 ? 'high' : temperature < 15 ? 'low' : 'norm'}`;
+    elements.metLink.title = `Ute Temperatur - Oppdatert: ${lastUpdated} (Kilde: ${source})`;
     
     // Update weather icon if available
     const symbolData = data.properties.timeseries[0].data.next_1_hours?.summary;
-    if (symbolData?.symbol_code && weatherIcon) {
-        weatherIcon.innerHTML = `
+    if (symbolData?.symbol_code && elements.weatherIcon) {
+        elements.weatherIcon.innerHTML = `
             <object type="image/svg+xml" data="weather-icons/${symbolData.symbol_code}.svg" 
                     width="16" height="16" class="weather-svg">
                 <img src="weather-icons/${symbolData.symbol_code}.svg" 
                      alt="${symbolData.symbol_code}" width="16" height="16">
             </object>
         `;
-        weatherIcon.style.display = 'flex';
+        elements.weatherIcon.style.display = 'flex';
     }
 }
 

@@ -1,19 +1,32 @@
-const elements = {
-    temperature: document.getElementById('temperature'),
-    battery: document.getElementById('battery'),
-    batteryVolt: document.getElementById('batteryVolt'),
-    window: document.getElementById('window'),
-    pressure: document.getElementById('pressure'),
-    light: document.getElementById('light'),
-    timeSince: document.getElementById('time-since'),
-    title: document.getElementById('main-title'),
-    metTemp: document.getElementById('met-temp')
-};
+// Get elements function for dynamic access to DOM elements 
+function getElements() {
+    return {
+        temperature: document.getElementById('temperature'),
+        battery: document.getElementById('battery'),
+        batteryVolt: document.getElementById('batteryVolt'),
+        window: document.getElementById('window'),
+        pressure: document.getElementById('pressure'),
+        light: document.getElementById('light'),
+        timeSince: document.getElementById('time-since'),
+        title: document.getElementById('main-title'),
+        metTemp: document.getElementById('met-temp')
+    };
+}
 
 // Weather functions are now in weather.js
 
 async function fetchData() {
     try {
+        // Get elements dynamically (after they've been created)
+        const elements = getElements();
+        
+        // If elements aren't loaded yet, try again later
+        if (!elements.temperature || !elements.battery) {
+            console.log('Elements not ready yet, retrying in 500ms');
+            setTimeout(fetchData, 500);
+            return;
+        }
+        
         const responses = await Promise.all([
             fetch(`https://api.thingspeak.com/channels/2568299/feeds/last.json?timezone=${timezone}&status=true`),
             fetch(`https://api.thingspeak.com/channels/2584548/status/last.json?timezone=${timezone}`),
@@ -115,9 +128,10 @@ async function fetchData() {
         elements.title.title = `${lastStatus.status}`;
     } catch (error) {
         console.error('Error fetching data:', error);
-        elements.temperature.textContent = 'Temperatur: Feil';
-        elements.battery.textContent = 'Batteri: Feil';
-        elements.timeSince.textContent = 'Sist oppdatert: Feil';
+        const elements = getElements();
+        if (elements.temperature) elements.temperature.textContent = 'Temperatur: Feil';
+        if (elements.battery) elements.battery.textContent = 'Batteri: Feil';
+        if (elements.timeSince) elements.timeSince.textContent = 'Sist oppdatert: Feil';
     }
 }
 

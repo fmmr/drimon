@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DriMon Components Test</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="header.css">
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="dark-mode.css">
+    <script src="header_components.js"></script>
+    <script src="component_tests.js"></script>
+    <style>
+        body {
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .test-section h2 {
+            margin-top: 0;
+            font-size: 1.5rem;
+        }
+        .test-button {
+            margin: 5px;
+            padding: 8px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .test-button:hover {
+            background-color: #0056b3;
+        }
+        .component-container {
+            margin-top: 15px;
+            padding: 10px;
+            border: 1px dashed #aaa;
+            min-height: 50px;
+        }
+        .test-result {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .test-summary {
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+        .test-passed {
+            background-color: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+        }
+        .test-failed {
+            background-color: #f8d7da;
+            border: 1px solid #f5c6cb;
+            color: #721c24;
+        }
+        .tab-container {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .tab {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #f1f1f1;
+            border: 1px solid #ddd;
+            border-bottom: none;
+            cursor: pointer;
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+        }
+        .tab.active {
+            background-color: #fff;
+            border-bottom: 1px solid #fff;
+            margin-bottom: -1px;
+        }
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 0 5px 5px 5px;
+            overflow: auto;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        body {
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>DriMon Components Test</h1>
+    <p>This page allows you to test individual components from the header_components.js file.</p>
+    
+    <div class="tab-container">
+        <div class="tab active" onclick="openTab(event, 'manual-tests')">Manual Tests</div>
+        <div class="tab" onclick="openTab(event, 'automated-tests')">Automated Tests</div>
+    </div>
+    
+    <div id="manual-tests" class="tab-content active">
+        <div class="test-section">
+            <h2>Logo Container</h2>
+            <button class="test-button" onclick="testLogoContainer()">Test Logo Container</button>
+            <div id="logo-container-test" class="component-container"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Data Container</h2>
+            <button class="test-button" onclick="testDataContainer()">Test Data Container</button>
+            <div id="data-container-test" class="component-container"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Date Ranges</h2>
+            <button class="test-button" onclick="testDateRanges()">Test Date Ranges</button>
+            <div id="date-ranges-test" class="component-container"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Search Container</h2>
+            <button class="test-button" onclick="testSearchContainer()">Test Search Container</button>
+            <div id="search-container-test" class="component-container"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Full Header</h2>
+            <button class="test-button" onclick="testFullHeader()">Test Full Header</button>
+            <div id="full-header-test" class="component-container"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Event Binding Test</h2>
+            <button class="test-button" onclick="testEventBinding()">Test Event Binding</button>
+            <div id="event-binding-test" class="component-container"></div>
+            <div id="event-result" class="test-result"></div>
+        </div>
+    </div>
+    
+    <div id="automated-tests" class="tab-content">
+        <div class="test-section">
+            <h2>Automated Component Tests</h2>
+            <p>Run all component tests automatically to verify that they render correctly.</p>
+            <button class="test-button" onclick="runHeaderComponentTests()">Run All Tests</button>
+            <div id="test-results" class="test-result"></div>
+        </div>
+    </div>
+    
+    <script>
+        // Tab switching
+        function openTab(evt, tabName) {
+            const tabs = document.getElementsByClassName('tab');
+            for (let i = 0; i < tabs.length; i++) {
+                tabs[i].classList.remove('active');
+            }
+            
+            const tabContents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+            
+            evt.currentTarget.classList.add('active');
+            document.getElementById(tabName).classList.add('active');
+        }
+        
+        // Test individual components
+        function testLogoContainer() {
+            const container = document.getElementById('logo-container-test');
+            container.innerHTML = '';
+            container.appendChild(createLogoContainer());
+        }
+        
+        function testDataContainer() {
+            const container = document.getElementById('data-container-test');
+            container.innerHTML = '';
+            container.appendChild(createDataContainer());
+        }
+        
+        function testDateRanges() {
+            const container = document.getElementById('date-ranges-test');
+            container.innerHTML = '';
+            container.appendChild(createDateRanges());
+        }
+        
+        function testSearchContainer() {
+            const container = document.getElementById('search-container-test');
+            container.innerHTML = '';
+            container.appendChild(createSearchContainer());
+        }
+        
+        function testFullHeader() {
+            const container = document.getElementById('full-header-test');
+            container.innerHTML = '';
+            container.appendChild(createHeader());
+        }
+        
+        // Test event binding
+        function testEventBinding() {
+            const container = document.getElementById('event-binding-test');
+            const resultContainer = document.getElementById('event-result');
+            container.innerHTML = '';
+            resultContainer.innerHTML = 'Click on components to test events:';
+            
+            // Create header components
+            const header = createHeader();
+            container.appendChild(header);
+            
+            // Add event listeners to test interactive elements
+            const dateChips = header.querySelectorAll('.date-chip');
+            dateChips.forEach(chip => {
+                chip.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    resultContainer.innerHTML += `\nDate Range Clicked: ${chip.dataset.range} (${chip.textContent})`;
+                });
+            });
+            
+            const updateButton = header.querySelector('#updateButton');
+            if (updateButton) {
+                updateButton.addEventListener('click', () => {
+                    resultContainer.innerHTML += '\nUpdate Button Clicked';
+                });
+            }
+            
+            const darkModeToggle = header.querySelector('#darkModeToggle');
+            if (darkModeToggle) {
+                darkModeToggle.addEventListener('click', () => {
+                    resultContainer.innerHTML += '\nDark Mode Toggle Clicked';
+                });
+            }
+            
+            const statsToggle = header.querySelector('#statsToggle');
+            if (statsToggle) {
+                statsToggle.addEventListener('click', () => {
+                    resultContainer.innerHTML += '\nStats Toggle Clicked';
+                });
+            }
+        }
+    </script>
+</body>
+</html>

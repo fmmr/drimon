@@ -402,7 +402,6 @@ function createOrUpdateChart(config, data) {
             
             // Create dataset for this series
             const yAxisID = series.axis || 'y';
-            console.log(`Series ${series.title} using axis: ${yAxisID}`);
             
             datasets.push({
                 label: series.title,
