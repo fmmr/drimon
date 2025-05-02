@@ -1,0 +1,68 @@
+/**
+ * Language Switcher Styling for DriMon
+ */
+
+.language-switcher {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-left: 10px;
+}
+
+.lang-flag {
+    background: none;
+    border: none;
+    padding: 2px;
+    cursor: pointer;
+    border-radius: 3px;
+    font-size: 15px;
+    line-height: 1;
+    opacity: 0.6;
+    transition: all 0.2s ease;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.lang-flag:hover {
+    opacity: 0.9;
+    transform: scale(1.1);
+}
+
+.lang-flag.active {
+    opacity: 1;
+    box-shadow: 0 0 0 1px rgba(0, 123, 255, 0.25);
+    transform: scale(1.1);
+}
+
+/* Position in header */
+.language-wrapper {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+    .language-switcher {
+        margin-left: 0;
+        margin-right: 5px;
+    }
+    
+    .lang-flag {
+        font-size: 14px;
+        padding: 1px;
+    }
+    
+    .language-wrapper {
+        order: -1;
+        margin-right: auto;
+        margin-left: 0;
+    }
+}
+
+/* Dark mode support */
+[data-theme="dark"] .lang-flag.active {
+    box-shadow: 0 0 0 1px rgba(100, 180, 255, 0.4);
+}

@@ -1,6 +1,9 @@
 // YR.no weather integration - minimal implementation
 const DEBUG_WEATHER = false; // Set to true to enable debug logging
 
+// Store latest weather data for re-use when language changes
+let latestWeatherData = null;
+
 // Get weather elements function for dynamic access
 function getWeatherElements() {
     return {
@@ -10,7 +13,7 @@ function getWeatherElements() {
     };
 }
 
-// Logger function
+// Logger function - no-op if debugging is disabled
 const log = (msg, data) => DEBUG_WEATHER && console.log(`[Weather] ${msg}`, data || '');
 
 // Weather data fetching function
@@ -103,20 +106,44 @@ async function fetchWeather() {
 
 // Update the UI with weather data
 function updateDisplay(data) {
+    // Store the latest data for language switching
+    latestWeatherData = data;
+    
+    // Call the common function for updating the display
+    updateWeatherDisplay();
+}
+
+// Separate function to update display that can be called when language changes
+function updateWeatherDisplay() {
+    // Skip if we don't have weather data yet
+    if (!latestWeatherData) return;
+    
     const elements = getWeatherElements();
     if (!elements.metTemp) return;
     
-    const temperature = Math.round(data.properties.timeseries[0].data.instant.details.air_temperature * 10) / 10;
-    const lastUpdated = moment(data.properties.timeseries[0].time).format('L LTS');
-    const source = data._source || 'yr.no';
+    const temperature = Math.round(latestWeatherData.properties.timeseries[0].data.instant.details.air_temperature * 10) / 10;
+    const lastUpdated = moment(latestWeatherData.properties.timeseries[0].time).format('L LTS');
+    const source = latestWeatherData._source || 'yr.no';
     
     // Update temperature display
     elements.metTemp.innerHTML = `yr: ${temperature} °C`;
     elements.metLink.className = `data-chip ${temperature > 25 ? 'high' : temperature < 15 ? 'low' : 'norm'}`;
-    elements.metLink.title = `Ute Temperatur - Oppdatert: ${lastUpdated} (Kilde: ${source})`;
+    
+    // Get translated title if i18n is available
+    let outTempTitle = 'Ute Temperatur';
+    let updatedText = 'Oppdatert';
+    let sourceText = 'Kilde';
+    
+    if (window.i18n && typeof window.i18n.__ === 'function') {
+        outTempTitle = window.i18n.__('outTempChart');
+        updatedText = window.i18n.__('time');
+        // Source doesn't need translation
+    }
+    
+    elements.metLink.title = `${outTempTitle} - ${updatedText}: ${lastUpdated} (${sourceText}: ${source})`;
     
     // Update weather icon if available
-    const symbolData = data.properties.timeseries[0].data.next_1_hours?.summary;
+    const symbolData = latestWeatherData.properties.timeseries[0].data.next_1_hours?.summary;
     if (symbolData?.symbol_code && elements.weatherIcon) {
         elements.weatherIcon.innerHTML = `
             <object type="image/svg+xml" data="weather-icons/${symbolData.symbol_code}.svg" 

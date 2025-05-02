@@ -33,6 +33,7 @@ The web interface uses:
 - **Vanilla JavaScript**: For DOM manipulation and data fetching
 - **Moment.js**: For date handling and formatting
 - **Bootstrap & Font Awesome**: For basic styling and icons
+- **Internationalization (i18n)**: Multi-language support (Norwegian, English, Spanish)
 
 ### Architecture
 
@@ -64,6 +65,11 @@ DriMon follows a component-based architecture for maintainability and testabilit
 - `weather.js`: Weather data integration with YR.no
 - `date_utils.js`: Date range handling and URL parameter parsing
 - `script.js`: Main application logic and UI interaction
+- `translations.js`: Internationalization system with multi-language support
+
+#### Internationalization
+- `translations.js`: Translations for Norwegian, English, and Spanish
+- `i18n_tests.js`: Automated tests for verifying translations in UI elements
 
 #### Testing
 - `test_components.html`: Test harness for component testing
@@ -71,6 +77,25 @@ DriMon follows a component-based architecture for maintainability and testabilit
 ### Chart Configuration
 
 Charts are configured using a row-based layout system that automatically calculates grid positions. Each chart belongs to a specific row and category, with responsive layouts for both desktop and mobile devices.
+
+### Statistical Indicators
+
+Charts include visual statistical indicators with configurable options:
+- **Average Value Lines**: Horizontal dashed lines showing the average value (always visible)
+- **Maximum Points**: Optional diamond markers highlighting the highest values
+- **Minimum Points**: Optional triangle markers showing the lowest values
+- **Statistical Information**: Min/max/avg values displayed in chart stats
+
+Statistical indicators can be configured per chart:
+```javascript
+{
+    id: 'chart-temp',
+    title: 'Temperature',
+    // ... other configuration ...
+    indicateMin: true, // Show minimum value markers
+    indicateMax: true  // Show maximum value markers
+}
+```
 
 ### Mobile Support
 
@@ -147,6 +172,7 @@ DriMon includes a comprehensive test mode with debug tools. To activate:
 
 1. Append `?test=true` to any DriMon URL (e.g., `https://drimon.rodland.no/?test=true`)
 2. Optional: Set log level with `&logLevel=verbose` (options: `info`, `debug`, `verbose`)
+3. For i18n tests: Append `?test_i18n=true` to run automated internationalization tests
 
 Test Mode Features:
 
@@ -182,6 +208,9 @@ https://drimon.rodland.no/?test=true&logLevel=verbose
 
 # Test mode with debug level logging
 https://drimon.rodland.no/?test=true&logLevel=debug
+
+# Run i18n tests - automatically tests all UI translations
+https://drimon.rodland.no/?test_i18n=true
 ```
 
 The debug panel provides an interactive interface for exploring the application's inner workings without affecting production functionality.

@@ -11,7 +11,9 @@ window.chartConfigs = [
         field: 1, 
         color: '#c62828', // Red for temperature
         row: 1,
-        category: 'temperature'
+        category: 'temperature',
+        indicateMin: true,
+        indicateMax: true
     },
     { 
         id: 'chart-window',
@@ -23,7 +25,8 @@ window.chartConfigs = [
         startDate: '2024-07-25 18:00:00',
         category: 'structure',
         minValue: 50,  // Set minimum Y-axis value
-        relatedCategories: ['temperature']  // Show temperature values in tooltip
+        relatedCategories: ['temperature'],  // Show temperature values in tooltip
+        indicateMax: true
     },
     // Multi-series chart for light measurements with dual y-axes
     {
@@ -57,7 +60,8 @@ window.chartConfigs = [
         field: 3, 
         color: '#4a6741', // Dark green for system
         row: 1,
-        category: 'system'
+        category: 'system',
+        indicateMin: true
     },
 
     // Row 2
@@ -68,7 +72,9 @@ window.chartConfigs = [
         field: 3, 
         color: '#c62828',
         row: 2,
-        category: 'temperature'
+        category: 'temperature',
+        indicateMin: true,
+        indicateMax: true
     },
     // Multi-series chart combining cucumber and padron temperatures (positioned as 2nd chart in row 2)
     {
@@ -100,7 +106,9 @@ window.chartConfigs = [
         field: 1, 
         color: '#c62828',
         row: 2,
-        category: 'temperature'
+        category: 'temperature',
+        indicateMin: true,
+        indicateMax: true
     },
     // Multi-series chart combining BME, AHT, and Floor temperature sensors
     {
@@ -140,7 +148,9 @@ window.chartConfigs = [
         field: 2, 
         color: '#5c6bc0',
         row: 3,
-        category: 'weather'
+        category: 'weather',
+        indicateMin: true,
+        indicateMax: true
     },
     { 
         id: 'chart-pressure',
@@ -216,7 +226,8 @@ window.chartConfigs = [
         color: '#4a6741',
         row: 4,
         startDate: '2024-07-25 15:00:00',
-        category: 'system'
+        category: 'system',
+        indicateMin: true
     },
     { 
         id: 'chart-time-used',

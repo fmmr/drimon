@@ -57,6 +57,8 @@
    - Create energy efficiency analysis for temperature regulation
    - Add forecasting for optimal window opening times based on weather prediction
    - Implement machine learning for pattern recognition and predictive maintenance
+   - Show min/max/avg indicators directly on charts with visual highlighting
+   - Display average values as horizontal reference lines for easy comparison
 
 6. **Comparative Analysis Tools**
    - Add overlay of historical data (compare with same day last week/month/year)
@@ -127,10 +129,26 @@
     - Create lazy loading of chart data as needed
     - Implement efficient data caching strategies
     - Add background data pre-fetching for smoother navigation
+    - Make data-chips never break the line - implement horizontal scrolling for both date-pickers and data-info-chips (similar to current mobile implementation but apply to all screen sizes)
 
 16. **Internationalization and Localization**
-    - Add support for multiple languages
+    - ✅ Add support for multiple languages (Norwegian, English, Spanish)
+    - ✅ Translate chart titles, labels, and data points
+    - ✅ Add language switcher in the header
+    - ✅ Create automated test framework for i18n validation
     - Implement region-specific date and number formatting
     - Create localized units of measurement (imperial/metric)
     - Add time zone support for global access
     - Implement cultural adaptations for color meanings and symbols
+
+17. **Browser Compatibility Enhancements**
+    - Make weather/met functionality work on Safari/iPhone
+    - Test and optimize for all major browsers and platforms
+    - Ensure consistent user experience across devices
+
+18. **Code Quality and Maintenance**
+    - Refactor code and delete everything not in use
+    - Remove outdated comments and documentation
+    - Implement consistent code style and naming conventions
+    - Optimize file size and loading performance
+    - Improve code organization and modularization

@@ -24,10 +24,18 @@ function createLogoContainer() {
     
     const timeIndicator = document.createElement('div');
     timeIndicator.className = 'time-indicator';
+    timeIndicator.title = window.i18n && typeof window.i18n.__ === 'function' ? 
+        window.i18n.__('time') : 'Sist oppdatert';
+    timeIndicator.setAttribute('data-i18n-title', 'time');
     
     const timeSpan = document.createElement('span');
     timeSpan.id = 'time-since';
-    timeSpan.textContent = 'Laster...';
+    
+    // Use i18n for loading text if available
+    const loadingText = window.i18n && typeof window.i18n.__ === 'function' ? 
+        window.i18n.__('loading') : 'Laster...';
+    timeSpan.textContent = loadingText;
+    timeSpan.setAttribute('data-i18n', 'loading');
     
     timeIndicator.appendChild(timeSpan);
     logoLink.appendChild(logoImg);
@@ -45,10 +53,17 @@ function createLogoContainer() {
  * @param {string} initialText - Initial text to display
  * @returns {HTMLElement} The data chip element
  */
-function createDataChip(id, iconClass, title, initialText = 'Laster...') {
+function createDataChip(id, iconClass, title, initialText = 'loading') {
     const dataChip = document.createElement('div');
     dataChip.className = 'data-chip';
-    dataChip.title = title;
+    
+    // Use i18n if available
+    const translatedTitle = window.i18n && typeof window.i18n.__ === 'function' ? 
+        window.i18n.__(title) : title;
+    dataChip.title = translatedTitle;
+    
+    // Add data-i18n attributes for later translation updates
+    dataChip.setAttribute('data-i18n-title', title);
     
     if (iconClass) {
         const icon = document.createElement('i');
@@ -58,7 +73,18 @@ function createDataChip(id, iconClass, title, initialText = 'Laster...') {
     
     const span = document.createElement('span');
     span.id = id;
-    span.textContent = initialText;
+    
+    // Use i18n for loading text if available
+    const translatedText = (window.i18n && typeof window.i18n.__ === 'function') ? 
+        window.i18n.__(initialText) : 
+        (initialText === 'loading' ? 'Laster...' : initialText);
+    
+    span.textContent = translatedText;
+    
+    if (initialText === 'loading') {
+        span.setAttribute('data-i18n', 'loading');
+    }
+    
     dataChip.appendChild(span);
     
     return dataChip;
@@ -80,11 +106,25 @@ function createWeatherPill() {
     metLink.href = 'https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/1-60206/Norge/Akershus/Asker/R%C3%B8dtangen';
     metLink.className = 'data-chip';
     metLink.id = 'met-link';
-    metLink.title = 'Ute Temperatur (yr.no)';
+    
+    // Use i18n if available for title
+    const translatedTitle = window.i18n && typeof window.i18n.__ === 'function' ? 
+        window.i18n.__('outTempChart') : 'Ute Temperatur (yr.no)';
+    metLink.title = translatedTitle;
+    
+    // Add data-i18n attribute for later translation updates
+    metLink.setAttribute('data-i18n-title', 'outTempChart');
     
     const metTemp = document.createElement('span');
     metTemp.id = 'met-temp';
-    metTemp.textContent = 'Laster...';
+    
+    // Use i18n for loading text if available
+    const loadingText = window.i18n && typeof window.i18n.__ === 'function' ? 
+        window.i18n.__('loading') : 'Laster...';
+    metTemp.textContent = loadingText;
+    
+    // Add data-i18n attribute for later translation updates
+    metTemp.setAttribute('data-i18n', 'loading');
     
     metLink.appendChild(metTemp);
     weatherContainer.appendChild(iconContainer);
@@ -102,26 +142,26 @@ function createDataContainer() {
     dataContainer.className = 'data-container';
     dataContainer.id = 'infoSection';
     
-    // Temperature chip
-    const tempChip = createDataChip('temperature', 'fas fa-thermometer-half', 'Drivhus Temperatur');
+    // Temperature chip with translation key
+    const tempChip = createDataChip('temperature', 'fas fa-thermometer-half', 'temperature');
     
     // Weather pill
     const weatherPill = createWeatherPill();
     
-    // Light chip
-    const lightChip = createDataChip('light', 'fas fa-sun', 'Lysnivå', '');
+    // Light chip with translation key
+    const lightChip = createDataChip('light', 'fas fa-sun', 'light', '');
     
-    // Battery percentage chip
-    const batteryChip = createDataChip('battery', 'fas fa-battery-half', 'Batteri Prosent');
+    // Battery percentage chip with translation key
+    const batteryChip = createDataChip('battery', 'fas fa-battery-half', 'battery');
     
-    // Battery voltage chip
-    const batteryVoltChip = createDataChip('batteryVolt', 'fas fa-bolt', 'Batteri Spenning');
+    // Battery voltage chip with translation key
+    const batteryVoltChip = createDataChip('batteryVolt', 'fas fa-bolt', 'batteryVoltage');
     
-    // Pressure chip
-    const pressureChip = createDataChip('pressure', 'fas fa-compress-alt', 'Lufttrykk');
+    // Pressure chip with translation key
+    const pressureChip = createDataChip('pressure', 'fas fa-compress-alt', 'pressure');
     
-    // Window chip
-    const windowChip = createDataChip('window', 'fas fa-window-maximize', 'Vindusåpning', '');
+    // Window chip with translation key
+    const windowChip = createDataChip('window', 'fas fa-window-maximize', 'window', '');
     
     // Add all chips to the container
     dataContainer.appendChild(tempChip);
@@ -138,15 +178,22 @@ function createDataContainer() {
 /**
  * Creates a date chip element
  * @param {string} range - The date range value
- * @param {string} text - The text to display
+ * @param {string} key - The translation key for the text
+ * @param {string} defaultText - The default text to display if no translation available
  * @returns {HTMLElement} The date chip element
  */
-function createDateChip(range, text) {
+function createDateChip(range, key, defaultText) {
     const chip = document.createElement('a');
     chip.href = '#';
     chip.className = 'date-chip';
     chip.dataset.range = range;
-    chip.textContent = text;
+    
+    // Use i18n for text if available
+    chip.textContent = window.i18n && typeof window.i18n.__ === 'function' ? 
+        window.i18n.__(key) : defaultText;
+    
+    // Add data-i18n attribute for later translation updates
+    chip.setAttribute('data-i18n', key);
     
     return chip;
 }
@@ -159,22 +206,22 @@ function createDateRanges() {
     const dateRanges = document.createElement('div');
     dateRanges.className = 'date-ranges';
     
-    // Create all date chips
+    // Create all date chips with translation keys and default text
     const dateChips = [
-        { range: 'today', text: 'i dag' },
-        { range: '1', text: '2d' },
-        { range: '2', text: '3d' },
-        { range: '6', text: '7d' },
-        { range: '13', text: '14d' },
-        { range: 'yesterday', text: 'i går' },
-        { range: 'this-week', text: 'uke' },
-        { range: 'last-week', text: 'uke-1' },
-        { range: 'start', text: 'start' }
+        { range: 'today', key: 'today', defaultText: 'i dag' },
+        { range: '1', key: 'twoDay', defaultText: '2d' },
+        { range: '2', key: 'threeDay', defaultText: '3d' },
+        { range: '6', key: 'sevenDay', defaultText: '7d' },
+        { range: '13', key: 'fourteenDay', defaultText: '14d' },
+        { range: 'yesterday', key: 'yesterday', defaultText: 'i går' },
+        { range: 'this-week', key: 'week', defaultText: 'uke' },
+        { range: 'last-week', key: 'lastWeek', defaultText: 'uke-1' },
+        { range: 'start', key: 'start', defaultText: 'start' }
     ];
     
     // Add all chips to the container
     dateChips.forEach(chip => {
-        dateRanges.appendChild(createDateChip(chip.range, chip.text));
+        dateRanges.appendChild(createDateChip(chip.range, chip.key, chip.defaultText));
     });
     
     return dateRanges;
@@ -194,23 +241,34 @@ function createSearchContainer() {
     
     const sortSelect = document.createElement('select');
     sortSelect.id = 'sortSelect';
-    sortSelect.title = 'Sorter etter kategori';
+    
+    // Use i18n for title if available
+    sortSelect.title = window.i18n && typeof window.i18n.__ === 'function' ? 
+        window.i18n.__('sortBy') : 'Sorter etter kategori';
+    sortSelect.setAttribute('data-i18n-title', 'sortBy');
     
     const sortOptions = [
-        { value: 'row', text: 'Standard' },
-        { value: 'temperature', text: 'Temperatur' },
-        { value: 'humidity', text: 'Fuktighet' },
-        { value: 'weather', text: 'Vær' },
-        { value: 'system', text: 'System' },
-        { value: 'soil', text: 'Jord' },
-        { value: 'light', text: 'Lys' },
-        { value: 'structure', text: 'Struktur' }
+        { value: 'row', key: 'default' },
+        { value: 'temperature', key: 'temperatureSort' },
+        { value: 'humidity', key: 'humiditySort' },
+        { value: 'weather', key: 'weatherSort' },
+        { value: 'system', key: 'systemSort' },
+        { value: 'soil', key: 'soilSort' },
+        { value: 'light', key: 'lightSort' },
+        { value: 'structure', key: 'structureSort' }
     ];
     
     sortOptions.forEach(option => {
         const optionEl = document.createElement('option');
         optionEl.value = option.value;
-        optionEl.textContent = option.text;
+        
+        // Use i18n for option text if available
+        optionEl.textContent = window.i18n && typeof window.i18n.__ === 'function' ? 
+            window.i18n.__(option.key) : option.key;
+        
+        // Add data-i18n attribute for later translation updates
+        optionEl.setAttribute('data-i18n', option.key);
+        
         sortSelect.appendChild(optionEl);
     });
     
@@ -223,16 +281,28 @@ function createSearchContainer() {
     const resultsInput = document.createElement('input');
     resultsInput.type = 'number';
     resultsInput.id = 'resultsInput';
-    resultsInput.placeholder = 'Resultater';
+    
+    // Use i18n for placeholder if available
+    resultsInput.placeholder = window.i18n && typeof window.i18n.__ === 'function' ? 
+        window.i18n.__('results') : 'Resultater';
+    resultsInput.setAttribute('data-i18n-placeholder', 'results');
     resultsInput.min = '1';
     
     const updateButton = document.createElement('button');
     updateButton.id = 'updateButton';
-    updateButton.textContent = 'Oppdater';
+    
+    // Use i18n for button text if available
+    updateButton.textContent = window.i18n && typeof window.i18n.__ === 'function' ? 
+        window.i18n.__('update') : 'Oppdater';
+    updateButton.setAttribute('data-i18n', 'update');
     
     const darkModeToggle = document.createElement('button');
     darkModeToggle.id = 'darkModeToggle';
-    darkModeToggle.title = 'Bytt mellom mørk og lys modus';
+    
+    // Use i18n for tooltip if available
+    darkModeToggle.title = window.i18n && typeof window.i18n.__ === 'function' ? 
+        window.i18n.__('darkModeTooltip') : 'Bytt mellom mørk og lys modus';
+    darkModeToggle.setAttribute('data-i18n-title', 'darkModeTooltip');
     
     const darkModeIcon = document.createElement('span');
     darkModeIcon.className = 'icon';
@@ -240,7 +310,11 @@ function createSearchContainer() {
     
     const statsToggle = document.createElement('button');
     statsToggle.id = 'statsToggle';
-    statsToggle.title = 'Vis/skjul statistikker';
+    
+    // Use i18n for tooltip if available
+    statsToggle.title = window.i18n && typeof window.i18n.__ === 'function' ? 
+        window.i18n.__('statsTooltip') : 'Vis/skjul statistikker';
+    statsToggle.setAttribute('data-i18n-title', 'statsTooltip');
     
     const statsIcon = document.createElement('span');
     statsIcon.className = 'icon';

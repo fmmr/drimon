@@ -10,17 +10,24 @@
     <link rel="stylesheet" href="main.css">
     <link rel="stylesheet" href="dark-mode.css">
     <link rel="stylesheet" href="debug.css">
+    <link rel="stylesheet" href="language_switcher.css">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/locale/nb.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/locale/en-gb.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/locale/es.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <!-- Debug and test utilities (must be loaded first) -->
     <script src="debug.js"></script>
+    
+    <!-- Internationalization -->
+    <script src="translations.js"></script>
     
     <!-- Component modules -->
     <script src="header_components.js"></script>
     <script src="chart_components.js"></script>
     <script src="data_components.js"></script>
+    <script src="language_switcher.js"></script>
     
     <!-- Application logic -->
     <script src="date_utils.js"></script>
@@ -29,6 +36,8 @@
     <script src="chart_config.js"></script>
     <script src="chart_renderer.js"></script>
     <script src="script.js"></script>
+    <!-- Automated testing -->
+    <script src="i18n_tests.js"></script>
     <link rel="canonical" href="https://drimon.rodland.no/" />
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="48x48" href="favicon.ico">

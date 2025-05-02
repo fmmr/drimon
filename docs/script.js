@@ -1,6 +1,16 @@
 // Global timezone setting
 const timezone = "Europe/Oslo";
 
+// Initialize moment.js locale based on the current language
+document.addEventListener('DOMContentLoaded', () => {
+    if (window.moment && window.i18n && typeof window.i18n.getCurrentLanguage === 'function') {
+        const lang = window.i18n.getCurrentLanguage() || 'no';
+        const momentLocale = lang === 'no' ? 'nb' : lang;
+        window.moment.locale(momentLocale);
+        console.log(`Initialized moment locale to: ${momentLocale}`);
+    }
+});
+
 // Reference to fetchChartData function needed for periodic updates
 // This will be set by chart_renderer.js
 

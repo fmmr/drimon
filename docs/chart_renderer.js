@@ -70,10 +70,49 @@ function initializeChartLayout() {
         chartDiv.setAttribute('data-category', config.category || '');
         
         // Create title
+        // Map chart title to an appropriate translation key
+        // Instead of adding "Chart" suffix, use a map of known titles for exact matching
+        let translationKey;
+        
+        // Map common chart titles to their translation keys
+        const titleMap = {
+            'Temperatur': 'temperatureChart',
+            'Vindusåpning': 'windowChart',
+            'Lys': 'lightChart',
+            'Batteri (%)': 'batteryPercentChart',
+            'Temperatur Diff': 'tempDiffChart',
+            'Plante Temperaturer': 'plantsTempsChart',
+            'Utetemperatur': 'outTempChart',
+            'Sensor Temperaturer': 'sensorsTempsChart',
+            'Luftfuktighet': 'humidityChart',
+            'Lufttrykk': 'pressureChart',
+            'Vind': 'windChart',
+            'Nedbør': 'rainChart',
+            'Jordfuktighet': 'soilMoistureChart',
+            'Batteri (spenning)': 'batteryVoltageChart',
+            'WiFi': 'wifiChart',
+            'Tid brukt': 'timeUsedChart'
+        };
+        
+        // Use the map or fall back to the original title (without adding Chart suffix)
+        translationKey = titleMap[config.title] || config.title.toLowerCase().replace(/\s+/g, '');
+            
+        // Create title div with translation attributes
         const titleDiv = document.createElement('div');
         titleDiv.className = 'chart-title';
-        titleDiv.textContent = config.title;
-        titleDiv.title = config.title; // Add tooltip
+        titleDiv.setAttribute('data-i18n', translationKey);
+        
+        // Apply translation immediately if available, otherwise use default text
+        if (window.i18n && typeof window.i18n.__ === 'function') {
+            const translatedTitle = window.i18n.__(translationKey);
+            titleDiv.textContent = translatedTitle;
+            titleDiv.title = translatedTitle;
+        } else {
+            titleDiv.textContent = config.title; // Default text
+            titleDiv.title = config.title; // Default tooltip
+        }
+        
+        titleDiv.setAttribute('data-i18n-title', translationKey); // For tooltip translation
         
         // For multi-series charts, the current values are shown in the legend
         // (No longer needed to update the title)
@@ -100,8 +139,14 @@ function initializeChartLayout() {
         const spinner = document.createElement('div');
         spinner.className = 'loading-spinner';
         
+        // Get translated loading text
+        let loadingTextValue = 'Laster data...';
+        if (window.i18n && typeof window.i18n.__ === 'function') {
+            loadingTextValue = window.i18n.__('loading');
+        }
+        
         const loadingText = document.createElement('div');
-        loadingText.textContent = 'Laster data...';
+        loadingText.textContent = loadingTextValue;
         
         // Assemble the DOM structure
         loadingDiv.appendChild(spinner);
@@ -209,15 +254,278 @@ function calculateGridPositions(rowGroups) {
 window.fetchChartData = window.DataComponents.fetchChartData;
 
 // Create or update a Chart.js chart
+// Function to translate all chart labels in a dataset
+// Export to global scope so it can be called from event handlers
+window.translateChartLabels = function(chart) {
+    if (!chart || !chart.data || !chart.data.datasets || !window.chartTranslator) {
+        return;
+    }
+
+    // Get chart info
+    const chartId = chart.canvas.id;
+    const chartConfig = window.chartConfigs.find(c => c.id === chartId);
+    const isMultiSeries = chartConfig && chartConfig.series && Array.isArray(chartConfig.series) && chartConfig.series.length > 1;
+    
+    // For soil moisture chart with specific series titles that need special handling
+    const isSoilMoistureChart = chartId === 'chart-soil-moisture';
+
+    // Update all dataset labels with correct translations
+    chart.data.datasets.forEach((dataset, index) => {
+        if (!dataset.label) return;
+        
+        // Get original label (without any current value)
+        const originalLabel = dataset.label.split(':')[0].trim();
+        let translatedLabel;
+        
+        // For multi-series charts, look up series titles from chart config
+        if (isMultiSeries && chartConfig && chartConfig.series && chartConfig.series[index]) {
+            const seriesTitle = chartConfig.series[index].title;
+            translatedLabel = window.chartTranslator.translateSeriesTitle(seriesTitle);
+            console.log(`Series ${index}: "${seriesTitle}" -> "${translatedLabel}"`);
+        } else {
+            // For single series charts, use chart title
+            if (chartConfig) {
+                translatedLabel = window.chartTranslator.translateChartTitle(chartConfig.title);
+            } else {
+                translatedLabel = originalLabel; // Fallback
+            }
+        }
+        
+        // Apply translations and preserve value part
+        if (translatedLabel && translatedLabel !== originalLabel) {
+            const parts = dataset.label.split(':');
+            if (parts.length > 1) {
+                dataset.label = `${translatedLabel}: ${parts[1].trim()}`;
+            } else {
+                dataset.label = translatedLabel;
+            }
+        }
+    });
+    
+    // Update chart legend with translated labels
+    if (chart.options && chart.options.plugins && chart.options.plugins.legend) {
+        try {
+            // This is a trick to force Chart.js to re-render the legend completely
+            // First hide the legend
+            const originalLegendDisplay = chart.options.plugins.legend.display;
+            chart.options.plugins.legend.display = false;
+            chart.update('none');
+            
+            // Then show it again with the new labels
+            chart.options.plugins.legend.display = originalLegendDisplay;
+            
+            // Set up custom legend generator that properly handles translations
+            const defaultGenerateLabels = Chart.defaults.plugins.legend.labels.generateLabels;
+            chart.options.plugins.legend.labels.generateLabels = function(chart) {
+                const labels = defaultGenerateLabels(chart);
+                
+                // For multi-series charts, handle legend labels specially
+                if (isMultiSeries) {
+                    labels.forEach((label, i) => {
+                        if (i < chart.data.datasets.length && chartConfig && chartConfig.series && i < chartConfig.series.length) {
+                            const dataset = chart.data.datasets[i];
+                            
+                            // Get original series title from configuration (source of truth)
+                            const seriesTitle = chartConfig.series[i].title;
+                            const translatedTitle = window.chartTranslator.translateSeriesTitle(seriesTitle);
+                            
+                            // Extract current value if present
+                            let valuePart = '';
+                            if (dataset && dataset.data && dataset.data.length > 0) {
+                                const currentValue = dataset.data[dataset.data.length - 1];
+                                if (currentValue !== undefined && !isNaN(currentValue)) {
+                                    // Format based on the value range
+                                    const formatNum = val => {
+                                        if (Math.abs(val) >= 10) return Math.round(val);
+                                        else if (Math.abs(val) < 1) return val.toFixed(2);
+                                        else return val.toFixed(1);
+                                    };
+                                    valuePart = `: ${formatNum(currentValue)}`;
+                                }
+                            }
+                            
+                            // Special handling for soil moisture chart to ensure consistent labels
+                            if (isSoilMoistureChart) {
+                                // For soil moisture chart, always apply the translation directly
+                                // to both the dataset label and legend text for consistency
+                                const fullLabel = `${translatedTitle}${valuePart}`;
+                                
+                                // Update in both places to ensure consistency
+                                dataset.label = fullLabel;
+                                label.text = fullLabel;
+                            } else {
+                                // For other charts, use the dataset label as source of truth
+                                label.text = dataset.label;
+                            }
+                        }
+                    });
+                }
+                
+                return labels;
+            };
+        } catch (e) {
+            console.error("Error updating legend:", e);
+        }
+    }
+    
+    // Update stats labels with new translations
+    const statsEl = document.getElementById(`stats-${chartId}`);
+    if (statsEl) {
+        // Get minimum, average and maximum values from chart data for stats display
+        let minValue = Infinity;
+        let maxValue = -Infinity;
+        let avgValue = 0;
+        let totalValues = 0;
+        let totalCount = 0;
+        
+        // Calculate min/max/avg across all datasets
+        chart.data.datasets.forEach(dataset => {
+            if (!dataset.data || dataset.data.length === 0) return;
+            
+            const values = dataset.data.filter(v => !isNaN(v));
+            if (values.length === 0) return;
+            
+            const datasetMin = Math.min(...values);
+            const datasetMax = Math.max(...values);
+            const datasetSum = values.reduce((sum, v) => sum + v, 0);
+            
+            minValue = Math.min(minValue, datasetMin);
+            maxValue = Math.max(maxValue, datasetMax);
+            totalValues += datasetSum;
+            totalCount += values.length;
+        });
+        
+        // Calculate overall average
+        avgValue = totalCount > 0 ? totalValues / totalCount : 0;
+        
+        // Get current value (from the first dataset for simplicity)
+        const currentValue = chart.data.datasets[0]?.data?.length > 0 
+            ? chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1] 
+            : null;
+        
+        // Get translated stat labels
+        let lowLabel = 'L';
+        let avgLabel = 'A';
+        let highLabel = 'H';
+        let nowLabel = 'N';
+        
+        if (window.i18n && typeof window.i18n.__ === 'function') {
+            const lowTranslation = window.i18n.__('low');
+            const avgTranslation = window.i18n.__('avg');
+            const highTranslation = window.i18n.__('high');
+            const nowTranslation = window.i18n.__('now');
+            
+            lowLabel = lowTranslation && lowTranslation.length > 0 ? lowTranslation[0].toUpperCase() : 'L';
+            avgLabel = avgTranslation && avgTranslation.length > 0 ? avgTranslation[0].toUpperCase() : 'A';
+            highLabel = highTranslation && highTranslation.length > 0 ? highTranslation[0].toUpperCase() : 'H';
+            nowLabel = nowTranslation && nowTranslation.length > 0 ? nowTranslation[0].toUpperCase() : 'N';
+        }
+        
+        // Get unit from chart ID
+        const unit = getUnitForChart(chartId) || '';
+        
+        // Format numbers with appropriate precision
+        const formatNumber = (val) => {
+            if (typeof val !== 'number' || isNaN(val)) return '—';
+            
+            // Use the helper function to determine if we should use integers
+            const range = maxValue - minValue;
+            if (shouldUseIntegerValues(chartConfig) || range >= 10) {
+                return Math.round(val).toString();
+            } else if (range < 1) {
+                return val.toFixed(2); // More precision for very small ranges
+            } else {
+                return val.toFixed(1); // Default to 1 decimal place
+            }
+        };
+        
+        // Check if this is a multi-series chart
+        const isMultiSeries = chartConfig && chartConfig.series && Array.isArray(chartConfig.series) && chartConfig.series.length > 1;
+        
+        // Update the stats HTML
+        statsEl.innerHTML = `
+            <div class="chart-stat">
+                <span class="chart-stat-label">
+                    <span class="chart-stat-label-short">${lowLabel}:</span>
+                    <span class="chart-stat-label-low"></span>
+                </span>${formatNumber(minValue)}${unit}
+            </div>
+            <div class="chart-stat">
+                <span class="chart-stat-label">
+                    <span class="chart-stat-label-short">${avgLabel}:</span>
+                    <span class="chart-stat-label-avg"></span>
+                </span>${formatNumber(avgValue)}${unit}
+            </div>
+            <div class="chart-stat">
+                <span class="chart-stat-label">
+                    <span class="chart-stat-label-short">${highLabel}:</span>
+                    <span class="chart-stat-label-high"></span>
+                </span>${formatNumber(maxValue)}${unit}
+            </div>
+            ${!isMultiSeries ? `
+            <div class="chart-stat chart-stat-current">
+                <span class="chart-stat-label">
+                    <span class="chart-stat-label-short">${nowLabel}:</span>
+                    <span class="chart-stat-label-now"></span>
+                </span>${currentValue !== null ? formatNumber(currentValue) + unit : '—'}
+            </div>
+            ` : ''}
+        `;
+        
+    }
+    
+    // Apply changes with a short timeout to ensure the update happens
+    setTimeout(() => {
+        try {
+            chart.update('none');
+        } catch (e) {
+            // Silently ignore errors
+        }
+    }, 10);
+}
+
+// Listen for language changes to update all chart elements
+document.addEventListener('languageChanged', (event) => {
+    // 1. First update chart DOM titles
+    document.querySelectorAll('.chart-title').forEach(titleEl => {
+        const translationKey = titleEl.getAttribute('data-i18n');
+        if (translationKey && window.i18n && typeof window.i18n.__ === 'function') {
+            const translatedTitle = window.i18n.__(translationKey);
+            titleEl.textContent = translatedTitle;
+            if (titleEl.hasAttribute('data-i18n-title')) {
+                titleEl.title = translatedTitle;
+            }
+        }
+    });
+    
+    // 2. Then update each chart's labels, legends and stats
+    if (window.chartInstances) {
+        Object.entries(window.chartInstances).forEach(([chartId, chartInstance]) => {
+            if (chartInstance) {
+                window.translateChartLabels(chartInstance);
+            }
+        });
+    }
+});
+
 function createOrUpdateChart(config, data) {
     // Get the loading element
     const loadingEl = document.getElementById(`loading-${config.id}`);
+    
+    // Get translated loading text
+    let loadingText = 'Laster data...';
+    let noDataText = 'Ingen data tilgjengelig';
+    
+    if (window.i18n && typeof window.i18n.__ === 'function') {
+        loadingText = window.i18n.__('loading');
+        noDataText = window.i18n.__('noData');
+    }
     
     // Reset loading element to its initial state
     if (loadingEl) {
         loadingEl.innerHTML = `
             <div class="loading-spinner"></div>
-            <div>Laster data...</div>
+            <div>${loadingText}</div>
         `;
         loadingEl.style.display = 'block';
     }
@@ -225,7 +533,7 @@ function createOrUpdateChart(config, data) {
     if (!data || !data.feeds || data.feeds.length === 0) {
         // No data available
         if (loadingEl) {
-            loadingEl.innerHTML = `<div>Ingen data tilgjengelig</div>`;
+            loadingEl.innerHTML = `<div>${noDataText}</div>`;
         }
         return;
     }
@@ -250,7 +558,12 @@ function createOrUpdateChart(config, data) {
             // No valid data for any series
             const loadingEl = document.getElementById(`loading-${config.id}`);
             if (loadingEl) {
-                loadingEl.innerHTML = `<div>Ingen gyldige dataverdier</div>`;
+                // Use translated no data text
+                let noDataText = 'Ingen gyldige dataverdier';
+                if (window.i18n && typeof window.i18n.__ === 'function') {
+                    noDataText = window.i18n.__('noData');
+                }
+                loadingEl.innerHTML = `<div>${noDataText}</div>`;
             }
             return;
         }
@@ -281,11 +594,31 @@ function createOrUpdateChart(config, data) {
             // Add to filtered values for overall stats
             filteredValues = filteredValues.concat(seriesFiltered);
             
+            // Translate series title if possible
+            let translatedTitle = series.title;
+            if (window.i18n && typeof window.i18n.__ === 'function') {
+                // Map common series titles to translation keys
+                const titleKey = series.title === 'Tak' ? 'ceiling' :
+                                 series.title === 'Intern' ? 'internal' :
+                                 series.title === 'Agurk' ? 'cucumber' :
+                                 series.title === 'Agurk 1' ? 'cucumber1' :
+                                 series.title === 'Agurk 2' ? 'cucumber2' :
+                                 series.title === 'Padron' ? 'padron' :
+                                 series.title === 'Gulv' ? 'floor' : null;
+                
+                if (titleKey) {
+                    const translated = window.i18n.__(titleKey);
+                    if (translated !== titleKey) {
+                        translatedTitle = translated;
+                    }
+                }
+            }
+            
             // Create dataset for this series
             const yAxisID = series.axis || 'y';
             
             datasets.push({
-                label: series.title,
+                label: translatedTitle,
                 data: seriesValues,
                 borderColor: series.color,
                 backgroundColor: `${series.color}20`,
@@ -309,7 +642,12 @@ function createOrUpdateChart(config, data) {
             // No valid numeric values
             const loadingEl = document.getElementById(`loading-${config.id}`);
             if (loadingEl) {
-                loadingEl.innerHTML = `<div>Ingen gyldige dataverdier</div>`;
+                // Use translated no data text
+                let noDataText = 'Ingen gyldige dataverdier';
+                if (window.i18n && typeof window.i18n.__ === 'function') {
+                    noDataText = window.i18n.__('noData');
+                }
+                loadingEl.innerHTML = `<div>${noDataText}</div>`;
             }
             return;
         }
@@ -320,9 +658,39 @@ function createOrUpdateChart(config, data) {
         // Store timestamps for cross-chart syncing
         timestamps = data.feeds.map(feed => feed.created_at);
         
-        // Create dataset for single series
+        // Create dataset for single series - use translations if available
+        // Get translated chart title
+        let chartTitle = config.title;
+        
+        // Map common chart titles to their translation keys
+        const titleMap = {
+            'Temperatur': 'temperatureChart',
+            'Vindusåpning': 'windowChart',
+            'Lys': 'lightChart',
+            'Batteri (%)': 'batteryPercentChart',
+            'Temperatur Diff': 'tempDiffChart',
+            'Plante Temperaturer': 'plantsTempsChart',
+            'Utetemperatur': 'outTempChart',
+            'Sensor Temperaturer': 'sensorsTempsChart',
+            'Luftfuktighet': 'humidityChart',
+            'Lufttrykk': 'pressureChart',
+            'Vind': 'windChart',
+            'Nedbør': 'rainChart',
+            'Jordfuktighet': 'soilMoistureChart',
+            'Batteri (spenning)': 'batteryVoltageChart',
+            'WiFi': 'wifiChart',
+            'Tid brukt': 'timeUsedChart'
+        };
+        
+        if (window.i18n && typeof window.i18n.__ === 'function') {
+            const translationKey = titleMap[config.title];
+            if (translationKey) {
+                chartTitle = window.i18n.__(translationKey);
+            }
+        }
+        
         datasets.push({
-            label: config.title,
+            label: chartTitle,
             data: values,
             borderColor: config.color,
             backgroundColor: hasNegativeValues ? 'rgba(0,0,0,0)' : `${config.color}20`,
@@ -406,31 +774,49 @@ function createOrUpdateChart(config, data) {
         // Get the most recent (current) value
         const currentValue = filteredValues.length > 0 ? filteredValues[filteredValues.length - 1] : null;
         
+        // Get translated stat labels
+        let lowLabel = 'L';
+        let avgLabel = 'A';
+        let highLabel = 'H';
+        let nowLabel = 'N';
+        
+        if (window.i18n && typeof window.i18n.__ === 'function') {
+            const lowTranslation = window.i18n.__('low');
+            const avgTranslation = window.i18n.__('avg');
+            const highTranslation = window.i18n.__('high');
+            const nowTranslation = window.i18n.__('now');
+            
+            lowLabel = lowTranslation && lowTranslation.length > 0 ? lowTranslation[0].toUpperCase() : 'L';
+            avgLabel = avgTranslation && avgTranslation.length > 0 ? avgTranslation[0].toUpperCase() : 'A';
+            highLabel = highTranslation && highTranslation.length > 0 ? highTranslation[0].toUpperCase() : 'H';
+            nowLabel = nowTranslation && nowTranslation.length > 0 ? nowTranslation[0].toUpperCase() : 'N';
+        }
+        
         // Always prepare the innerHTML, regardless of visibility state
         // Use both short and full labels - CSS will show appropriate one based on viewport
         statsEl.innerHTML = `
             <div class="chart-stat">
                 <span class="chart-stat-label">
-                    <span class="chart-stat-label-short">L:</span>
+                    <span class="chart-stat-label-short">${lowLabel}:</span>
                     <span class="chart-stat-label-low"></span>
                 </span>${formatNumber(adjustedMinValue)}${getUnit}
             </div>
             <div class="chart-stat">
                 <span class="chart-stat-label">
-                    <span class="chart-stat-label-short">A:</span>
+                    <span class="chart-stat-label-short">${avgLabel}:</span>
                     <span class="chart-stat-label-avg"></span>
                 </span>${formatNumber(avgValue)}${getUnit}
             </div>
             <div class="chart-stat">
                 <span class="chart-stat-label">
-                    <span class="chart-stat-label-short">H:</span>
+                    <span class="chart-stat-label-short">${highLabel}:</span>
                     <span class="chart-stat-label-high"></span>
                 </span>${formatNumber(maxValue)}${getUnit}
             </div>
             ${!data.is_multi_series ? `
             <div class="chart-stat chart-stat-current">
                 <span class="chart-stat-label">
-                    <span class="chart-stat-label-short">N:</span>
+                    <span class="chart-stat-label-short">${nowLabel}:</span>
                     <span class="chart-stat-label-now"></span>
                 </span>${currentValue !== null ? formatNumber(currentValue) + getUnit : '—'}
             </div>
@@ -439,6 +825,13 @@ function createOrUpdateChart(config, data) {
         
         // Now set display based on visibility preference
         statsEl.style.display = statsVisible ? 'flex' : 'none';
+    }
+    
+    // Ensure we're using the correct locale for time formatting
+    if (window.moment && window.i18n) {
+        const lang = window.i18n.getCurrentLanguage();
+        const momentLocale = lang === 'no' ? 'nb' : lang;
+        window.moment.locale(momentLocale);
     }
     
     const chartData = {
@@ -578,6 +971,9 @@ function createOrUpdateChart(config, data) {
     // Check if this chart has a minimum value configuration
     const hasMinValue = config.minValue !== undefined;
     
+    // We'll use the config title directly in the chart options
+    // The DOM title element will be updated when language changes
+    
     // Optimized chart options for better rendering
     const chartOptions = {
         responsive: true,
@@ -591,6 +987,15 @@ function createOrUpdateChart(config, data) {
                 top: 2,
                 bottom: 0
             }
+        },
+        
+        // Only show legend for multi-series charts or when explicitly enabled
+        plugins: {
+            ...(!data.is_multi_series && {
+                legend: {
+                    display: false // Don't show legend for single-series charts, including stat datasets
+                }
+            }),
         },
         
         scales: {
@@ -704,6 +1109,9 @@ function createOrUpdateChart(config, data) {
         },
         
         plugins: {
+            title: {
+                display: false, // Don't display the title - we have our own title element
+            },
             legend: {
                 // Only show legend for multi-series charts
                 display: data.is_multi_series === true, // Explicitly check for true to avoid false positives
@@ -729,6 +1137,31 @@ function createOrUpdateChart(config, data) {
                             // Update each label with the current value
                             labels.forEach((label, i) => {
                                 if (i < data.series.length && datasets[i].data.length > 0) {
+                                    // First, ensure label text is translated if needed
+                                    if (window.i18n && typeof window.i18n.__ === 'function') {
+                                        // Get original text (before any value is added)
+                                        const originalText = label.text.split(':')[0].trim();
+                                        
+                                        // Find translation key for this series label
+                                        let titleKey = null;
+                                        if (originalText === 'Tak') titleKey = 'ceiling';
+                                        else if (originalText === 'Intern') titleKey = 'internal';
+                                        else if (originalText === 'Agurk') titleKey = 'cucumber';
+                                        else if (originalText === 'Agurk 1') titleKey = 'cucumber1';
+                                        else if (originalText === 'Agurk 2') titleKey = 'cucumber2';
+                                        else if (originalText === 'Padron') titleKey = 'padron';
+                                        else if (originalText === 'Gulv') titleKey = 'floor';
+                                        
+                                        // Apply translation if found
+                                        if (titleKey) {
+                                            const translated = window.i18n.__(titleKey);
+                                            if (translated !== titleKey) {
+                                                label.text = translated;
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Add current value to label text
                                     const currentValue = datasets[i].data[datasets[i].data.length - 1];
                                     if (currentValue !== undefined && !isNaN(currentValue)) {
                                         // Format value based on magnitude
@@ -770,6 +1203,13 @@ function createOrUpdateChart(config, data) {
                     // Customize title to show full date/time
                     title: (tooltipItems) => {
                         const index = tooltipItems[0].dataIndex;
+                        // Explicitly check current locale to make sure it's set correctly
+                        if (window.moment && window.i18n) {
+                            const lang = window.i18n.getCurrentLanguage();
+                            // Set the locale each time to ensure it matches current language
+                            const momentLocale = lang === 'no' ? 'nb' : lang;
+                            window.moment.locale(momentLocale);
+                        }
                         return moment(timestamps[index]).format('LLL');
                     },
                     
@@ -833,22 +1273,36 @@ function createOrUpdateChart(config, data) {
                                 lines.push('');
                             }
                             
-                            // Add category header
-                            let headerText = '— Andre verdier —'; // Default header
+                            // Get category translation key
+                            const headerKey = category === 'temperature' ? 'temperatures' :
+                                              category === 'weather' ? 'weather' :
+                                              category === 'structure' ? 'structure' :
+                                              category === 'light' ? 'light' :
+                                              category === 'system' ? 'system' :
+                                              category === 'soil' ? 'soil' : 'otherValues';
                             
-                            // Try to get more specific headers based on category
-                            if (category === 'temperature') {
-                                headerText = '— Temperaturer —';
-                            } else if (category === 'weather') {
-                                headerText = '— Vær —';
-                            } else if (category === 'structure') {
-                                headerText = '— Struktur —';
-                            } else if (category === 'light') {
-                                headerText = '— Lys —';
-                            } else if (category === 'system') {
-                                headerText = '— System —';
-                            } else if (category === 'soil') {
-                                headerText = '— Jord —';
+                            // Always use translations if available (not just as fallback)
+                            let headerText = '— Andre verdier —'; // Default fallback
+                            
+                            if (window.i18n && typeof window.i18n.__ === 'function') {
+                                // Get fresh translation for current language
+                                const translated = window.i18n.__(headerKey);
+                                headerText = `— ${translated} —`;
+                            } else {
+                                // Fallback headers if i18n is not available
+                                if (category === 'temperature') {
+                                    headerText = '— Temperaturer —';
+                                } else if (category === 'weather') {
+                                    headerText = '— Vær —';
+                                } else if (category === 'structure') {
+                                    headerText = '— Struktur —';
+                                } else if (category === 'light') {
+                                    headerText = '— Lys —';
+                                } else if (category === 'system') {
+                                    headerText = '— System —';
+                                } else if (category === 'soil') {
+                                    headerText = '— Jord —';
+                                }
                             }
                             
                             lines.push('', headerText);
@@ -891,6 +1345,99 @@ function createOrUpdateChart(config, data) {
         }
     };
     
+    // Add statistical annotation datasets for avg (and optionally min/max)
+    // Only do this for non-multi-series charts to avoid visual clutter
+    if (!data.is_multi_series && datasets.length === 1 && filteredValues.length > 0) {
+        // Calculate statistical values
+        const min = Math.min(...filteredValues);
+        const max = Math.max(...filteredValues);
+        const avg = avgValue;
+        
+        // Add average line dataset (horizontal line) - always show this
+        datasets.push({
+            label: window.i18n ? window.i18n.__('avg') : 'Average',
+            data: Array(chartData.labels.length).fill(avg),
+            borderColor: '#888888',
+            borderWidth: 1,
+            borderDash: [5, 5],
+            pointRadius: 0,
+            pointHoverRadius: 0,
+            fill: false,
+            tension: 0,
+            yAxisID: 'y',
+            order: 1 // Place behind the main dataset
+        });
+        
+        // Check if we should show min/max indicators based on config
+        const showMax = config.indicateMax === true;
+        const showMin = config.indicateMin === true;
+        
+        if (showMax || showMin) {
+            // Create datasets for min/max points
+            // Find indices where min/max values occur
+            const maxIndices = [];
+            const minIndices = [];
+            
+            // Find all occurrences of min and max values
+            datasets[0].data.forEach((value, index) => {
+                if (showMax && value === max) maxIndices.push(index);
+                if (showMin && value === min) minIndices.push(index);
+            });
+            
+            // Add max points dataset if configured
+            if (showMax && maxIndices.length > 0) {
+                // Limit to at most 3 markers to avoid clutter
+                const limitedMaxIndices = maxIndices.length > 3 ? 
+                    [maxIndices[0], maxIndices[Math.floor(maxIndices.length/2)], maxIndices[maxIndices.length-1]] : 
+                    maxIndices;
+                
+                const maxData = Array(chartData.labels.length).fill(null);
+                limitedMaxIndices.forEach(index => maxData[index] = max);
+                
+                datasets.push({
+                    label: window.i18n ? window.i18n.__('high') : 'Max',
+                    data: maxData,
+                    backgroundColor: '#ff5252',
+                    borderColor: '#ff5252',
+                    borderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    pointStyle: 'rectRot',
+                    fill: false,
+                    showLine: false,
+                    yAxisID: 'y',
+                    order: 0 // Place in front of all other datasets
+                });
+            }
+            
+            // Add min points dataset if configured
+            if (showMin && minIndices.length > 0) {
+                // Limit to at most 3 markers to avoid clutter
+                const limitedMinIndices = minIndices.length > 3 ? 
+                    [minIndices[0], minIndices[Math.floor(minIndices.length/2)], minIndices[minIndices.length-1]] : 
+                    minIndices;
+                
+                const minData = Array(chartData.labels.length).fill(null);
+                limitedMinIndices.forEach(index => minData[index] = min);
+                
+                datasets.push({
+                    label: window.i18n ? window.i18n.__('low') : 'Min',
+                    data: minData,
+                    backgroundColor: '#4caf50',
+                    borderColor: '#4caf50',
+                    borderWidth: 2,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
+                    pointStyle: 'triangle',
+                    fill: false,
+                    showLine: false,
+                    yAxisID: 'y',
+                    order: 0 // Place in front of all other datasets
+                });
+            }
+        }
+    }
+    
     // Create or update chart
     const canvas = document.getElementById(config.id);
     if (!canvas) return;
@@ -907,6 +1454,12 @@ function createOrUpdateChart(config, data) {
             data: chartData,
             options: chartOptions
         });
+    }
+    
+    // Apply translations to all chart elements (labels, legend, stats)
+    // This ensures that the chart is properly translated on initial creation
+    if (typeof window.translateChartLabels === 'function') {
+        window.translateChartLabels(chartInstances[config.id]);
     }
     
     // If this is a multi-series chart, we'll update the legend with current values
@@ -1173,8 +1726,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const range = getURLParameter('range') || '1';
     const results = parseInt(getURLParameter('results')) || 8000;
     
-    // Load charts with URL parameters
-    loadAllCharts(range, results);
+    // Ensure translations are loaded before creating charts
+    if (window.i18n && typeof window.i18n.updatePageLanguage === 'function') {
+        // Translations already loaded, initialize charts
+        loadAllCharts(range, results);
+    } else {
+        // Wait for translations to be ready
+        const checkTranslations = setInterval(() => {
+            if (window.i18n && typeof window.i18n.updatePageLanguage === 'function') {
+                clearInterval(checkTranslations);
+                loadAllCharts(range, results);
+            }
+        }, 50);
+    }
     
     // Add a failsafe for charts disappearing
     setInterval(() => {
