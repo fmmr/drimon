@@ -26,7 +26,8 @@ window.chartConfigs = [
         category: 'structure',
         minValue: 50,  // Set minimum Y-axis value
         relatedCategories: ['temperature'],  // Show temperature values in tooltip
-        indicateMax: true
+        indicateMax: true,
+        indicateMin: true  // Add option to highlight the low value
     },
     // Multi-series chart for light measurements with dual y-axes
     {

@@ -10,6 +10,9 @@ Chart.defaults.maintainAspectRatio = false;
 window.chartInstances = {};
 const chartInstances = window.chartInstances;
 
+// Export recalculation function for access from script.js
+window.recalculateChartStats = recalculateChartStats;
+
 // Initialize the charts layout
 function initializeChartLayout() {
     const chartContainer = document.getElementById('chartContainer');
@@ -253,6 +256,160 @@ function calculateGridPositions(rowGroups) {
 // Create a reference to the fetchChartData function from data_components.js
 window.fetchChartData = window.DataComponents.fetchChartData;
 
+// Function to recalculate stats from chart data
+function recalculateChartStats(chart) {
+    if (!chart || !chart.data || !chart.data.datasets) return;
+    
+    // Get chart info
+    const chartId = chart.canvas.id;
+    const chartConfig = window.chartConfigs.find(c => c.id === chartId);
+    const isMultiSeries = chartConfig && chartConfig.series && Array.isArray(chartConfig.series) && chartConfig.series.length > 1;
+    
+    // Get minimum, average and maximum values from chart data
+    let minValue = Infinity;
+    let maxValue = -Infinity;
+    let avgValue = 0;
+    let totalValues = 0;
+    let totalCount = 0;
+    
+    // Get active datasets - filter out statistical/hidden datasets
+    const activeDatasets = chart.data.datasets.filter((dataset, idx) => {
+        // Skip datasets with all null/undefined values
+        const hasRealValues = dataset.data && dataset.data.some(v => v !== null && v !== undefined);
+        
+        // Skip datasets that are just for statistical indicators
+        const isStatDataset = dataset.label && (
+            dataset.label.includes('Average') || 
+            dataset.label.includes('Avg') || 
+            dataset.label.includes('Min') || 
+            dataset.label.includes('Max') ||
+            dataset.label.includes('Low') ||
+            dataset.label.includes('High')
+        );
+        
+        // Skip datasets with all identical values (likely avg line)
+        const hasIdenticalValues = dataset.data && 
+            dataset.data.length > 1 && 
+            new Set(dataset.data.filter(v => v !== null && v !== undefined)).size === 1;
+        
+        return hasRealValues && !isStatDataset && !hasIdenticalValues;
+    });
+    
+    // Calculate min/max/avg only from real data datasets
+    activeDatasets.forEach((dataset, datasetIndex) => {
+        if (!dataset.data || dataset.data.length === 0) return;
+        
+        let values = dataset.data.filter(v => v !== null && v !== undefined && !isNaN(v));
+        if (values.length === 0) return;
+        
+        let filteredValues = values;
+        
+        // Skip empty datasets
+        if (filteredValues.length === 0) return;
+        
+        // Use filtered values for min/max/avg calculations
+        const datasetMin = Math.min(...filteredValues);
+        const datasetMax = Math.max(...filteredValues);
+        const datasetSum = filteredValues.reduce((sum, v) => sum + v, 0);
+        
+        minValue = Math.min(minValue, datasetMin);
+        maxValue = Math.max(maxValue, datasetMax);
+        totalValues += datasetSum;
+        totalCount += filteredValues.length;
+    });
+    
+    // Calculate overall average
+    avgValue = totalCount > 0 ? totalValues / totalCount : 0;
+    
+    // Get current value (from the first active dataset for simplicity)
+    const currentValue = activeDatasets[0]?.data?.length > 0 
+        ? activeDatasets[0].data[activeDatasets[0].data.length - 1] 
+        : null;
+    
+    // Stats calculation complete
+    
+    // Update the stats display
+    updateChartStats(chartId, minValue, maxValue, avgValue, currentValue, isMultiSeries);
+}
+
+// Function to update chart stats - centralizing all stats logic in one place
+function updateChartStats(chartId, minValue, maxValue, avgValue, currentValue, isMultiSeries) {
+    const statsEl = document.getElementById(`stats-${chartId}`);
+    if (!statsEl) return;
+    
+    // Get translated labels
+    let lowLabel = 'L';
+    let avgLabel = 'A';
+    let highLabel = 'H';
+    let nowLabel = 'N';
+    
+    if (window.i18n && typeof window.i18n.__ === 'function') {
+        const lowTranslation = window.i18n.__('low');
+        const avgTranslation = window.i18n.__('avg');
+        const highTranslation = window.i18n.__('high');
+        const nowTranslation = window.i18n.__('now');
+        
+        lowLabel = lowTranslation && lowTranslation.length > 0 ? lowTranslation[0].toUpperCase() : 'L';
+        avgLabel = avgTranslation && avgTranslation.length > 0 ? avgTranslation[0].toUpperCase() : 'A';
+        highLabel = highTranslation && highTranslation.length > 0 ? highTranslation[0].toUpperCase() : 'H';
+        nowLabel = nowTranslation && nowTranslation.length > 0 ? nowTranslation[0].toUpperCase() : 'N';
+    }
+    
+    // Get chart config and unit
+    const config = window.chartConfigs.find(c => c.id === chartId);
+    const unit = getUnitForChart(chartId) || (config && config.unit) || '';
+    
+    // Format values appropriately
+    const range = maxValue - minValue;
+    const formatNumber = (val) => {
+        if (!val && val !== 0) return '—';
+        
+        if ((config && shouldUseIntegerValues(config)) || range >= 10) {
+            return Math.round(val).toString();
+        } else if (range < 1) {
+            return val.toFixed(2); // More precision for very small ranges
+        } else {
+            return val.toFixed(1); // Default to 1 decimal place
+        }
+    };
+    
+    // Update stats for chart
+    
+    // Build stats HTML
+    statsEl.innerHTML = `
+        <div class="chart-stat">
+            <span class="chart-stat-label">
+                <span class="chart-stat-label-short">${lowLabel}:</span>
+                <span class="chart-stat-label-low"></span>
+            </span>${formatNumber(minValue)}${unit}
+        </div>
+        <div class="chart-stat">
+            <span class="chart-stat-label">
+                <span class="chart-stat-label-short">${avgLabel}:</span>
+                <span class="chart-stat-label-avg"></span>
+            </span>${formatNumber(avgValue)}${unit}
+        </div>
+        <div class="chart-stat">
+            <span class="chart-stat-label">
+                <span class="chart-stat-label-short">${highLabel}:</span>
+                <span class="chart-stat-label-high"></span>
+            </span>${formatNumber(maxValue)}${unit}
+        </div>
+        ${!isMultiSeries ? `
+        <div class="chart-stat chart-stat-current">
+            <span class="chart-stat-label">
+                <span class="chart-stat-label-short">${nowLabel}:</span>
+                <span class="chart-stat-label-now"></span>
+            </span>${currentValue !== null ? formatNumber(currentValue) + unit : '—'}
+        </div>
+        ` : ''}
+    `;
+    
+    // Apply visibility based on user preference
+    const statsVisible = localStorage.getItem('statsVisible') !== 'false';
+    statsEl.style.display = statsVisible ? 'flex' : 'none';
+}
+
 // Create or update a Chart.js chart
 // Function to translate all chart labels in a dataset
 // Export to global scope so it can be called from event handlers
@@ -281,7 +438,6 @@ window.translateChartLabels = function(chart) {
         if (isMultiSeries && chartConfig && chartConfig.series && chartConfig.series[index]) {
             const seriesTitle = chartConfig.series[index].title;
             translatedLabel = window.chartTranslator.translateSeriesTitle(seriesTitle);
-            console.log(`Series ${index}: "${seriesTitle}" -> "${translatedLabel}"`);
         } else {
             // For single series charts, use chart title
             if (chartConfig) {
@@ -369,115 +525,52 @@ window.translateChartLabels = function(chart) {
     }
     
     // Update stats labels with new translations
-    const statsEl = document.getElementById(`stats-${chartId}`);
-    if (statsEl) {
-        // Get minimum, average and maximum values from chart data for stats display
-        let minValue = Infinity;
-        let maxValue = -Infinity;
-        let avgValue = 0;
-        let totalValues = 0;
-        let totalCount = 0;
+    // Get minimum, average and maximum values from chart data for stats display
+    let minValue = Infinity;
+    let maxValue = -Infinity;
+    let avgValue = 0;
+    let totalValues = 0;
+    let totalCount = 0;
+    
+    // Calculate min/max/avg across all datasets
+    chart.data.datasets.forEach(dataset => {
+        if (!dataset.data || dataset.data.length === 0) return;
         
-        // Calculate min/max/avg across all datasets
-        chart.data.datasets.forEach(dataset => {
-            if (!dataset.data || dataset.data.length === 0) return;
-            
-            const values = dataset.data.filter(v => !isNaN(v));
-            if (values.length === 0) return;
-            
-            const datasetMin = Math.min(...values);
-            const datasetMax = Math.max(...values);
-            const datasetSum = values.reduce((sum, v) => sum + v, 0);
-            
-            minValue = Math.min(minValue, datasetMin);
-            maxValue = Math.max(maxValue, datasetMax);
-            totalValues += datasetSum;
-            totalCount += values.length;
-        });
+        const values = dataset.data.filter(v => !isNaN(v));
+        if (values.length === 0) return;
         
-        // Calculate overall average
-        avgValue = totalCount > 0 ? totalValues / totalCount : 0;
+        // Process dataset values
         
-        // Get current value (from the first dataset for simplicity)
-        const currentValue = chart.data.datasets[0]?.data?.length > 0 
-            ? chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1] 
-            : null;
+        // Use actual minimum value - include all valid values
+        const datasetMin = Math.min(...values);
+        const datasetMax = Math.max(...values);
+        const datasetSum = values.reduce((sum, v) => sum + v, 0);
         
-        // Get translated stat labels
-        let lowLabel = 'L';
-        let avgLabel = 'A';
-        let highLabel = 'H';
-        let nowLabel = 'N';
-        
-        if (window.i18n && typeof window.i18n.__ === 'function') {
-            const lowTranslation = window.i18n.__('low');
-            const avgTranslation = window.i18n.__('avg');
-            const highTranslation = window.i18n.__('high');
-            const nowTranslation = window.i18n.__('now');
-            
-            lowLabel = lowTranslation && lowTranslation.length > 0 ? lowTranslation[0].toUpperCase() : 'L';
-            avgLabel = avgTranslation && avgTranslation.length > 0 ? avgTranslation[0].toUpperCase() : 'A';
-            highLabel = highTranslation && highTranslation.length > 0 ? highTranslation[0].toUpperCase() : 'H';
-            nowLabel = nowTranslation && nowTranslation.length > 0 ? nowTranslation[0].toUpperCase() : 'N';
-        }
-        
-        // Get unit from chart ID
-        const unit = getUnitForChart(chartId) || '';
-        
-        // Format numbers with appropriate precision
-        const formatNumber = (val) => {
-            if (typeof val !== 'number' || isNaN(val)) return '—';
-            
-            // Use the helper function to determine if we should use integers
-            const range = maxValue - minValue;
-            if (shouldUseIntegerValues(chartConfig) || range >= 10) {
-                return Math.round(val).toString();
-            } else if (range < 1) {
-                return val.toFixed(2); // More precision for very small ranges
-            } else {
-                return val.toFixed(1); // Default to 1 decimal place
-            }
-        };
-        
-        // Check if this is a multi-series chart
-        const isMultiSeries = chartConfig && chartConfig.series && Array.isArray(chartConfig.series) && chartConfig.series.length > 1;
-        
-        // Update the stats HTML
-        statsEl.innerHTML = `
-            <div class="chart-stat">
-                <span class="chart-stat-label">
-                    <span class="chart-stat-label-short">${lowLabel}:</span>
-                    <span class="chart-stat-label-low"></span>
-                </span>${formatNumber(minValue)}${unit}
-            </div>
-            <div class="chart-stat">
-                <span class="chart-stat-label">
-                    <span class="chart-stat-label-short">${avgLabel}:</span>
-                    <span class="chart-stat-label-avg"></span>
-                </span>${formatNumber(avgValue)}${unit}
-            </div>
-            <div class="chart-stat">
-                <span class="chart-stat-label">
-                    <span class="chart-stat-label-short">${highLabel}:</span>
-                    <span class="chart-stat-label-high"></span>
-                </span>${formatNumber(maxValue)}${unit}
-            </div>
-            ${!isMultiSeries ? `
-            <div class="chart-stat chart-stat-current">
-                <span class="chart-stat-label">
-                    <span class="chart-stat-label-short">${nowLabel}:</span>
-                    <span class="chart-stat-label-now"></span>
-                </span>${currentValue !== null ? formatNumber(currentValue) + unit : '—'}
-            </div>
-            ` : ''}
-        `;
-        
-    }
+        minValue = Math.min(minValue, datasetMin);
+        maxValue = Math.max(maxValue, datasetMax);
+        totalValues += datasetSum;
+        totalCount += values.length;
+    });
+    
+    // Calculate overall average
+    avgValue = totalCount > 0 ? totalValues / totalCount : 0;
+    
+    // Get current value (from the first dataset for simplicity)
+    const currentValue = chart.data.datasets[0]?.data?.length > 0 
+        ? chart.data.datasets[0].data[chart.data.datasets[0].data.length - 1] 
+        : null;
+    
+    // Use unified stats update function
+    updateChartStats(chartId, minValue, maxValue, avgValue, currentValue, isMultiSeries);
     
     // Apply changes with a short timeout to ensure the update happens
     setTimeout(() => {
         try {
             chart.update('none');
+            
+            // IMPORTANT: Always recalculate stats after chart update
+            // This ensures min/max/avg values are updated correctly
+            recalculateChartStats(chart);
         } catch (e) {
             // Silently ignore errors
         }
@@ -547,10 +640,15 @@ function createOrUpdateChart(config, data) {
     let datasets = [];
     let filteredValues = [];
     let timestamps = [];
-    let minValue = Infinity;
+    let minValue = Infinity;  // Initialize to Infinity so Math.min works properly
     let maxValue = -Infinity;
     let avgValue = 0;
     let hasNegativeValues = false;
+    
+    // Debug initialization values
+    if (config.id.includes('temp')) {
+        console.log(`DEBUG [${config.id}]: Initializing min to ${minValue}, max to ${maxValue}`);
+    }
     
     if (data.is_multi_series) {
         // Handle multi-series data
@@ -585,12 +683,13 @@ function createOrUpdateChart(config, data) {
                 hasNegativeValues = true;
             }
             
-            // Update min/max values
+            // Simple min/max calculation from actual data values
             const seriesMin = Math.min(...seriesFiltered);
             const seriesMax = Math.max(...seriesFiltered);
             minValue = Math.min(minValue, seriesMin);
             maxValue = Math.max(maxValue, seriesMax);
             
+            // Process min values for series
             // Add to filtered values for overall stats
             filteredValues = filteredValues.concat(seriesFiltered);
             
@@ -635,8 +734,10 @@ function createOrUpdateChart(config, data) {
         const values = data.feeds.map(feed => parseFloat(feed[`field${config.field}`]));
         hasNegativeValues = values.some(v => v < 0);
         
-        // Calculate data range for better scaling
+        // Calculate data range for better scaling - only filter NaN values, keep zeros and all valid numbers
         filteredValues = values.filter(v => !isNaN(v));
+        
+        // Process values for temperature charts
         
         if (filteredValues.length === 0) {
             // No valid numeric values
@@ -652,8 +753,11 @@ function createOrUpdateChart(config, data) {
             return;
         }
         
+        // Simple min/max calculation from actual data values
         minValue = Math.min(...filteredValues);
         maxValue = Math.max(...filteredValues);
+        
+        // Min/max values calculated
         
         // Store timestamps for cross-chart syncing
         timestamps = data.feeds.map(feed => feed.created_at);
@@ -746,86 +850,11 @@ function createOrUpdateChart(config, data) {
         };
     }
     
-    // Apply chart config minimum value if provided
-    let adjustedMinValue = minValue;
-    if (config.minValue !== undefined && minValue < config.minValue) {
-        adjustedMinValue = config.minValue;
-    }
+    // Get the most recent (current) value
+    const currentValue = filteredValues.length > 0 ? filteredValues[filteredValues.length - 1] : null;
     
-    // Format values for display
-    const getUnit = config.unit || '';
-    const formatNumber = (val) => {
-        // Use the helper function to determine if we should use integers
-        if (shouldUseIntegerValues(config) || range >= 10) {
-            return Math.round(val).toString();
-        } else if (range < 1) {
-            return val.toFixed(2); // More precision for very small ranges
-        } else {
-            return val.toFixed(1); // Default to 1 decimal place
-        }
-    };
-    
-    // Check if stats display is enabled
-    const statsVisible = localStorage.getItem('statsVisible') !== 'false';
-    
-    // Update stats 
-    const statsEl = document.getElementById(`stats-${config.id}`);
-    if (statsEl) {
-        // Get the most recent (current) value
-        const currentValue = filteredValues.length > 0 ? filteredValues[filteredValues.length - 1] : null;
-        
-        // Get translated stat labels
-        let lowLabel = 'L';
-        let avgLabel = 'A';
-        let highLabel = 'H';
-        let nowLabel = 'N';
-        
-        if (window.i18n && typeof window.i18n.__ === 'function') {
-            const lowTranslation = window.i18n.__('low');
-            const avgTranslation = window.i18n.__('avg');
-            const highTranslation = window.i18n.__('high');
-            const nowTranslation = window.i18n.__('now');
-            
-            lowLabel = lowTranslation && lowTranslation.length > 0 ? lowTranslation[0].toUpperCase() : 'L';
-            avgLabel = avgTranslation && avgTranslation.length > 0 ? avgTranslation[0].toUpperCase() : 'A';
-            highLabel = highTranslation && highTranslation.length > 0 ? highTranslation[0].toUpperCase() : 'H';
-            nowLabel = nowTranslation && nowTranslation.length > 0 ? nowTranslation[0].toUpperCase() : 'N';
-        }
-        
-        // Always prepare the innerHTML, regardless of visibility state
-        // Use both short and full labels - CSS will show appropriate one based on viewport
-        statsEl.innerHTML = `
-            <div class="chart-stat">
-                <span class="chart-stat-label">
-                    <span class="chart-stat-label-short">${lowLabel}:</span>
-                    <span class="chart-stat-label-low"></span>
-                </span>${formatNumber(adjustedMinValue)}${getUnit}
-            </div>
-            <div class="chart-stat">
-                <span class="chart-stat-label">
-                    <span class="chart-stat-label-short">${avgLabel}:</span>
-                    <span class="chart-stat-label-avg"></span>
-                </span>${formatNumber(avgValue)}${getUnit}
-            </div>
-            <div class="chart-stat">
-                <span class="chart-stat-label">
-                    <span class="chart-stat-label-short">${highLabel}:</span>
-                    <span class="chart-stat-label-high"></span>
-                </span>${formatNumber(maxValue)}${getUnit}
-            </div>
-            ${!data.is_multi_series ? `
-            <div class="chart-stat chart-stat-current">
-                <span class="chart-stat-label">
-                    <span class="chart-stat-label-short">${nowLabel}:</span>
-                    <span class="chart-stat-label-now"></span>
-                </span>${currentValue !== null ? formatNumber(currentValue) + getUnit : '—'}
-            </div>
-            ` : ''}
-        `;
-        
-        // Now set display based on visibility preference
-        statsEl.style.display = statsVisible ? 'flex' : 'none';
-    }
+    // Use the unified stats update function
+    updateChartStats(config.id, minValue, maxValue, avgValue, currentValue, data.is_multi_series);
     
     // Ensure we're using the correct locale for time formatting
     if (window.moment && window.i18n) {
@@ -1447,6 +1476,9 @@ function createOrUpdateChart(config, data) {
         chartInstances[config.id].data = chartData;
         chartInstances[config.id].options = chartOptions;
         chartInstances[config.id].update('none');
+        
+        // Always recalculate stats to ensure they're correct
+        recalculateChartStats(chartInstances[config.id]);
     } else {
         // Create new chart
         chartInstances[config.id] = new Chart(canvas, {
@@ -1454,6 +1486,9 @@ function createOrUpdateChart(config, data) {
             data: chartData,
             options: chartOptions
         });
+        
+        // Calculate initial stats for new chart
+        recalculateChartStats(chartInstances[config.id]);
     }
     
     // Apply translations to all chart elements (labels, legend, stats)
@@ -1508,6 +1543,9 @@ window.resizeAllCharts = function() {
             // Force resize and update
             chart.resize();
             chart.update('none');
+            
+            // Recalculate stats after resize to ensure they're correct
+            recalculateChartStats(chart);
         }
     });
 }
