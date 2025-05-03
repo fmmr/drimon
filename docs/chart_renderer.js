@@ -1374,7 +1374,7 @@ function createOrUpdateChart(config, data) {
         }
     };
     
-    // Add statistical annotation datasets for avg (and optionally min/max)
+    // Calculate statistical values for annotations
     // Only do this for non-multi-series charts to avoid visual clutter
     if (!data.is_multi_series && datasets.length === 1 && filteredValues.length > 0) {
         // Calculate statistical values
@@ -1382,27 +1382,30 @@ function createOrUpdateChart(config, data) {
         const max = Math.max(...filteredValues);
         const avg = avgValue;
         
-        // Add average line dataset (horizontal line) - always show this
-        datasets.push({
-            label: window.i18n ? window.i18n.__('avg') : 'Average',
-            data: Array(chartData.labels.length).fill(avg),
+        // Create annotations array
+        const annotations = {};
+        
+        // Add average line annotation - always show this
+        annotations.avgLine = {
+            type: 'line',
+            yMin: avg,
+            yMax: avg,
             borderColor: '#888888',
             borderWidth: 1,
             borderDash: [5, 5],
-            pointRadius: 0,
-            pointHoverRadius: 0,
-            fill: false,
-            tension: 0,
-            yAxisID: 'y',
-            order: 1 // Place behind the main dataset
-        });
+            label: {
+                enabled: false,
+                content: window.i18n ? window.i18n.__('avg') : 'Average',
+                position: 'start',
+                backgroundColor: 'rgba(136, 136, 136, 0.7)'
+            }
+        };
         
         // Check if we should show min/max indicators based on config
         const showMax = config.indicateMax === true;
         const showMin = config.indicateMin === true;
         
         if (showMax || showMin) {
-            // Create datasets for min/max points
             // Find indices where min/max values occur
             const maxIndices = [];
             const minIndices = [];
@@ -1413,58 +1416,70 @@ function createOrUpdateChart(config, data) {
                 if (showMin && value === min) minIndices.push(index);
             });
             
-            // Add max points dataset if configured
+            // Add max point annotations if configured
             if (showMax && maxIndices.length > 0) {
                 // Limit to at most 3 markers to avoid clutter
                 const limitedMaxIndices = maxIndices.length > 3 ? 
                     [maxIndices[0], maxIndices[Math.floor(maxIndices.length/2)], maxIndices[maxIndices.length-1]] : 
                     maxIndices;
                 
-                const maxData = Array(chartData.labels.length).fill(null);
-                limitedMaxIndices.forEach(index => maxData[index] = max);
-                
-                datasets.push({
-                    label: window.i18n ? window.i18n.__('high') : 'Max',
-                    data: maxData,
-                    backgroundColor: '#ff5252',
-                    borderColor: '#ff5252',
-                    borderWidth: 2,
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
-                    pointStyle: 'rectRot',
-                    fill: false,
-                    showLine: false,
-                    yAxisID: 'y',
-                    order: 0 // Place in front of all other datasets
+                // Create point annotations for each max value
+                limitedMaxIndices.forEach((index, i) => {
+                    annotations[`maxPoint${i}`] = {
+                        type: 'point',
+                        xValue: index,
+                        yValue: max,
+                        backgroundColor: '#ff5252',
+                        borderColor: '#ff5252',
+                        borderWidth: 2,
+                        radius: 5,
+                        label: {
+                            enabled: false,
+                            content: window.i18n ? window.i18n.__('high') : 'Max',
+                            position: 'top',
+                            backgroundColor: 'rgba(255, 82, 82, 0.7)'
+                        }
+                    };
                 });
             }
             
-            // Add min points dataset if configured
+            // Add min point annotations if configured
             if (showMin && minIndices.length > 0) {
                 // Limit to at most 3 markers to avoid clutter
                 const limitedMinIndices = minIndices.length > 3 ? 
                     [minIndices[0], minIndices[Math.floor(minIndices.length/2)], minIndices[minIndices.length-1]] : 
                     minIndices;
                 
-                const minData = Array(chartData.labels.length).fill(null);
-                limitedMinIndices.forEach(index => minData[index] = min);
-                
-                datasets.push({
-                    label: window.i18n ? window.i18n.__('low') : 'Min',
-                    data: minData,
-                    backgroundColor: '#4caf50',
-                    borderColor: '#4caf50',
-                    borderWidth: 2,
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
-                    pointStyle: 'triangle',
-                    fill: false,
-                    showLine: false,
-                    yAxisID: 'y',
-                    order: 0 // Place in front of all other datasets
+                // Create point annotations for each min value
+                limitedMinIndices.forEach((index, i) => {
+                    annotations[`minPoint${i}`] = {
+                        type: 'point',
+                        xValue: index,
+                        yValue: min,
+                        backgroundColor: '#4caf50',
+                        borderColor: '#4caf50',
+                        borderWidth: 2,
+                        radius: 5,
+                        label: {
+                            enabled: false,
+                            content: window.i18n ? window.i18n.__('low') : 'Min',
+                            position: 'bottom',
+                            backgroundColor: 'rgba(76, 175, 80, 0.7)'
+                        }
+                    };
                 });
             }
         }
+        
+        // Add annotations to chart options
+        if (!chartOptions.plugins) {
+            chartOptions.plugins = {};
+        }
+        
+        // Add or update annotation plugin options
+        chartOptions.plugins.annotation = {
+            annotations: annotations
+        };
     }
     
     // Create or update chart
