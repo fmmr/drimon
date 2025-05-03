@@ -6,24 +6,28 @@ window.chartConfigs = [
     // Row 1
     { 
         id: 'chart-temp',
-        title: 'Temperatur', 
+        titleKey: 'temperatureChart', 
         channel: 2568299, 
         field: 1, 
         color: '#c62828', // Red for temperature
         row: 1,
         category: 'temperature',
+        unit: '°C',
+        useIntegerFormat: false,
         indicateMin: true,
         indicateMax: true
     },
     { 
         id: 'chart-window',
-        title: 'Vindusåpning', 
+        titleKey: 'windowChart', 
         channel: 2568299, 
         field: 4, 
         color: '#8a5a44',
         row: 1,
         startDate: '2024-07-25 18:00:00',
         category: 'structure',
+        unit: 'mm',
+        useIntegerFormat: true,
         minValue: 50,  // Set minimum Y-axis value
         relatedCategories: ['temperature'],  // Show temperature values in tooltip
         indicateMax: true,
@@ -32,17 +36,17 @@ window.chartConfigs = [
     // Multi-series chart for light measurements with dual y-axes
     {
         id: 'chart-light',
-        title: 'Lys', 
+        titleKey: 'lightChart', 
         series: [
             {
-                title: 'Tak',       // External/ceiling light
+                titleKey: 'ceiling',   // External/ceiling light
                 channel: 2568299, 
                 field: 8,
                 color: '#e6a500',  // Yellow for light
                 axis: 'y'          // Primary y-axis
             },
             {
-                title: 'Intern',    // Internal light intensity
+                titleKey: 'internal',  // Internal light intensity
                 channel: 2584547, 
                 field: 5,
                 color: '#8a5a00',  // Dark yellow for light intensity
@@ -52,45 +56,51 @@ window.chartConfigs = [
         row: 1,
         startDate: '2024-08-06 17:00:00',
         category: 'light',
+        unit: 'lux',
+        useIntegerFormat: true,
         secondYAxis: true          // Enable second y-axis
     },
     { 
         id: 'chart-battery',
-        title: 'Batteri (%)', 
+        titleKey: 'batteryPercentChart', 
         channel: 2584547, 
         field: 3, 
         color: '#4a6741', // Dark green for system
         row: 1,
         category: 'system',
+        unit: '%',
+        useIntegerFormat: true,
         indicateMin: true
     },
 
     // Row 2
     { 
         id: 'chart-temp-diff',
-        title: 'Temperatur Diff', 
+        titleKey: 'tempDiffChart', 
         channel: 2626867, 
         field: 3, 
         color: '#c62828',
         row: 2,
         category: 'temperature',
+        unit: '°C',
+        useIntegerFormat: false,
         indicateMin: true,
         indicateMax: true
     },
     // Multi-series chart combining cucumber and padron temperatures (positioned as 2nd chart in row 2)
     {
         id: 'chart-plants-temp',
-        title: 'Plante Temperaturer',
+        titleKey: 'plantsTempsChart',
         // Define multiple data series for a single chart
         series: [
             {
-                title: 'Agurk',
+                titleKey: 'cucumber',
                 channel: 2584548,
                 field: 3,
                 color: '#e67e22'  // Orange-red for cucumber
             },
             {
-                title: 'Padron',
+                titleKey: 'padron',
                 channel: 2584548,
                 field: 5,
                 color: '#9b59b6'  // Purple-red for padron
@@ -98,39 +108,45 @@ window.chartConfigs = [
         ],
         row: 2,
         startDate: '2024-07-25 15:00:00',
-        category: 'plant-temperature'  // Custom category to separate from other temperature charts
+        category: 'plant-temperature',  // Custom category to separate from other temperature charts
+        unit: '°C',
+        useIntegerFormat: false
     },
     { 
         id: 'chart-out-temp',
-        title: 'Utetemperatur', 
+        titleKey: 'outTempChart', 
         channel: 2626867, 
         field: 1, 
         color: '#c62828',
         row: 2,
         category: 'temperature',
+        unit: '°C',
+        useIntegerFormat: false,
         indicateMin: true,
         indicateMax: true
     },
     // Multi-series chart combining BME, AHT, and Floor temperature sensors
     {
         id: 'chart-sensors-temp',
-        title: 'Sensor Temperaturer',
+        titleKey: 'sensorsTempsChart',
         // Define multiple data series for a single chart
         series: [
             {
-                title: 'BME',
+                titleKey: 'BME',  // Technical name with fallback to itself
+                title: 'BME',     // Fallback
                 channel: 2584548,
                 field: 1,
                 color: '#e67e22'  // Orange-red - reused from plant temp chart
             },
             {
-                title: 'AHT',
+                titleKey: 'AHT',  // Technical name with fallback to itself
+                title: 'AHT',     // Fallback
                 channel: 2584548,
                 field: 2,
                 color: '#9b59b6'  // Purple-red - reused from plant temp chart
             },
             {
-                title: 'Gulv',
+                titleKey: 'floor',
                 channel: 2584548,
                 field: 4,
                 color: '#2980b9'  // Blue for floor temperature - more contrast
@@ -138,69 +154,79 @@ window.chartConfigs = [
         ],
         row: 2,
         startDate: '2024-07-25 15:00:00',
-        category: 'detail-temperature'  // Custom category to separate from other temperature charts
+        category: 'detail-temperature',  // Custom category to separate from other temperature charts
+        unit: '°C',
+        useIntegerFormat: false
     },
 
     // Row 3
     { 
         id: 'chart-humidity',
-        title: 'Luftfuktighet', 
+        titleKey: 'humidityChart', 
         channel: 2568299, 
         field: 2, 
         color: '#5c6bc0',
         row: 3,
         category: 'weather',
+        unit: '%',
+        useIntegerFormat: true,
         indicateMin: true,
         indicateMax: true
     },
     { 
         id: 'chart-pressure',
-        title: 'Lufttrykk', 
+        titleKey: 'pressureChart', 
         channel: 2568299, 
         field: 7, 
         color: '#5c6bc0',
         row: 3,
-        category: 'weather'
+        category: 'weather',
+        unit: 'hPa',
+        useIntegerFormat: true
     },
     { 
         id: 'chart-wind',
-        title: 'Vind', 
+        titleKey: 'windChart', 
         channel: 2626867, 
         field: 5, 
         color: '#5c6bc0',
         row: 3,
-        category: 'weather'
+        category: 'weather',
+        unit: 'm/s',
+        useIntegerFormat: false
     },
     { 
         id: 'chart-rain',
-        title: 'Nedbør', 
+        titleKey: 'rainChart', 
         channel: 2626867, 
         field: 6, 
         color: '#5c6bc0',
         row: 3,
-        category: 'weather'
+        category: 'weather',
+        unit: 'mm',
+        useIntegerFormat: false
     },
 
     // Row 4
     // Multi-series chart for soil moisture
     {
         id: 'chart-soil-moisture',
-        title: 'Jordfuktighet', 
+        titleKey: 'soilMoistureChart', 
         series: [
             {
-                title: 'Agurk 1',
+                titleKey: 'cucumber1',
                 channel: 2584548, 
                 field: 6,
                 color: '#1976d2'  // Blue-green
             },
             {
-                title: 'Agurk 2',
+                titleKey: 'cucumber2',
                 channel: 2584548, 
                 field: 7,
                 color: '#388e3c'  // Medium green
             },
             {
-                title: 'Padron',
+                titleKey: 'padron',
                 channel: 2584548, 
                 field: 8,
                 color: '#f9a825'  // Yellow-green
@@ -208,35 +234,46 @@ window.chartConfigs = [
         ],
         row: 4,
         startDate: '2024-07-25 00:00:00',
-        category: 'soil-moisture'  // Custom category to separate from other soil charts
+        category: 'soil-moisture',  // Custom category to separate from other soil charts
+        unit: '%',
+        useIntegerFormat: true,
+        // Add special handling flag for soil moisture chart to avoid ID checks in code
+        specialHandling: {
+          consistentLegendLabels: true  // Ensures dataset.label and legend text are consistent
+        }
     },
     { 
         id: 'chart-battery-voltage',
-        title: 'Batteri (spenning)', 
+        titleKey: 'batteryVoltageChart', 
         channel: 2584547, 
         field: 2, 
         color: '#4a6741',
         row: 4,
-        category: 'system'
+        category: 'system',
+        unit: 'V',
+        useIntegerFormat: false
     },
     { 
         id: 'chart-wifi',
-        title: 'WiFi', 
+        titleKey: 'wifiChart', 
         channel: 2584547, 
         field: 1, 
         color: '#4a6741',
         row: 4,
         startDate: '2024-07-25 15:00:00',
         category: 'system',
+        unit: 'dBm',
+        useIntegerFormat: true,
         indicateMin: true
     },
     { 
         id: 'chart-time-used',
-        title: 'Tid brukt', 
+        titleKey: 'timeUsedChart', 
         channel: 2584547, 
         field: 4, 
         color: '#4a6741',
         row: 4,
-        category: 'system'
+        category: 'system',
+        useIntegerFormat: true
     },
 ];

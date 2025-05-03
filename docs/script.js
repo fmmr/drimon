@@ -213,6 +213,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             
                             // Update the chart - this will refresh the legend with current values
                             window.chartInstances[config.id].update('none');
+                            
+                            // Recalculate stats after update
+                            if (window.recalculateChartStats) {
+                                window.recalculateChartStats(window.chartInstances[config.id]);
+                            }
                         } 
                         // Single series chart
                         else if (newData.feeds && newData.feeds.length > 0) {
@@ -222,6 +227,11 @@ document.addEventListener('DOMContentLoaded', () => {
                             window.chartInstances[config.id].data.labels = labels;
                             window.chartInstances[config.id].data.datasets[0].data = values;
                             window.chartInstances[config.id].update('none'); // Update without animation
+                            
+                            // Recalculate stats after update
+                            if (window.recalculateChartStats) {
+                                window.recalculateChartStats(window.chartInstances[config.id]);
+                            }
                         }
                     }
                 } catch (e) {
