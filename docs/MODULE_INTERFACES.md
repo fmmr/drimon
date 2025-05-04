@@ -13,7 +13,7 @@ This document details the interfaces between modules in the refactored architect
 
 ## Core Module Interfaces
 
-### Utils Module Interface
+### Utils Module Interface (Implemented)
 
 ```javascript
 /**
@@ -52,6 +52,7 @@ function getURLParameter(name) { /* ... */ }
  * @param {boolean} [options.useInteger=false] - Whether to format as integer
  * @param {number} [options.decimals] - Number of decimal places
  * @param {string} [options.unit=''] - Unit to append
+ * @param {number} [options.range=0] - Data range for dynamic precision
  * @returns {string} Formatted number
  */
 function formatNumber(value, options = {}) { /* ... */ }
@@ -73,6 +74,25 @@ function getDateRange(rangeCode) { /* ... */ }
 function createElement(tagName, attributes = {}, children = null) { /* ... */ }
 
 /**
+ * Add an event listener with proper cleanup
+ * @param {Element} element - DOM element to attach listener to
+ * @param {string} event - Event name (e.g., 'click')
+ * @param {Function} handler - Event handler function
+ * @param {Object} [options] - Event listener options 
+ * @returns {Function} Function to remove the event listener
+ */
+function addEventListenerWithCleanup(element, event, handler, options) { /* ... */ }
+
+/**
+ * Add multiple event listeners with single cleanup function
+ * @param {Element} element - DOM element to attach listeners to
+ * @param {Object} eventMap - Map of event names to handler functions
+ * @param {Object} [options] - Event listener options
+ * @returns {Function} Function to remove all event listeners
+ */
+function addMultipleEventListeners(element, eventMap, options) { /* ... */ }
+
+/**
  * Debounce a function call
  * @param {Function} func - Function to debounce
  * @param {number} wait - Wait time in milliseconds
@@ -87,6 +107,33 @@ function debounce(func, wait) { /* ... */ }
  * @returns {Function} Throttled function
  */
 function throttle(func, limit) { /* ... */ }
+
+/**
+ * Calculate statistics from an array of values
+ * @param {Array<number>} values - Array of numeric values
+ * @returns {Object} Statistics object with min, max, avg, and currentValue properties
+ */
+function calculateStatistics(values) { /* ... */ }
+
+/**
+ * Create a simple event emitter
+ * @returns {Object} Event emitter object with on, off, emit, and once methods
+ */
+function createEventEmitter() { /* ... */ }
+
+/**
+ * Convert object to query string
+ * @param {Object} data - Data object to convert to query string
+ * @returns {string} URL query parameters string
+ */
+function toQueryString(data) { /* ... */ }
+
+/**
+ * Parse query string into object
+ * @param {string} queryString - URL query string (with or without leading ?)
+ * @returns {Object} Parsed query parameters
+ */
+function parseQueryString(queryString) { /* ... */ }
 ```
 
 ### I18n Module Interface
@@ -140,13 +187,40 @@ function getAvailableLanguages() { /* ... */ }
 function onLanguageChanged(callback) { /* ... */ }
 ```
 
-### Config Module Interface
+### Config Module Interface (Implemented)
 
 ```javascript
 /**
  * Configuration module
  * @module core/config
+ * 
+ * This module implements a configuration-driven approach where:
+ * - All chart properties must be explicitly defined in the configuration
+ * - No implicit behavior based on chart IDs or naming conventions
+ * - All configurations are validated against a schema
+ * - Default values are applied where not specified
  */
+
+/**
+ * Initialize configuration
+ * @param {Object} config - Application configuration
+ * @returns {boolean} Success flag
+ */
+function initialize(config) { /* ... */ }
+
+/**
+ * Validate a chart configuration against the schema
+ * @param {Object} config - Chart configuration
+ * @returns {Object} Validation result with isValid flag and errors array
+ */
+function validateChartConfig(config) { /* ... */ }
+
+/**
+ * Validate application configuration
+ * @param {Object} config - Application configuration
+ * @returns {Object} Validation result with isValid flag and errors array
+ */
+function validateAppConfig(config) { /* ... */ }
 
 /**
  * Get chart configuration by ID
@@ -176,11 +250,18 @@ function getChartsForRow(rowNumber) { /* ... */ }
 function getChartsByCategory(category) { /* ... */ }
 
 /**
- * Validate a chart configuration
- * @param {Object} config - Chart configuration to validate
- * @returns {Object} Validation result with isValid flag and errors array
+ * Get the unit for a chart from its configuration
+ * @param {string|Object} chartIdOrConfig - Chart ID or config object
+ * @returns {string} Unit string or empty string if not found
  */
-function validateChartConfig(config) { /* ... */ }
+function getUnitForChart(chartIdOrConfig) { /* ... */ }
+
+/**
+ * Check if a chart should use integer formatting
+ * @param {Object} config - Chart configuration
+ * @returns {boolean} True if chart should use integer values
+ */
+function shouldUseIntegerValues(config) { /* ... */ }
 
 /**
  * Get application configuration value
@@ -189,6 +270,13 @@ function validateChartConfig(config) { /* ... */ }
  * @returns {*} Configuration value
  */
 function getConfig(key, defaultValue = null) { /* ... */ }
+
+/**
+ * Set application configuration value
+ * @param {string} key - Configuration key
+ * @param {*} value - Configuration value
+ */
+function setConfig(key, value) { /* ... */ }
 ```
 
 ## Data Module Interfaces

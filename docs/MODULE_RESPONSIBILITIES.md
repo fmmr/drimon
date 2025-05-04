@@ -4,21 +4,31 @@ This document defines the clear responsibilities of each module in the refactore
 
 ## Core Modules
 
-### `/core/utils.js`
+### `/core/utils.js` (Implemented)
 
 **Primary Responsibility**: Provide general-purpose utility functions used across the application.
 
 **Specific Responsibilities**:
-- Date formatting and manipulation functions (from date_utils.js)
-- Number formatting functions (from ChartUtils, data_components.js)
-- URL parameter handling (getURLParameter) 
-- DOM helper functions
-- General-purpose utility functions
+- Date formatting and manipulation functions
+- Number formatting and statistics calculation
+- URL parameter handling and query string utilities
+- DOM creation and event handling utilities
+- Debounce and throttle functions
+- Event emitter implementation
 
 **Interfaces**:
+- `formatDate()`: Format date with locale support
+- `formatRelativeTime()`: Format relative time strings
+- `getURLParameter()`: Parse URL parameters
+- `formatNumber()`: Format numbers with units
+- `getDateRange()`: Get date ranges for queries
+- `createElement()`: Create DOM elements
+- `addEventListenerWithCleanup()`: Manage event listeners
+- `debounce()`: Create debounced functions
+- `throttle()`: Create throttled functions
+- `calculateStatistics()`: Calculate min/max/avg values
+- `createEventEmitter()`: Create event management system
 - Pure functional interface (input → output with no side effects)
-- No dependencies on application state
-- No direct DOM manipulation
 
 ### `/core/i18n.js`
 
@@ -37,20 +47,28 @@ This document defines the clear responsibilities of each module in the refactore
 - `getCurrentLanguage()`: Get the current language code
 - Listen for 'languageChanged' event
 
-### `/core/config.js`
+### `/core/config.js` (Implemented)
 
 **Primary Responsibility**: Manage application-wide configuration settings.
 
 **Specific Responsibilities**:
-- Define configuration schema
-- Validate configuration values
-- Provide access to configuration
+- Define configuration schema for charts and application settings
+- Validate configuration values against schema
+- Provide access to chart and application configuration
 - Store default configuration values
+- Apply configuration-driven approach with explicit properties
 
 **Interfaces**:
-- Validation functions for configuration
-- Accessor functions for configuration values
-- Configuration schema definition
+- `validateChartConfig()`: Validate a chart configuration
+- `validateAppConfig()`: Validate application configuration
+- `getChartConfig()`: Get chart config by ID
+- `getAllChartConfigs()`: Get all chart configurations
+- `getChartsForRow()`: Get charts for a specific row
+- `getChartsByCategory()`: Get charts by category
+- `getUnitForChart()`: Get unit for a chart
+- `shouldUseIntegerValues()`: Check integer formatting
+- `getConfig()`: Get application config value
+- `setConfig()`: Set application config value
 
 ## Data Modules
 

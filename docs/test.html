@@ -21,8 +21,13 @@
     <!-- Language Switcher -->
     <script src="language_switcher.js"></script>
     
+    <!-- Original modules for backward compatibility -->
+    <script src="chart_config.js"></script>
+    
     <!-- Core modules -->
     <script src="js/core/utils.js"></script>
+    <script src="js/core/config-schema.js"></script>
+    <script src="js/core/config.js"></script>
     
     <!-- Component modules -->
     <script src="header_components.js"></script>
@@ -32,6 +37,18 @@
     
     <!-- Test modules -->
     <script src="js/tests/utils.test.js"></script>
+    <script src="js/tests/config.test.js"></script>
+    
+    <!-- Initialize Config module with existing chart configs -->
+    <script>
+        // Initialize Config with existing chartConfigs when available
+        document.addEventListener('DOMContentLoaded', () => {
+            if (window.chartConfigs && Config) {
+                Config.initialize({ chartConfigs: window.chartConfigs });
+                console.log('Config module initialized with existing chart configurations');
+            }
+        });
+    </script>
     <style>
         body {
             padding: 20px;
@@ -234,6 +251,30 @@
             <p>Test the utility functions from core/utils.js</p>
             <button class="test-button" onclick="runUtilsTests()">Run Utils Tests</button>
             <div id="utils-test-results" class="test-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Config Tests</h2>
+            <p>Test the configuration system from core/config.js</p>
+            <button class="test-button" onclick="runConfigTests()">Run Config Tests</button>
+            <div id="config-test-results" class="test-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Config Validation Playground</h2>
+            <div class="test-controls">
+                <button class="test-button" onclick="testConfigValidation()">Test Validation</button>
+            </div>
+            <textarea id="config-validation-input" style="width: 100%; height: 150px; font-family: monospace; margin-top: 10px; padding: 10px;">{
+  "id": "chart-test",
+  "titleKey": "testChart",
+  "row": 1,
+  "channel": 123456,
+  "field": 1,
+  "category": "test",
+  "unit": "°C"
+}</textarea>
+            <div id="config-validation-results" class="test-result" style="margin-top: 10px;"></div>
         </div>
         
         <div class="test-section">
@@ -1272,6 +1313,76 @@ const card = Utils.createElement('div', { className: 'card' }, [
             // Add a log message
             if (logContainer) {
                 logContainer.innerHTML += '<br><strong>All event listeners have been removed!</strong>';
+            }
+        }
+        
+        // Config testing functions
+        function runConfigTests() {
+            const runner = new TestRunner('Config');
+            
+            // Add all Config tests from the test module
+            if (configTests) {
+                runner.addTest('validateChartConfig', configTests.testValidateChartConfig);
+                runner.addTest('getChartConfig', configTests.testGetChartConfig);
+                runner.addTest('getChartsForRow', configTests.testGetChartsForRow);
+                runner.addTest('getChartsByCategory', configTests.testGetChartsByCategory);
+                runner.addTest('getUnitForChart', configTests.testGetUnitForChart);
+                runner.addTest('shouldUseIntegerValues', configTests.testShouldUseIntegerValues);
+                runner.addTest('appConfig', configTests.testAppConfig);
+            }
+            
+            // Run tests and display results
+            runner.runTests().then(results => {
+                const resultContainer = document.getElementById('config-test-results');
+                if (resultContainer) {
+                    resultContainer.innerHTML = `
+                        <div class="test-summary ${results.failed > 0 ? 'test-failed' : 'test-passed'}">
+                            <h3>Config Module Test Results</h3>
+                            <p>Total: ${results.total}</p>
+                            <p>Passed: ${results.passed}</p>
+                            <p>Failed: ${results.failed}</p>
+                        </div>
+                    `;
+                }
+            });
+        }
+        
+        function testConfigValidation() {
+            const inputElement = document.getElementById('config-validation-input');
+            const resultsElement = document.getElementById('config-validation-results');
+            
+            try {
+                // Parse the JSON input
+                const configData = JSON.parse(inputElement.value);
+                
+                // Validate the config
+                const validationResult = Config.validateChartConfig(configData);
+                
+                // Show results with formatting
+                if (validationResult.isValid) {
+                    resultsElement.innerHTML = `
+                        <div class="test-summary test-passed">
+                            <h3>✅ Configuration is valid!</h3>
+                        </div>
+                    `;
+                } else {
+                    resultsElement.innerHTML = `
+                        <div class="test-summary test-failed">
+                            <h3>❌ Configuration is invalid:</h3>
+                            <ul>
+                                ${validationResult.errors.map(err => `<li>${err}</li>`).join('')}
+                            </ul>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                // Handle JSON parsing errors
+                resultsElement.innerHTML = `
+                    <div class="test-summary test-failed">
+                        <h3>❌ Error parsing JSON:</h3>
+                        <p>${error.message}</p>
+                    </div>
+                `;
             }
         }
     </script>

@@ -139,3 +139,14 @@ Tests can be executed by:
 The testing approach will evolve throughout the refactoring process. We'll continually improve our testing practices to ensure high-quality code.
 
 Remember: **The ultimate goal of testing is to provide confidence that the code works as expected and to catch regressions early.**
+
+## Configuration-Driven Testing
+
+The DriMon application follows a configuration-driven approach, where module behavior is determined by explicit configuration rather than implicit conventions. When testing:
+
+1. Always test with explicit configuration parameters
+2. Avoid relying on ID-based or naming convention-based defaults
+3. Validate that configuration validation properly rejects invalid configurations
+4. Test default values to ensure they provide meaningful fallbacks
+
+This approach ensures our tests will remain valid even as we evolve the application's implementation details.

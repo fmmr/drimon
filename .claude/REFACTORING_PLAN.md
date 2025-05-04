@@ -34,11 +34,11 @@ This document outlines the comprehensive plan to refactor and simplify the DriMo
 ## Phase 2: Core Architecture Refactoring
 
 ### 2.1 Chart Configuration System
-- [ ] Refactor `chart_config.js` to be the single source of truth for all chart-related configuration
-- [ ] Add proper JSDoc documentation to configuration schema
-- [ ] Standardize configuration properties (units, formatting, display options)
-- [ ] Implement validation for chart configuration
-- [ ] Move any hardcoded properties from chart renderer into configuration
+- [x] Refactor `chart_config.js` to be the single source of truth for all chart-related configuration
+- [x] Add proper JSDoc documentation to configuration schema
+- [x] Standardize configuration properties (units, formatting, display options)
+- [x] Implement validation for chart configuration
+- [x] Move any hardcoded properties from chart renderer into configuration
 
 ### 2.2 Internationalization Improvements
 - [ ] Refactor translation system to eliminate hardcoded string comparisons
@@ -175,19 +175,20 @@ This document outlines the comprehensive plan to refactor and simplify the DriMo
 
 ## Next Steps
 
-We have made good progress with the utility functions module and testing environment. Here are the next steps to continue the refactoring:
+We have made excellent progress implementing the core utilities and chart configuration system. Here are the next steps to continue the refactoring:
 
-1. **Chart Configuration System**: Begin extraction of chart configuration logic:
-   - Create a `config.js` module in `/docs/js/core/`
-   - Create a schema for chart configurations
-   - Add validation functions for configuration
-   - Create accessor functions for chart properties
-   - Add unit tests for configuration validation
+1. **Internationalization System**:
+   - Create an `i18n.js` module in `/docs/js/core/` based on the existing translations.js
+   - Remove string lookup maps in favor of direct key references
+   - Add validation for missing translation keys
+   - Implement proper locale handling with fallbacks
+   - Create tests for i18n functionality
 
-2. **Core Module Implementation**:
-   - Implement an event system that uses the EventEmitter from utils.js
-   - Create the i18n module in `/docs/js/core/` to handle translations
-   - Add tests for i18n functionality
+2. **Event System Implementation**:
+   - Create an `events.js` module in `/docs/js/core/` that uses the EventEmitter from utils.js
+   - Implement standard events for the application (data fetched, chart created, etc.)
+   - Add tests for the event system
+   - Convert existing callback patterns to use the event system
 
 3. **Data Module Implementation**:
    - Create a data fetcher module to handle API calls
@@ -195,12 +196,18 @@ We have made good progress with the utility functions module and testing environ
    - Add data processing utilities
    - Create tests for data fetching and processing
 
-4. **Complete Folder Structure**:
-   - Create remaining directories according to the project structure
-   - Set up entry points and module exports
-   - Update imports in existing files
+4. **Chart Renderer Refactoring**:
+   - Create chart factory module
+   - Implement chart renderer using the new configuration system
+   - Create tests for chart rendering
 
-These tasks will continue building the core architecture needed for the rest of the refactoring process. We will focus on implementing one module at a time to ensure proper unit testing and validation.
+These tasks will continue building the core architecture needed for the refactoring process. Each module will be implemented with proper tests and validation before moving on to the next one.
+
+It's important that we test each module with real data in the production environment as early as possible. After implementing a few more core modules, we should:
+1. Apply the new modules to index.html alongside the existing code
+2. Verify functionality with real data from ThingSpeak
+3. Test on different devices and screen sizes
+4. Only when verified, gradually migrate functionality from old to new modules
 
 ## Project Structure After Refactoring
 
