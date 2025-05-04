@@ -185,53 +185,43 @@ const utilsTests = {
         assertNotNull(startRange.startDate, 'startDate should not be null for "start" range');
     },
     
-    testShouldUseIntegerValues: async () => {
-        // Test explicit config
-        assertEqual(
-            Utils.shouldUseIntegerValues({ useIntegerFormat: true }),
-            true,
-            'shouldUseIntegerValues should return true when useIntegerFormat is true'
-        );
-        
-        // Test chart ID heuristics
-        assertEqual(
-            Utils.shouldUseIntegerValues({ id: 'chart-light' }),
-            true,
-            'shouldUseIntegerValues should return true for light charts'
-        );
-        
-        assertEqual(
-            Utils.shouldUseIntegerValues({ id: 'chart-temp' }),
-            false,
-            'shouldUseIntegerValues should return false for temperature charts'
-        );
-    },
+    // Note: Tests for getUnitForChart and shouldUseIntegerValues have been removed
+    // as we now use direct property access from configuration objects
     
-    testGetUnitForChart: async () => {
-        // Test direct unit in config
-        assertEqual(
-            Utils.getUnitForChart({ unit: 'XYZ' }),
-            'XYZ',
-            'getUnitForChart should return unit from config'
-        );
+    // Add a new test demonstrating configuration-driven formatting
+    testConfigurationDriven: async () => {
+        // Test formatter with explicit configuration
+        const temperatureConfig = { 
+            unit: '°C',
+            useIntegerFormat: false 
+        };
         
-        // Test chart ID heuristics
-        assertEqual(
-            Utils.getUnitForChart('chart-temp'),
-            '°C',
-            'getUnitForChart should return °C for temperature charts'
-        );
+        const formattedTemp = Utils.formatNumber(21.6, { 
+            unit: temperatureConfig.unit, 
+            useInteger: temperatureConfig.useIntegerFormat 
+        });
         
         assertEqual(
-            Utils.getUnitForChart('chart-humidity'),
-            '%',
-            'getUnitForChart should return % for humidity charts'
+            formattedTemp,
+            '21.6 °C',
+            'formatNumber should use explicit configuration values for formatting'
         );
         
+        // Test formatter with different configuration
+        const lightConfig = { 
+            unit: 'lux',
+            useIntegerFormat: true 
+        };
+        
+        const formattedLight = Utils.formatNumber(1245.89, { 
+            unit: lightConfig.unit, 
+            useInteger: lightConfig.useIntegerFormat 
+        });
+        
         assertEqual(
-            Utils.getUnitForChart('chart-light'),
-            'lux',
-            'getUnitForChart should return lux for light charts'
+            formattedLight,
+            '1246 lux',
+            'formatNumber should use explicit configuration values for formatting'
         );
     },
     
@@ -487,8 +477,7 @@ document.addEventListener('DOMContentLoaded', () => {
     runner.addTest('formatNumber', utilsTests.testFormatNumber);
     runner.addTest('getURLParameter', utilsTests.testGetURLParameter);
     runner.addTest('getDateRange', utilsTests.testGetDateRange);
-    runner.addTest('shouldUseIntegerValues', utilsTests.testShouldUseIntegerValues);
-    runner.addTest('getUnitForChart', utilsTests.testGetUnitForChart);
+    runner.addTest('configurationDriven', utilsTests.testConfigurationDriven);
     runner.addTest('calculateStatistics', utilsTests.testCalculateStatistics);
     runner.addTest('createElement', utilsTests.testCreateElement);
     runner.addTest('addEventListenerWithCleanup', utilsTests.testAddEventListenerWithCleanup);

@@ -249,19 +249,9 @@ function getChartsForRow(rowNumber) { /* ... */ }
  */
 function getChartsByCategory(category) { /* ... */ }
 
-/**
- * Get the unit for a chart from its configuration
- * @param {string|Object} chartIdOrConfig - Chart ID or config object
- * @returns {string} Unit string or empty string if not found
- */
-function getUnitForChart(chartIdOrConfig) { /* ... */ }
-
-/**
- * Check if a chart should use integer formatting
- * @param {Object} config - Chart configuration
- * @returns {boolean} True if chart should use integer values
- */
-function shouldUseIntegerValues(config) { /* ... */ }
+// Note: Use direct property access for chart configuration values:
+// - For units: config.unit
+// - For integer formatting: config.useIntegerFormat
 
 /**
  * Get application configuration value

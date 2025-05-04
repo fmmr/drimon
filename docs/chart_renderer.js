@@ -13,50 +13,19 @@ const chartInstances = window.chartInstances;
 /**
  * Chart renderer utility functions
  * Contains helper methods for data processing, chart creation and updates
+ * 
+ * IMPORTANT: This module follows a configuration-driven approach where all chart properties
+ * must be explicitly defined in the configuration. No implicit behavior based on chart IDs.
  */
 const ChartUtils = {
-    // Get the unit for a chart from its configuration
-    getUnitForChart: function(chartId, config) {
-        // Get unit from config if available
-        if (config && config.unit) {
-            return config.unit;
-        }
-        
-        // Try to find config by ID
-        const chartConfig = window.chartConfigs.find(c => c.id === chartId);
-        if (chartConfig && chartConfig.unit) {
-            return chartConfig.unit;
-        }
-        
-        // If no unit found, return empty string
-        return '';
-    },
-    
-    // Check if a chart should use integer formatting
-    shouldUseIntegerValues: function(config) {
-        // Get value directly from config if available
-        if (config && config.useIntegerFormat !== undefined) {
-            return config.useIntegerFormat;
-        }
-        
-        // Try to find config by ID if config object has an ID
-        if (config && config.id) {
-            const chartConfig = window.chartConfigs.find(c => c.id === config.id);
-            if (chartConfig && chartConfig.useIntegerFormat !== undefined) {
-                return chartConfig.useIntegerFormat;
-            }
-        }
-        
-        // Default to false if not specified
-        return false;
-    },
-    
     // Format a number based on chart configuration and data range
     formatNumber: function(val, config, range) {
         if (!val && val !== 0) return '—';
         
-        // Check if we should use integer format
-        if (this.shouldUseIntegerValues(config) || range >= 10) {
+        // Check if we should use integer format - use direct config property access
+        const useInteger = config && config.useIntegerFormat === true;
+        
+        if (useInteger || range >= 10) {
             return Math.round(val).toString();
         } else if (range < 1) {
             return val.toFixed(2); // More precision for very small ranges
@@ -509,9 +478,9 @@ function updateChartStats(chartId, minValue, maxValue, avgValue, currentValue, i
         nowLabel = nowTranslation && nowTranslation.length > 0 ? nowTranslation[0].toUpperCase() : 'N';
     }
     
-    // Get chart config and unit
+    // Get chart config and unit through direct config property access
     const config = window.chartConfigs.find(c => c.id === chartId);
-    const unit = ChartUtils.getUnitForChart(chartId, config);
+    const unit = config && config.unit ? config.unit : '';
     
     // Format values appropriately
     const range = maxValue - minValue;

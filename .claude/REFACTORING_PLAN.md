@@ -39,6 +39,8 @@ This document outlines the comprehensive plan to refactor and simplify the DriMo
 - [x] Standardize configuration properties (units, formatting, display options)
 - [x] Implement validation for chart configuration
 - [x] Move any hardcoded properties from chart renderer into configuration
+- [x] Remove ID-based logic in favor of explicit configuration properties
+- [x] Implement true configuration-driven approach with direct property access
 
 ### 2.2 Internationalization Improvements
 - [ ] Refactor translation system to eliminate hardcoded string comparisons

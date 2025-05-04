@@ -8,6 +8,16 @@
  * - No implicit behavior based on chart IDs or naming conventions
  * - All configurations are validated against a schema
  * - Default values are applied where not specified
+ * 
+ * IMPORTANT: This module avoids any ID-based logic or implicit behavior.
+ * All chart properties (like units and formatting) must be explicitly 
+ * defined in the chart configuration, rather than inferred from chart IDs
+ * or other properties. This ensures consistent, predictable behavior and
+ * makes the system more maintainable.
+ * 
+ * Helper functions that previously used ID-based logic (like getUnitForChart
+ * and shouldUseIntegerValues) have been deprecated in favor of direct
+ * property access from the configuration objects.
  */
 
 import { ChartConfigSchema, DefaultChartConfig, AppConfigSchema } from './config-schema.js';
@@ -219,52 +229,6 @@ const Config = {
     return this._chartConfigs.filter(c => c.category === category);
   },
   
-  /**
-   * Get the unit for a chart from its configuration
-   * @param {string|Object} chartIdOrConfig - Chart ID or config object
-   * @returns {string} Unit string or empty string if not found
-   */
-  getUnitForChart: function(chartIdOrConfig) {
-    // If config object with unit is provided directly
-    if (typeof chartIdOrConfig === 'object' && chartIdOrConfig.unit) {
-      return chartIdOrConfig.unit;
-    }
-    
-    // Extract chartId from config object or use directly
-    const chartId = typeof chartIdOrConfig === 'object' ? chartIdOrConfig.id : chartIdOrConfig;
-    
-    // Try to find config by ID
-    const chartConfig = this.getChartConfig(chartId);
-    if (chartConfig && chartConfig.unit) {
-      return chartConfig.unit;
-    }
-    
-    // No unit found
-    return '';
-  },
-  
-  /**
-   * Check if a chart should use integer formatting
-   * @param {Object} config - Chart configuration
-   * @returns {boolean} True if chart should use integer values
-   */
-  shouldUseIntegerValues: function(config) {
-    // Get value directly from config if available
-    if (config && config.useIntegerFormat !== undefined) {
-      return config.useIntegerFormat;
-    }
-    
-    // Try to find config by ID if config object has an ID
-    if (config && config.id) {
-      const chartConfig = this.getChartConfig(config.id);
-      if (chartConfig && chartConfig.useIntegerFormat !== undefined) {
-        return chartConfig.useIntegerFormat;
-      }
-    }
-    
-    // Default to false if not specified
-    return false;
-  },
   
   /**
    * Get application configuration value

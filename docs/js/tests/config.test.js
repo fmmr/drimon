@@ -267,7 +267,8 @@ const configTests = {
         assertEqual(nonExistentCharts.length, 0, 'Should find 0 charts in non-existent category');
     },
     
-    testGetUnitForChart: async () => {
+    // Tests for demonstrating proper configuration-driven approach
+    testConfigurationDrivenApproach: async () => {
         // Initialize with test configurations
         const testConfigs = [
             {
@@ -277,48 +278,7 @@ const configTests = {
                 channel: 123456,
                 field: 1,
                 category: 'temperature',
-                unit: '°C'
-            },
-            {
-                id: 'chart-humidity',
-                titleKey: 'humidityChart',
-                row: 1,
-                channel: 123456,
-                field: 2,
-                category: 'weather',
-                unit: '%'
-            }
-        ];
-        
-        Config.initialize({ chartConfigs: testConfigs });
-        
-        // Test getting unit by chart ID
-        const tempUnit = Config.getUnitForChart('chart-temp');
-        assertEqual(tempUnit, '°C', 'Should return correct unit for chart-temp');
-        
-        // Test getting unit by chart config object
-        const humidityUnit = Config.getUnitForChart({ id: 'chart-humidity' });
-        assertEqual(humidityUnit, '%', 'Should return correct unit for chart-humidity config object');
-        
-        // Test getting unit for config object with direct unit property
-        const directUnit = Config.getUnitForChart({ unit: 'XYZ' });
-        assertEqual(directUnit, 'XYZ', 'Should return unit directly from config object');
-        
-        // Test getting unit for non-existent chart (should return empty string)
-        const nonExistentUnit = Config.getUnitForChart('non-existent-chart');
-        assertEqual(nonExistentUnit, '', 'Should return empty string for non-existent chart');
-    },
-    
-    testShouldUseIntegerValues: async () => {
-        // Initialize with test configurations
-        const testConfigs = [
-            {
-                id: 'chart-temp',
-                titleKey: 'temperatureChart',
-                row: 1,
-                channel: 123456,
-                field: 1,
-                category: 'temperature',
+                unit: '°C',
                 useIntegerFormat: false
             },
             {
@@ -328,26 +288,26 @@ const configTests = {
                 channel: 123456,
                 field: 3,
                 category: 'light',
+                unit: 'lux',
                 useIntegerFormat: true
             }
         ];
         
         Config.initialize({ chartConfigs: testConfigs });
         
-        // Test with explicit config value
-        const tempFormat = Config.shouldUseIntegerValues({ id: 'chart-temp' });
-        assertFalse(tempFormat, 'chart-temp should not use integer format');
+        // Get configuration for temperature chart
+        const tempConfig = Config.getChartConfig('chart-temp');
         
-        const lightFormat = Config.shouldUseIntegerValues({ id: 'chart-light' });
-        assertTrue(lightFormat, 'chart-light should use integer format');
+        // Direct access to configuration properties
+        assertEqual(tempConfig.unit, '°C', 'Should access unit directly from config object');
+        assertFalse(tempConfig.useIntegerFormat, 'Should access formatting directly from config object');
         
-        // Test with direct config property
-        const directFormat = Config.shouldUseIntegerValues({ useIntegerFormat: true });
-        assertTrue(directFormat, 'Config with useIntegerFormat: true should return true');
+        // Get configuration for light chart
+        const lightConfig = Config.getChartConfig('chart-light');
         
-        // Test with unknown chart ID (should return default false)
-        const unknownFormat = Config.shouldUseIntegerValues({ id: 'unknown-chart' });
-        assertFalse(unknownFormat, 'Unknown chart should return default false value');
+        // Direct access to configuration properties
+        assertEqual(lightConfig.unit, 'lux', 'Should access unit directly from config object');
+        assertTrue(lightConfig.useIntegerFormat, 'Should access formatting directly from config object');
     },
     
     testAppConfig: async () => {
@@ -441,8 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
     runner.addTest('getChartConfig', configTests.testGetChartConfig);
     runner.addTest('getChartsForRow', configTests.testGetChartsForRow);
     runner.addTest('getChartsByCategory', configTests.testGetChartsByCategory);
-    runner.addTest('getUnitForChart', configTests.testGetUnitForChart);
-    runner.addTest('shouldUseIntegerValues', configTests.testShouldUseIntegerValues);
+    runner.addTest('configurationDrivenApproach', configTests.testConfigurationDrivenApproach);
     runner.addTest('appConfig', configTests.testAppConfig);
     
     // Run the tests
