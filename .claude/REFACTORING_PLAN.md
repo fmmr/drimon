@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the comprehensive plan to refactor and simplify the DriMon web interface while maintaining all existing functionality. The goal is to create a more maintainable, modular codebase with better separation of concerns, less duplication, and improved internationalization support.
+This document outlines the comprehensive plan to refactor and simplify the DriMon web interface while maintaining all existing functionality. The goal is to create a more maintainable, modular codebase with better separation of concerns, less Application, and improved internationalization support.
 
 ## Core Principles
 
@@ -16,20 +16,20 @@ This document outlines the comprehensive plan to refactor and simplify the DriMo
 
 ### 1.1 Code Audit
 - [x] Review all JavaScript files to understand dependencies and code flow
-- [ ] Document key functions and their responsibilities
-- [ ] Identify areas of duplication and overly complex code
-- [ ] Create a dependency graph between modules
+- [x] Document key functions and their responsibilities (created FUNCTION_INVENTORY.md)
+- [x] Identify areas of duplication and overly complex code (created CODE_ANALYSIS.md)
+- [x] Create a dependency graph between modules (created DEPENDENCY_GRAPH.md)
 
 ### 1.2 Test Environment Setup
-- [ ] Enhance `test.html` to include test cases for all key components
+- [x] Enhance `test.html` to include test cases for all key components
 - [ ] Add unit tests for chart rendering functions
 - [ ] Add tests for internationalization (i18n) functionality
 - [ ] Create automated test suite for chart configuration validation
 
 ### 1.3 Define Module Boundaries
-- [ ] Clearly define responsibilities for each module
-- [ ] Create interface documentation for module interactions
-- [ ] Define data flow between components
+- [x] Clearly define responsibilities for each module (created MODULE_RESPONSIBILITIES.md)
+- [x] Create interface documentation for module interactions (created MODULE_INTERFACES.md)
+- [x] Define data flow between components (included in MODULE_INTERFACES.md)
 
 ## Phase 2: Core Architecture Refactoring
 
@@ -48,10 +48,17 @@ This document outlines the comprehensive plan to refactor and simplify the DriMo
 - [ ] Add translation validation system to catch missing keys
 
 ### 2.3 Utility Functions
-- [ ] Create a dedicated utility module `utils.js` for shared functions
-- [ ] Move date handling, number formatting, and other shared functionality to utilities
-- [ ] Implement proper error handling and validation in utility functions
-- [ ] Add unit tests for all utility functions
+- [x] Define utility module structure and interfaces (included in MODULE_INTERFACES.md)
+- [x] Create a dedicated utility module `utils.js` for shared functions
+- [x] Move date handling, number formatting, and other shared functionality to utilities
+- [x] Implement proper error handling and validation in utility functions
+- [x] Add unit tests for all utility functions
+
+### 2.4 Code quality
+- [x] Identify any unused code (included in CODE_ANALYSIS.md)
+- [ ] Remove any unused code
+- [ ] Ensure there is a minimal or no duplicated code
+- [ ] Add JSDoc comments to utility functions
 
 ## Phase 3: Component Refactoring
 
@@ -162,6 +169,38 @@ This document outlines the comprehensive plan to refactor and simplify the DriMo
 3. **Test-first approach**: Write tests before implementing changes where possible
 4. **Continuous validation**: Regularly test the UI to ensure functionality is preserved
 5. **Documentation-driven**: Update documentation as code changes are made
+6. **No premature commits**: Do not commit to git without explicit approval - production code should be manually tested before any commit
+7. **Real testing**: Test files should import production code directly rather than duplicating it, and should use real data when possible
+8. **Test code isolation**: Test code (HTML, CSS, JS) should only contain what's needed to run tests, not duplicated production code
+
+## Next Steps
+
+We have made good progress with the utility functions module and testing environment. Here are the next steps to continue the refactoring:
+
+1. **Chart Configuration System**: Begin extraction of chart configuration logic:
+   - Create a `config.js` module in `/docs/js/core/`
+   - Create a schema for chart configurations
+   - Add validation functions for configuration
+   - Create accessor functions for chart properties
+   - Add unit tests for configuration validation
+
+2. **Core Module Implementation**:
+   - Implement an event system that uses the EventEmitter from utils.js
+   - Create the i18n module in `/docs/js/core/` to handle translations
+   - Add tests for i18n functionality
+
+3. **Data Module Implementation**:
+   - Create a data fetcher module to handle API calls
+   - Implement proper caching
+   - Add data processing utilities
+   - Create tests for data fetching and processing
+
+4. **Complete Folder Structure**:
+   - Create remaining directories according to the project structure
+   - Set up entry points and module exports
+   - Update imports in existing files
+
+These tasks will continue building the core architecture needed for the rest of the refactoring process. We will focus on implementing one module at a time to ensure proper unit testing and validation.
 
 ## Project Structure After Refactoring
 

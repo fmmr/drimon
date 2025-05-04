@@ -21,11 +21,17 @@
     <!-- Language Switcher -->
     <script src="language_switcher.js"></script>
     
+    <!-- Core modules -->
+    <script src="js/core/utils.js"></script>
+    
     <!-- Component modules -->
     <script src="header_components.js"></script>
     <script src="chart_components.js"></script>
     <script src="data_components.js"></script>
     <script src="component_tests.js"></script>
+    
+    <!-- Test modules -->
+    <script src="js/tests/utils.test.js"></script>
     <style>
         body {
             padding: 20px;
@@ -125,6 +131,7 @@
         <div class="tab" onclick="openTab(event, 'automated-tests')">Automated Tests</div>
         <div class="tab" onclick="openTab(event, 'chart-tests')">Chart Tests</div>
         <div class="tab" onclick="openTab(event, 'language-tests')">Language Tests</div>
+        <div class="tab" onclick="openTab(event, 'core-tests')">Core Tests</div>
     </div>
     
     <div id="manual-tests" class="tab-content active">
@@ -218,6 +225,57 @@
                 <button class="test-button" onclick="checkTranslations()">Check Translation Keys</button>
             </div>
             <div id="translation-results" class="test-result"></div>
+        </div>
+    </div>
+    
+    <div id="core-tests" class="tab-content">
+        <div class="test-section">
+            <h2>Utility Tests</h2>
+            <p>Test the utility functions from core/utils.js</p>
+            <button class="test-button" onclick="runUtilsTests()">Run Utils Tests</button>
+            <div id="utils-test-results" class="test-result"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Date Formatting Tests</h2>
+            <div class="test-controls">
+                <button class="test-button" onclick="testDateFormatting()">Test Date Formatting</button>
+            </div>
+            <div id="date-formatting-results" class="component-container"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Number Formatting Tests</h2>
+            <div class="test-controls">
+                <button class="test-button" onclick="testNumberFormatting()">Test Number Formatting</button>
+            </div>
+            <div id="number-formatting-results" class="component-container"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Event Emitter Tests</h2>
+            <div class="test-controls">
+                <button class="test-button" onclick="testEventEmitter()">Test Event Emitter</button>
+            </div>
+            <div id="event-emitter-results" class="component-container"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>DOM Creation Tests</h2>
+            <div class="test-controls">
+                <button class="test-button" onclick="testDOMCreation()">Test DOM Creation</button>
+            </div>
+            <div id="dom-creation-results" class="component-container"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>Event Listener Tests</h2>
+            <div class="test-controls">
+                <button class="test-button" onclick="testEventListeners()">Create Test Elements</button>
+                <button class="test-button" onclick="cleanupEventListeners()">Cleanup Listeners</button>
+            </div>
+            <div id="event-listener-results" class="component-container"></div>
+            <div id="event-listener-log" class="test-result" style="margin-top: 10px;"></div>
         </div>
     </div>
     
@@ -543,6 +601,677 @@
                 resultContainer.innerHTML += `<div>Found ${i18nElements.length} elements with data-i18n attributes</div>`;
             } else {
                 resultContainer.innerHTML = 'Translation system not available';
+            }
+        }
+        
+        // Core utility test functions
+        function runUtilsTests() {
+            // Create test runner
+            const runner = new TestRunner('Utils');
+            
+            // Add test functions from utils.test.js
+            if (utilsTests) {
+                runner.addTest('formatNumber', utilsTests.testFormatNumber);
+                runner.addTest('getURLParameter', utilsTests.testGetURLParameter);
+                runner.addTest('getDateRange', utilsTests.testGetDateRange);
+                runner.addTest('shouldUseIntegerValues', utilsTests.testShouldUseIntegerValues);
+                runner.addTest('getUnitForChart', utilsTests.testGetUnitForChart);
+                runner.addTest('calculateStatistics', utilsTests.testCalculateStatistics);
+            }
+            
+            // Run tests and display results
+            runner.runTests().then(results => {
+                const resultContainer = document.getElementById('utils-test-results');
+                if (resultContainer) {
+                    resultContainer.innerHTML = `
+                        <div class="test-summary ${results.failed > 0 ? 'test-failed' : 'test-passed'}">
+                            <h3>Utils Module Test Results</h3>
+                            <p>Total: ${results.total}</p>
+                            <p>Passed: ${results.passed}</p>
+                            <p>Failed: ${results.failed}</p>
+                        </div>
+                    `;
+                }
+            });
+        }
+        
+        function testDateFormatting() {
+            const container = document.getElementById('date-formatting-results');
+            container.innerHTML = '';
+            
+            if (!window.Utils) {
+                container.innerHTML = '<div>Utils module not available</div>';
+                return;
+            }
+            
+            // Test dates
+            const now = new Date();
+            const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+            const lastWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            
+            // Format options
+            const formats = [
+                { format: 'LLL', label: 'Default (LLL)' },
+                { format: 'YYYY-MM-DD', label: 'ISO Date' },
+                { format: 'DD MMM YYYY HH:mm', label: 'Custom Format' },
+                { format: 'ddd, MMMM D, YYYY', label: 'Long Date' }
+            ];
+            
+            // Create results table
+            const table = document.createElement('table');
+            table.style.width = '100%';
+            table.style.borderCollapse = 'collapse';
+            table.style.marginTop = '10px';
+            
+            // Create header row
+            const header = document.createElement('tr');
+            header.innerHTML = `
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Date</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Format</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Formatted Result</th>
+            `;
+            table.appendChild(header);
+            
+            // Add rows for each date and format
+            const dates = [
+                { date: now, label: 'Now' },
+                { date: yesterday, label: 'Yesterday' },
+                { date: lastWeek, label: 'Last Week' }
+            ];
+            
+            dates.forEach(date => {
+                formats.forEach(format => {
+                    const row = document.createElement('tr');
+                    const formatted = Utils.formatDate(date.date, format.format);
+                    
+                    row.innerHTML = `
+                        <td style="border: 1px solid #ddd; padding: 8px;">${date.label}</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${format.label} (${format.format})</td>
+                        <td style="border: 1px solid #ddd; padding: 8px;">${formatted}</td>
+                    `;
+                    
+                    table.appendChild(row);
+                });
+            });
+            
+            // Relative time section
+            const relativeHeader = document.createElement('h4');
+            relativeHeader.textContent = 'Relative Time Formatting';
+            relativeHeader.style.marginTop = '20px';
+            
+            const relativeTable = document.createElement('table');
+            relativeTable.style.width = '100%';
+            relativeTable.style.borderCollapse = 'collapse';
+            relativeTable.style.marginTop = '10px';
+            
+            // Create header row
+            const relativeTableHeader = document.createElement('tr');
+            relativeTableHeader.innerHTML = `
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Date</th>
+                <th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Relative Result</th>
+            `;
+            relativeTable.appendChild(relativeTableHeader);
+            
+            // Add rows for each date
+            dates.forEach(date => {
+                const row = document.createElement('tr');
+                const formatted = Utils.formatRelativeTime(date.date);
+                
+                row.innerHTML = `
+                    <td style="border: 1px solid #ddd; padding: 8px;">${date.label}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">${formatted}</td>
+                `;
+                
+                relativeTable.appendChild(row);
+            });
+            
+            container.appendChild(table);
+            container.appendChild(relativeHeader);
+            container.appendChild(relativeTable);
+        }
+        
+        function testNumberFormatting() {
+            const container = document.getElementById('number-formatting-results');
+            container.innerHTML = '';
+            
+            if (!window.Utils) {
+                container.innerHTML = '<div>Utils module not available</div>';
+                return;
+            }
+            
+            // Test numbers
+            const numbers = [
+                0,
+                0.123,
+                1.5,
+                23.456,
+                1000
+            ];
+            
+            // Format options
+            const options = [
+                { name: 'Default', options: {} },
+                { name: 'Integer', options: { useInteger: true } },
+                { name: '2 Decimals', options: { decimals: 2 } },
+                { name: 'With Unit (°C)', options: { unit: '°C' } },
+                { name: 'Small Range', options: { range: 0.5 } },
+                { name: 'Medium Range', options: { range: 5 } },
+                { name: 'Large Range', options: { range: 50 } }
+            ];
+            
+            // Create results table
+            const table = document.createElement('table');
+            table.style.width = '100%';
+            table.style.borderCollapse = 'collapse';
+            table.style.marginTop = '10px';
+            
+            // Create header row
+            const header = document.createElement('tr');
+            let headerHtml = `<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">Number</th>`;
+            
+            options.forEach(option => {
+                headerHtml += `<th style="border: 1px solid #ddd; padding: 8px; text-align: left;">${option.name}</th>`;
+            });
+            
+            header.innerHTML = headerHtml;
+            table.appendChild(header);
+            
+            // Add rows for each number
+            numbers.forEach(number => {
+                const row = document.createElement('tr');
+                let rowHtml = `<td style="border: 1px solid #ddd; padding: 8px;">${number}</td>`;
+                
+                options.forEach(option => {
+                    const formatted = Utils.formatNumber(number, option.options);
+                    rowHtml += `<td style="border: 1px solid #ddd; padding: 8px;">${formatted}</td>`;
+                });
+                
+                row.innerHTML = rowHtml;
+                table.appendChild(row);
+            });
+            
+            // Add row for null/undefined
+            const specialRow = document.createElement('tr');
+            let specialRowHtml = `<td style="border: 1px solid #ddd; padding: 8px;">null</td>`;
+            
+            options.forEach(option => {
+                const formatted = Utils.formatNumber(null, option.options);
+                specialRowHtml += `<td style="border: 1px solid #ddd; padding: 8px;">${formatted}</td>`;
+            });
+            
+            specialRow.innerHTML = specialRowHtml;
+            table.appendChild(specialRow);
+            
+            container.appendChild(table);
+        }
+        
+        // Event Emitter Tests
+        function testEventEmitter() {
+            const container = document.getElementById('event-emitter-results');
+            container.innerHTML = '';
+            
+            // Create an event emitter
+            const emitter = Utils.createEventEmitter();
+            
+            // Create result display
+            const resultDisplay = document.createElement('div');
+            resultDisplay.id = 'emitter-log';
+            resultDisplay.className = 'test-result';
+            resultDisplay.style.marginBottom = '15px';
+            resultDisplay.innerHTML = 'Event Log:<br>';
+            container.appendChild(resultDisplay);
+            
+            // Create event sources
+            const buttonContainer = document.createElement('div');
+            buttonContainer.style.display = 'flex';
+            buttonContainer.style.gap = '10px';
+            buttonContainer.style.marginBottom = '15px';
+            
+            // Create message input
+            const messageInput = document.createElement('input');
+            messageInput.type = 'text';
+            messageInput.value = 'Test Message';
+            messageInput.style.padding = '8px';
+            messageInput.style.margin = '0 10px';
+            
+            // Create buttons for different events
+            const events = ['click', 'hover', 'submit', 'error'];
+            
+            events.forEach(eventName => {
+                const button = document.createElement('button');
+                button.className = 'test-button';
+                button.textContent = `Emit ${eventName}`;
+                button.onclick = () => {
+                    emitter.emit(eventName, { message: messageInput.value, timestamp: new Date() });
+                    resultDisplay.innerHTML += `<br>Emitted "${eventName}" with message: "${messageInput.value}"`;
+                };
+                buttonContainer.appendChild(button);
+            });
+            
+            container.appendChild(messageInput);
+            container.appendChild(buttonContainer);
+            
+            // Create subscription controls
+            const subscriptionContainer = document.createElement('div');
+            subscriptionContainer.style.marginBottom = '15px';
+            
+            const subscriptionForm = document.createElement('div');
+            subscriptionForm.style.display = 'flex';
+            subscriptionForm.style.gap = '10px';
+            subscriptionForm.style.marginBottom = '10px';
+            
+            const eventSelect = document.createElement('select');
+            eventSelect.style.padding = '8px';
+            
+            events.forEach(eventName => {
+                const option = document.createElement('option');
+                option.value = eventName;
+                option.textContent = eventName;
+                eventSelect.appendChild(option);
+            });
+            
+            const subscribeButton = document.createElement('button');
+            subscribeButton.className = 'test-button';
+            subscribeButton.textContent = 'Subscribe';
+            
+            const subscribeOnceButton = document.createElement('button');
+            subscribeOnceButton.className = 'test-button';
+            subscribeOnceButton.textContent = 'Subscribe Once';
+            
+            subscriptionForm.appendChild(eventSelect);
+            subscriptionForm.appendChild(subscribeButton);
+            subscriptionForm.appendChild(subscribeOnceButton);
+            
+            subscriptionContainer.appendChild(subscriptionForm);
+            
+            // Create active subscriptions display
+            const subscriptionsDisplay = document.createElement('div');
+            subscriptionsDisplay.id = 'active-subscriptions';
+            subscriptionsDisplay.innerHTML = '<strong>Active Subscriptions:</strong>';
+            subscriptionsDisplay.style.marginBottom = '10px';
+            
+            subscriptionContainer.appendChild(subscriptionsDisplay);
+            container.appendChild(subscriptionContainer);
+            
+            // Track subscriptions for cleanup
+            const subscriptions = new Map();
+            let subscriptionCounter = 0;
+            
+            // Subscribe function
+            subscribeButton.onclick = () => {
+                const eventName = eventSelect.value;
+                const subId = subscriptionCounter++;
+                
+                const handler = (data) => {
+                    resultDisplay.innerHTML += `<br>Handler #${subId} received "${eventName}" with message: "${data.message}"`;
+                };
+                
+                const unsubscribe = emitter.on(eventName, handler);
+                subscriptions.set(subId, { eventName, unsubscribe });
+                
+                // Update display
+                subscriptionsDisplay.innerHTML += `<br>- #${subId}: ${eventName} (regular)`;
+            };
+            
+            // Subscribe once function
+            subscribeOnceButton.onclick = () => {
+                const eventName = eventSelect.value;
+                const subId = subscriptionCounter++;
+                
+                emitter.once(eventName, (data) => {
+                    resultDisplay.innerHTML += `<br>One-time handler #${subId} received "${eventName}" with message: "${data.message}"`;
+                    
+                    // Update subscriptions display (remove this one)
+                    setTimeout(() => {
+                        // Remove from display too
+                        subscriptionsDisplay.innerHTML = subscriptionsDisplay.innerHTML.replace(
+                            `<br>- #${subId}: ${eventName} (once)`, 
+                            ''
+                        );
+                    }, 100);
+                });
+                
+                // Update display
+                subscriptionsDisplay.innerHTML += `<br>- #${subId}: ${eventName} (once)`;
+            };
+            
+            // Create unsubscribe controls
+            const unsubscribeContainer = document.createElement('div');
+            const unsubscribeForm = document.createElement('div');
+            unsubscribeForm.style.display = 'flex';
+            unsubscribeForm.style.gap = '10px';
+            
+            const subIdInput = document.createElement('input');
+            subIdInput.type = 'number';
+            subIdInput.placeholder = 'Subscription ID';
+            subIdInput.style.padding = '8px';
+            
+            const unsubscribeButton = document.createElement('button');
+            unsubscribeButton.className = 'test-button';
+            unsubscribeButton.textContent = 'Unsubscribe';
+            unsubscribeButton.onclick = () => {
+                const subId = parseInt(subIdInput.value);
+                
+                if (subscriptions.has(subId)) {
+                    const { eventName, unsubscribe } = subscriptions.get(subId);
+                    unsubscribe();
+                    subscriptions.delete(subId);
+                    
+                    // Update display
+                    subscriptionsDisplay.innerHTML = subscriptionsDisplay.innerHTML.replace(
+                        `<br>- #${subId}: ${eventName} (regular)`, 
+                        ''
+                    );
+                    
+                    resultDisplay.innerHTML += `<br>Unsubscribed handler #${subId}`;
+                } else {
+                    resultDisplay.innerHTML += `<br>Error: Subscription #${subId} not found`;
+                }
+            };
+            
+            unsubscribeForm.appendChild(subIdInput);
+            unsubscribeForm.appendChild(unsubscribeButton);
+            unsubscribeContainer.appendChild(unsubscribeForm);
+            container.appendChild(unsubscribeContainer);
+        }
+        
+        // DOM Creation Tests
+        function testDOMCreation() {
+            const container = document.getElementById('dom-creation-results');
+            container.innerHTML = '';
+            
+            // Create controls for testing createElement function
+            const controls = document.createElement('div');
+            controls.style.marginBottom = '20px';
+            controls.style.display = 'flex';
+            controls.style.flexWrap = 'wrap';
+            controls.style.gap = '10px';
+            
+            // Element type selector
+            const elementTypes = ['div', 'button', 'span', 'input', 'select', 'textarea', 'p', 'h3'];
+            const typeSelect = document.createElement('select');
+            typeSelect.id = 'element-type';
+            
+            elementTypes.forEach(type => {
+                const option = document.createElement('option');
+                option.value = type;
+                option.textContent = type;
+                typeSelect.appendChild(option);
+            });
+            
+            // Class name input
+            const classInput = document.createElement('input');
+            classInput.id = 'class-name';
+            classInput.placeholder = 'CSS Class';
+            classInput.value = 'test-element';
+            
+            // Text content input
+            const textInput = document.createElement('input');
+            textInput.id = 'text-content';
+            textInput.placeholder = 'Text Content';
+            textInput.value = 'Test Content';
+            
+            // Create element button
+            const createButton = document.createElement('button');
+            createButton.className = 'test-button';
+            createButton.textContent = 'Create Element';
+            
+            // Add to controls
+            controls.appendChild(typeSelect);
+            controls.appendChild(classInput);
+            controls.appendChild(textInput);
+            controls.appendChild(createButton);
+            container.appendChild(controls);
+            
+            // Result container
+            const resultContainer = document.createElement('div');
+            resultContainer.style.border = '1px solid #ddd';
+            resultContainer.style.padding = '10px';
+            resultContainer.style.minHeight = '100px';
+            resultContainer.style.marginBottom = '10px';
+            container.appendChild(resultContainer);
+            
+            // Code display
+            const codeDisplay = document.createElement('pre');
+            codeDisplay.style.border = '1px solid #ddd';
+            codeDisplay.style.padding = '10px';
+            codeDisplay.style.background = '#f8f9fa';
+            codeDisplay.style.overflow = 'auto';
+            codeDisplay.style.maxHeight = '150px';
+            container.appendChild(codeDisplay);
+            
+            // Handle button click
+            createButton.onclick = () => {
+                const elementType = typeSelect.value;
+                const className = classInput.value;
+                const textContent = textInput.value;
+                
+                // Clear previous result
+                resultContainer.innerHTML = '';
+                
+                // Create attributes object
+                const attributes = {
+                    className,
+                    textContent
+                };
+                
+                // Special case for input
+                if (elementType === 'input') {
+                    attributes.type = 'text';
+                    attributes.value = textContent;
+                    delete attributes.textContent;
+                }
+                
+                // Create element using utility function
+                const element = Utils.createElement(elementType, attributes);
+                
+                // Add to result container
+                resultContainer.appendChild(element);
+                
+                // Update code display
+                codeDisplay.textContent = `// Element creation code:
+const element = Utils.createElement('${elementType}', {
+    className: '${className}'${elementType === 'input' ? `,
+    value: '${textContent}'` : `,
+    textContent: '${textContent}'`}
+});`;
+            };
+            
+            // Nested element example button
+            const nestedButton = document.createElement('button');
+            nestedButton.className = 'test-button';
+            nestedButton.textContent = 'Create Nested Example';
+            nestedButton.style.marginTop = '10px';
+            container.appendChild(nestedButton);
+            
+            nestedButton.onclick = () => {
+                // Clear previous result
+                resultContainer.innerHTML = '';
+                
+                // Create a nested structure
+                const card = Utils.createElement('div', { className: 'card' }, [
+                    Utils.createElement('h3', { className: 'card-title' }, 'Card Title'),
+                    Utils.createElement('p', { className: 'card-body' }, 'This is a card created with Utils.createElement'),
+                    Utils.createElement('div', { className: 'card-footer' }, [
+                        Utils.createElement('button', { 
+                            className: 'card-button',
+                            textContent: 'Action Button',
+                            onclick: () => alert('Button clicked!')
+                        })
+                    ])
+                ]);
+                
+                // Style the card
+                card.style.border = '1px solid #ccc';
+                card.style.borderRadius = '4px';
+                card.style.padding = '10px';
+                card.style.maxWidth = '300px';
+                
+                // Add to result container
+                resultContainer.appendChild(card);
+                
+                // Update code display
+                codeDisplay.textContent = `// Nested element creation code:
+const card = Utils.createElement('div', { className: 'card' }, [
+    Utils.createElement('h3', { className: 'card-title' }, 'Card Title'),
+    Utils.createElement('p', { className: 'card-body' }, 'This is a card created with Utils.createElement'),
+    Utils.createElement('div', { className: 'card-footer' }, [
+        Utils.createElement('button', { 
+            className: 'card-button',
+            textContent: 'Action Button',
+            onclick: () => alert('Button clicked!')
+        })
+    ])
+]);`;
+            };
+        }
+        
+        // Store references to event cleanup functions
+        let eventCleanupFunctions = [];
+        
+        // Event Listener Tests
+        function testEventListeners() {
+            const container = document.getElementById('event-listener-results');
+            const logContainer = document.getElementById('event-listener-log');
+            
+            // Clean up existing elements and logs
+            container.innerHTML = '';
+            logContainer.innerHTML = 'Event Log:<br>';
+            
+            // Cleanup previous event listeners
+            cleanupEventListeners();
+            
+            // Create a simple button with a click handler
+            const button = Utils.createElement('button', {
+                className: 'test-button',
+                textContent: 'Click Me',
+                style: {
+                    margin: '10px'
+                }
+            });
+            
+            // Add the button to the container
+            container.appendChild(button);
+            
+            // Add an event listener with cleanup
+            const clickCleanup = Utils.addEventListenerWithCleanup(button, 'click', () => {
+                logContainer.innerHTML += '<br>Button was clicked!';
+            });
+            
+            // Store the cleanup function
+            eventCleanupFunctions.push(clickCleanup);
+            
+            // Create a mouseover/mouseout test element
+            const hoverElement = Utils.createElement('div', {
+                className: 'hover-element',
+                textContent: 'Hover over me',
+                style: {
+                    padding: '20px',
+                    margin: '10px',
+                    background: '#f0f0f0',
+                    cursor: 'pointer',
+                    textAlign: 'center',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px'
+                }
+            });
+            
+            // Add to container
+            container.appendChild(hoverElement);
+            
+            // Add multiple event listeners
+            const multipleCleanup = Utils.addMultipleEventListeners(hoverElement, {
+                mouseover: () => {
+                    logContainer.innerHTML += '<br>Mouse entered hover element';
+                    hoverElement.style.background = '#e0e0ff';
+                },
+                mouseout: () => {
+                    logContainer.innerHTML += '<br>Mouse left hover element';
+                    hoverElement.style.background = '#f0f0f0';
+                },
+                click: () => {
+                    logContainer.innerHTML += '<br>Hover element was clicked';
+                }
+            });
+            
+            // Store the cleanup function
+            eventCleanupFunctions.push(multipleCleanup);
+            
+            // Create a form with inputs for additional testing
+            const form = Utils.createElement('form', {
+                className: 'test-form',
+                style: {
+                    margin: '10px',
+                    padding: '10px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px'
+                },
+                onsubmit: (e) => {
+                    e.preventDefault();
+                    logContainer.innerHTML += '<br>Form was submitted!';
+                    return false;
+                }
+            }, [
+                Utils.createElement('input', {
+                    type: 'text',
+                    placeholder: 'Type something',
+                    style: {
+                        padding: '8px',
+                        margin: '5px',
+                        width: '200px'
+                    }
+                }),
+                Utils.createElement('button', {
+                    textContent: 'Submit Form',
+                    className: 'test-button',
+                    type: 'submit',
+                    style: {
+                        margin: '5px'
+                    }
+                })
+            ]);
+            
+            // Add to container
+            container.appendChild(form);
+            
+            // Add event listener to the input
+            const input = form.querySelector('input');
+            const inputCleanup = Utils.addEventListenerWithCleanup(input, 'input', () => {
+                logContainer.innerHTML += `<br>Input value changed: ${input.value}`;
+            });
+            
+            // Store the cleanup function
+            eventCleanupFunctions.push(inputCleanup);
+            
+            // Display instructions
+            const instructions = Utils.createElement('div', {
+                className: 'instructions',
+                innerHTML: '<strong>Instructions:</strong><br>Interact with the elements above to see events logged. Use the "Cleanup Listeners" button to remove all event listeners.',
+                style: {
+                    margin: '10px',
+                    padding: '10px',
+                    border: '1px solid #ddd',
+                    borderRadius: '4px',
+                    background: '#ffffd0'
+                }
+            });
+            
+            container.appendChild(instructions);
+        }
+        
+        // Function to clean up all event listeners
+        function cleanupEventListeners() {
+            const logContainer = document.getElementById('event-listener-log');
+            
+            // Call all cleanup functions
+            eventCleanupFunctions.forEach(cleanup => cleanup());
+            
+            // Reset the array
+            eventCleanupFunctions = [];
+            
+            // Add a log message
+            if (logContainer) {
+                logContainer.innerHTML += '<br><strong>All event listeners have been removed!</strong>';
             }
         }
     </script>
