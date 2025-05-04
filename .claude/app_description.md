@@ -1,4 +1,9 @@
-# DriMon Web Interface Description
+# DriMon 
+Main project folder: ~/projects/drimon/
+
+Drimon is my greenhouse monitor repo.  20240724_drimon_1_3/ contains the code which runs on an esp32 to gather sensor data and post these to thingspeak.
+
+docs/ is the application for showing data.  it's a github docs repo - so asny changes pushed to git are set in production automatically.  It consists f data from thingspeak - in form of a HTML page with header, including data, data-selectors and other command.  and the main portion which are a series of charts.
 
 ## Main Structure
 - **index.html**: Main application

@@ -1,4 +1,6 @@
-  I need your help implementing the DriMon web interface refactoring plan that we previously created. The refactoring plan is stored in my repository at docs/REFACTORING_PLAN.md.
+a small description of the project is in .claude/app_description.md
+
+  I need your help implementing the DriMon web interface refactoring plan that we previously created. The refactoring plan is stored in my repository at .claude/REFACTORING_PLAN.md.
 
   Please start by:
   1. Reading the refactoring plan document to understand the overall approach (.claude/REFACTORING_PLAN.md)
