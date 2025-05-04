@@ -1,0 +1,14 @@
+  I need your help implementing the DriMon web interface refactoring plan that we previously created. The refactoring plan is stored in my repository at docs/REFACTORING_PLAN.md.
+
+  Please start by:
+  1. Reading the refactoring plan document to understand the overall approach (.claude/REFACTORING_PLAN.md)
+  2. Examining the current code structure in the docs directory
+  3. Setting up our working approach for Phase 1 (Analysis and Preparation)
+  4. Creating a detailed task list for the first implementations
+
+  For today's session, let's focus on beginning Phase 1 and preparing for the core architecture refactoring. I'd like to prioritize enhancing the test environment and establishing proper module boundaries
+  before making significant changes to the codebase.
+
+  As we work through this refactoring, it's important that we maintain all existing functionality while improving code organization, removing hardcoded strings, and making the codebase more maintainable.
+
+  Do not commit anything to GIT.  I will test manually as we go along and tell you to make commits when I'm happy with the state.

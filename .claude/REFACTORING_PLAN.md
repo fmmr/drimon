@@ -121,6 +121,7 @@ This document outlines the comprehensive plan to refactor and simplify the DriMo
 
 ### 5.3 Network Optimization
 - [ ] Implement smarter data fetching strategy
+- [ ] Ensure charts are fetched async and displayed as soon as possible
 - [ ] Add request throttling and debouncing
 - [ ] Optimize payload sizes
 - [ ] Implement proper caching headers
