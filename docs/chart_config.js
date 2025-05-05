@@ -132,15 +132,15 @@ window.chartConfigs = [
         // Define multiple data series for a single chart
         series: [
             {
-                titleKey: 'BME',  // Technical name with fallback to itself
-                title: 'BME',     // Fallback
+                titleKey: 'BME',  // Technical sensor name as the key itself
+                title: 'BME',     // Same as key for readability
                 channel: 2584548,
                 field: 1,
                 color: '#e67e22'  // Orange-red - reused from plant temp chart
             },
             {
-                titleKey: 'AHT',  // Technical name with fallback to itself
-                title: 'AHT',     // Fallback
+                titleKey: 'AHT',  // Technical sensor name as the key itself
+                title: 'AHT',     // Same as key for readability
                 channel: 2584548,
                 field: 2,
                 color: '#9b59b6'  // Purple-red - reused from plant temp chart
@@ -274,6 +274,7 @@ window.chartConfigs = [
         color: '#4a6741',
         row: 4,
         category: 'system',
+        unit: 'ms',  // Adding missing unit
         useIntegerFormat: true
     },
 ];

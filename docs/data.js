@@ -61,7 +61,6 @@ async function fetchData() {
         
         // If elements aren't loaded yet, try again later
         if (!elements.temperature || !elements.battery) {
-            console.log('Elements not ready yet, retrying in 500ms');
             setTimeout(fetchData, 500);
             return;
         }
@@ -245,7 +244,7 @@ function updateUIWithLatestData() {
     elements.light.parentElement.className = `data-chip`;
 
     elements.timeSince.textContent = latestData.timeSince;
-    elements.timeSince.setAttribute('data-timestamp', latestData.createdAt);
+    elements.timeSince.setAttribute('data-timestamp', latestData.createdAt.toISOString());
     elements.timeSince.parentElement.title = latestData.lastUpdated;
     
     if (elements.title) {

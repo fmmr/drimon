@@ -1,5 +1,12 @@
 /**
- * DriMon Translations
+ * DriMon Translations (DEPRECATED)
+ * 
+ * DEPRECATED: This file is being phased out in favor of the new i18n system
+ * in js/core/translations-loader.js, which is now the single source of truth for translations.
+ * 
+ * DO NOT ADD NEW TRANSLATIONS HERE. Instead, add them to translations-loader.js.
+ * This file is kept for backward compatibility during the transition period
+ * and will eventually be removed.
  * 
  * This file contains translations for the DriMon dashboard in multiple languages.
  * Currently supported: Norwegian (no), English (en), Spanish (es)

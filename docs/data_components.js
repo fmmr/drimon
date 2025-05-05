@@ -76,6 +76,7 @@ async function fetchTimeRangeData(config, startDateStr, endDateStr, results = DE
                 chart_id: config.id,
                 series: seriesData.map((data, index) => ({
                     title: config.series[index].title,
+                    titleKey: config.series[index].titleKey, // Include titleKey for translation
                     channel: config.series[index].channel,
                     field: config.series[index].field,
                     color: config.series[index].color,
@@ -219,8 +220,14 @@ function processChartData(config, data) {
             // Create dataset for this series
             const yAxisID = series.axis || 'y';
             
+            // Use titleKey for translation if available
+            let label = series.title;
+            if (series.titleKey && window.I18n && typeof window.I18n.translate === 'function') {
+                label = window.I18n.translate(series.titleKey);
+            }
+            
             datasets.push({
-                label: series.title,
+                label: label,
                 data: seriesValues,
                 borderColor: series.color,
                 backgroundColor: `${series.color}20`,
@@ -229,7 +236,8 @@ function processChartData(config, data) {
                 pointHoverRadius: 4,
                 fill: false,
                 tension: 0.1,
-                yAxisID: yAxisID // Explicitly set the y-axis ID
+                yAxisID: yAxisID, // Explicitly set the y-axis ID
+                titleKey: series.titleKey // Store titleKey for future translation updates
             });
         });
     } else {
@@ -254,8 +262,14 @@ function processChartData(config, data) {
         timestamps = data.feeds.map(feed => feed.created_at);
         
         // Create dataset for single series
+        // Use titleKey for translation if available
+        let label = config.title;
+        if (config.titleKey && window.I18n && typeof window.I18n.translate === 'function') {
+            label = window.I18n.translate(config.titleKey);
+        }
+        
         datasets.push({
-            label: config.title,
+            label: label,
             data: values,
             borderColor: config.color,
             backgroundColor: hasNegativeValues ? 'rgba(0,0,0,0)' : `${config.color}20`,
@@ -264,7 +278,8 @@ function processChartData(config, data) {
             pointHoverRadius: 4,
             fill: !hasNegativeValues,
             tension: 0.1,
-            yAxisID: 'y' // Always use primary y-axis for single series
+            yAxisID: 'y', // Always use primary y-axis for single series
+            titleKey: config.titleKey // Store titleKey for future translation updates
         });
     }
     

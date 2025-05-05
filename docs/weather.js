@@ -23,7 +23,6 @@ async function fetchWeather() {
     
     // If elements aren't loaded yet, try again later
     if (!elements.metTemp || !elements.weatherIcon) {
-        log('Weather elements not ready yet, retrying in 500ms');
         setTimeout(fetchWeather, 500);
         return;
     }

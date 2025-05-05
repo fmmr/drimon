@@ -24,13 +24,27 @@ const ChartUtils = {
         
         // Check if we should use integer format - use direct config property access
         const useInteger = config && config.useIntegerFormat === true;
+        const chartId = config ? config.id : null;
         
+        // First handle specific chart cases
+        if (chartId === 'chart-battery-voltage') {
+            // Battery voltage always shows one decimal place for consistency
+            return parseFloat(val.toFixed(3)).toFixed(1);
+        }
+        
+        // Use config-based or range-based formatting
         if (useInteger || range >= 10) {
+            // Format as integer for integer config or large ranges
             return Math.round(val).toString();
-        } else if (range < 1) {
-            return val.toFixed(2); // More precision for very small ranges
+        } else if (range < 1 || Math.abs(val) < 1) {
+            // Use two decimal places for very small ranges or very small values
+            return parseFloat(val.toFixed(3)).toFixed(2);
+        } else if (Math.abs(val) < 10) {
+            // Use one decimal place for moderately small values
+            return parseFloat(val.toFixed(3)).toFixed(1);
         } else {
-            return val.toFixed(1); // Default to 1 decimal place
+            // For medium to large values, round to integers
+            return Math.round(parseFloat(val.toFixed(3))).toString();
         }
     },
     
@@ -581,23 +595,65 @@ function translateDatasetLabels(chart, chartConfig, isMultiSeries) {
             
             // Use titleKey if available, otherwise use series.title
             if (series.titleKey) {
-                // Translate directly using i18n
-                translatedLabel = window.i18n ? window.i18n.__(series.titleKey) : series.title || originalLabel;
+                // First try the new I18n system (preferred)
+                if (window.I18n && typeof window.I18n.translate === 'function') {
+                    translatedLabel = window.I18n.translate(series.titleKey);
+                } 
+                // Fallback to old system
+                else if (window.i18n && typeof window.i18n.__ === 'function') {
+                    translatedLabel = window.i18n.__(series.titleKey);
+                } 
+                // Fallback to title or original label if no i18n available
+                else {
+                    translatedLabel = series.title || originalLabel;
+                }
             } else if (series.title) {
-                // Use legacy chartTranslator for backward compatibility
-                translatedLabel = window.chartTranslator.translateSeriesTitle(series.title);
+                // If no titleKey but has a title, try to use a mapping system to find the key
+                // First check if there's a helper from chart-i18n.js
+                if (window.ChartI18n && typeof window.ChartI18n.translateSeriesLabel === 'function') {
+                    translatedLabel = window.ChartI18n.translateSeriesLabel(series.title);
+                } 
+                // Otherwise use legacy chartTranslator
+                else if (window.chartTranslator && typeof window.chartTranslator.translateSeriesTitle === 'function') {
+                    translatedLabel = window.chartTranslator.translateSeriesTitle(series.title);
+                } 
+                // Direct fallback to title if no translation system
+                else {
+                    translatedLabel = series.title;
+                }
             } else {
-                translatedLabel = originalLabel; // Fallback to original label
+                // No titleKey or title, use the original label
+                translatedLabel = originalLabel;
             }
         } else {
             // For single series charts, use chart title
             if (chartConfig) {
                 if (chartConfig.titleKey) {
-                    // Translate directly using i18n
-                    translatedLabel = window.i18n ? window.i18n.__(chartConfig.titleKey) : chartConfig.title || originalLabel;
+                    // First try the new I18n system (preferred)
+                    if (window.I18n && typeof window.I18n.translate === 'function') {
+                        translatedLabel = window.I18n.translate(chartConfig.titleKey);
+                    } 
+                    // Fallback to old system
+                    else if (window.i18n && typeof window.i18n.__ === 'function') {
+                        translatedLabel = window.i18n.__(chartConfig.titleKey);
+                    } 
+                    // Fallback to title or original label if no i18n available
+                    else {
+                        translatedLabel = chartConfig.title || originalLabel;
+                    }
                 } else if (chartConfig.title) {
-                    // Use legacy chartTranslator for backward compatibility
-                    translatedLabel = window.chartTranslator.translateChartTitle(chartConfig.title);
+                    // If no titleKey but has a title, try to use a mapping system
+                    if (window.ChartI18n && typeof window.ChartI18n.translateChartTitle === 'function') {
+                        translatedLabel = window.ChartI18n.translateChartTitle(chartConfig.title);
+                    } 
+                    // Otherwise use legacy chartTranslator
+                    else if (window.chartTranslator && typeof window.chartTranslator.translateChartTitle === 'function') {
+                        translatedLabel = window.chartTranslator.translateChartTitle(chartConfig.title);
+                    } 
+                    // Direct fallback to title
+                    else {
+                        translatedLabel = chartConfig.title;
+                    }
                 } else {
                     translatedLabel = originalLabel; // Fallback to original
                 }
@@ -615,6 +671,9 @@ function translateDatasetLabels(chart, chartConfig, isMultiSeries) {
                 dataset.label = translatedLabel;
             }
         }
+        
+        // Add debug logs for troubleshooting
+        console.log(`Translating dataset ${index}: Original = "${originalLabel}", Translated = "${translatedLabel}"`);
     });
 }
 
@@ -653,19 +712,63 @@ function updateChartLegend(chart, chartConfig, isMultiSeries, specialHandling) {
                         
                         // Get original series title from configuration (source of truth)
                         const series = chartConfig.series[i];
-                        let translatedTitle;
+                        let translatedTitle = '';
                         
-                        // Use titleKey if available
-                        if (series.titleKey) {
-                            translatedTitle = window.i18n ? window.i18n.__(series.titleKey) : series.title || '';
-                        } else if (series.title) {
-                            // Legacy translation via chartTranslator
-                            translatedTitle = window.chartTranslator.translateSeriesTitle(series.title);
-                        } else {
-                            translatedTitle = ''; // Fallback
+                        // First check if we have the dataset with stored information
+                        if (dataset) {
+                            // First try to use the translated label that should be set in the dataset directly
+                            if (dataset.label) {
+                                translatedTitle = dataset.label.split(':')[0].trim(); // Strip any value part
+                            }
+                            // If no valid dataset label, try to regenerate it
+                            else if (dataset._titleKey || dataset._originalTitle) {
+                                // Use stored titleKey
+                                if (dataset._titleKey) {
+                                    if (window.I18n && typeof window.I18n.translate === 'function') {
+                                        translatedTitle = window.I18n.translate(dataset._titleKey);
+                                    } else if (window.i18n && typeof window.i18n.__ === 'function') {
+                                        translatedTitle = window.i18n.__(dataset._titleKey);
+                                    }
+                                } 
+                                // Fallback to original title
+                                else if (dataset._originalTitle) {
+                                    translatedTitle = dataset._originalTitle;
+                                }
+                            }
+                        }
+                            
+                        // If we couldn't get the translation from the dataset, try the series config
+                        if (!translatedTitle && series) {
+                            // Try getting translation using titleKey
+                            if (series.titleKey) {
+                                if (window.I18n && typeof window.I18n.translate === 'function') {
+                                    translatedTitle = window.I18n.translate(series.titleKey);
+                                } else if (window.i18n && typeof window.i18n.__ === 'function') {
+                                    translatedTitle = window.i18n.__(series.titleKey);
+                                } else {
+                                    translatedTitle = series.title || '';
+                                }
+                            } 
+                            // If no titleKey, use title directly
+                            else if (series.title) {
+                                translatedTitle = series.title;
+                            } else {
+                                // Series has no titleKey or title property
+                                translatedTitle = `Series ${i+1}`;
+                            }
                         }
                         
-                        // Extract current value if present
+                        // Last resort fallback
+                        if (!translatedTitle) {
+                            translatedTitle = `Series ${i+1}`;
+                        }
+                        
+                        // If we still have no translation, use dataset.label as fallback
+                        if (!translatedTitle && dataset && dataset.label) {
+                            translatedTitle = dataset.label.split(':')[0].trim();
+                        }
+                        
+                        // Extract current value if present to append to label
                         let valuePart = '';
                         if (dataset && dataset.data && dataset.data.length > 0) {
                             const currentValue = dataset.data[dataset.data.length - 1];
@@ -685,8 +788,26 @@ function updateChartLegend(chart, chartConfig, isMultiSeries, specialHandling) {
                             dataset.label = fullLabel;
                             label.text = fullLabel;
                         } else {
-                            // For other charts, use the dataset label as source of truth
-                            label.text = dataset.label;
+                            // For other charts, ensure the dataset label is properly set first
+                            if (dataset && translatedTitle) {
+                                // Update dataset label if it doesn't match the translation
+                                const currentLabelBase = dataset.label ? dataset.label.split(':')[0].trim() : '';
+                                if (currentLabelBase !== translatedTitle) {
+                                    if (valuePart) {
+                                        dataset.label = `${translatedTitle}${valuePart}`;
+                                    } else {
+                                        dataset.label = translatedTitle;
+                                    }
+                                }
+                            }
+                            
+                            // Then set the legend text from the dataset
+                            if (dataset && dataset.label) {
+                                label.text = dataset.label;
+                            } else if (translatedTitle) {
+                                // Fallback if dataset.label is not available
+                                label.text = `${translatedTitle}${valuePart}`;
+                            }
                         }
                     }
                 });
@@ -713,7 +834,7 @@ document.addEventListener('languageChanged', (event) => {
         }
     });
     
-    // 2. Then update each chart's labels, legends and stats
+    // 2. Then update each chart's labels, legends and stats - with a small delay for legend update
     if (window.chartInstances) {
         Object.entries(window.chartInstances).forEach(([chartId, chartInstance]) => {
             if (chartInstance) {
@@ -721,17 +842,29 @@ document.addEventListener('languageChanged', (event) => {
             }
         });
     }
+    
+    // 3. Fix temperature chart stats that might display series labels instead of L/A/H/N
+    if (typeof fixTemperatureChartStats === 'function') {
+        // Add a slight delay to ensure chart stats are updated first
+        setTimeout(fixTemperatureChartStats, 50);
+    }
 });
 
 function createOrUpdateChart(config, data) {
     // Get the loading element
     const loadingEl = document.getElementById(`loading-${config.id}`);
     
-    // Get translated loading text
+    // Get translated loading text - try both systems to ensure it works
     let loadingText = 'Laster data...';
     let noDataText = 'Ingen data tilgjengelig';
     
-    if (window.i18n && typeof window.i18n.__ === 'function') {
+    // First try the new i18n system (preferred)
+    if (window.I18n && typeof window.I18n.translate === 'function') {
+        loadingText = window.I18n.translate('loading');
+        noDataText = window.I18n.translate('noData');
+    }
+    // Fallback to the old i18n system
+    else if (window.i18n && typeof window.i18n.__ === 'function') {
         loadingText = window.i18n.__('loading');
         noDataText = window.i18n.__('noData');
     }
@@ -835,8 +968,26 @@ function createOrUpdateChart(config, data) {
             // Create dataset for this series
             const yAxisID = series.axis || 'y';
             
+            // Determine translated title for dataset label
+            let datasetLabel = series.title || ''; // Fallback
+            
+            // Use titleKey if available (preferred)
+            if (series.titleKey) {
+                if (window.I18n && typeof window.I18n.translate === 'function') {
+                    datasetLabel = window.I18n.translate(series.titleKey);
+                } else if (window.i18n && typeof window.i18n.__ === 'function') {
+                    datasetLabel = window.i18n.__(series.titleKey);
+                }
+            }
+            
+            // Ensure we have a valid label
+            if (!datasetLabel || datasetLabel === series.titleKey) {
+                // Use original title as fallback if translation failed
+                datasetLabel = series.title || `Series ${datasets.length + 1}`;
+            }
+            
             datasets.push({
-                label: translatedTitle,
+                label: datasetLabel,
                 data: seriesValues,
                 borderColor: series.color,
                 backgroundColor: `${series.color}20`,
@@ -845,7 +996,10 @@ function createOrUpdateChart(config, data) {
                 pointHoverRadius: 4,
                 fill: false,
                 tension: 0.1,
-                yAxisID: yAxisID // Explicitly set the y-axis ID
+                yAxisID: yAxisID, // Explicitly set the y-axis ID
+                // Store original config for reference during updates
+                _titleKey: series.titleKey,
+                _originalTitle: series.title
             });
         });
     } else {
@@ -1107,7 +1261,8 @@ function createOrUpdateChart(config, data) {
                                 value: series.values[closestIndex],
                                 unit: unit,
                                 color: series.color || '#666',
-                                category: rawData.category // Store the category for grouping
+                                category: rawData.category, // Store the category for grouping
+                                chartId: chartId // Store the chart ID for filtering duplicates
                             });
                         });
                     } else {
@@ -1127,7 +1282,8 @@ function createOrUpdateChart(config, data) {
                             value: rawData.values[closestIndex],
                             unit: unit,
                             color: rawData.color || '#666',
-                            category: rawData.category // Store the category for grouping
+                            category: rawData.category, // Store the category for grouping
+                            chartId: chartId // Store the chart ID for filtering duplicates
                         });
                     }
                 }
@@ -1209,11 +1365,41 @@ function createOrUpdateChart(config, data) {
                     color: '#666',
                     padding: 0,
                     callback: function(value) {
+                        // Handle null or undefined values
+                        if (value === null || value === undefined) {
+                            return '';
+                        }
+                        
+                        // Get chart ID to apply specific formatting for certain charts
+                        const chartId = this.chart.canvas.id;
+                        const config = window.chartConfigs.find(c => c.id === chartId);
+                        
                         // Abbreviate large numbers
                         if (value >= 1000) {
                             return (value / 1000) + 'k';
                         }
-                        return value;
+                        
+                        // Fix floating point precision issues
+                        // First round to avoid JavaScript floating point arithmetic problems
+                        const valueWithFixedPrecision = parseFloat(value.toFixed(3));
+                        
+                        // Special case for battery voltage chart - always show 1 decimal place
+                        if (chartId === 'chart-battery-voltage') {
+                            return valueWithFixedPrecision.toFixed(1);
+                        }
+                        
+                        // For small values (like voltage, temperature differences)
+                        if (Math.abs(valueWithFixedPrecision) < 10) {
+                            // For very small values, use 2 decimal places
+                            if (Math.abs(valueWithFixedPrecision) < 1) {
+                                return valueWithFixedPrecision.toFixed(2);
+                            }
+                            // For moderately small values, use 1 decimal place
+                            return valueWithFixedPrecision.toFixed(1);
+                        }
+                        
+                        // For larger values, use integers
+                        return Math.round(valueWithFixedPrecision);
                     }
                 },
                 border: {
@@ -1263,11 +1449,41 @@ function createOrUpdateChart(config, data) {
                         color: '#8a5a00', // Match the color of the second series
                         padding: 0,
                         callback: function(value) {
+                            // Handle null or undefined values
+                            if (value === null || value === undefined) {
+                                return '';
+                            }
+                            
+                            // Get chart ID to apply specific formatting for certain charts
+                            const chartId = this.chart.canvas.id;
+                            const config = window.chartConfigs.find(c => c.id === chartId);
+                            
                             // Abbreviate large numbers
                             if (value >= 1000) {
                                 return (value / 1000) + 'k';
                             }
-                            return value;
+                            
+                            // Fix floating point precision issues
+                            // First round to avoid JavaScript floating point arithmetic problems
+                            const valueWithFixedPrecision = parseFloat(value.toFixed(3));
+                            
+                            // Special case for battery voltage chart - always show 1 decimal place
+                            if (chartId === 'chart-battery-voltage') {
+                                return valueWithFixedPrecision.toFixed(1);
+                            }
+                            
+                            // For small values (like voltage, temperature differences)
+                            if (Math.abs(valueWithFixedPrecision) < 10) {
+                                // For very small values, use 2 decimal places
+                                if (Math.abs(valueWithFixedPrecision) < 1) {
+                                    return valueWithFixedPrecision.toFixed(2);
+                                }
+                                // For moderately small values, use 1 decimal place
+                                return valueWithFixedPrecision.toFixed(1);
+                            }
+                            
+                            // For larger values, use integers
+                            return Math.round(valueWithFixedPrecision);
                         }
                     },
                     border: {
@@ -1388,6 +1604,20 @@ function createOrUpdateChart(config, data) {
                         return moment(timestamps[index]).format('LLL');
                     },
                     
+                    // Customize format for data values in tooltip
+                    label: (tooltipItem) => {
+                        const datasetLabel = tooltipItem.dataset.label || '';
+                        let formattedValue = tooltipItem.formattedValue;
+                        
+                        // Use consistent formatting based on configuration
+                        if (config.useIntegerFormat === true) {
+                            // Format as integer if the chart is configured to use integer format
+                            formattedValue = Math.round(tooltipItem.raw);
+                        }
+                        
+                        return `${datasetLabel}: ${formattedValue}${config.unit || ''}`;
+                    },
+                    
                     // Show data from all related charts in this tooltip
                     afterBody: (tooltipItems) => {
                         if (!tooltipItems.length) return [];
@@ -1403,6 +1633,8 @@ function createOrUpdateChart(config, data) {
                         
                         // Create a map of chart titles we're already showing in this tooltip
                         const visibleTitles = new Set();
+                        // Track current chart ID to filter out any data from the same chart
+                        const currentChartId = config.id;
                         
                         // For multi-series charts, track all series being shown in the main tooltip
                         tooltipItems.forEach(item => {
@@ -1432,7 +1664,10 @@ function createOrUpdateChart(config, data) {
                         });
                         
                         // Filter out values that are already shown in the tooltip
-                        const filteredRelatedData = relatedData.filter(item => !visibleTitles.has(item.title));
+                        // AND filter out any data from the same chart (to avoid duplication)
+                        const filteredRelatedData = relatedData.filter(item => 
+                            !visibleTitles.has(item.title) && 
+                            (!item.chartId || item.chartId !== currentChartId));
                         
                         // Don't show anything if there are no other charts to display
                         if (filteredRelatedData.length === 0) return [];
@@ -1498,24 +1733,33 @@ function createOrUpdateChart(config, data) {
                             
                             // Add each data item
                             items.forEach(item => {
-                                // Format value based on content
-                                let formattedValue;
-                                // Get the item title or default to empty string
-                                const itemTitle = item.title || '';
+                                // Get chart config to determine formatting
+                                const relatedChartId = item.chartId;
+                                const relatedChartConfig = relatedChartId ? 
+                                    window.chartConfigs.find(c => c.id === relatedChartId) : null;
+                                    
+                                // Check chart config for integer formatting flag
+                                const useIntegerFormat = relatedChartConfig && 
+                                    relatedChartConfig.useIntegerFormat === true;
                                 
-                                // Use similar rules as the main formatNumber function
-                                if (itemTitle.toLowerCase().includes('light') || 
-                                    itemTitle.toLowerCase().includes('wifi') || 
-                                    itemTitle.toLowerCase().includes('window') ||
-                                    itemTitle.toLowerCase().includes('soil') ||
-                                    itemTitle.toLowerCase().includes('pressure') ||
-                                    Math.abs(item.value) >= 10) {
+                                // Always use integer formatting if config says so
+                                if (useIntegerFormat) {
+                                    formattedValue = Math.round(item.value);
+                                }
+                                // Use default formatting rules for other values
+                                else if (Math.abs(item.value) >= 10) {
                                     formattedValue = Math.round(item.value);
                                 } else if (Math.abs(item.value) < 1) {
                                     formattedValue = item.value.toFixed(2);
                                 } else {
                                     formattedValue = item.value.toFixed(1);
                                 }
+                                // Use configuration-based formatting
+                                if (relatedChartConfig && relatedChartConfig.useIntegerFormat === true) {
+                                    // Format as integer if the chart is configured to use integer format
+                                    formattedValue = Math.round(item.value);
+                                }
+                                
                                 lines.push(`${item.title}: ${formattedValue} ${item.unit}`);
                             });
                             
@@ -1681,6 +1925,15 @@ function createOrUpdateChart(config, data) {
     if (data.is_multi_series && chartInstances[config.id]) {
         chartInstances[config.id].update('none');
     }
+    
+    // For temperature charts, ensure they have correct stats labels (L/A/H/N)
+    // Check if it's a temperature chart
+    if (config.id === 'chart-temp' || config.id === 'chart-temp-diff' || config.id === 'chart-out-temp') {
+        if (typeof fixTemperatureChartStats === 'function') {
+            // Apply the fix with a small delay to ensure the chart is fully rendered
+            setTimeout(fixTemperatureChartStats, 100);
+        }
+    }
 }
 
 // Call this when window is resized to properly adjust all charts
@@ -1724,6 +1977,14 @@ window.resizeAllCharts = function() {
             
             // Recalculate stats after resize to ensure they're correct
             recalculateChartStats(chart);
+            
+            // Fix temperature chart stats if needed
+            const chartId = chart.canvas.id;
+            if (chartId === 'chart-temp' || chartId === 'chart-temp-diff' || chartId === 'chart-out-temp') {
+                if (typeof fixTemperatureChartStats === 'function') {
+                    setTimeout(fixTemperatureChartStats, 100);
+                }
+            }
         }
     });
 }
@@ -1760,6 +2021,13 @@ window.refreshCharts = function(range, results) {
     
     // Now load all charts with new parameters
     loadAllCharts(range, results);
+    
+    // Apply the temperature chart stats fix after charts are loaded
+    setTimeout(() => {
+        if (typeof fixTemperatureChartStats === 'function') {
+            fixTemperatureChartStats();
+        }
+    }, 1000); // Longer delay to ensure charts are fully loaded
 }
 
 // Handle date range selection
@@ -1931,6 +2199,191 @@ function sortChartsByCategory(category) {
     
     // Store the current sort preference
     localStorage.setItem('chartSortPreference', category);
+}
+
+/**
+ * Special function to fix the temperature chart stats when they're broken
+ * This should be called whenever language changes to ensure proper translation
+ */
+function fixTemperatureChartStats() {
+    // These are the charts that should show Low/Avg/High/Now stats instead of series labels
+    const temperatureChartIds = ['chart-temp', 'chart-temp-diff', 'chart-out-temp'];
+    
+    // Process each chart
+    temperatureChartIds.forEach(chartId => {
+        const statsEl = document.getElementById(`stats-${chartId}`);
+        if (!statsEl) {
+            return;
+        }
+        
+        // Get translated labels using the preferred translation system (try both for consistency)
+        let lowLabel = 'L';
+        let avgLabel = 'A';
+        let highLabel = 'H';
+        let nowLabel = 'N';
+        
+        let lowFullLabel = 'Low';
+        let avgFullLabel = 'Avg';
+        let highFullLabel = 'High';
+        let nowFullLabel = 'Now';
+        
+        // First try the new I18n system
+        if (window.I18n && typeof window.I18n.translate === 'function') {
+            // Get translations using new system
+            const lowTranslation = window.I18n.translate('low');
+            const avgTranslation = window.I18n.translate('avg');
+            const highTranslation = window.I18n.translate('high');
+            const nowTranslation = window.I18n.translate('now');
+            
+            // Set short labels (first letter capitalized)
+            lowLabel = lowTranslation && lowTranslation.length > 0 ? lowTranslation[0].toUpperCase() : 'L';
+            avgLabel = avgTranslation && avgTranslation.length > 0 ? avgTranslation[0].toUpperCase() : 'A';
+            highLabel = highTranslation && highTranslation.length > 0 ? highTranslation[0].toUpperCase() : 'H';
+            nowLabel = nowTranslation && nowTranslation.length > 0 ? nowTranslation[0].toUpperCase() : 'N';
+            
+            // Set full labels for data attributes
+            lowFullLabel = lowTranslation || 'Low';
+            avgFullLabel = avgTranslation || 'Avg';
+            highFullLabel = highTranslation || 'High';
+            nowFullLabel = nowTranslation || 'Now';
+        } 
+        // Fallback to the old i18n system
+        else if (window.i18n && typeof window.i18n.__ === 'function') {
+            // Get translations using old system
+            const lowTranslation = window.i18n.__('low');
+            const avgTranslation = window.i18n.__('avg');
+            const highTranslation = window.i18n.__('high');
+            const nowTranslation = window.i18n.__('now');
+            
+            // Set short labels
+            lowLabel = lowTranslation && lowTranslation.length > 0 ? lowTranslation[0].toUpperCase() : 'L';
+            avgLabel = avgTranslation && avgTranslation.length > 0 ? avgTranslation[0].toUpperCase() : 'A';
+            highLabel = highTranslation && highTranslation.length > 0 ? highTranslation[0].toUpperCase() : 'H';
+            nowLabel = nowTranslation && nowTranslation.length > 0 ? nowTranslation[0].toUpperCase() : 'N';
+            
+            // Set full labels
+            lowFullLabel = lowTranslation || 'Low';
+            avgFullLabel = avgTranslation || 'Avg';
+            highFullLabel = highTranslation || 'High';
+            nowFullLabel = nowTranslation || 'Now';
+        }
+        
+        // Get chart config for unit and formatting
+        const config = window.chartConfigs.find(c => c.id === chartId);
+        const unit = config && config.unit ? config.unit : '';
+        
+        // Determine values for chart statistics
+        let minValue = 0;
+        let maxValue = 0;
+        let avgValue = 0;
+        let currentValue = null;
+        let range = 0;
+        
+        // First try getting values from chart instance
+        const chartInstance = window.chartInstances[chartId];
+        if (chartInstance && chartInstance.data && chartInstance.data.datasets && 
+            chartInstance.data.datasets.length > 0 && chartInstance.data.datasets[0].data) {
+            
+            // Get values from the first dataset
+            const dataset = chartInstance.data.datasets[0];
+            const validValues = dataset.data.filter(v => v !== null && v !== undefined && !isNaN(v));
+            
+            if (validValues.length > 0) {
+                minValue = Math.min(...validValues);
+                maxValue = Math.max(...validValues);
+                avgValue = validValues.reduce((sum, val) => sum + val, 0) / validValues.length;
+                currentValue = validValues[validValues.length - 1];
+                range = maxValue - minValue;
+            }
+        }
+        // If chart instance not available, try to extract values from the existing stats element
+        else {
+            // Extract values from existing stats
+            try {
+                const statDivs = statsEl.querySelectorAll('.chart-stat');
+                if (statDivs.length >= 3) {
+                    // Extract numeric values from stat divs
+                    const getNumericValue = (div) => {
+                        const text = div.textContent.trim();
+                        const match = text.match(/[-\d.]+/);
+                        return match ? parseFloat(match[0]) : null;
+                    };
+                    
+                    minValue = getNumericValue(statDivs[0]);
+                    avgValue = getNumericValue(statDivs[1]);
+                    maxValue = getNumericValue(statDivs[2]);
+                    
+                    if (statDivs.length >= 4) {
+                        currentValue = getNumericValue(statDivs[3]);
+                    }
+                    
+                    // Ensure values are valid numbers
+                    minValue = !isNaN(minValue) ? minValue : 0;
+                    avgValue = !isNaN(avgValue) ? avgValue : 0;
+                    maxValue = !isNaN(maxValue) ? maxValue : 0;
+                    currentValue = !isNaN(currentValue) ? currentValue : null;
+                    
+                    range = maxValue - minValue;
+                }
+            } catch (e) {
+                // Use default values
+                minValue = 0;
+                maxValue = 0;
+                avgValue = 0;
+                currentValue = null;
+                range = 0;
+            }
+        }
+        
+        // Format values appropriately
+        const formatNumber = (val) => {
+            if (val === null || val === undefined || isNaN(val)) return '—';
+            if (config && config.useIntegerFormat) {
+                return Math.round(val).toString();
+            } else if (range >= 10) {
+                return Math.round(val).toString();
+            } else if (range < 1) {
+                return val.toFixed(2);
+            } else {
+                return val.toFixed(1);
+            }
+        };
+        
+        // Create the properly formatted values
+        const formattedMin = formatNumber(minValue);
+        const formattedAvg = formatNumber(avgValue);
+        const formattedMax = formatNumber(maxValue);
+        const formattedCurrent = currentValue !== null ? formatNumber(currentValue) : '—';
+        
+        // Replace the content of the stats element with properly structured HTML
+        // This ensures that the HTML structure is correct regardless of what was there before
+        statsEl.innerHTML = `
+            <div class="chart-stat">
+                <span class="chart-stat-label">
+                    <span class="chart-stat-label-short">${lowLabel}:</span>
+                    <span class="chart-stat-label-low" data-full-label="${lowFullLabel}:"></span>
+                </span>${formattedMin}${unit}
+            </div>
+            <div class="chart-stat">
+                <span class="chart-stat-label">
+                    <span class="chart-stat-label-short">${avgLabel}:</span>
+                    <span class="chart-stat-label-avg" data-full-label="${avgFullLabel}:"></span>
+                </span>${formattedAvg}${unit}
+            </div>
+            <div class="chart-stat">
+                <span class="chart-stat-label">
+                    <span class="chart-stat-label-short">${highLabel}:</span>
+                    <span class="chart-stat-label-high" data-full-label="${highFullLabel}:"></span>
+                </span>${formattedMax}${unit}
+            </div>
+            <div class="chart-stat chart-stat-current">
+                <span class="chart-stat-label">
+                    <span class="chart-stat-label-short">${nowLabel}:</span>
+                    <span class="chart-stat-label-now" data-full-label="${nowFullLabel}:"></span>
+                </span>${formattedCurrent !== '—' ? formattedCurrent + unit : '—'}
+            </div>
+        `;
+    });
 }
 
 // Initialize chart system when the DOM is ready

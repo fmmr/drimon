@@ -179,26 +179,32 @@ li.chartjs-legend-item span,
     padding: 1px 3px; /* Larger padding */
   }
   
-  /* Show full labels on mobile */
+  /* 
+   * Note: Mobile labels are now handled via JavaScript translation.
+   * The old CSS-based text insertion has been removed because it 
+   * caused incorrect translations to appear on language changes.
+   */
+  
+  /* Hide short labels and show full labels on mobile */
+  .mobile-layout .chart-stat-label-short {
+    display: none;
+  }
+  
+  /* Use data-full-label attribute for mobile labels */
   .mobile-layout .chart-stat-label-low::before {
-    content: 'Min:';
+    content: attr(data-full-label);
   }
   
   .mobile-layout .chart-stat-label-avg::before {
-    content: 'Snitt:';
+    content: attr(data-full-label);
   }
   
   .mobile-layout .chart-stat-label-high::before {
-    content: 'Max:';
+    content: attr(data-full-label);
   }
   
   .mobile-layout .chart-stat-label-now::before {
-    content: 'Nå:';
-  }
-  
-  /* Hide short labels on mobile */
-  .mobile-layout .chart-stat-label-short {
-    display: none;
+    content: attr(data-full-label);
   }
 }
 

@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const lang = window.i18n.getCurrentLanguage() || 'no';
         const momentLocale = lang === 'no' ? 'nb' : lang;
         window.moment.locale(momentLocale);
-        console.log(`Initialized moment locale to: ${momentLocale}`);
     }
 });
 

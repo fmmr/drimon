@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="no">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,35 +11,61 @@
     <link rel="stylesheet" href="dark-mode.css">
     <link rel="stylesheet" href="debug.css">
     <link rel="stylesheet" href="language_switcher.css">
+    
+    <!-- Base libraries -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/locale/nb.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/locale/en-gb.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/locale/es.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Chart.js Annotations plugin -->
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
-    <!-- Debug and test utilities (must be loaded first) -->
+    
+    <!-- Debug utilities -->
     <script src="debug.js"></script>
     
-    <!-- Internationalization -->
-    <script src="translations.js"></script>
+    <!-- Core modules - new architecture (normal scripts, not ES modules) -->
+    <!-- Load critical utilities first -->
+    <script src="js/core/translations-loader.js"></script>
+    <script src="js/core/chart-utils.js"></script>
+    <script src="js/core/i18n.js"></script>
+    <script src="js/core/chart-i18n.js"></script>
+    <script>
+        // Initialize translations when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize I18n with the translations from translations-loader.js
+            if (window.I18n && typeof window.I18n.initialize === 'function' && window.DriMonTranslations) {
+                const success = window.I18n.initialize(window.DriMonTranslations, {
+                    defaultLanguage: 'no',
+                    warnOnMissing: true
+                });
+                
+                if (success && window.ChartI18n) {
+                    // Initialize chart translator
+                    window.ChartI18n.initialize();
+                    
+                    // Signal that the new i18n system is ready
+                    document.dispatchEvent(new CustomEvent('i18nReady'));
+                }
+            } else {
+                console.error('Failed to initialize i18n system - required components not available');
+            }
+        });
+    </script>
     
-    <!-- Component modules -->
+    <!-- Application modules -->
     <script src="header_components.js"></script>
     <script src="chart_components.js"></script>
     <script src="data_components.js"></script>
     <script src="language_switcher.js"></script>
-    
-    <!-- Application logic -->
     <script src="date_utils.js"></script>
     <script src="data.js"></script>
     <script src="weather.js"></script>
     <script src="chart_config.js"></script>
     <script src="chart_renderer.js"></script>
     <script src="script.js"></script>
-    <!-- Automated testing -->
     <script src="i18n_tests.js"></script>
+    
     <link rel="canonical" href="https://drimon.rodland.no/" />
     <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="48x48" href="favicon.ico">
@@ -86,6 +112,21 @@
                 // Set up date range handlers (from chart_renderer.js)
                 setupDateRangeHandlers();
             }
+            
+            // Apply translations to the page
+            document.addEventListener('i18nReady', () => {
+                // Update all translatable elements on the page
+                I18n.updatePageLanguage();
+                
+                // Allow ChartI18n to update chart translations
+                if (window.charts && window.charts.length > 0) {
+                    window.charts.forEach(chart => {
+                        if (chart.id) {
+                            ChartI18n.updateChartTranslations(chart.id);
+                        }
+                    });
+                }
+            });
         });
     </script>
 </body>

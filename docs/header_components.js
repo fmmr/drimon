@@ -24,16 +24,15 @@ function createLogoContainer() {
     
     const timeIndicator = document.createElement('div');
     timeIndicator.className = 'time-indicator';
-    timeIndicator.title = window.i18n && typeof window.i18n.__ === 'function' ? 
-        window.i18n.__('time') : 'Sist oppdatert';
+    // Use only the new I18n system - no fallbacks
+    timeIndicator.title = window.I18n.translate('time');
     timeIndicator.setAttribute('data-i18n-title', 'time');
     
     const timeSpan = document.createElement('span');
     timeSpan.id = 'time-since';
     
-    // Use i18n for loading text if available
-    const loadingText = window.i18n && typeof window.i18n.__ === 'function' ? 
-        window.i18n.__('loading') : 'Laster...';
+    // Use only the new I18n system - no fallbacks
+    const loadingText = window.I18n.translate('loading');
     timeSpan.textContent = loadingText;
     timeSpan.setAttribute('data-i18n', 'loading');
     
@@ -57,10 +56,8 @@ function createDataChip(id, iconClass, title, initialText = 'loading') {
     const dataChip = document.createElement('div');
     dataChip.className = 'data-chip';
     
-    // Use i18n if available
-    const translatedTitle = window.i18n && typeof window.i18n.__ === 'function' ? 
-        window.i18n.__(title) : title;
-    dataChip.title = translatedTitle;
+    // Use only the new I18n system - no fallbacks
+    dataChip.title = window.I18n.translate(title);
     
     // Add data-i18n attributes for later translation updates
     dataChip.setAttribute('data-i18n-title', title);
@@ -74,10 +71,8 @@ function createDataChip(id, iconClass, title, initialText = 'loading') {
     const span = document.createElement('span');
     span.id = id;
     
-    // Use i18n for loading text if available
-    const translatedText = (window.i18n && typeof window.i18n.__ === 'function') ? 
-        window.i18n.__(initialText) : 
-        (initialText === 'loading' ? 'Laster...' : initialText);
+    // Use only the new I18n system - no fallbacks
+    const translatedText = window.I18n.translate(initialText);
     
     span.textContent = translatedText;
     
@@ -107,9 +102,8 @@ function createWeatherPill() {
     metLink.className = 'data-chip';
     metLink.id = 'met-link';
     
-    // Use i18n if available for title
-    const translatedTitle = window.i18n && typeof window.i18n.__ === 'function' ? 
-        window.i18n.__('outTempChart') : 'Ute Temperatur (yr.no)';
+    // Use only the new I18n system - no fallbacks
+    const translatedTitle = window.I18n.translate('outTempChart');
     metLink.title = translatedTitle;
     
     // Add data-i18n attribute for later translation updates
@@ -118,9 +112,8 @@ function createWeatherPill() {
     const metTemp = document.createElement('span');
     metTemp.id = 'met-temp';
     
-    // Use i18n for loading text if available
-    const loadingText = window.i18n && typeof window.i18n.__ === 'function' ? 
-        window.i18n.__('loading') : 'Laster...';
+    // Use only the new I18n system - no fallbacks
+    const loadingText = window.I18n.translate('loading');
     metTemp.textContent = loadingText;
     
     // Add data-i18n attribute for later translation updates
@@ -188,9 +181,8 @@ function createDateChip(range, key, defaultText) {
     chip.className = 'date-chip';
     chip.dataset.range = range;
     
-    // Use i18n for text if available
-    chip.textContent = window.i18n && typeof window.i18n.__ === 'function' ? 
-        window.i18n.__(key) : defaultText;
+    // Use only the new I18n system - no fallbacks
+    chip.textContent = window.I18n.translate(key);
     
     // Add data-i18n attribute for later translation updates
     chip.setAttribute('data-i18n', key);
@@ -242,9 +234,8 @@ function createSearchContainer() {
     const sortSelect = document.createElement('select');
     sortSelect.id = 'sortSelect';
     
-    // Use i18n for title if available
-    sortSelect.title = window.i18n && typeof window.i18n.__ === 'function' ? 
-        window.i18n.__('sortBy') : 'Sorter etter kategori';
+    // Use only the new I18n system - no fallbacks
+    sortSelect.title = window.I18n.translate('sortBy');
     sortSelect.setAttribute('data-i18n-title', 'sortBy');
     
     const sortOptions = [
@@ -262,9 +253,8 @@ function createSearchContainer() {
         const optionEl = document.createElement('option');
         optionEl.value = option.value;
         
-        // Use i18n for option text if available
-        optionEl.textContent = window.i18n && typeof window.i18n.__ === 'function' ? 
-            window.i18n.__(option.key) : option.key;
+        // Use only the new I18n system - no fallbacks
+        optionEl.textContent = window.I18n.translate(option.key);
         
         // Add data-i18n attribute for later translation updates
         optionEl.setAttribute('data-i18n', option.key);
@@ -282,26 +272,23 @@ function createSearchContainer() {
     resultsInput.type = 'number';
     resultsInput.id = 'resultsInput';
     
-    // Use i18n for placeholder if available
-    resultsInput.placeholder = window.i18n && typeof window.i18n.__ === 'function' ? 
-        window.i18n.__('results') : 'Resultater';
+    // Use only the new I18n system - no fallbacks
+    resultsInput.placeholder = window.I18n.translate('results');
     resultsInput.setAttribute('data-i18n-placeholder', 'results');
     resultsInput.min = '1';
     
     const updateButton = document.createElement('button');
     updateButton.id = 'updateButton';
     
-    // Use i18n for button text if available
-    updateButton.textContent = window.i18n && typeof window.i18n.__ === 'function' ? 
-        window.i18n.__('update') : 'Oppdater';
+    // Use only the new I18n system - no fallbacks
+    updateButton.textContent = window.I18n.translate('update');
     updateButton.setAttribute('data-i18n', 'update');
     
     const darkModeToggle = document.createElement('button');
     darkModeToggle.id = 'darkModeToggle';
     
-    // Use i18n for tooltip if available
-    darkModeToggle.title = window.i18n && typeof window.i18n.__ === 'function' ? 
-        window.i18n.__('darkModeTooltip') : 'Bytt mellom mørk og lys modus';
+    // Use only the new I18n system - no fallbacks
+    darkModeToggle.title = window.I18n.translate('darkModeTooltip');
     darkModeToggle.setAttribute('data-i18n-title', 'darkModeTooltip');
     
     const darkModeIcon = document.createElement('span');
@@ -311,9 +298,8 @@ function createSearchContainer() {
     const statsToggle = document.createElement('button');
     statsToggle.id = 'statsToggle';
     
-    // Use i18n for tooltip if available
-    statsToggle.title = window.i18n && typeof window.i18n.__ === 'function' ? 
-        window.i18n.__('statsTooltip') : 'Vis/skjul statistikker';
+    // Use only the new I18n system - no fallbacks
+    statsToggle.title = window.I18n.translate('statsTooltip');
     statsToggle.setAttribute('data-i18n-title', 'statsTooltip');
     
     const statsIcon = document.createElement('span');

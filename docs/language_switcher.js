@@ -3,6 +3,9 @@
  * 
  * This file contains the language switcher component with small flags
  * to switch between Norwegian, English, and Spanish.
+ * 
+ * @version 2.0
+ * @updated Updated to use the new I18n system
  */
 
 /**
@@ -21,14 +24,15 @@ function createLanguageSwitcher() {
         { code: 'es', name: 'Español', emoji: '🇪🇸' }
     ];
     
-    // Get current language
-    const currentLang = window.i18n ? window.i18n.getCurrentLanguage() : 'no';
+    // Use only the new I18n system - no fallbacks
+    const currentLang = window.I18n.getCurrentLanguage();
     
     // Create flag buttons for each language
     languages.forEach(lang => {
         const button = document.createElement('button');
         button.className = `lang-flag ${lang.code === currentLang ? 'active' : ''}`;
         button.setAttribute('data-lang', lang.code);
+        button.setAttribute('data-language-switch', lang.code); // New attribute for the new I18n system
         button.setAttribute('title', lang.name);
         button.setAttribute('aria-label', `Switch to ${lang.name}`);
         
@@ -37,15 +41,55 @@ function createLanguageSwitcher() {
         
         // Add click event
         button.addEventListener('click', () => {
-            // Only proceed if i18n is available
-            if (window.i18n && typeof window.i18n.setLanguage === 'function') {
-                // Set the language
-                window.i18n.setLanguage(lang.code);
-                
+            let langChanged = false;
+            
+            // First try the new I18n system
+            if (window.I18n && typeof window.I18n.setLanguage === 'function') {
+                langChanged = window.I18n.setLanguage(lang.code);
+            } 
+            // Fall back to the old i18n system if needed
+            else if (window.i18n && typeof window.i18n.setLanguage === 'function') {
+                langChanged = window.i18n.setLanguage(lang.code);
+            }
+            
+            // If language was changed successfully, update the UI
+            if (langChanged) {
                 // Update active state on buttons
                 document.querySelectorAll('.lang-flag').forEach(btn => {
                     btn.classList.toggle('active', btn.getAttribute('data-lang') === lang.code);
                 });
+                
+                // Apply the temperature chart stats fix
+                if (typeof fixTemperatureChartStats === 'function') {
+                    // Give time for chart translations to complete first
+                    setTimeout(fixTemperatureChartStats, 200);
+                }
+                
+                // Use the direct DOM manipulation utility after a delay
+                setTimeout(() => {
+                    // If we have the utility function, use it
+                    if (window.updateChartLegendDOM) {
+                        window.updateChartLegendDOM();
+                    }
+                    
+                    // Force chart update to ensure proper translations in legends
+                    if (window.chartInstances) {
+                        Object.values(window.chartInstances).forEach(chart => {
+                            if (chart) {
+                                // Apply translations first
+                                if (typeof window.translateChartLabels === 'function') {
+                                    window.translateChartLabels(chart);
+                                }
+                                // Then update chart
+                                try {
+                                    chart.update('none');
+                                } catch (e) {
+                                    console.error("Error updating chart:", e);
+                                }
+                            }
+                        });
+                    }
+                }, 300);
             }
         });
         
@@ -83,6 +127,17 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         addLanguageSwitcherToHeader();
     }, 100);
+});
+
+// Listen for the new i18n system to be ready
+document.addEventListener('i18nReady', () => {
+    // Re-create the language switcher if it exists
+    const existingSwitcher = document.querySelector('.language-switcher');
+    if (existingSwitcher) {
+        const parent = existingSwitcher.parentElement;
+        parent.innerHTML = '';
+        parent.appendChild(createLanguageSwitcher());
+    }
 });
 
 // Export the component

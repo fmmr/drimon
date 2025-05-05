@@ -15,8 +15,20 @@
     <!-- Debug utilities -->
     <script src="debug.js"></script>
     
-    <!-- Translations -->
-    <script src="translations.js"></script>
+    <!-- Translations (new system) -->
+    <script src="js/core/translations-loader.js"></script>
+    <script src="js/core/i18n.js"></script>
+    <script>
+        // Initialize I18n with the translations from translations-loader.js
+        document.addEventListener('DOMContentLoaded', function() {
+            if (window.I18n && window.DriMonTranslations) {
+                window.I18n.initialize(window.DriMonTranslations, {
+                    defaultLanguage: 'no',
+                    warnOnMissing: true
+                });
+            }
+        });
+    </script>
 
     <!-- Language Switcher -->
     <script src="language_switcher.js"></script>

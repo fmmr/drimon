@@ -28,7 +28,7 @@ const testDefinitions = {
             const titles = Array.from(elements).map(el => el.textContent);
             
             // Create expected values for sample keys in current language
-            const expected = sampleKeys.map(key => window.i18n.__(key));
+            const expected = sampleKeys.map(key => window.I18n.translate(key));
             
             // Check if expected values exist in the elements
             expected.forEach(exp => {
@@ -59,7 +59,7 @@ const testDefinitions = {
             const chartIds = ['chart-soil-moisture', 'chart-light', 'chart-plants-temp', 'chart-sensors-temp'];
             
             // Expected translations for each key
-            const expected = keysToCheck.map(key => window.i18n.__(key));
+            const expected = keysToCheck.map(key => window.I18n.translate(key));
             
             // Check translations in chart datasets
             Object.entries(window.chartInstances).forEach(([chartId, chart]) => {
@@ -140,7 +140,7 @@ const testDefinitions = {
         selector: '.date-chip',
         verify: (elements, lang) => {
             // Check for translations of date ranges
-            const expected = window.i18n.__('today');
+            const expected = window.I18n.translate('today');
             let found = false;
             
             Array.from(elements).forEach(el => {
@@ -156,8 +156,8 @@ const testDefinitions = {
         selector: '#darkModeToggle, #statsToggle',
         verify: (elements, lang) => {
             // Check tooltips for buttons
-            const darkModeTooltip = window.i18n.__('darkModeTooltip');
-            const statsTooltip = window.i18n.__('statsTooltip');
+            const darkModeTooltip = window.I18n.translate('darkModeTooltip');
+            const statsTooltip = window.I18n.translate('statsTooltip');
             let count = 0;
             
             Array.from(elements).forEach(el => {
@@ -198,7 +198,7 @@ function changeLanguageAndTest(lang) {
     console.log(`Testing language: ${lang}`);
     
     // Set language
-    window.i18n.setLanguage(lang);
+    window.I18n.setLanguage(lang);
     
     // Wait for language change to take effect
     setTimeout(() => {

@@ -143,31 +143,49 @@ function updateChartStats(chartId, statsData, isMultiSeries, unit = '', formatNu
     // Format function fallback if not provided
     const formatter = formatNumber || ((val) => val.toFixed(1));
     
+    // Get translated labels
+    let lowLabel = 'L';
+    let avgLabel = 'A';
+    let highLabel = 'H';
+    let nowLabel = 'N';
+    
+    if (window.I18n && typeof window.I18n.translate === 'function') {
+        const lowTranslation = window.I18n.translate('low');
+        const avgTranslation = window.I18n.translate('avg');
+        const highTranslation = window.I18n.translate('high');
+        const nowTranslation = window.I18n.translate('now');
+        
+        lowLabel = lowTranslation && lowTranslation.length > 0 ? lowTranslation[0].toUpperCase() : 'L';
+        avgLabel = avgTranslation && avgTranslation.length > 0 ? avgTranslation[0].toUpperCase() : 'A';
+        highLabel = highTranslation && highTranslation.length > 0 ? highTranslation[0].toUpperCase() : 'H';
+        nowLabel = nowTranslation && nowTranslation.length > 0 ? nowTranslation[0].toUpperCase() : 'N';
+    }
+    
     // Always prepare the innerHTML, regardless of visibility state
     // Use both short and full labels - CSS will show appropriate one based on viewport
     statsEl.innerHTML = `
         <div class="chart-stat">
             <span class="chart-stat-label">
-                <span class="chart-stat-label-short">L:</span>
+                <span class="chart-stat-label-short">${lowLabel}:</span>
                 <span class="chart-stat-label-low"></span>
             </span>${formatter(minValue)}${getUnit}
         </div>
         <div class="chart-stat">
             <span class="chart-stat-label">
-                <span class="chart-stat-label-short">A:</span>
+                <span class="chart-stat-label-short">${avgLabel}:</span>
                 <span class="chart-stat-label-avg"></span>
             </span>${formatter(avgValue)}${getUnit}
         </div>
         <div class="chart-stat">
             <span class="chart-stat-label">
-                <span class="chart-stat-label-short">H:</span>
+                <span class="chart-stat-label-short">${highLabel}:</span>
                 <span class="chart-stat-label-high"></span>
             </span>${formatter(maxValue)}${getUnit}
         </div>
         ${!isMultiSeries ? `
         <div class="chart-stat chart-stat-current">
             <span class="chart-stat-label">
-                <span class="chart-stat-label-short">N:</span>
+                <span class="chart-stat-label-short">${nowLabel}:</span>
                 <span class="chart-stat-label-now"></span>
             </span>${currentValue !== null ? formatter(currentValue) + getUnit : '—'}
         </div>
