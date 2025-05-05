@@ -26,7 +26,9 @@
       "Bash(ls:*)",
       "Bash(cp:*)",
       "Bash(/Users/fmr/projects/drimon/docs/.claude/*)",
-      "Bash(/Users/fmr/projects/drimon/.claude/)"
+      "Bash(/Users/fmr/projects/drimon/.claude/)",
+      "Bash(rm:*)",
+      "Bash(git rm:*)"
     ],
     "deny": []
   }
