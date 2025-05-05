@@ -1,12 +1,32 @@
 <meta name="google-site-verification" content="FM1YRYn40sX8BMJEtySkmjXelYIegzNxT7Ig2Ma3eSE" />
 
-# DriMon
+# DriMon - Drivhus Monitor
 
 ![logo](/docs/logos/1_1000x550.webp)
 
 Monitoring our greenhouse at Rødtangen, Norway
 
-This README is work-in-progress and consists of a lot of TODOs and notes.  I hope I'll get around to add content.
+## Overview
+
+DriMon is a web-based visualization platform for greenhouse monitoring data. This project displays sensor data from a network of ESP32-based monitoring systems installed in a greenhouse.
+
+The system consists of:
+
+1. **Hardware Sensors**: ESP32-based sensors measuring:
+   - Temperature (multiple locations)
+   - Humidity
+   - Air pressure
+   - Light levels
+   - Soil moisture
+   - Window opening
+   - Battery status
+
+2. **Data Storage**: [ThingSpeak](https://thingspeak.com/) channels store the time-series data from the sensors.
+
+3. **Web Visualization**: This web interface that displays:
+   - Real-time sensor readings
+   - Interactive time-series charts
+   - Historical data analysis
 
 ## Links
 * [Main site - Charts and Data](https://drimon.rodland.no/)
@@ -15,52 +35,12 @@ This README is work-in-progress and consists of a lot of TODOs and notes.  I hop
 * [Thingspeak Channel 3](https://thingspeak.com/channels/2584547)
 * [Github page](https://github.com/fmmr/drimon)
 
-## Building the greenhouse (Summer of 2023)
-### digging
-TODO: describe with pictures
-### filling
-TODO: describe with pictures
-### assembling
-TODO: describe with pictures
-### water & electricity
-TODO: describe with pictures
-### gif of the entire process
-TODO: add
+## Project Components
 
-## Plants (Summer of 2024)
-### Tomatoes
-TODO: describe
-### Physalis
-TODO: describe
-### Chilis
-TODO: describe
-### Peppers (Paprika)
-TODO: describe
-### Eggplant (Aubergine)
-TODO: describe
-### Squash
-TODO: describe
-### Cucumber
-TODO: describe
-### Alcea (Hollyhock)
-TODO: describe
-### Urter
-TODO: describe
-### Pumpkin
-TODO: describe
+### Hardware Components (ESP32)
+The sensor system in the greenhouse is based on ESP32 microcontrollers with various sensors.
 
-
-## Monitoring the greenhouse (Summer of 2024)
-### custom PCB
-TODO: v1 and v2 - process/price.  errors/bugs. v1.0/1.1
-[v 1.0](https://aisler.net/p/QGJVZVVV)
-[v 1.1](https://aisler.net/p/GKWHNKOD)
-Changes I want to make: smaller. fix missing connection.  fewer I²C connections (used + 2). no 1-wire. text visible.  more JCT connectors instead of pins. 38 pin esp32?
-### casing
-TODO: biltema assortmentbox 
-### sensors
 #### List of Components
-TODO: add all components
 <table>
 	<thead>
   <tr>
@@ -147,65 +127,60 @@ TODO: add all components
 		<li><a href="https://www.aliexpress.com/item/1005006177829793.html">AliExpress</a></li>
 	</ul></td>
   </tr>
-  <!--
-  <tr>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td></td>
-    <td class="tg-0pky"><ul>
-		<li><a href=""></a></li>
-		<li><a href=""></a></li>
-	</ul></td>
-    <td class="tg-0pky"><ul>
-		<li><a href=""></a></li>
-	</ul></td>
-  </tr>
-  -->
 </tbody>
 </table>
 
-### esp32
-TODO: many GPIOas, integrated wifi (and bluetooth)
-### interfaces 
-TODO: (I²C, 1-Wire, Analogue input, Digital input)
-### deep sleep
-TODO: striggle with mulitple buttons
-### temperature
-TODO: hide from sun, calculate average, soil temperature
-### soil moisture sensors
-TODO: tried both capacitive and resistive, struggling with good calibration
-### batteries, solar panel
-TODO: which batteries, how many, which solar panel
-### windows
-TODO: how to measure the "openess"?
-### wifi, antenna
-TODO: wifi 50 meter outdoor through walls.  Hacked antenna on a 30-pin
-### light sensor
-TODO: tried 3 different locations - ended up with hald-dome diffuser in roof top.
-Typically will not measure anything below 0.5lux or higgher than ca 50000lux.
-### battery gauge
-hm - reverse voltage
-### thingspeak
-TODO: describe
-### main chart page
-#### iframes
-TODO: describe
-#### data
-TODO: describe
-#### met.no
-TODO: describe
+### Custom PCB
+- [v 1.0](https://aisler.net/p/QGJVZVVV)
+- [v 1.1](https://aisler.net/p/GKWHNKOD)
 
-## Ideas and Future
-### simple
-TODO: add outside temperature (hm - how/where).  
-### complex
-ideas on actually controlling:
-- watering
-- nutrition
-- light
+### Web Interface
 
+The web interface uses:
 
-## Other Links/Inspiration
-TODO: add
+- **Chart.js**: For interactive data visualization and charts
+- **Modern HTML/CSS**: Responsive design optimized for both desktop and mobile
+- **Vanilla JavaScript**: For DOM manipulation and data fetching
+- **Moment.js**: For date handling and formatting
+- **Bootstrap & Font Awesome**: For basic styling and icons
+- **Internationalization (i18n)**: Multi-language support (Norwegian, English, Spanish)
 
+#### Features
+
+- **Interactive Charts**: Time-series data visualization with pan and zoom
+- **Statistical Analysis**: Automatic calculation of min/max/average values
+- **Weather Integration**: Real-time weather data from YR.no
+- **Responsive Design**: Optimized for both desktop and mobile devices
+- **Dark Mode**: Toggleable light/dark theme
+- **Multiple Languages**: Support for Norwegian, English, and Spanish
+
+## Documentation
+
+- [Development Documentation](/documentation/DEVELOPMENT.md): Architecture, components, and development guidelines
+- [Testing Guidelines](/documentation/TESTING.md): Testing approach and best practices
+- [Future Enhancements](/documentation/FUTURE.md): Planned features and improvements
+- [Refactoring Plan](/documentation/REFACTORING_PLAN.md): Detailed plan for code refactoring
+
+## Getting Started
+
+To preview this site locally, you can use any static file server. For example:
+
+```bash
+# Using Python
+python -m http.server
+
+# Or using Node.js
+npx serve
+```
+
+## Greenhouse Installation
+
+The DriMon system was installed in our greenhouse at Rødtangen, Norway, built during the summer of 2023. The monitoring system was installed during the summer of 2024.
+
+### Future Plans
+
+Future enhancements include:
+- Automated watering system
+- Nutrient monitoring and control
+- Additional sensors for soil and air quality
+- Improved predictive analytics for plant growth
