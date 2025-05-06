@@ -508,32 +508,41 @@ function updateChartStats(chartId, minValue, maxValue, avgValue, currentValue, i
     // Format values appropriately
     const range = maxValue - minValue;
     
+    // Determine formatting function based on config
+    let formatFunc = ChartUtils.formatNumber;
+    
+    // Special override for window chart - always use integers
+    if (chartId === 'chart-window' || 
+        (config && config.formatting && config.formatting.decimalPlaces === 0)) {
+        formatFunc = (val, config, range) => Math.round(val).toString();
+    }
+    
     // Build stats HTML
     statsEl.innerHTML = `
         <div class="chart-stat">
             <span class="chart-stat-label">
                 <span class="chart-stat-label-short">${lowLabel}:</span>
                 <span class="chart-stat-label-low"></span>
-            </span>${ChartUtils.formatNumber(minValue, config, range)}${unit}
+            </span>${formatFunc(minValue, config, range)}${unit}
         </div>
         <div class="chart-stat">
             <span class="chart-stat-label">
                 <span class="chart-stat-label-short">${avgLabel}:</span>
                 <span class="chart-stat-label-avg"></span>
-            </span>${ChartUtils.formatNumber(avgValue, config, range)}${unit}
+            </span>${formatFunc(avgValue, config, range)}${unit}
         </div>
         <div class="chart-stat">
             <span class="chart-stat-label">
                 <span class="chart-stat-label-short">${highLabel}:</span>
                 <span class="chart-stat-label-high"></span>
-            </span>${ChartUtils.formatNumber(maxValue, config, range)}${unit}
+            </span>${formatFunc(maxValue, config, range)}${unit}
         </div>
         ${!isMultiSeries ? `
         <div class="chart-stat chart-stat-current">
             <span class="chart-stat-label">
                 <span class="chart-stat-label-short">${nowLabel}:</span>
                 <span class="chart-stat-label-now"></span>
-            </span>${currentValue !== null ? ChartUtils.formatNumber(currentValue, config, range) + unit : '—'}
+            </span>${currentValue !== null ? formatFunc(currentValue, config, range) + unit : '—'}
         </div>
         ` : ''}
     `;
@@ -911,6 +920,9 @@ function createOrUpdateChart(config, data) {
     
     // Initialize min and max values for statistics
     
+    // Check if we need to apply data transformation
+    const dataTransform = config.dataTransform || null;
+    
     if (data.is_multi_series) {
         // Handle multi-series data
         if (!data.series || data.series.length === 0 || data.series[0].feeds.length === 0) {
@@ -933,7 +945,22 @@ function createOrUpdateChart(config, data) {
         // Process each series data
         data.series.forEach(series => {
             // Get values for this series
-            const seriesValues = series.feeds.map(feed => parseFloat(feed[`field${series.field}`]));
+            let seriesValues = series.feeds.map(feed => parseFloat(feed[`field${series.field}`]));
+            
+            // Apply data transformation if configured
+            if (dataTransform) {
+                seriesValues = seriesValues.map(value => {
+                    if (isNaN(value)) return value;
+                    
+                    // Apply shift transformation
+                    if (dataTransform.shiftBy !== undefined) {
+                        return value + dataTransform.shiftBy;
+                    }
+                    
+                    return value;
+                });
+            }
+            
             const seriesFiltered = seriesValues.filter(v => !isNaN(v));
             
             // Skip empty series
@@ -1005,7 +1032,22 @@ function createOrUpdateChart(config, data) {
         });
     } else {
         // Handle single series data (original code)
-        const values = data.feeds.map(feed => parseFloat(feed[`field${config.field}`]));
+        let values = data.feeds.map(feed => parseFloat(feed[`field${config.field}`]));
+        
+        // Apply data transformation if configured
+        if (dataTransform) {
+            values = values.map(value => {
+                if (isNaN(value)) return value;
+                
+                // Apply shift transformation
+                if (dataTransform.shiftBy !== undefined) {
+                    return value + dataTransform.shiftBy;
+                }
+                
+                return value;
+            });
+        }
+        
         hasNegativeValues = values.some(v => v < 0);
         
         // Calculate data range for better scaling - only filter NaN values, keep zeros and all valid numbers
@@ -1367,23 +1409,38 @@ function createOrUpdateChart(config, data) {
                         // First round to avoid JavaScript floating point arithmetic problems
                         const valueWithFixedPrecision = parseFloat(value.toFixed(3));
                         
+                        // Integer values should always be displayed as integers without decimal places
+                        if (Number.isInteger(valueWithFixedPrecision)) {
+                            return valueWithFixedPrecision.toString();
+                        }
+                        
+                        // Check for explicit decimal places setting in config
+                        if (config && config.formatting && config.formatting.decimalPlaces !== undefined) {
+                            return parseFloat(valueWithFixedPrecision.toFixed(config.formatting.decimalPlaces)).toString();
+                        }
+                        
+                        // Special case for window chart - always show integers
+                        if (chartId === 'chart-window') {
+                            return Math.round(valueWithFixedPrecision).toString();
+                        }
+                        
                         // Special case for battery voltage chart - always show 1 decimal place
                         if (chartId === 'chart-battery-voltage') {
-                            return valueWithFixedPrecision.toFixed(1);
+                            return parseFloat(valueWithFixedPrecision.toFixed(1)).toString();
                         }
                         
                         // For small values (like voltage, temperature differences)
                         if (Math.abs(valueWithFixedPrecision) < 10) {
                             // For very small values, use 2 decimal places
                             if (Math.abs(valueWithFixedPrecision) < 1) {
-                                return valueWithFixedPrecision.toFixed(2);
+                                return parseFloat(valueWithFixedPrecision.toFixed(2)).toString();
                             }
                             // For moderately small values, use 1 decimal place
-                            return valueWithFixedPrecision.toFixed(1);
+                            return parseFloat(valueWithFixedPrecision.toFixed(1)).toString();
                         }
                         
                         // For larger values, use integers
-                        return Math.round(valueWithFixedPrecision);
+                        return Math.round(valueWithFixedPrecision).toString();
                     }
                 },
                 border: {
@@ -1451,23 +1508,38 @@ function createOrUpdateChart(config, data) {
                             // First round to avoid JavaScript floating point arithmetic problems
                             const valueWithFixedPrecision = parseFloat(value.toFixed(3));
                             
+                            // Integer values should always be displayed as integers without decimal places
+                            if (Number.isInteger(valueWithFixedPrecision)) {
+                                return valueWithFixedPrecision.toString();
+                            }
+                            
+                            // Check for explicit decimal places setting in config
+                            if (config && config.formatting && config.formatting.decimalPlaces !== undefined) {
+                                return parseFloat(valueWithFixedPrecision.toFixed(config.formatting.decimalPlaces)).toString();
+                            }
+                            
+                            // Special case for window chart - always show integers
+                            if (chartId === 'chart-window') {
+                                return Math.round(valueWithFixedPrecision).toString();
+                            }
+                            
                             // Special case for battery voltage chart - always show 1 decimal place
                             if (chartId === 'chart-battery-voltage') {
-                                return valueWithFixedPrecision.toFixed(1);
+                                return parseFloat(valueWithFixedPrecision.toFixed(1)).toString();
                             }
                             
                             // For small values (like voltage, temperature differences)
                             if (Math.abs(valueWithFixedPrecision) < 10) {
                                 // For very small values, use 2 decimal places
                                 if (Math.abs(valueWithFixedPrecision) < 1) {
-                                    return valueWithFixedPrecision.toFixed(2);
+                                    return parseFloat(valueWithFixedPrecision.toFixed(2)).toString();
                                 }
                                 // For moderately small values, use 1 decimal place
-                                return valueWithFixedPrecision.toFixed(1);
+                                return parseFloat(valueWithFixedPrecision.toFixed(1)).toString();
                             }
                             
                             // For larger values, use integers
-                            return Math.round(valueWithFixedPrecision);
+                            return Math.round(valueWithFixedPrecision).toString();
                         }
                     },
                     border: {
@@ -1600,7 +1672,24 @@ function createOrUpdateChart(config, data) {
                             formattedValue = Math.round(tooltipItem.raw);
                         }
                         
-                        return `${datasetLabel}: ${formattedValue}${config.unit || ''}`;
+                        // Add transformation information in tooltip if configured
+                        let displayUnit = config.unit || '';
+                        if (config.dataTransform && config.dataTransform.normalizeToZero) {
+                            // Optionally add original value info in tooltip
+                            const originalValue = tooltipItem.raw - (config.dataTransform.shiftBy || 0);
+                            const formattedOriginal = config.useIntegerFormat ? 
+                                Math.round(originalValue) : 
+                                parseFloat(originalValue.toFixed(1));
+                                
+                            // Only show if debugging is enabled or always show
+                            // return `${datasetLabel}: ${formattedValue}${displayUnit} (raw: ${formattedOriginal}${displayUnit})`;
+                            
+                            // Simple display without raw value
+                            return `${datasetLabel}: ${formattedValue}${displayUnit}`;
+                        }
+                        
+                        // Standard display without transformation info
+                        return `${datasetLabel}: ${formattedValue}${displayUnit}`;
                     },
                     
                     // Show data from all related charts in this tooltip

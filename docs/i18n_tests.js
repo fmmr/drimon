@@ -4,8 +4,97 @@
  * This file contains automated tests to verify that all UI elements
  * are correctly translated when the page loads and when languages are switched.
  * 
- * Run these tests by adding ?test_i18n=true to the URL.
+ * Run these tests by:
+ * 1. Adding ?test_i18n=true to the URL for automated tests
+ * 2. Using the console functions below for manual testing:
+ *    - testI18n() - Run basic i18n checks in console
+ *    - switchLanguage(lang) - Test switching to a specific language
+ *    - validateI18n() - Check for missing translations
  */
+
+// Add console test helpers
+window.testI18n = function() {
+    console.group('I18n System Test');
+    
+    if (!window.I18n) {
+        console.error('I18n system not available!');
+        console.groupEnd();
+        return;
+    }
+    
+    console.log('Current language:', I18n.getCurrentLanguage());
+    console.log('Supported languages:', I18n.getSupportedLanguages());
+    
+    // Test some basic translations
+    console.log('Translation examples:');
+    console.log('  "temperature" →', I18n.translate('temperature'));
+    console.log('  "loading" →', I18n.translate('loading'));
+    console.log('  "windowChart" →', I18n.translate('windowChart'));
+    
+    // Test ChartI18n functionality
+    if (window.ChartI18n) {
+        console.log('ChartI18n test:');
+        console.log('  translateChartTitle("Temperatur") →', ChartI18n.translateChartTitle('Temperatur'));
+        console.log('  translateSeriesLabel("Tak") →', ChartI18n.translateSeriesLabel('Tak'));
+        console.log('  getStatisticsLabels() →', ChartI18n.getStatisticsLabels());
+    } else {
+        console.warn('ChartI18n not available');
+    }
+    
+    // Test if charts have translations
+    if (window.charts && window.charts.length > 0) {
+        console.log('First chart test:');
+        const chart = window.charts[0];
+        console.log('  ID:', chart.id);
+        if (chart.data && chart.data.datasets && chart.data.datasets.length > 0) {
+            console.log('  Dataset label:', chart.data.datasets[0].label);
+        }
+        const titleEl = document.getElementById(chart.id).closest('.chart').querySelector('.chart-title');
+        console.log('  Title element:', titleEl ? titleEl.textContent : 'Not found');
+    }
+    
+    console.groupEnd();
+    return 'Test complete. See console for results.';
+};
+
+window.switchLanguage = function(lang) {
+    if (!window.I18n) {
+        console.error('I18n system not available!');
+        return false;
+    }
+    
+    if (!I18n.getSupportedLanguages().includes(lang)) {
+        console.error(`Language "${lang}" not supported. Available: ${I18n.getSupportedLanguages().join(', ')}`);
+        return false;
+    }
+    
+    console.log(`Switching language to: ${lang}`);
+    return I18n.setLanguage(lang);
+};
+
+window.validateI18n = function() {
+    if (!window.I18n || typeof I18n.validateTranslations !== 'function') {
+        console.error('I18n validation not available!');
+        return;
+    }
+    
+    const results = I18n.validateTranslations();
+    console.group('I18n Validation Results');
+    console.log('Valid:', results.isValid);
+    
+    if (results.errors.length > 0) {
+        console.error('Errors:', results.errors);
+    }
+    
+    if (results.warnings.length > 0) {
+        console.warn('Warnings:', results.warnings);
+    }
+    
+    console.log('Stats:', results.stats);
+    console.groupEnd();
+    
+    return results;
+};
 
 // Test configuration
 const languagesToTest = ['no', 'en', 'es'];

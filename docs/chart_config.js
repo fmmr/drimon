@@ -1,5 +1,25 @@
 // Configuration for all charts with row-based layout
 // Make available globally for script.js
+//
+// Chart Configuration Properties:
+// - id: Unique chart identifier
+// - titleKey: Translation key for chart title
+// - channel: ThingSpeak channel ID
+// - field: ThingSpeak field number
+// - color: Chart line color in hex format
+// - row: Grid row position (1-4)
+// - category: Chart category for filtering/grouping
+// - unit: Display unit (°C, mm, lux, etc.)
+// - useIntegerFormat: Whether to format values as integers
+// - minValue: Minimum Y-axis value
+// - formatting: Structured formatting options
+// - indicators: Configuration for min/max/avg indicators
+// - yAxis: Y-axis configuration options
+// - dataTransform: Data transformation options:
+//   - shiftBy: Shifts all values by specified amount
+//   - normalizeToZero: Flag indicating this shift is for normalization
+//   Example: { shiftBy: -57, normalizeToZero: true }
+//
 window.chartConfigs = [
     // Define chart groupings for linked tooltips
     // Groups: temperature, humidity, weather, system, light, soil
@@ -49,10 +69,26 @@ window.chartConfigs = [
         category: 'structure',
         unit: 'mm',
         useIntegerFormat: true,
-        minValue: 50,  // Set minimum Y-axis value
+        // Use both options to ensure consistent integer formatting
+        formatting: {
+            useIntegerFormat: true,
+            decimalPlaces: 0  // Force exactly 0 decimal places
+        },
+        minValue: 0,  // Changed from 50 to 0 since values will be normalized
         relatedCategories: ['temperature'],  // Show temperature values in tooltip
         indicateMax: true,
-        indicateMin: true  // Add option to highlight the low value
+        indicateMin: true,  // Add option to highlight the low value
+        // Add data transformation configuration
+        dataTransform: {
+            shiftBy: -57,  // Shift all values down by 57mm
+            normalizeToZero: true  // Indicates that this shift is intended to normalize to zero
+        },
+        // Structured y-axis configuration
+        yAxis: {
+            beginAtZero: true,    // Always start at 0
+            min: 0,               // Force minimum to be 0
+            gridColor: 'rgba(0, 0, 0, 0.05)'
+        }
     },
     // Multi-series chart for light measurements with dual y-axes
     {

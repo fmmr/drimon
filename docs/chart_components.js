@@ -57,8 +57,21 @@ function createChartContainer(config, isMobile = false) {
 function createChartTitle(title) {
     const titleDiv = document.createElement('div');
     titleDiv.className = 'chart-title';
-    titleDiv.textContent = title;
-    titleDiv.title = title; // Add tooltip
+    
+    // Store original title for i18n
+    titleDiv.setAttribute('data-original-title', title);
+    
+    // Try to translate the title if I18n is available
+    let displayTitle = title;
+    if (window.ChartI18n && typeof window.ChartI18n.translateChartTitle === 'function') {
+        displayTitle = window.ChartI18n.translateChartTitle(title);
+    } else if (window.I18n && typeof window.I18n.translate === 'function') {
+        // Fallback to direct i18n if ChartI18n is not available
+        displayTitle = window.I18n.translate(title);
+    }
+    
+    titleDiv.textContent = displayTitle;
+    titleDiv.title = displayTitle; // Add tooltip
     
     return titleDiv;
 }
@@ -116,7 +129,9 @@ function createLoadingIndicator(chartId) {
     spinner.className = 'loading-spinner';
     
     const loadingText = document.createElement('div');
-    loadingText.textContent = 'Laster data...';
+    // Use i18n for loading text if available
+    loadingText.textContent = window.I18n && typeof window.I18n.translate === 'function' ? 
+        window.I18n.translate('loading') : 'Laster data...';
     
     loadingDiv.appendChild(spinner);
     loadingDiv.appendChild(loadingText);
@@ -150,15 +165,18 @@ function updateChartStats(chartId, statsData, isMultiSeries, unit = '', formatNu
     let nowLabel = 'N';
     
     if (window.I18n && typeof window.I18n.translate === 'function') {
-        const lowTranslation = window.I18n.translate('low');
-        const avgTranslation = window.I18n.translate('avg');
-        const highTranslation = window.I18n.translate('high');
-        const nowTranslation = window.I18n.translate('now');
-        
-        lowLabel = lowTranslation && lowTranslation.length > 0 ? lowTranslation[0].toUpperCase() : 'L';
-        avgLabel = avgTranslation && avgTranslation.length > 0 ? avgTranslation[0].toUpperCase() : 'A';
-        highLabel = highTranslation && highTranslation.length > 0 ? highTranslation[0].toUpperCase() : 'H';
-        nowLabel = nowTranslation && nowTranslation.length > 0 ? nowTranslation[0].toUpperCase() : 'N';
+        const statsLabels = window.ChartI18n && typeof window.ChartI18n.getStatisticsLabels === 'function' ?
+            window.ChartI18n.getStatisticsLabels() : {
+                min: window.I18n.translate('low'),
+                avg: window.I18n.translate('avg'),
+                max: window.I18n.translate('high'),
+                current: window.I18n.translate('now')
+            };
+            
+        lowLabel = statsLabels.min.charAt(0).toUpperCase();
+        avgLabel = statsLabels.avg.charAt(0).toUpperCase();
+        highLabel = statsLabels.max.charAt(0).toUpperCase();
+        nowLabel = statsLabels.current.charAt(0).toUpperCase();
     }
     
     // Always prepare the innerHTML, regardless of visibility state
@@ -204,14 +222,18 @@ function updateChartStats(chartId, statsData, isMultiSeries, unit = '', formatNu
  * @param {boolean} show - Whether to show or hide the indicator
  * @returns {void}
  */
-function updateLoadingIndicator(chartId, message = 'Laster data...', show = true) {
+function updateLoadingIndicator(chartId, message = null, show = true) {
+    // Use i18n for default message if available
+    const defaultMessage = window.I18n && typeof window.I18n.translate === 'function' ? 
+        window.I18n.translate('loading') : 'Laster data...';
+    const displayMessage = message || defaultMessage;
     const loadingEl = document.getElementById(`loading-${chartId}`);
     if (!loadingEl) return;
     
     if (show) {
         loadingEl.innerHTML = `
             <div class="loading-spinner"></div>
-            <div>${message}</div>
+            <div>${displayMessage}</div>
         `;
         loadingEl.style.display = 'block';
     } else {

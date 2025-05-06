@@ -177,6 +177,9 @@ function processChartData(config, data) {
     let hasNegativeValues = false;
     let secondaryAxisValues = [];
     
+    // Check if we need to apply data transformation
+    const dataTransform = config.dataTransform || null;
+    
     // Process multi-series data
     if (data.is_multi_series) {
         if (!data.series || data.series.length === 0 || data.series[0].feeds.length === 0) {
@@ -192,7 +195,13 @@ function processChartData(config, data) {
         // Process each series data
         data.series.forEach(series => {
             // Get values for this series
-            const seriesValues = series.feeds.map(feed => parseFloat(feed[`field${series.field}`]));
+            let seriesValues = series.feeds.map(feed => parseFloat(feed[`field${series.field}`]));
+            
+            // Apply data transformation if configured
+            if (dataTransform) {
+                seriesValues = applyDataTransformation(seriesValues, dataTransform);
+            }
+            
             const seriesFiltered = seriesValues.filter(v => !isNaN(v));
             
             // Skip empty series
@@ -242,7 +251,13 @@ function processChartData(config, data) {
         });
     } else {
         // Handle single series data
-        const values = data.feeds.map(feed => parseFloat(feed[`field${config.field}`]));
+        let values = data.feeds.map(feed => parseFloat(feed[`field${config.field}`]));
+        
+        // Apply data transformation if configured
+        if (dataTransform) {
+            values = applyDataTransformation(values, dataTransform);
+        }
+        
         hasNegativeValues = values.some(v => v < 0);
         
         // Calculate data range for better scaling
@@ -280,6 +295,44 @@ function processChartData(config, data) {
             tension: 0.1,
             yAxisID: 'y', // Always use primary y-axis for single series
             titleKey: config.titleKey // Store titleKey for future translation updates
+        });
+    }
+    
+    /**
+     * Applies data transformations to an array of values
+     * 
+     * Supported transformations:
+     * - shiftBy: Number - Shifts all data points by the specified amount
+     * - normalizeToZero: Boolean - Flag indicating if this shift is intended to normalize values to zero
+     * 
+     * Example config:
+     * ```javascript
+     * dataTransform: {
+     *   shiftBy: -57,  // Shift all values down by 57 units
+     *   normalizeToZero: true  // Indicates this is a normalization
+     * }
+     * ```
+     * 
+     * @param {number[]} values - Array of data values
+     * @param {Object} transform - Transformation configuration
+     * @returns {number[]} - Transformed values
+     */
+    function applyDataTransformation(values, transform) {
+        if (!values || !Array.isArray(values) || !transform) {
+            return values;
+        }
+        
+        return values.map(value => {
+            if (isNaN(value)) return value;
+            
+            // Apply shift transformation
+            if (transform.shiftBy !== undefined) {
+                return value + transform.shiftBy;
+            }
+            
+            // Can add more transformation types here in the future
+            
+            return value;
         });
     }
     
