@@ -67,26 +67,7 @@ html, body {
     position: relative;
   }
   
-  /* Hint for new users on mobile - only shown on first visit */
-  .chart-container.mobile-layout::before {
-    content: "Tips: Du kan sortere diagrammene etter kategori med menyen øverst";
-    display: block;
-    position: sticky;
-    top: 0;
-    background-color: #f8f9fa;
-    color: #666;
-    font-size: 11px;
-    padding: 5px 10px;
-    text-align: center;
-    border-bottom: 1px solid #e9ecef;
-    margin-bottom: 10px;
-    z-index: 5;
-  }
-  
-  /* Hide hint when sort preference already exists */
-  .hint-hidden.chart-container.mobile-layout::before {
-    display: none;
-  }
+  /* Mobile hint removed as requested */
 }
 
 /* Individual chart styling */

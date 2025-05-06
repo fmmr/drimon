@@ -22,15 +22,18 @@ const ChartUtils = {
     formatNumber: function(val, config, range) {
         if (!val && val !== 0) return '—';
         
-        // Check if we should use integer format - use direct config property access
-        const useInteger = config && config.useIntegerFormat === true;
-        const chartId = config ? config.id : null;
+        // Get formatting configuration
+        const formatting = config && config.formatting || {};
         
-        // First handle specific chart cases
-        if (chartId === 'chart-battery-voltage') {
-            // Battery voltage always shows one decimal place for consistency
-            return parseFloat(val.toFixed(3)).toFixed(1);
+        // First check for explicit decimal places configuration
+        if (formatting.decimalPlaces !== undefined) {
+            return parseFloat(val.toFixed(3)).toFixed(formatting.decimalPlaces);
         }
+        
+        // Use useIntegerFormat from either the formatting object or the main config
+        const useInteger = (formatting.useIntegerFormat !== undefined) ? 
+            formatting.useIntegerFormat : 
+            (config && config.useIntegerFormat === true);
         
         // Use config-based or range-based formatting
         if (useInteger || range >= 10) {
@@ -140,9 +143,15 @@ const ChartUtils = {
             }
         };
         
-        // Check if we should show min/max indicators based on config
-        const showMax = config.indicateMax === true;
-        const showMin = config.indicateMin === true;
+        // Get indicator configuration with defaults
+        const indicators = config.indicators || {};
+        const showMax = indicators.showMax !== undefined ? indicators.showMax : (config.indicateMax === true);
+        const showMin = indicators.showMin !== undefined ? indicators.showMin : (config.indicateMin === true);
+        
+        // Get indicator colors from configuration or use defaults
+        const indicatorColors = indicators.colors || {};
+        const maxColor = indicatorColors.max || '#ff5252';
+        const minColor = indicatorColors.min || '#4caf50';
         
         if (showMax || showMin) {
             // Find indices where min/max values occur
@@ -168,8 +177,8 @@ const ChartUtils = {
                         type: 'point',
                         xValue: index,
                         yValue: maxValue,
-                        backgroundColor: '#ff5252',
-                        borderColor: '#ff5252',
+                        backgroundColor: maxColor,
+                        borderColor: maxColor,
                         borderWidth: 2,
                         radius: 5,
                         label: {
@@ -195,8 +204,8 @@ const ChartUtils = {
                         type: 'point',
                         xValue: index,
                         yValue: minValue,
-                        backgroundColor: '#4caf50',
-                        borderColor: '#4caf50',
+                        backgroundColor: minColor,
+                        borderColor: minColor,
                         borderWidth: 2,
                         radius: 5,
                         label: {
@@ -948,18 +957,10 @@ function createOrUpdateChart(config, data) {
             // Translate series title if possible
             let translatedTitle = series.title;
             if (window.i18n && typeof window.i18n.__ === 'function') {
-                // Map common series titles to translation keys
-                const titleKey = series.title === 'Tak' ? 'ceiling' :
-                                 series.title === 'Intern' ? 'internal' :
-                                 series.title === 'Agurk' ? 'cucumber' :
-                                 series.title === 'Agurk 1' ? 'cucumber1' :
-                                 series.title === 'Agurk 2' ? 'cucumber2' :
-                                 series.title === 'Padron' ? 'padron' :
-                                 series.title === 'Gulv' ? 'floor' : null;
-                
-                if (titleKey) {
-                    const translated = window.i18n.__(titleKey);
-                    if (translated !== titleKey) {
+                // Use titleKey from series config directly if available
+                if (series.titleKey) {
+                    const translated = window.i18n.__(series.titleKey);
+                    if (translated !== series.titleKey) {
                         translatedTitle = translated;
                     }
                 }
@@ -1039,31 +1040,9 @@ function createOrUpdateChart(config, data) {
         // Get translated chart title
         let chartTitle = config.title;
         
-        // Map common chart titles to their translation keys
-        const titleMap = {
-            'Temperatur': 'temperatureChart',
-            'Vindusåpning': 'windowChart',
-            'Lys': 'lightChart',
-            'Batteri (%)': 'batteryPercentChart',
-            'Temperatur Diff': 'tempDiffChart',
-            'Plante Temperaturer': 'plantsTempsChart',
-            'Utetemperatur': 'outTempChart',
-            'Sensor Temperaturer': 'sensorsTempsChart',
-            'Luftfuktighet': 'humidityChart',
-            'Lufttrykk': 'pressureChart',
-            'Vind': 'windChart',
-            'Nedbør': 'rainChart',
-            'Jordfuktighet': 'soilMoistureChart',
-            'Batteri (spenning)': 'batteryVoltageChart',
-            'WiFi': 'wifiChart',
-            'Tid brukt': 'timeUsedChart'
-        };
-        
-        if (window.i18n && typeof window.i18n.__ === 'function') {
-            const translationKey = titleMap[config.title];
-            if (translationKey) {
-                chartTitle = window.i18n.__(translationKey);
-            }
+        // Use titleKey directly from config if available
+        if (config.titleKey && window.i18n && typeof window.i18n.__ === 'function') {
+            chartTitle = window.i18n.__(config.titleKey);
         }
         
         datasets.push({
@@ -1346,17 +1325,22 @@ function createOrUpdateChart(config, data) {
                 }
             },
             y: {
-                position: window.innerWidth <= 768 ? 'left' : 'right', // Position scale on left for mobile, right for desktop
+                // Use yAxis configuration if available, or default values
+                position: config.yAxis && config.yAxis.position ? config.yAxis.position : 
+                         (window.innerWidth <= 768 ? 'left' : 'right'), // Position scale on left for mobile, right for desktop
                 grid: {
-                    color: 'rgba(0, 0, 0, 0.05)',
-                    lineWidth: 1,
-                    drawBorder: false
+                    color: config.yAxis && config.yAxis.gridColor ? config.yAxis.gridColor : 'rgba(0, 0, 0, 0.05)',
+                    lineWidth: config.yAxis && config.yAxis.gridLineWidth ? config.yAxis.gridLineWidth : 1,
+                    drawBorder: config.yAxis && config.yAxis.drawBorder ? config.yAxis.drawBorder : false
                 },
-                // Dynamic scale based on data range with padding
-                min: hasMinValue ? config.minValue : undefined, // Use hard minimum if configured
-                suggestedMin: hasMinValue ? undefined : paddedMinValue, // Only use suggestedMin if no minValue configured
-                suggestedMax: paddedMaxValue,
-                beginAtZero: false, // Never force zero as we want to scale to data
+                // Dynamic scale based on config or data range with padding
+                min: config.yAxis && config.yAxis.min !== undefined ? config.yAxis.min : 
+                    (hasMinValue ? config.minValue : undefined), // Use explicit min if configured
+                suggestedMin: (config.yAxis && config.yAxis.min !== undefined) || hasMinValue ? 
+                    undefined : paddedMinValue, // Only use suggestedMin if no min configured
+                suggestedMax: config.yAxis && config.yAxis.max !== undefined ? config.yAxis.max : paddedMaxValue,
+                beginAtZero: config.yAxis && config.yAxis.beginAtZero !== undefined ? 
+                    config.yAxis.beginAtZero : false, // Use config or default to false
                 ticks: {
                     font: {
                         size: window.innerWidth <= 768 ? 8 : 9
@@ -1533,7 +1517,8 @@ function createOrUpdateChart(config, data) {
                                         // Get original text (before any value is added)
                                         const originalText = (label.text || '').split(':')[0].trim();
                                         
-                                        // Find translation key for this series label
+                                        // Fall back to hardcoded mapping since we don't have access 
+                                        // to the chart configuration in this scope
                                         let titleKey = null;
                                         if (originalText === 'Tak') titleKey = 'ceiling';
                                         else if (originalText === 'Intern') titleKey = 'internal';
@@ -2133,13 +2118,26 @@ function setupDateRangeHandlers() {
 }
 
 // Sort charts by category - only on mobile devices
+// Export sort function to global scope for access from event handlers
+window.sortChartsByCategory = sortChartsByCategory;
+
 function sortChartsByCategory(category) {
     // Only apply sorting on mobile (to avoid issues on desktop grid layout)
-    if (window.innerWidth > 768) {
+    // Force mobile mode if needed for testing by adding ?forceMobile=true to URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const forceMobile = urlParams.get('forceMobile') === 'true';
+    const isMobileView = window.innerWidth <= 768 || forceMobile;
+    
+    if (!isMobileView) {
         return;
     }
     
     const chartContainer = document.getElementById('chartContainer');
+    
+    if (!chartContainer) {
+        return;
+    }
+    
     const charts = Array.from(chartContainer.querySelectorAll('.chart'));
     
     // Save references to the chart instances and their canvases
@@ -2155,13 +2153,19 @@ function sortChartsByCategory(category) {
     
     // Create a sortable array of chart elements with their metadata
     const chartElements = charts.map(chart => {
+        // Get canvas element - if missing, skip this chart
+        const canvas = chart.querySelector('canvas');
+        if (!canvas) {
+            return null;
+        }
+        
         return {
             element: chart,
-            row: parseInt(chart.getAttribute('data-row')),
-            category: chart.getAttribute('data-category'),
-            id: chart.querySelector('canvas').id
+            row: parseInt(chart.getAttribute('data-row') || '0'),
+            category: chart.getAttribute('data-category') || '',
+            id: canvas.id
         };
-    });
+    }).filter(Boolean); // Remove any null elements (charts with missing canvas)
     
     // Sort charts based on category
     if (category === 'row') {
@@ -2171,8 +2175,27 @@ function sortChartsByCategory(category) {
                 return a.row - b.row;
             }
             
-            const aCol = parseInt(a.element.style.gridColumn.split('/')[0]) || 0;
-            const bCol = parseInt(b.element.style.gridColumn.split('/')[0]) || 0;
+            // Get gridColumn from either style property or data attribute to be more robust
+            // This fixes an issue where style.gridColumn might not be set on mobile
+            let aCol = 0;
+            let bCol = 0;
+            
+            // Try to get from config first (most reliable source)
+            const aConfig = window.chartConfigs.find(c => c.id === a.id);
+            const bConfig = window.chartConfigs.find(c => c.id === b.id);
+            
+            if (aConfig && aConfig.gridColumn) {
+                aCol = parseInt(aConfig.gridColumn.split('/')[0]) || 0;
+            } else if (a.element.style.gridColumn) {
+                aCol = parseInt(a.element.style.gridColumn.split('/')[0]) || 0;
+            }
+            
+            if (bConfig && bConfig.gridColumn) {
+                bCol = parseInt(bConfig.gridColumn.split('/')[0]) || 0;
+            } else if (b.element.style.gridColumn) {
+                bCol = parseInt(b.element.style.gridColumn.split('/')[0]) || 0;
+            }
+            
             return aCol - bCol;
         });
     } else {
@@ -2424,35 +2447,58 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }, 30000); // Check every 30 seconds
     
-    // Set up category sorter
-    const sortSelect = document.getElementById('sortSelect');
-    if (sortSelect) {
-        // Try to restore last used sort preference
-        const lastSort = localStorage.getItem('chartSortPreference');
-        if (lastSort) {
-            sortSelect.value = lastSort;
-            
-            // Hide the sorting hint if user has already used sorting
-            const chartContainer = document.getElementById('chartContainer');
-            if (chartContainer) {
-                chartContainer.classList.add('hint-hidden');
-            }
+    // Set up a function to initialize the sorting that can be called later
+    // when we're sure the dropdown exists
+    window.initializeSorting = function() {
+        const sortSelect = document.getElementById('sortSelect');
+        
+        if (!sortSelect) {
+            // If sort select isn't found, try again after a delay
+            setTimeout(window.initializeSorting, 500);
+            return;
         }
         
-        sortSelect.addEventListener('change', () => {
-            const category = sortSelect.value;
-            sortChartsByCategory(category);
-            
-            // Hide the sorting hint after user has sorted
-            const chartContainer = document.getElementById('chartContainer');
-            if (chartContainer) {
-                chartContainer.classList.add('hint-hidden');
-            }
+        // Try to restore last used sort preference
+        const lastSort = localStorage.getItem('chartSortPreference');
+        
+        if (lastSort) {
+            sortSelect.value = lastSort;
+        }
+        
+        // Remove any existing event listeners
+        const newSortSelect = sortSelect.cloneNode(true);
+        sortSelect.parentNode.replaceChild(newSortSelect, sortSelect);
+        
+        // Add event listener to the new element
+        newSortSelect.addEventListener('change', (event) => {
+            const category = event.target.value;
+            window.sortChartsByCategory(category);
         });
         
         // Apply the initial sort if we're in mobile mode and a preference exists
         if (window.innerWidth <= 768 && lastSort) {
-            setTimeout(() => sortChartsByCategory(lastSort), 500);
+            setTimeout(() => window.sortChartsByCategory(lastSort), 500);
         }
-    }
+    };
+    
+    // Try to initialize sorting immediately
+    window.initializeSorting();
+    
+    // Also set up a MutationObserver to detect when the header might be added
+    const bodyObserver = new MutationObserver((mutations) => {
+        for (const mutation of mutations) {
+            if (mutation.type === 'childList' && mutation.addedNodes.length) {
+                // Check if sortSelect was added
+                if (document.getElementById('sortSelect')) {
+                    window.initializeSorting();
+                    // No need to keep observing once we've found it
+                    bodyObserver.disconnect();
+                    break;
+                }
+            }
+        }
+    });
+    
+    // Start observing for header/sortSelect additions
+    bodyObserver.observe(document.body, { childList: true, subtree: true });
 });

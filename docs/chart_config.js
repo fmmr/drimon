@@ -13,9 +13,30 @@ window.chartConfigs = [
         row: 1,
         category: 'temperature',
         unit: '°C',
+        // For backward compatibility
         useIntegerFormat: false,
-        indicateMin: true,
-        indicateMax: true
+        // Structured formatting configuration
+        formatting: {
+            useIntegerFormat: false,
+            decimalPlaces: 1 // Show 1 decimal place for most temperature values
+        },
+        // Structured indicator configuration
+        indicators: {
+            showMin: true,
+            showMax: true,
+            showAvg: true,
+            colors: {
+                min: '#4caf50', // Green for min
+                max: '#ff5252', // Red for max
+                avg: '#888888'  // Gray for average
+            }
+        },
+        // Structured y-axis configuration
+        yAxis: {
+            position: 'right',
+            beginAtZero: false, // Don't force zero for temperature
+            gridColor: 'rgba(0, 0, 0, 0.05)'
+        }
     },
     { 
         id: 'chart-window',
@@ -57,8 +78,20 @@ window.chartConfigs = [
         startDate: '2024-08-06 17:00:00',
         category: 'light',
         unit: 'lux',
+        // For backward compatibility
         useIntegerFormat: true,
-        secondYAxis: true          // Enable second y-axis
+        // Structured formatting configuration
+        formatting: {
+            useIntegerFormat: true // Always use integer format for light values
+        },
+        secondYAxis: true,          // Enable second y-axis
+        // Structured y-axis configuration
+        yAxis: {
+            gridColor: 'rgba(0, 0, 0, 0.05)',
+            gridLineWidth: 1,
+            drawBorder: false,
+            beginAtZero: true       // Always start at 0 for light measurements
+        }
     },
     { 
         id: 'chart-battery',
@@ -182,7 +215,18 @@ window.chartConfigs = [
         row: 3,
         category: 'weather',
         unit: 'hPa',
-        useIntegerFormat: true
+        // For backward compatibility
+        useIntegerFormat: true,
+        // Structured formatting configuration
+        formatting: {
+            useIntegerFormat: true // Always use integer format for pressure values
+        },
+        // Structured indicator configuration
+        indicators: {
+            showMin: false,
+            showMax: false,
+            showAvg: true
+        }
     },
     { 
         id: 'chart-wind',
@@ -251,7 +295,11 @@ window.chartConfigs = [
         row: 4,
         category: 'system',
         unit: 'V',
-        useIntegerFormat: false
+        // Use structured formatting config instead of special case in code
+        formatting: {
+            decimalPlaces: 1, // Always show 1 decimal place for battery voltage
+            useIntegerFormat: false
+        }
     },
     { 
         id: 'chart-wifi',
