@@ -16,9 +16,8 @@
 // - indicators: Configuration for min/max/avg indicators
 // - yAxis: Y-axis configuration options
 // - dataTransform: Data transformation options:
-//   - shiftBy: Shifts all values by specified amount
-//   - normalizeToZero: Flag indicating this shift is for normalization
-//   Example: { shiftBy: -57, normalizeToZero: true }
+//   - shiftBy: Shifts all values by specified amount (negative to shift down)
+//   Example: { shiftBy: -63 }
 //
 window.chartConfigs = [
     // Define chart groupings for linked tooltips
@@ -80,8 +79,7 @@ window.chartConfigs = [
         indicateMin: true,  // Add option to highlight the low value
         // Add data transformation configuration
         dataTransform: {
-            shiftBy: -63,  // Shift all values down by 63mm (actually seen 57 in winter)
-            normalizeToZero: true  // Indicates that this shift is intended to normalize to zero
+            shiftBy: -63  // Shift all values down by 63mm (actually seen 57 in winter)
         },
         // Structured y-axis configuration
         yAxis: {

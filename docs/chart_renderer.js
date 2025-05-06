@@ -1672,23 +1672,10 @@ function createOrUpdateChart(config, data) {
                             formattedValue = Math.round(tooltipItem.raw);
                         }
                         
-                        // Add transformation information in tooltip if configured
+                        // Add display unit to the value
                         let displayUnit = config.unit || '';
-                        if (config.dataTransform && config.dataTransform.normalizeToZero) {
-                            // Optionally add original value info in tooltip
-                            const originalValue = tooltipItem.raw - (config.dataTransform.shiftBy || 0);
-                            const formattedOriginal = config.useIntegerFormat ? 
-                                Math.round(originalValue) : 
-                                parseFloat(originalValue.toFixed(1));
-                                
-                            // Only show if debugging is enabled or always show
-                            // return `${datasetLabel}: ${formattedValue}${displayUnit} (raw: ${formattedOriginal}${displayUnit})`;
-                            
-                            // Simple display without raw value
-                            return `${datasetLabel}: ${formattedValue}${displayUnit}`;
-                        }
                         
-                        // Standard display without transformation info
+                        // Display the formatted value with unit
                         return `${datasetLabel}: ${formattedValue}${displayUnit}`;
                     },
                     

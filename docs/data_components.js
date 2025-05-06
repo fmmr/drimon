@@ -303,13 +303,11 @@ function processChartData(config, data) {
      * 
      * Supported transformations:
      * - shiftBy: Number - Shifts all data points by the specified amount
-     * - normalizeToZero: Boolean - Flag indicating if this shift is intended to normalize values to zero
      * 
      * Example config:
      * ```javascript
      * dataTransform: {
-     *   shiftBy: -57,  // Shift all values down by 57 units
-     *   normalizeToZero: true  // Indicates this is a normalization
+     *   shiftBy: -63  // Shift all values down by 63 units
      * }
      * ```
      * 
