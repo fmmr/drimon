@@ -86,10 +86,28 @@ html, body {
     border-color: var(--input-border);
 }
 
-#sortSelect {
+#sortSelect, 
+#mobileSortSelect {
     background-color: var(--chip-bg);
     color: var(--text-color);
     border-color: var(--input-border);
+    transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    
+    /* Custom dropdown arrow that will work with dark mode */
+    background-image: linear-gradient(45deg, transparent 50%, var(--text-color) 50%), 
+                      linear-gradient(135deg, var(--text-color) 50%, transparent 50%);
+    background-position: calc(100% - 15px) calc(1em + 0px), 
+                         calc(100% - 10px) calc(1em + 0px);
+    background-size: 5px 5px, 5px 5px;
+    background-repeat: no-repeat;
+    
+    /* Remove default arrow */
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    
+    /* Add padding for the custom arrow */
+    padding-right: 30px;
 }
 
 /* Dark mode toggle button */
@@ -198,7 +216,16 @@ html, body {
         background: #1a1a1a;
     }
     
-    [data-theme="dark"] #sortSelect {
+    [data-theme="dark"] #sortSelect,
+    [data-theme="dark"] #mobileSortSelect {
         background-color: #222;
+        color: #e0e0e0;
+        border-color: #444;
+    }
+    
+    /* Override custom dropdown arrow color for better visibility in dark mode */
+    [data-theme="dark"] select {
+        background-image: linear-gradient(45deg, transparent 50%, #aaa 50%), 
+                          linear-gradient(135deg, #aaa 50%, transparent 50%);
     }
 }
