@@ -13,11 +13,16 @@
 // - useIntegerFormat: Whether to format values as integers
 // - minValue: Minimum Y-axis value
 // - formatting: Structured formatting options
+//   - useIntegerFormat: Whether to format as integers
+//   - decimalPlaces: Number of decimal places to display
+// - statsLabelsStyle: Style for statistics labels (e.g., 'LAHN' for Low/Avg/High/Now)
 // - indicators: Configuration for min/max/avg indicators
 // - yAxis: Y-axis configuration options
 // - dataTransform: Data transformation options:
 //   - shiftBy: Shifts all values by specified amount (negative to shift down)
 //   Example: { shiftBy: -63 }
+// - categoryHeaderKey: Translation key for category headers in tooltips
+//   Example: 'temperatures' for temperature category
 //
 window.chartConfigs = [
     // Define chart groupings for linked tooltips
@@ -31,6 +36,7 @@ window.chartConfigs = [
         color: '#c62828', // Red for temperature
         row: 1,
         category: 'temperature',
+        categoryHeaderKey: 'temperatures', // Translation key for category headers in tooltips
         unit: '°C',
         // For backward compatibility
         useIntegerFormat: false,
@@ -39,6 +45,8 @@ window.chartConfigs = [
             useIntegerFormat: false,
             decimalPlaces: 1 // Show 1 decimal place for most temperature values
         },
+        // Use LAHN (Low/Avg/High/Now) style for statistics labels
+        statsLabelsStyle: 'LAHN',
         // Structured indicator configuration
         indicators: {
             showMin: true,
@@ -66,6 +74,7 @@ window.chartConfigs = [
         row: 1,
         startDate: '2024-07-25 18:00:00',
         category: 'structure',
+        categoryHeaderKey: 'structure', // Translation key for category headers in tooltips
         unit: 'mm',
         useIntegerFormat: true,
         // Use both options to ensure consistent integer formatting
@@ -111,6 +120,7 @@ window.chartConfigs = [
         row: 1,
         startDate: '2024-08-06 17:00:00',
         category: 'light',
+        categoryHeaderKey: 'light', // Translation key for category headers in tooltips
         unit: 'lux',
         // For backward compatibility
         useIntegerFormat: true,
@@ -135,6 +145,7 @@ window.chartConfigs = [
         color: '#4a6741', // Dark green for system
         row: 1,
         category: 'system',
+        categoryHeaderKey: 'system', // Translation key for category headers in tooltips
         unit: '%',
         useIntegerFormat: true,
         indicateMin: true
@@ -149,8 +160,11 @@ window.chartConfigs = [
         color: '#c62828',
         row: 2,
         category: 'temperature',
+        categoryHeaderKey: 'temperatures', // Translation key for category headers in tooltips
         unit: '°C',
         useIntegerFormat: false,
+        // Use LAHN (Low/Avg/High/Now) style for statistics labels
+        statsLabelsStyle: 'LAHN',
         indicateMin: true,
         indicateMax: true
     },
@@ -162,8 +176,11 @@ window.chartConfigs = [
         color: '#c62828',
         row: 2,
         category: 'temperature',
+        categoryHeaderKey: 'temperatures', // Translation key for category headers in tooltips
         unit: '°C',
         useIntegerFormat: false,
+        // Use LAHN (Low/Avg/High/Now) style for statistics labels
+        statsLabelsStyle: 'LAHN',
         indicateMin: true,
         indicateMax: true
     },
@@ -189,6 +206,7 @@ window.chartConfigs = [
         row: 2,
         startDate: '2024-07-25 15:00:00',
         category: 'plant-temperature',  // Custom category to separate from other temperature charts
+        categoryHeaderKey: 'temperatures', // Use standard temperatures key for translation
         unit: '°C',
         useIntegerFormat: false
     },
@@ -222,6 +240,7 @@ window.chartConfigs = [
         row: 2,
         startDate: '2024-07-25 15:00:00',
         category: 'detail-temperature',  // Custom category to separate from other temperature charts
+        categoryHeaderKey: 'temperatures', // Use standard temperatures key for translation
         unit: '°C',
         useIntegerFormat: false
     },
@@ -235,6 +254,7 @@ window.chartConfigs = [
         color: '#5c6bc0',
         row: 3,
         category: 'weather',
+        categoryHeaderKey: 'weather', // Translation key for category headers in tooltips
         unit: '%',
         useIntegerFormat: true,
         indicateMin: true,
@@ -248,6 +268,7 @@ window.chartConfigs = [
         color: '#5c6bc0',
         row: 3,
         category: 'weather',
+        categoryHeaderKey: 'weather', // Translation key for category headers in tooltips
         unit: 'hPa',
         // For backward compatibility
         useIntegerFormat: true,
@@ -270,6 +291,7 @@ window.chartConfigs = [
         color: '#5c6bc0',
         row: 3,
         category: 'weather',
+        categoryHeaderKey: 'weather', // Translation key for category headers in tooltips
         unit: 'm/s',
         useIntegerFormat: false
     },
@@ -281,6 +303,7 @@ window.chartConfigs = [
         color: '#5c6bc0',
         row: 3,
         category: 'weather',
+        categoryHeaderKey: 'weather', // Translation key for category headers in tooltips
         unit: 'mm',
         useIntegerFormat: false
     },
@@ -313,6 +336,7 @@ window.chartConfigs = [
         row: 4,
         startDate: '2024-07-25 00:00:00',
         category: 'soil-moisture',  // Custom category to separate from other soil charts
+        categoryHeaderKey: 'soil', // Translation key for category headers in tooltips
         unit: '%',
         useIntegerFormat: true,
         // Add special handling flag for soil moisture chart to avoid ID checks in code
@@ -328,6 +352,7 @@ window.chartConfigs = [
         color: '#4a6741',
         row: 4,
         category: 'system',
+        categoryHeaderKey: 'system', // Translation key for category headers in tooltips
         unit: 'V',
         // Use structured formatting config instead of special case in code
         formatting: {
@@ -344,6 +369,7 @@ window.chartConfigs = [
         row: 4,
         startDate: '2024-07-25 15:00:00',
         category: 'system',
+        categoryHeaderKey: 'system', // Translation key for category headers in tooltips
         unit: 'dBm',
         useIntegerFormat: true,
         indicateMin: true
@@ -356,6 +382,7 @@ window.chartConfigs = [
         color: '#4a6741',
         row: 4,
         category: 'system',
+        categoryHeaderKey: 'system', // Translation key for category headers in tooltips
         unit: 'ms',  // Adding missing unit
         useIntegerFormat: true
     },

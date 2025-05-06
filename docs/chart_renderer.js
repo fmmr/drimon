@@ -51,6 +51,7 @@ const ChartUtils = {
         }
     },
     
+    
     // Filter active datasets from chart data
     // This excludes statistical/hidden datasets used for annotations
     getActiveDatasets: function(chart) {
@@ -511,9 +512,8 @@ function updateChartStats(chartId, minValue, maxValue, avgValue, currentValue, i
     // Determine formatting function based on config
     let formatFunc = ChartUtils.formatNumber;
     
-    // Special override for window chart - always use integers
-    if (chartId === 'chart-window' || 
-        (config && config.formatting && config.formatting.decimalPlaces === 0)) {
+    // Use integer formatting if decimal places is explicitly set to 0 in config
+    if (config && config.formatting && config.formatting.decimalPlaces === 0) {
         formatFunc = (val, config, range) => Math.round(val).toString();
     }
     
@@ -1211,11 +1211,8 @@ function createOrUpdateChart(config, data) {
         });
     }
     
-    // Use ChartUtils.getUnitForChart instead of this function
-    // This is kept for backward compatibility
-    function getUnitForChart(chartId) {
-        return ChartUtils.getUnitForChart(chartId);
-    }
+    // Unit should always come from chart configuration
+    // This function is removed to enforce configuration-driven approach
     
     // Function to get all related chart data (same category and related categories)
     function getRelatedChartData(category, timestamp, config) {
@@ -1260,7 +1257,11 @@ function createOrUpdateChart(config, data) {
                 if (minTimeDiff <= 5 * 60 * 1000 && closestIndex !== -1) {
                     // Get chart config to get correct unit
                     const chartConfig = window.chartConfigs.find(c => c.id === chartId);
-                    const unit = chartConfig && chartConfig.unit ? chartConfig.unit : ChartUtils.getUnitForChart(chartId, chartConfig);
+                    // Unit must come from chart configuration
+                    if (!chartConfig || !chartConfig.unit) {
+                        console.error(`Configuration error: Missing unit for chart ${chartId}. Add 'unit' property to chart config.`);
+                    }
+                    const unit = chartConfig && chartConfig.unit ? chartConfig.unit : '';
                     
                     // Handle both single and multi-series charts
                     if (rawData.is_multi_series && rawData.series && Array.isArray(rawData.series)) {
@@ -1414,19 +1415,15 @@ function createOrUpdateChart(config, data) {
                             return valueWithFixedPrecision.toString();
                         }
                         
-                        // Check for explicit decimal places setting in config
+                        // Use formatting configuration from chart config
                         if (config && config.formatting && config.formatting.decimalPlaces !== undefined) {
+                            // Force integers (decimal places = 0)
+                            if (config.formatting.decimalPlaces === 0) {
+                                return Math.round(valueWithFixedPrecision).toString();
+                            }
+                            
+                            // Use specified decimal places for non-zero values
                             return parseFloat(valueWithFixedPrecision.toFixed(config.formatting.decimalPlaces)).toString();
-                        }
-                        
-                        // Special case for window chart - always show integers
-                        if (chartId === 'chart-window') {
-                            return Math.round(valueWithFixedPrecision).toString();
-                        }
-                        
-                        // Special case for battery voltage chart - always show 1 decimal place
-                        if (chartId === 'chart-battery-voltage') {
-                            return parseFloat(valueWithFixedPrecision.toFixed(1)).toString();
                         }
                         
                         // For small values (like voltage, temperature differences)
@@ -1513,19 +1510,15 @@ function createOrUpdateChart(config, data) {
                                 return valueWithFixedPrecision.toString();
                             }
                             
-                            // Check for explicit decimal places setting in config
+                            // Use formatting configuration from chart config
                             if (config && config.formatting && config.formatting.decimalPlaces !== undefined) {
+                                // Force integers (decimal places = 0)
+                                if (config.formatting.decimalPlaces === 0) {
+                                    return Math.round(valueWithFixedPrecision).toString();
+                                }
+                                
+                                // Use specified decimal places for non-zero values
                                 return parseFloat(valueWithFixedPrecision.toFixed(config.formatting.decimalPlaces)).toString();
-                            }
-                            
-                            // Special case for window chart - always show integers
-                            if (chartId === 'chart-window') {
-                                return Math.round(valueWithFixedPrecision).toString();
-                            }
-                            
-                            // Special case for battery voltage chart - always show 1 decimal place
-                            if (chartId === 'chart-battery-voltage') {
-                                return parseFloat(valueWithFixedPrecision.toFixed(1)).toString();
                             }
                             
                             // For small values (like voltage, temperature differences)
@@ -1589,16 +1582,29 @@ function createOrUpdateChart(config, data) {
                                         // Get original text (before any value is added)
                                         const originalText = (label.text || '').split(':')[0].trim();
                                         
-                                        // Fall back to hardcoded mapping since we don't have access 
-                                        // to the chart configuration in this scope
+                                        // Try to find the matching series config for this dataset
                                         let titleKey = null;
-                                        if (originalText === 'Tak') titleKey = 'ceiling';
-                                        else if (originalText === 'Intern') titleKey = 'internal';
-                                        else if (originalText === 'Agurk') titleKey = 'cucumber';
-                                        else if (originalText === 'Agurk 1') titleKey = 'cucumber1';
-                                        else if (originalText === 'Agurk 2') titleKey = 'cucumber2';
-                                        else if (originalText === 'Padron') titleKey = 'padron';
-                                        else if (originalText === 'Gulv') titleKey = 'floor';
+                                        
+                                        // Get chart configuration from chartConfigs
+                                        const chartConfig = window.chartConfigs.find(c => c.id === chart.canvas.id);
+                                        
+                                        // If we have config and this is a multi-series chart with series defined
+                                        if (chartConfig && chartConfig.series && Array.isArray(chartConfig.series)) {
+                                            // Try to find matching series by original text
+                                            const matchingSeries = chartConfig.series.find(s => 
+                                                s.title === originalText || 
+                                                (window.i18n && s.titleKey && window.i18n.__(s.titleKey) === originalText)
+                                            );
+                                            
+                                            if (matchingSeries && matchingSeries.titleKey) {
+                                                titleKey = matchingSeries.titleKey;
+                                            } else {
+                                                // Error if we cannot find a matching series with titleKey
+                                                console.error(`Configuration error: Unable to find matching series with titleKey for "${originalText}" in chart ${chart.canvas.id}. Add 'titleKey' property to series config.`);
+                                            }
+                                        } else {
+                                            console.error(`Configuration error: Missing series configuration for multi-series chart ${chart.canvas.id}.`);
+                                        }
                                         
                                         // Apply translation if found
                                         if (titleKey) {
@@ -1758,13 +1764,20 @@ function createOrUpdateChart(config, data) {
                                 lines.push('');
                             }
                             
-                            // Get category translation key
-                            const headerKey = category === 'temperature' ? 'temperatures' :
-                                              category === 'weather' ? 'weather' :
-                                              category === 'structure' ? 'structure' :
-                                              category === 'light' ? 'light' :
-                                              category === 'system' ? 'system' :
-                                              category === 'soil' ? 'soil' : 'otherValues';
+                            // Get category translation key from chart config
+                            let headerKey = 'otherValues'; // Default if all else fails
+                            
+                            // Find charts with this category and look for categoryHeaderKey
+                            const chartsInCategory = window.chartConfigs.filter(c => c.category === category);
+                            const chartWithHeaderKey = chartsInCategory.find(c => c.categoryHeaderKey);
+                            
+                            if (chartWithHeaderKey && chartWithHeaderKey.categoryHeaderKey) {
+                                // Use explicit configuration property
+                                headerKey = chartWithHeaderKey.categoryHeaderKey;
+                            } else {
+                                // Log error for missing categoryHeaderKey
+                                console.error(`Configuration error: Missing categoryHeaderKey for category "${category}". Add 'categoryHeaderKey' property to chart configs with this category.`);
+                            }
                             
                             // Always use translations if available (not just as fallback)
                             let headerText = '— Andre verdier —'; // Default fallback
@@ -1987,9 +2000,9 @@ function createOrUpdateChart(config, data) {
         chartInstances[config.id].update('none');
     }
     
-    // For temperature charts, ensure they have correct stats labels (L/A/H/N)
-    // Check if it's a temperature chart
-    if (config.id === 'chart-temp' || config.id === 'chart-temp-diff' || config.id === 'chart-out-temp') {
+    // Apply special stats labels formatting if configured
+    // For example, temperature charts use LAHN (Low/Avg/High/Now) style
+    if (config.statsLabelsStyle === 'LAHN') {
         if (typeof fixTemperatureChartStats === 'function') {
             // Apply the fix with a small delay to ensure the chart is fully rendered
             setTimeout(fixTemperatureChartStats, 100);
@@ -2039,9 +2052,9 @@ window.resizeAllCharts = function() {
             // Recalculate stats after resize to ensure they're correct
             recalculateChartStats(chart);
             
-            // Fix temperature chart stats if needed
-            const chartId = chart.canvas.id;
-            if (chartId === 'chart-temp' || chartId === 'chart-temp-diff' || chartId === 'chart-out-temp') {
+            // Fix special stats labels if needed (e.g., temperature charts)
+            const chartConfig = window.chartConfigs.find(c => c.id === chart.canvas.id);
+            if (chartConfig && chartConfig.statsLabelsStyle === 'LAHN') {
                 if (typeof fixTemperatureChartStats === 'function') {
                     setTimeout(fixTemperatureChartStats, 100);
                 }
@@ -2305,11 +2318,12 @@ function sortChartsByCategory(category) {
  * This should be called whenever language changes to ensure proper translation
  */
 function fixTemperatureChartStats() {
-    // These are the charts that should show Low/Avg/High/Now stats instead of series labels
-    const temperatureChartIds = ['chart-temp', 'chart-temp-diff', 'chart-out-temp'];
+    // Find all charts with statsLabelsStyle: 'LAHN' configuration
+    const chartsWithSpecialStats = window.chartConfigs.filter(config => config.statsLabelsStyle === 'LAHN');
     
-    // Process each chart
-    temperatureChartIds.forEach(chartId => {
+    // Process each chart with special stats formatting
+    chartsWithSpecialStats.forEach(chartConfig => {
+        const chartId = chartConfig.id;
         const statsEl = document.getElementById(`stats-${chartId}`);
         if (!statsEl) {
             return;
@@ -2367,9 +2381,8 @@ function fixTemperatureChartStats() {
             nowFullLabel = nowTranslation || 'Now';
         }
         
-        // Get chart config for unit and formatting
-        const config = window.chartConfigs.find(c => c.id === chartId);
-        const unit = config && config.unit ? config.unit : '';
+        // Use chartConfig directly (already have it) for unit and formatting 
+        const unit = chartConfig.unit || '';
         
         // Determine values for chart statistics
         let minValue = 0;
@@ -2437,7 +2450,7 @@ function fixTemperatureChartStats() {
         // Format values appropriately
         const formatNumber = (val) => {
             if (val === null || val === undefined || isNaN(val)) return '—';
-            if (config && config.useIntegerFormat) {
+            if (chartConfig && chartConfig.useIntegerFormat) {
                 return Math.round(val).toString();
             } else if (range >= 10) {
                 return Math.round(val).toString();

@@ -2,45 +2,44 @@
  * @file chart-utils.js
  * @description Utility functions for chart handling in DriMon
  * 
- * This file provides backward compatibility for chart utilities
- * that were previously defined globally.
+ * This file enforces the configuration-driven approach where all chart properties
+ * must be explicitly defined in the configuration.
  */
 
 // Define ChartUtils globally to ensure it's available before charts are rendered
 window.ChartUtils = {
     /**
-     * Get unit for a chart based on its ID
+     * @deprecated Units should be read directly from chart configuration
      * @param {string} chartId - Chart ID
-     * @returns {string} Unit string
+     * @returns {string} Empty string with an error message
      */
     getUnitForChart: function(chartId) {
-        // Find the chart config
-        if (window.chartConfigs && Array.isArray(window.chartConfigs)) {
-            const config = window.chartConfigs.find(c => c.id === chartId);
-            if (config && config.unit) {
-                return config.unit;
-            }
-            
-            // If we can't find the unit, log a warning but return empty string to avoid errors
-            console.warn(`Chart with ID '${chartId}' has no unit defined in its configuration. Using empty string.`);
-        } else {
-            console.warn('ChartConfigs not available or not an array');
-        }
+        console.error(`Configuration error: Units should be accessed directly from chart config, not via getUnitForChart(). Chart ID: ${chartId}`);
         return '';
     },
     
     /**
-     * Check if a chart should use integer values
-     * @param {string} chartId - Chart ID
-     * @returns {boolean} True if integer values should be used
+     * @deprecated Integer formats should be read directly from chart configuration
+     * @param {object} config - Chart configuration object
+     * @returns {boolean} False with an error message
      */
-    shouldUseIntegerValues: function(chartId) {
-        // Find the chart config
-        if (window.chartConfigs && Array.isArray(window.chartConfigs)) {
-            const config = window.chartConfigs.find(c => c.id === chartId);
-            if (config && config.hasOwnProperty('useIntegerFormat')) {
+    shouldUseIntegerValues: function(config) {
+        // Support direct config access to ease transition
+        if (config && typeof config === 'object') {
+            // First check for formatting configuration
+            if (config.formatting && config.formatting.useIntegerFormat !== undefined) {
+                return config.formatting.useIntegerFormat;
+            }
+            
+            // Then check for direct property
+            if (config.useIntegerFormat !== undefined) {
                 return config.useIntegerFormat;
             }
+            
+            // Log error for missing configuration properties
+            console.error(`Configuration error: Missing formatting.useIntegerFormat in chart config. Add this property to the chart config.`);
+        } else {
+            console.error(`Configuration error: Invalid chart config object provided to shouldUseIntegerValues()`);
         }
         return false;
     }

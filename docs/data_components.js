@@ -389,7 +389,7 @@ function processChartData(config, data) {
         secondaryAxisMax: secondaryAxisMax,
         series: data.series, // Pass through series data for multi-series charts
         category: config.category,
-        unit: config.unit || getUnitForChart(config.id)
+        unit: config.unit || ''
     };
 }
 
@@ -456,24 +456,6 @@ function getDateRange(range) {
     }
 }
 
-/**
- * Determines appropriate unit based on chart ID
- * @param {string} chartId - ID of the chart
- * @returns {string} - Unit string
- */
-function getUnitForChart(chartId) {
-    if (chartId.includes('temp') || chartId.includes('plant') || chartId.includes('sensors')) return '°C';
-    if (chartId.includes('humidity')) return '%';
-    if (chartId.includes('pressure')) return 'hPa';
-    if (chartId.includes('wind')) return 'm/s';
-    if (chartId.includes('rain')) return 'mm';
-    if (chartId.includes('battery')) return chartId.includes('voltage') ? 'V' : '%';
-    if (chartId.includes('light')) return 'lux';
-    if (chartId.includes('window')) return 'mm';
-    if (chartId.includes('wifi')) return 'dBm';
-    if (chartId.includes('soil')) return '%';
-    return '';
-}
 
 /**
  * Determines whether a chart should use integer values
@@ -481,12 +463,23 @@ function getUnitForChart(chartId) {
  * @returns {boolean} - True if chart should use only integers
  */
 function shouldUseIntegerValues(config) {
-    // These chart types typically have large numbers or don't need decimal precision
-    return config.id.includes('light') || 
-           config.id.includes('window') ||
-           config.id.includes('wifi') ||
-           config.id.includes('soil') ||
-           config.id.includes('pressure');
+    // First check for formatting configuration (preferred)
+    if (config && config.formatting && config.formatting.useIntegerFormat !== undefined) {
+        return config.formatting.useIntegerFormat;
+    }
+    
+    // Then check for direct property (legacy but supported)
+    if (config && config.useIntegerFormat !== undefined) {
+        return config.useIntegerFormat;
+    }
+    
+    // Log warning about missing formatting configuration
+    if (config && config.id) {
+        console.warn(`Configuration warning: Missing formatting.useIntegerFormat for chart ${config.id}. Add 'formatting.useIntegerFormat' property to chart config.`);
+    }
+    
+    // Default to false - decimal formatting
+    return false;
 }
 
 /**
@@ -497,12 +490,33 @@ function shouldUseIntegerValues(config) {
  * @returns {string} - Formatted number string
  */
 function formatChartNumber(value, config, range) {
-    if (shouldUseIntegerValues(config) || range >= 10) {
+    // Check for NaN or null values
+    if (value === null || value === undefined || isNaN(value)) {
+        return '—';
+    }
+    
+    // First check for explicit decimal places configuration (preferred approach)
+    if (config && config.formatting && config.formatting.decimalPlaces !== undefined) {
+        return parseFloat(value.toFixed(3)).toFixed(config.formatting.decimalPlaces);
+    }
+    
+    // Check if we should use integer format based on configuration
+    if (shouldUseIntegerValues(config)) {
         return Math.round(value).toString();
-    } else if (range < 1) {
-        return value.toFixed(2); // More precision for very small ranges
+    }
+    
+    // If no explicit formatting config, log warning and use sensible defaults
+    if (config && config.id) {
+        console.warn(`Configuration warning: Missing formatting.decimalPlaces for chart ${config.id}. Using default formatting.`);
+    }
+    
+    // Default formatting based on value range
+    if (range >= 10) {
+        return Math.round(value).toString(); // Integer for large ranges
+    } else if (range < 1 || Math.abs(value) < 1) {
+        return parseFloat(value.toFixed(3)).toFixed(2); // 2 decimal places for very small ranges/values
     } else {
-        return value.toFixed(1); // Default to 1 decimal place
+        return parseFloat(value.toFixed(3)).toFixed(1); // 1 decimal place for medium values
     }
 }
 
@@ -515,7 +529,6 @@ if (typeof window !== 'undefined') {
         fetchSingleSeries,
         processChartData,
         getDateRange,
-        getUnitForChart,
         shouldUseIntegerValues,
         formatChartNumber
     };

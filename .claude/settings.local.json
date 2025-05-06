@@ -29,7 +29,10 @@
       "Bash(/Users/fmr/projects/drimon/.claude/)",
       "Bash(rm:*)",
       "Bash(git rm:*)",
-      "Bash(grep:*)"
+      "Bash(grep:*)",
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "Bash(sed:*)"
     ],
     "deny": []
   }
