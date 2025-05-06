@@ -149,15 +149,19 @@ li.chartjs-legend-item span,
   }
   
   /* Mobile stats adjustments - more verbose on mobile */
-  .mobile-layout .chart-stats {
+  .mobile-layout .chart-stats,
+  .chart-container.mobile-layout .chart .chart-stats {
     margin-bottom: 1px;
     padding-bottom: 1px;
-    font-size: 9px; /* Larger font for mobile */
-    gap: 6px; /* More space between stats */
+    font-size: 12px; /* Increased font size for mobile */
+    gap: 8px; /* More space between stats */
   }
   
-  .mobile-layout .chart-stat {
+  .mobile-layout .chart-stat,
+  .chart-container.mobile-layout .chart .chart-stat {
     padding: 1px 3px; /* Larger padding */
+    font-weight: 500; /* Slightly bolder for better readability */
+    font-size: 12px !important; /* Force larger font size on mobile */
   }
   
   /* 
@@ -167,24 +171,29 @@ li.chartjs-legend-item span,
    */
   
   /* Hide short labels and show full labels on mobile */
-  .mobile-layout .chart-stat-label-short {
+  .mobile-layout .chart-stat-label-short,
+  .chart-container.mobile-layout .chart .chart-stat-label-short {
     display: none;
   }
   
   /* Use data-full-label attribute for mobile labels */
-  .mobile-layout .chart-stat-label-low::before {
+  .mobile-layout .chart-stat-label-low::before,
+  .chart-container.mobile-layout .chart .chart-stat-label-low::before {
     content: attr(data-full-label);
   }
   
-  .mobile-layout .chart-stat-label-avg::before {
+  .mobile-layout .chart-stat-label-avg::before,
+  .chart-container.mobile-layout .chart .chart-stat-label-avg::before {
     content: attr(data-full-label);
   }
   
-  .mobile-layout .chart-stat-label-high::before {
+  .mobile-layout .chart-stat-label-high::before,
+  .chart-container.mobile-layout .chart .chart-stat-label-high::before {
     content: attr(data-full-label);
   }
   
-  .mobile-layout .chart-stat-label-now::before {
+  .mobile-layout .chart-stat-label-now::before,
+  .chart-container.mobile-layout .chart .chart-stat-label-now::before {
     content: attr(data-full-label);
   }
 }
@@ -234,7 +243,7 @@ li.chartjs-legend-item span,
   align-items: center;
   padding: 0px 2px;
   white-space: nowrap; /* Prevent wrapping of text */
-  font-size: 7.5px; /* Smaller text */
+  font-size: 7.5px; /* Smaller text for desktop */
   font-weight: 500; /* Make a bit bolder for better readability */
 }
 
@@ -247,6 +256,13 @@ li.chartjs-legend-item span,
 /* Highlight the current value */
 .chart-stat-current {
   font-weight: 600;
+  color: #006000;
+}
+
+/* Additional emphasis for current value on mobile */
+.mobile-layout .chart-stat-current,
+.chart-container.mobile-layout .chart .chart-stat-current {
+  font-weight: 700;
   color: #006000;
 }
 
