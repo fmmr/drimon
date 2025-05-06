@@ -7,37 +7,58 @@
 
 /**
  * Creates the logo container element
+ * @param {Object} [config] - Configuration object for logo container
  * @returns {HTMLElement} The logo container element
  */
-function createLogoContainer() {
-    const logoContainer = document.createElement('div');
-    logoContainer.className = 'logo-container';
+function createLogoContainer(config = null) {
+    // Default configuration
+    const options = {
+        logoUrl: 'https://github.com/fmmr/drimon',
+        logoImage: 'logos/1_100x55.webp',
+        logoAlt: 'DriMon',
+        logoClassName: 'logo',
+        logoId: 'main-title',
+        showTimeIndicator: true,
+        timeKey: 'time',
+        customClasses: '',
+        // Override with provided config
+        ...(config || {})
+    };
     
+    const logoContainer = document.createElement('div');
+    logoContainer.className = `logo-container ${options.customClasses}`.trim();
+    
+    // Create logo link and image
     const logoLink = document.createElement('a');
-    logoLink.href = 'https://github.com/fmmr/drimon';
+    logoLink.href = options.logoUrl;
     
     const logoImg = document.createElement('img');
-    logoImg.src = 'logos/1_100x55.webp';
-    logoImg.className = 'logo';
-    logoImg.id = 'main-title';
-    logoImg.alt = 'DriMon';
+    logoImg.src = options.logoImage;
+    logoImg.className = options.logoClassName;
+    logoImg.id = options.logoId;
+    logoImg.alt = options.logoAlt;
     
-    const timeIndicator = document.createElement('div');
-    timeIndicator.className = 'time-indicator';
-    timeIndicator.title = window.I18n.translate('time');
-    timeIndicator.setAttribute('data-i18n-title', 'time');
-    
-    const timeSpan = document.createElement('span');
-    timeSpan.id = 'time-since';
-    
-    const loadingText = window.I18n.translate('loading');
-    timeSpan.textContent = loadingText;
-    timeSpan.setAttribute('data-i18n', 'loading');
-    
-    timeIndicator.appendChild(timeSpan);
+    // Add logo to container
     logoLink.appendChild(logoImg);
     logoContainer.appendChild(logoLink);
-    logoContainer.appendChild(timeIndicator);
+    
+    // Add time indicator if configured
+    if (options.showTimeIndicator) {
+        const timeIndicator = document.createElement('div');
+        timeIndicator.className = 'time-indicator';
+        timeIndicator.title = window.I18n.translate(options.timeKey);
+        timeIndicator.setAttribute('data-i18n-title', options.timeKey);
+        
+        const timeSpan = document.createElement('span');
+        timeSpan.id = 'time-since';
+        
+        const loadingText = window.I18n.translate('loading');
+        timeSpan.textContent = loadingText;
+        timeSpan.setAttribute('data-i18n', 'loading');
+        
+        timeIndicator.appendChild(timeSpan);
+        logoContainer.appendChild(timeIndicator);
+    }
     
     return logoContainer;
 }
@@ -122,42 +143,46 @@ function createWeatherPill() {
 
 /**
  * Creates the data container with all data chips
+ * @param {Object} [config] - Configuration object for the data container
  * @returns {HTMLElement} The data container element
  */
-function createDataContainer() {
+function createDataContainer(config = null) {
     const dataContainer = document.createElement('div');
     dataContainer.className = 'data-container';
     dataContainer.id = 'infoSection';
     
-    // Temperature chip with translation key
-    const tempChip = createDataChip('temperature', 'fas fa-thermometer-half', 'temperature');
+    // If no config is provided, use default chip settings
+    const chips = config && config.chips ? config.chips : [
+        { id: 'temperature', icon: 'fas fa-thermometer-half', titleKey: 'temperature' },
+        { id: 'weather', type: 'weatherPill' },
+        { id: 'light', icon: 'fas fa-sun', titleKey: 'light', initialText: '' },
+        { id: 'battery', icon: 'fas fa-battery-half', titleKey: 'battery' },
+        { id: 'batteryVolt', icon: 'fas fa-bolt', titleKey: 'batteryVoltage' },
+        { id: 'pressure', icon: 'fas fa-compress-alt', titleKey: 'pressure' },
+        { id: 'window', icon: 'fas fa-window-maximize', titleKey: 'window', initialText: '' }
+    ];
     
-    // Weather pill
-    const weatherPill = createWeatherPill();
-    
-    // Light chip with translation key
-    const lightChip = createDataChip('light', 'fas fa-sun', 'light', '');
-    
-    // Battery percentage chip with translation key
-    const batteryChip = createDataChip('battery', 'fas fa-battery-half', 'battery');
-    
-    // Battery voltage chip with translation key
-    const batteryVoltChip = createDataChip('batteryVolt', 'fas fa-bolt', 'batteryVoltage');
-    
-    // Pressure chip with translation key
-    const pressureChip = createDataChip('pressure', 'fas fa-compress-alt', 'pressure');
-    
-    // Window chip with translation key
-    const windowChip = createDataChip('window', 'fas fa-window-maximize', 'window', '');
-    
-    // Add all chips to the container
-    dataContainer.appendChild(tempChip);
-    dataContainer.appendChild(weatherPill);
-    dataContainer.appendChild(lightChip);
-    dataContainer.appendChild(batteryChip);
-    dataContainer.appendChild(batteryVoltChip);
-    dataContainer.appendChild(pressureChip);
-    dataContainer.appendChild(windowChip);
+    // Create and add each chip to the container
+    chips.forEach(chipConfig => {
+        let chip;
+        
+        // Special handling for weather pill
+        if (chipConfig.type === 'weatherPill') {
+            chip = createWeatherPill();
+        } else {
+            // Create regular data chip
+            chip = createDataChip(
+                chipConfig.id,
+                chipConfig.icon,
+                chipConfig.titleKey,
+                chipConfig.initialText || 'loading'
+            );
+        }
+        
+        if (chip) {
+            dataContainer.appendChild(chip);
+        }
+    });
     
     return dataContainer;
 }
@@ -166,10 +191,9 @@ function createDataContainer() {
  * Creates a date chip element
  * @param {string} range - The date range value
  * @param {string} key - The translation key for the text
- * @param {string} defaultText - The default text to display if no translation available
  * @returns {HTMLElement} The date chip element
  */
-function createDateChip(range, key, defaultText) {
+function createDateChip(range, key) {
     const chip = document.createElement('a');
     chip.href = '#';
     chip.className = 'date-chip';
@@ -185,28 +209,29 @@ function createDateChip(range, key, defaultText) {
 
 /**
  * Creates the date ranges container with all date chips
+ * @param {Object} [config] - Configuration object for date ranges
  * @returns {HTMLElement} The date ranges container element
  */
-function createDateRanges() {
+function createDateRanges(config = null) {
     const dateRanges = document.createElement('div');
     dateRanges.className = 'date-ranges';
     
-    // Create all date chips with translation keys and default text
-    const dateChips = [
-        { range: 'today', key: 'today', defaultText: 'i dag' },
-        { range: '1', key: 'twoDay', defaultText: '2d' },
-        { range: '2', key: 'threeDay', defaultText: '3d' },
-        { range: '6', key: 'sevenDay', defaultText: '7d' },
-        { range: '13', key: 'fourteenDay', defaultText: '14d' },
-        { range: 'yesterday', key: 'yesterday', defaultText: 'i går' },
-        { range: 'this-week', key: 'week', defaultText: 'uke' },
-        { range: 'last-week', key: 'lastWeek', defaultText: 'uke-1' },
-        { range: 'start', key: 'start', defaultText: 'start' }
+    // If no config is provided, use default date ranges
+    const dateChips = config && config.ranges ? config.ranges : [
+        { range: 'today', key: 'today' },
+        { range: '1', key: 'twoDay' },
+        { range: '2', key: 'threeDay' },
+        { range: '6', key: 'sevenDay' },
+        { range: '13', key: 'fourteenDay' },
+        { range: 'yesterday', key: 'yesterday' },
+        { range: 'this-week', key: 'week' },
+        { range: 'last-week', key: 'lastWeek' },
+        { range: 'start', key: 'start' }
     ];
     
     // Add all chips to the container
     dateChips.forEach(chip => {
-        dateRanges.appendChild(createDateChip(chip.range, chip.key, chip.defaultText));
+        dateRanges.appendChild(createDateChip(chip.range, chip.key));
     });
     
     return dateRanges;
@@ -214,111 +239,536 @@ function createDateRanges() {
 
 /**
  * Creates the search container with sorting and results options
+ * @param {Object} [config] - Configuration object for search container
  * @returns {HTMLElement} The search container element
  */
-function createSearchContainer() {
+function createSearchContainer(config = null) {
     const searchContainer = document.createElement('div');
     searchContainer.className = 'search-container';
     
-    // Create sort container
-    const sortContainer = document.createElement('div');
-    sortContainer.className = 'sort-container';
+    // Get configuration options with defaults
+    const options = {
+        // Default options
+        resultsPlaceholder: 'results',
+        updateButtonKey: 'update',
+        includeCategories: true,
+        includeResults: true,
+        includeDarkMode: true,
+        includeStatsToggle: true,
+        // Override with provided config
+        ...(config || {})
+    };
     
-    const sortSelect = document.createElement('select');
-    sortSelect.id = 'sortSelect';
-    
-    sortSelect.title = window.I18n.translate('sortBy');
-    sortSelect.setAttribute('data-i18n-title', 'sortBy');
-    
-    const sortOptions = [
-        { value: 'row', key: 'default' },
-        { value: 'temperature', key: 'temperatureSort' },
-        { value: 'humidity', key: 'humiditySort' },
-        { value: 'weather', key: 'weatherSort' },
-        { value: 'system', key: 'systemSort' },
-        { value: 'soil', key: 'soilSort' },
-        { value: 'light', key: 'lightSort' },
-        { value: 'structure', key: 'structureSort' }
-    ];
-    
-    sortOptions.forEach(option => {
-        const optionEl = document.createElement('option');
-        optionEl.value = option.value;
+    // Only add categories if configured
+    if (options.includeCategories) {
+        // Create sort container
+        const sortContainer = document.createElement('div');
+        sortContainer.className = 'sort-container';
         
-            optionEl.textContent = window.I18n.translate(option.key);
+        const sortSelect = document.createElement('select');
+        sortSelect.id = 'sortSelect';
         
-        // Add data-i18n attribute for later translation updates
-        optionEl.setAttribute('data-i18n', option.key);
+        sortSelect.title = window.I18n.translate('sortBy');
+        sortSelect.setAttribute('data-i18n-title', 'sortBy');
         
-        sortSelect.appendChild(optionEl);
-    });
-    
-    sortContainer.appendChild(sortSelect);
+        // Always include the default sort option (by row)
+        const defaultOption = document.createElement('option');
+        defaultOption.value = 'row';
+        defaultOption.textContent = window.I18n.translate('default');
+        defaultOption.setAttribute('data-i18n', 'default');
+        sortSelect.appendChild(defaultOption);
+        
+        // Dynamically generate options based on actually used categories in chart configs
+        if (window.chartConfigs && Array.isArray(window.chartConfigs)) {
+            // Get unique categories from chart configs
+            const categories = [...new Set(window.chartConfigs.map(chartConfig => chartConfig.category))];
+            
+            // Map of category values to their translation keys
+            const categoryTranslationMap = {
+                'temperature': 'temperatureSort',
+                'plant-temperature': 'temperatureSort', // Map plant-temperature to temperatureSort
+                'detail-temperature': 'temperatureSort', // Map detail-temperature to temperatureSort
+                'humidity': 'humiditySort',
+                'weather': 'weatherSort',
+                'system': 'systemSort',
+                'soil': 'soilSort',
+                'soil-moisture': 'soilSort', // Map soil-moisture to soilSort
+                'light': 'lightSort',
+                'structure': 'structureSort'
+            };
+            
+            // Sort categories alphabetically by translated name
+            categories.sort((a, b) => {
+                const keyA = categoryTranslationMap[a] || a;
+                const keyB = categoryTranslationMap[b] || b;
+                const textA = window.I18n.translate(keyA);
+                const textB = window.I18n.translate(keyB);
+                return textA.localeCompare(textB);
+            });
+            
+            // Add option for each category
+            categories.forEach(category => {
+                // Skip categories that don't have a translation mapping
+                if (!categoryTranslationMap[category]) return;
+                
+                const translationKey = categoryTranslationMap[category];
+                
+                // Only add main categories, not subcategories
+                if (category.includes('-') && !['soil-moisture'].includes(category)) return;
+                
+                const optionEl = document.createElement('option');
+                optionEl.value = category;
+                optionEl.textContent = window.I18n.translate(translationKey);
+                optionEl.setAttribute('data-i18n', translationKey);
+                sortSelect.appendChild(optionEl);
+            });
+        }
+        
+        sortContainer.appendChild(sortSelect);
+        searchContainer.appendChild(sortContainer);
+    }
     
     // Create results container
     const resultsContainer = document.createElement('div');
     resultsContainer.className = 'results-container';
     
-    const resultsInput = document.createElement('input');
-    resultsInput.type = 'number';
-    resultsInput.id = 'resultsInput';
+    // Add results input and update button if configured
+    if (options.includeResults) {
+        // Create results input
+        const resultsInput = document.createElement('input');
+        resultsInput.type = 'number';
+        resultsInput.id = 'resultsInput';
+        
+        resultsInput.placeholder = window.I18n.translate(options.resultsPlaceholder);
+        resultsInput.setAttribute('data-i18n-placeholder', options.resultsPlaceholder);
+        resultsInput.min = '1';
+        
+        // Create update button
+        const updateButton = document.createElement('button');
+        updateButton.id = 'updateButton';
+        
+        updateButton.textContent = window.I18n.translate(options.updateButtonKey);
+        updateButton.setAttribute('data-i18n', options.updateButtonKey);
+        
+        resultsContainer.appendChild(resultsInput);
+        resultsContainer.appendChild(updateButton);
+    }
     
-    resultsInput.placeholder = window.I18n.translate('results');
-    resultsInput.setAttribute('data-i18n-placeholder', 'results');
-    resultsInput.min = '1';
+    // Add dark mode toggle if configured
+    if (options.includeDarkMode) {
+        const darkModeToggle = document.createElement('button');
+        darkModeToggle.id = 'darkModeToggle';
+        
+        darkModeToggle.title = window.I18n.translate('darkModeTooltip');
+        darkModeToggle.setAttribute('data-i18n-title', 'darkModeTooltip');
+        
+        const darkModeIcon = document.createElement('span');
+        darkModeIcon.className = 'icon';
+        darkModeIcon.innerHTML = '<i class="fas fa-moon"></i>';
+        
+        darkModeToggle.appendChild(darkModeIcon);
+        resultsContainer.appendChild(darkModeToggle);
+    }
     
-    const updateButton = document.createElement('button');
-    updateButton.id = 'updateButton';
+    // Add stats toggle if configured
+    if (options.includeStatsToggle) {
+        const statsToggle = document.createElement('button');
+        statsToggle.id = 'statsToggle';
+        
+        statsToggle.title = window.I18n.translate('statsTooltip');
+        statsToggle.setAttribute('data-i18n-title', 'statsTooltip');
+        
+        const statsIcon = document.createElement('span');
+        statsIcon.className = 'icon';
+        statsIcon.innerHTML = '<i class="fas fa-chart-line"></i>';
+        
+        statsToggle.appendChild(statsIcon);
+        resultsContainer.appendChild(statsToggle);
+    }
     
-    updateButton.textContent = window.I18n.translate('update');
-    updateButton.setAttribute('data-i18n', 'update');
+    // Add any custom elements if provided
+    if (options.customElements && Array.isArray(options.customElements)) {
+        options.customElements.forEach(el => {
+            if (el instanceof HTMLElement) {
+                resultsContainer.appendChild(el);
+            }
+        });
+    }
     
-    const darkModeToggle = document.createElement('button');
-    darkModeToggle.id = 'darkModeToggle';
-    
-    darkModeToggle.title = window.I18n.translate('darkModeTooltip');
-    darkModeToggle.setAttribute('data-i18n-title', 'darkModeTooltip');
-    
-    const darkModeIcon = document.createElement('span');
-    darkModeIcon.className = 'icon';
-    darkModeIcon.innerHTML = '<i class="fas fa-moon"></i>';
-    
-    const statsToggle = document.createElement('button');
-    statsToggle.id = 'statsToggle';
-    
-    statsToggle.title = window.I18n.translate('statsTooltip');
-    statsToggle.setAttribute('data-i18n-title', 'statsTooltip');
-    
-    const statsIcon = document.createElement('span');
-    statsIcon.className = 'icon';
-    statsIcon.innerHTML = '<i class="fas fa-chart-line"></i>';
-    
-    darkModeToggle.appendChild(darkModeIcon);
-    statsToggle.appendChild(statsIcon);
-    
-    resultsContainer.appendChild(resultsInput);
-    resultsContainer.appendChild(updateButton);
-    resultsContainer.appendChild(darkModeToggle);
-    resultsContainer.appendChild(statsToggle);
-    
-    searchContainer.appendChild(sortContainer);
     searchContainer.appendChild(resultsContainer);
     
     return searchContainer;
 }
 
 /**
+ * Component Registry for header components
+ * This registry allows registration of custom component factories
+ */
+const ComponentRegistry = {
+    // Store registered component factories
+    _factories: {
+        'logoContainer': createLogoContainer,
+        'dataContainer': createDataContainer,
+        'dateRanges': createDateRanges,
+        'searchContainer': createSearchContainer,
+        'weatherPill': createWeatherPill,
+        'dataChip': createDataChip
+    },
+    
+    /**
+     * Register a new component factory
+     * @param {string} type - Component type identifier
+     * @param {Function} factory - Factory function that creates the component
+     */
+    register: function(type, factory) {
+        if (typeof factory !== 'function') {
+            console.error(`Invalid factory for component type '${type}'. Factory must be a function.`);
+            return;
+        }
+        
+        this._factories[type] = factory;
+    },
+    
+    /**
+     * Create a component using the registered factory
+     * @param {string} type - Component type identifier
+     * @param {Object} config - Configuration for the component
+     * @returns {HTMLElement} The created component
+     */
+    create: function(type, config) {
+        if (!this._factories[type]) {
+            console.error(`Unknown component type: ${type}`);
+            return null;
+        }
+        
+        return this._factories[type](config);
+    },
+    
+    /**
+     * Check if a component type is registered
+     * @param {string} type - Component type identifier
+     * @returns {boolean} True if the component type is registered
+     */
+    hasType: function(type) {
+        return !!this._factories[type];
+    },
+    
+    /**
+     * Get all registered component types
+     * @returns {string[]} Array of registered component types
+     */
+    getTypes: function() {
+        return Object.keys(this._factories);
+    }
+};
+
+/**
+ * Header Component Configuration
+ * Declarative configuration for the header layout and components
+ */
+const HeaderConfig = {
+    // Component definitions
+    components: {
+        logo: {
+            type: 'logoContainer',
+            config: {
+                logoUrl: 'https://github.com/fmmr/drimon',
+                logoImage: 'logos/1_100x55.webp',
+                logoAlt: 'DriMon'
+            }
+        },
+        data: {
+            type: 'dataContainer',
+            config: {
+                chips: [
+                    { id: 'temperature', icon: 'fas fa-thermometer-half', titleKey: 'temperature' },
+                    { id: 'weather', type: 'weatherPill' },
+                    { id: 'light', icon: 'fas fa-sun', titleKey: 'light', initialText: '' },
+                    { id: 'battery', icon: 'fas fa-battery-half', titleKey: 'battery' },
+                    { id: 'batteryVolt', icon: 'fas fa-bolt', titleKey: 'batteryVoltage' },
+                    { id: 'pressure', icon: 'fas fa-compress-alt', titleKey: 'pressure' },
+                    { id: 'window', icon: 'fas fa-window-maximize', titleKey: 'window', initialText: '' }
+                ]
+            }
+        },
+        dateRanges: {
+            type: 'dateRanges',
+            config: {
+                ranges: [
+                    { range: 'today', key: 'today' },
+                    { range: '1', key: 'twoDay' },
+                    { range: '2', key: 'threeDay' },
+                    { range: '6', key: 'sevenDay' },
+                    { range: '13', key: 'fourteenDay' },
+                    { range: 'yesterday', key: 'yesterday' },
+                    { range: 'this-week', key: 'week' },
+                    { range: 'last-week', key: 'lastWeek' },
+                    { range: 'start', key: 'start' }
+                ]
+            }
+        },
+        search: {
+            type: 'searchContainer',
+            config: {
+                resultsPlaceholder: 'results',
+                updateButtonKey: 'update',
+                includeCategories: true,
+                includeResults: true,
+                includeDarkMode: true,
+                includeStatsToggle: true
+            }
+        }
+    },
+    
+    // Layout order
+    layout: ['logo', 'data', 'dateRanges', 'search'],
+    
+    // Header theme (can be custom CSS classes)
+    theme: 'modern-header',
+    
+    // Event callbacks
+    events: {
+        onLanguageChange: null,
+        onDateRangeChange: null,
+        onCategoryChange: null,
+        onDarkModeToggle: null,
+        onStatsToggle: null
+    }
+};
+
+/**
  * Creates the complete header element with all components
+ * Uses declarative configuration to build the header
+ * @param {Object} [config] - Optional custom configuration
  * @returns {HTMLElement} The complete header element
  */
-function createHeader() {
-    const header = document.createElement('header');
-    header.className = 'header modern-header';
+/**
+ * Header Controller for dynamic updates
+ * Manages a header instance and provides methods for updating components
+ */
+const HeaderController = {
+    /**
+     * Current header configuration
+     * @private
+     */
+    _config: null,
     
-    header.appendChild(createLogoContainer());
-    header.appendChild(createDataContainer());
-    header.appendChild(createDateRanges());
-    header.appendChild(createSearchContainer());
+    /**
+     * Current header element
+     * @private
+     */
+    _headerElement: null,
     
-    return header;
+    /**
+     * Initialize the header controller with a configuration
+     * @param {Object} config - Header configuration
+     * @returns {Object} The header controller
+     */
+    initialize: function(config = HeaderConfig) {
+        this._config = {...config};
+        this._headerElement = null;
+        return this;
+    },
+    
+    /**
+     * Create and render the header
+     * @param {HTMLElement} container - Container element to append the header to
+     * @returns {HTMLElement} The created header element
+     */
+    render: function(container) {
+        // Create the header element
+        this._headerElement = this._createHeaderElement();
+        
+        // Append to container if provided
+        if (container) {
+            container.appendChild(this._headerElement);
+        }
+        
+        return this._headerElement;
+    },
+    
+    /**
+     * Update a specific component in the header
+     * @param {string} componentKey - Key of the component to update
+     * @param {Object} newConfig - New configuration for the component
+     * @returns {boolean} Success flag
+     */
+    updateComponent: function(componentKey, newConfig) {
+        // Check if the component exists in the configuration
+        if (!this._config.components[componentKey]) {
+            console.error(`Component '${componentKey}' not found in header configuration`);
+            return false;
+        }
+        
+        // Update the configuration
+        this._config.components[componentKey].config = {
+            ...this._config.components[componentKey].config,
+            ...newConfig
+        };
+        
+        // If header element exists, update the component
+        if (this._headerElement) {
+            const componentElement = this._headerElement.querySelector(`[data-component="${componentKey}"]`);
+            if (componentElement) {
+                // Remove the old component
+                componentElement.remove();
+                
+                // Create the new component
+                const newComponent = ComponentRegistry.create(
+                    this._config.components[componentKey].type,
+                    this._config.components[componentKey].config
+                );
+                
+                if (newComponent) {
+                    // Add component key as a data attribute
+                    newComponent.setAttribute('data-component', componentKey);
+                    
+                    // Find the correct position to insert the new component
+                    const componentIndex = this._config.layout.indexOf(componentKey);
+                    const nextComponent = componentIndex < this._config.layout.length - 1 ? 
+                        this._headerElement.querySelector(`[data-component="${this._config.layout[componentIndex + 1]}"]`) : 
+                        null;
+                    
+                    // Insert the new component
+                    if (nextComponent) {
+                        this._headerElement.insertBefore(newComponent, nextComponent);
+                    } else {
+                        this._headerElement.appendChild(newComponent);
+                    }
+                    
+                    // Re-attach event handlers
+                    this._attachEventHandlers();
+                    
+                    return true;
+                }
+            }
+        }
+        
+        return false;
+    },
+    
+    /**
+     * Create the header element with all components
+     * @private
+     * @returns {HTMLElement} The header element
+     */
+    _createHeaderElement: function() {
+        const header = document.createElement('header');
+        header.className = `header ${this._config.theme || 'modern-header'}`;
+        
+        // Create each component according to the layout order
+        this._config.layout.forEach(componentKey => {
+            const componentConfig = this._config.components[componentKey];
+            if (!componentConfig) return;
+            
+            // Create the component using the registry
+            const component = ComponentRegistry.create(componentConfig.type, componentConfig.config);
+            
+            if (component) {
+                // Add component key as a data attribute for potential dynamic updates
+                component.setAttribute('data-component', componentKey);
+                
+                // Add to the header
+                header.appendChild(component);
+            }
+        });
+        
+        // Attach event handlers
+        this._attachEventHandlers(header);
+        
+        return header;
+    },
+    
+    /**
+     * Attach event handlers to the header components
+     * @private
+     * @param {HTMLElement} [header] - Header element to attach handlers to (defaults to _headerElement)
+     */
+    _attachEventHandlers: function(header = null) {
+        // Use provided header or current header element
+        const headerEl = header || this._headerElement;
+        if (!headerEl) return;
+        
+        // Attach event handlers if provided
+        if (this._config.events) {
+            // Attach language change event
+            if (this._config.events.onLanguageChange && typeof this._config.events.onLanguageChange === 'function') {
+                document.addEventListener('languageChanged', this._config.events.onLanguageChange);
+            }
+            
+            // Find and attach date range change handlers
+            if (this._config.events.onDateRangeChange && typeof this._config.events.onDateRangeChange === 'function') {
+                const dateChips = headerEl.querySelectorAll('.date-chip');
+                dateChips.forEach(chip => {
+                    chip.addEventListener('click', (e) => {
+                        const range = chip.getAttribute('data-range');
+                        if (range) {
+                            this._config.events.onDateRangeChange(range, e);
+                        }
+                    });
+                });
+            }
+            
+            // Find and attach category change handler
+            if (this._config.events.onCategoryChange && typeof this._config.events.onCategoryChange === 'function') {
+                const sortSelect = headerEl.querySelector('#sortSelect');
+                if (sortSelect) {
+                    sortSelect.addEventListener('change', (e) => {
+                        const category = e.target.value;
+                        this._config.events.onCategoryChange(category, e);
+                    });
+                }
+            }
+            
+            // Find and attach dark mode toggle handler
+            if (this._config.events.onDarkModeToggle && typeof this._config.events.onDarkModeToggle === 'function') {
+                const darkModeToggle = headerEl.querySelector('#darkModeToggle');
+                if (darkModeToggle) {
+                    darkModeToggle.addEventListener('click', this._config.events.onDarkModeToggle);
+                }
+            }
+            
+            // Find and attach stats toggle handler
+            if (this._config.events.onStatsToggle && typeof this._config.events.onStatsToggle === 'function') {
+                const statsToggle = headerEl.querySelector('#statsToggle');
+                if (statsToggle) {
+                    statsToggle.addEventListener('click', this._config.events.onStatsToggle);
+                }
+            }
+        }
+    }
+};
+
+/**
+ * Creates the complete header element with all components
+ * Uses declarative configuration to build the header
+ * @param {Object} [config] - Optional custom configuration
+ * @returns {HTMLElement} The complete header element
+ */
+function createHeader(config = HeaderConfig) {
+    // Initialize the header controller
+    const controller = HeaderController.initialize(config);
+    
+    // Create and return the header element
+    return controller._createHeaderElement();
 }
+
+// Make components available globally
+window.HeaderComponents = {
+    // Core functions
+    createHeader,
+    createLogoContainer,
+    createDataContainer,
+    createDataChip,
+    createWeatherPill,
+    createDateRanges,
+    createDateChip,
+    createSearchContainer,
+    
+    // Component system
+    ComponentRegistry,
+    HeaderController,
+    
+    // Configuration
+    HeaderConfig
+};

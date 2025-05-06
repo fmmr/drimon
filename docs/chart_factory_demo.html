@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart Factory Demo</title>
+    <link rel="stylesheet" href="main.css">
+    <link rel="stylesheet" href="dark-mode.css">
+
+    <!-- Include Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+
+    <!-- Core modules - load in correct order -->
+    <script src="js/core/utils.js"></script>
+    <script src="js/core/chart-factory.js"></script>
+    <script src="js/core/chart-loader.js"></script>
+    <script src="js/core/chart-controller.js"></script>
+    
+    <!-- Initialize components -->
+    <script>
+    window.addEventListener('DOMContentLoaded', function() {
+        // Make sure all components are defined
+        if (!window.ChartFactory || !window.ChartLoader || !window.ChartController) {
+            console.error('One or more chart components failed to load!');
+        }
+    });
+    </script>
+
+    <!-- Include sample chart config -->
+    <script>
+        // Sample chart configurations
+        window.chartConfigs = [
+            { 
+                id: 'chart-line',
+                title: 'Temperature Chart',
+                titleKey: 'temperatureChart',
+                field: 1,
+                color: '#c62828', // Red for temperature
+                row: 1,
+                category: 'temperature',
+                unit: '°C',
+                useIntegerFormat: false,
+                formatting: {
+                    decimalPlaces: 1
+                }
+            },
+            {
+                id: 'chart-multi',
+                title: 'Multi-Series Test',
+                titleKey: 'multiSeriesChart',
+                series: [
+                    {
+                        title: 'Series 1',
+                        titleKey: 'series1',
+                        field: 1,
+                        color: '#ff0000'
+                    },
+                    {
+                        title: 'Series 2',
+                        titleKey: 'series2',
+                        field: 2,
+                        color: '#00ff00'
+                    }
+                ],
+                row: 2,
+                category: 'test',
+                unit: 'units'
+            }
+        ];
+
+        // Sample chart data
+        function generateSampleData(points = 20, multiSeries = false) {
+            const now = new Date();
+            const data = {
+                feeds: []
+            };
+
+            for (let i = 0; i < points; i++) {
+                const timestamp = new Date(now.getTime() - (i * 3600000)); // 1 hour steps
+                data.feeds.unshift({
+                    created_at: timestamp.toISOString(),
+                    field1: Math.random() * 20 + 10, // Random temperature between 10-30
+                    field2: Math.random() * 50 + 50  // Random value between 50-100
+                });
+            }
+
+            if (multiSeries) {
+                data.is_multi_series = true;
+                data.series = [
+                    {
+                        title: 'Series 1',
+                        field: 1,
+                        feeds: [...data.feeds]
+                    },
+                    {
+                        title: 'Series 2',
+                        field: 2, 
+                        feeds: [...data.feeds]
+                    }
+                ];
+            }
+
+            return data;
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.5;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        .button {
+            padding: 8px 16px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .button:hover {
+            background-color: #0056b3;
+        }
+        .chart-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        @media (min-width: 768px) {
+            .chart-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+        .chart {
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 5px;
+            padding: 15px;
+            height: 300px;
+        }
+        .chart-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .chart-canvas-container {
+            position: relative;
+            height: 220px;
+        }
+        .chart-stats {
+            display: flex;
+            justify-content: space-around;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        .chart-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .loading-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+        .loading-spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .log-container {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            height: 200px;
+            overflow-y: auto;
+            font-family: monospace;
+        }
+        .footer {
+            margin-top: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chart Factory Demo</h1>
+    
+    <div class="header">
+        <div class="title">Chart factory with progressive loading and automatic updates</div>
+        <div class="controls">
+            <button id="loadBtn" class="button">Load Charts</button>
+            <button id="refreshBtn" class="button">Refresh Data</button>
+            <button id="toggleStatsBtn" class="button">Toggle Stats</button>
+            <button id="darkModeBtn" class="button">Toggle Dark Mode</button>
+        </div>
+    </div>
+    
+    <div id="chartContainer" class="chart-grid"></div>
+    
+    <div class="log-container" id="logContainer">
+        <div>Chart Factory Demo Initialized. Click "Load Charts" to begin.</div>
+    </div>
+    
+    <div class="footer">
+        Powered by Chart Factory Module
+    </div>
+    
+    <script>
+        // Log function
+        function log(message) {
+            const logContainer = document.getElementById('logContainer');
+            const logEntry = document.createElement('div');
+            logEntry.textContent = `${new Date().toLocaleTimeString()}: ${message}`;
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        // Initialize chart controller
+        ChartController.initialize();
+        log('Chart Controller initialized');
+        
+        // Initialize chart factory
+        ChartFactory.initialize();
+        log('Chart Factory initialized');
+        
+        // Initialize chart loader
+        ChartLoader.initialize({
+            containerId: 'chartContainer',
+            defaultRange: 1,
+            defaultResults: 8000,
+            mobileBreakpoint: 768
+        });
+        log('Chart Loader initialized');
+        
+        // Event handlers
+        document.getElementById('loadBtn').addEventListener('click', () => {
+            log('Loading charts...');
+            
+            // Set up event handlers for loader events
+            ChartLoader.setEventHandlers({
+                onProgress: (event) => {
+                    log(`Loading progress: ${event.percent}% (${event.loaded}/${event.total})`);
+                },
+                onComplete: () => {
+                    log('All charts loaded successfully!');
+                },
+                onError: (event) => {
+                    log(`Error loading chart ${event.chartId}: ${event.error.message}`);
+                }
+            });
+            
+            // Load mock data for the charts
+            const singleSeriesData = generateSampleData(24);
+            const multiSeriesData = generateSampleData(24, true);
+            
+            // Initialize layout
+            ChartLoader._initializeChartLayout();
+            
+            // Create or update charts
+            setTimeout(() => {
+                ChartLoader._createOrUpdateChart(window.chartConfigs[0], singleSeriesData);
+                log('Line chart created');
+            }, 500);
+            
+            setTimeout(() => {
+                ChartLoader._createOrUpdateChart(window.chartConfigs[1], multiSeriesData);
+                log('Multi-series chart created');
+            }, 1000);
+        });
+        
+        document.getElementById('refreshBtn').addEventListener('click', () => {
+            log('Refreshing data...');
+            
+            // Generate new sample data
+            const singleSeriesData = generateSampleData(24);
+            const multiSeriesData = generateSampleData(24, true);
+            
+            // Update charts
+            ChartLoader._createOrUpdateChart(window.chartConfigs[0], singleSeriesData);
+            ChartLoader._createOrUpdateChart(window.chartConfigs[1], multiSeriesData);
+            
+            log('Data refreshed');
+        });
+        
+        document.getElementById('toggleStatsBtn').addEventListener('click', () => {
+            const newVisibility = ChartController.toggleStatsVisibility();
+            log(`Stats visibility set to: ${newVisibility}`);
+            
+            // Show/hide stats for all charts
+            document.querySelectorAll('.chart-stats').forEach(statsEl => {
+                statsEl.style.display = newVisibility ? 'flex' : 'none';
+            });
+        });
+        
+        document.getElementById('darkModeBtn').addEventListener('click', () => {
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            document.documentElement.setAttribute('data-theme', isDark ? 'light' : 'dark');
+            log(`Dark mode set to: ${!isDark}`);
+        });
+        
+        // Handle window resize
+        window.addEventListener('resize', () => {
+            const isMobile = window.innerWidth <= 768;
+            ChartController.updateDisplayMode();
+            log(`Display mode changed to: ${isMobile ? 'mobile' : 'desktop'}`);
+        });
+        
+        // Log initial state
+        log(`Current display mode: ${window.innerWidth <= 768 ? 'mobile' : 'desktop'}`);
+        log(`Current theme: ${document.documentElement.getAttribute('data-theme') || 'light'}`);
+    </script>
+</body>
+</html>

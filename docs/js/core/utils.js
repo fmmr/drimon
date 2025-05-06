@@ -439,5 +439,5 @@ if (typeof window !== 'undefined') {
     window.Utils = Utils;
 }
 
-// ES modules export - will be used in refactored code
-export default Utils;
+// ES modules export - uncomment when using with module system
+// export default Utils;

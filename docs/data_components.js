@@ -9,6 +9,66 @@
 const DEFAULT_TIMEZONE = "Europe/Oslo";
 const DEFAULT_RESULTS = 8000;
 
+// Simple in-memory cache for chart data
+const dataCache = {
+    cache: {},
+    
+    /**
+     * Generate a cache key for a specific request
+     * @param {Object} config - Chart configuration
+     * @param {string} range - Date range
+     * @param {number} results - Maximum results
+     * @returns {string} - Cache key
+     */
+    generateKey: function(config, range, results) {
+        // Create a unique key based on chart ID, range and results
+        return `${config.id}_${range}_${results}`;
+    },
+    
+    /**
+     * Store data in cache with expiration
+     * @param {string} key - Cache key
+     * @param {Object} data - Chart data
+     */
+    set: function(key, data) {
+        // Cache data with timestamp
+        this.cache[key] = {
+            data: data,
+            timestamp: Date.now(),
+            expires: Date.now() + 60000 // Cache for 1 minute
+        };
+    },
+    
+    /**
+     * Get data from cache if valid
+     * @param {string} key - Cache key
+     * @returns {Object|null} - Cached data or null if not found/expired
+     */
+    get: function(key) {
+        const entry = this.cache[key];
+        
+        // Return null if entry doesn't exist or is expired
+        if (!entry || Date.now() > entry.expires) {
+            return null;
+        }
+        
+        // Return cached data
+        return entry.data;
+    },
+    
+    /**
+     * Clear the entire cache or a specific entry
+     * @param {string} [key] - Optional key to clear specific entry
+     */
+    clear: function(key) {
+        if (key) {
+            delete this.cache[key];
+        } else {
+            this.cache = {};
+        }
+    }
+};
+
 /**
  * Fetches chart data from ThingSpeak API based on configuration
  * @param {Object} config - Chart configuration object
@@ -17,6 +77,16 @@ const DEFAULT_RESULTS = 8000;
  * @returns {Promise<Object>} - Chart data object
  */
 async function fetchChartData(config, range = 1, results = DEFAULT_RESULTS) {
+    // Check if we have cached data
+    const cacheKey = dataCache.generateKey(config, range, results);
+    const cachedData = dataCache.get(cacheKey);
+    
+    // Return cached data if available
+    if (cachedData) {
+        console.log(`Using cached data for ${config.id}`);
+        return cachedData;
+    }
+    
     // Get date range either from range parameter or URL
     let startDateStr, endDateStr;
     
@@ -42,7 +112,15 @@ async function fetchChartData(config, range = 1, results = DEFAULT_RESULTS) {
         startDateStr = config.startDate;
     }
     
-    return fetchTimeRangeData(config, startDateStr, endDateStr, results);
+    // Fetch data
+    const data = await fetchTimeRangeData(config, startDateStr, endDateStr, results);
+    
+    // Cache the data if valid
+    if (data && data.feeds && data.feeds.length > 0) {
+        dataCache.set(cacheKey, data);
+    }
+    
+    return data;
 }
 
 /**

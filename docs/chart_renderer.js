@@ -2034,26 +2034,71 @@ window.resizeAllCharts = function() {
     });
 }
 
-// Load data for all charts
+// Load data for all charts with progressive rendering
 async function loadAllCharts(range = 1, results = 8000) {
+    console.time('Total chart loading');
+    
     // Initialize chart layout first
+    console.time('Chart layout initialization');
     initializeChartLayout();
+    console.timeEnd('Chart layout initialization');
     
-    // Fetch all chart data in parallel
-    const dataPromises = window.chartConfigs.map(config => fetchChartData(config, range, results));
+    // Start a counter to track when all charts are loaded
+    let chartsLoaded = 0;
+    const totalCharts = window.chartConfigs.length;
     
-    // Wait for all data to be fetched
-    const allData = await Promise.all(dataPromises);
+    // Create and track all fetch promises
+    console.time('Data fetching (total)');
     
-    // Render all charts with their respective data
-    window.chartConfigs.forEach((config, index) => {
-        createOrUpdateChart(config, allData[index]);
+    // Use Promise.allSettled to handle individual chart loading without waiting for all
+    const fetchPromises = window.chartConfigs.map((config, index) => {
+        // Start fetching data for this chart
+        return fetchChartData(config, range, results)
+            .then(data => {
+                // When data arrives, immediately render the chart
+                console.time(`Rendering chart ${config.id}`);
+                createOrUpdateChart(config, data);
+                console.timeEnd(`Rendering chart ${config.id}`);
+                
+                // Increment counter
+                chartsLoaded++;
+                
+                // If this is the last chart, log completion
+                if (chartsLoaded === totalCharts) {
+                    console.timeEnd('Data fetching (total)');
+                    console.timeEnd('Total chart loading');
+                }
+                
+                // Return the data for Promise tracking
+                return data;
+            })
+            .catch(error => {
+                console.error(`Error loading chart ${config.id}:`, error);
+                
+                // Even on error, increment counter
+                chartsLoaded++;
+                
+                // If this is the last chart, log completion
+                if (chartsLoaded === totalCharts) {
+                    console.timeEnd('Data fetching (total)');
+                    console.timeEnd('Total chart loading');
+                }
+                
+                // Return null data for failed charts
+                return null;
+            });
     });
+    
+    // The following is just for tracking completion, charts will render progressively
+    await Promise.allSettled(fetchPromises);
 }
 
 // Refresh all charts - expose globally for script.js
 window.refreshCharts = function(range, results) {
+    console.time('Refresh charts');
+    
     // Properly destroy all existing chart instances first
+    console.time('Destroy charts');
     Object.keys(chartInstances).forEach(id => {
         if (chartInstances[id]) {
             chartInstances[id].destroy();
@@ -2063,16 +2108,72 @@ window.refreshCharts = function(range, results) {
     
     // Clear chart instances object
     Object.keys(chartInstances).forEach(key => delete chartInstances[key]);
+    console.timeEnd('Destroy charts');
     
-    // Now load all charts with new parameters
+    // Now load all charts with new parameters using the progressive loading approach
     loadAllCharts(range, results);
     
-    // Apply the temperature chart stats fix after charts are loaded
-    setTimeout(() => {
-        if (typeof fixTemperatureChartStats === 'function') {
-            fixTemperatureChartStats();
-        }
-    }, 1000); // Longer delay to ensure charts are fully loaded
+    // Setup a completion check for temperature chart stats
+    // We'll use MutationObserver to detect when all charts are rendered
+    const chartContainer = document.getElementById('chartContainer');
+    
+    if (chartContainer) {
+        // Flag to track if stats have been fixed already
+        let statsFixed = false;
+        
+        // Create a mutation observer to watch for chart container changes
+        const observer = new MutationObserver((mutations) => {
+            // Skip if stats were already fixed
+            if (statsFixed) return;
+            
+            // Check if all charts are loaded by counting canvas elements
+            const canvasElements = chartContainer.querySelectorAll('canvas');
+            
+            // If we have canvas elements for all charts, run the stats fix
+            if (canvasElements.length >= window.chartConfigs.length) {
+                console.time('Fix temperature chart stats');
+                if (typeof fixTemperatureChartStats === 'function') {
+                    fixTemperatureChartStats();
+                }
+                console.timeEnd('Fix temperature chart stats');
+                console.timeEnd('Refresh charts');
+                
+                // Mark stats as fixed
+                statsFixed = true;
+                
+                // Disconnect the observer once we're done
+                observer.disconnect();
+            }
+        });
+        
+        // Observe changes to the chart container
+        observer.observe(chartContainer, { childList: true, subtree: true });
+        
+        // Add a timeout fallback in case something goes wrong
+        setTimeout(() => {
+            // Only run if stats haven't been fixed yet
+            if (!statsFixed) {
+                // Disconnect the observer
+                observer.disconnect();
+                
+                console.time('Fix temperature chart stats (fallback)');
+                if (typeof fixTemperatureChartStats === 'function') {
+                    fixTemperatureChartStats();
+                }
+                console.timeEnd('Fix temperature chart stats (fallback)');
+                
+                // Only end the timer if it hasn't been ended yet
+                try {
+                    console.timeEnd('Refresh charts');
+                } catch (e) {
+                    // Timer already ended, ignore
+                }
+                
+                // Mark stats as fixed
+                statsFixed = true;
+            }
+        }, 5000); // 5-second timeout as a fallback
+    }
 }
 
 // Handle date range selection
@@ -2288,7 +2389,70 @@ function sortChartsByCategory(category) {
  * Special function to fix the temperature chart stats when they're broken
  * This should be called whenever language changes to ensure proper translation
  */
+// Cache for translation labels to avoid repeated lookups
+const statLabelCache = {
+    labels: null,
+    
+    /**
+     * Get translation labels, using cache if available
+     * @returns {Object} Object containing translation labels
+     */
+    getLabels: function() {
+        // Return cached labels if available
+        if (this.labels) {
+            return this.labels;
+        }
+        
+        // Default labels
+        const defaultLabels = {
+            lowLabel: 'L',
+            avgLabel: 'A',
+            highLabel: 'H',
+            nowLabel: 'N',
+            lowFullLabel: 'Low',
+            avgFullLabel: 'Avg',
+            highFullLabel: 'High',
+            nowFullLabel: 'Now'
+        };
+        
+        // Try to get translations if I18n is available
+        if (window.I18n && typeof window.I18n.translate === 'function') {
+            const lowTranslation = window.I18n.translate('low');
+            const avgTranslation = window.I18n.translate('avg');
+            const highTranslation = window.I18n.translate('high');
+            const nowTranslation = window.I18n.translate('now');
+            
+            // Create labels object
+            this.labels = {
+                lowLabel: lowTranslation && lowTranslation.length > 0 ? lowTranslation[0].toUpperCase() : 'L',
+                avgLabel: avgTranslation && avgTranslation.length > 0 ? avgTranslation[0].toUpperCase() : 'A',
+                highLabel: highTranslation && highTranslation.length > 0 ? highTranslation[0].toUpperCase() : 'H',
+                nowLabel: nowTranslation && nowTranslation.length > 0 ? nowTranslation[0].toUpperCase() : 'N',
+                lowFullLabel: lowTranslation || 'Low',
+                avgFullLabel: avgTranslation || 'Avg',
+                highFullLabel: highTranslation || 'High',
+                nowFullLabel: nowTranslation || 'Now'
+            };
+        } else {
+            // Use default labels if I18n is not available
+            this.labels = defaultLabels;
+        }
+        
+        return this.labels;
+    },
+    
+    /**
+     * Clear cached labels (e.g., after language change)
+     */
+    clear: function() {
+        this.labels = null;
+    }
+};
+
 function fixTemperatureChartStats() {
+    // Use cached labels if available, or fetch new ones
+    const labels = statLabelCache.getLabels();
+    
     // Find all charts with statsLabelsStyle: 'LAHN' configuration
     const chartsWithSpecialStats = window.chartConfigs.filter(config => config.statsLabelsStyle === 'LAHN');
     
@@ -2300,50 +2464,19 @@ function fixTemperatureChartStats() {
             return;
         }
         
-        // Get translated labels using the preferred translation system (try both for consistency)
-        let lowLabel = 'L';
-        let avgLabel = 'A';
-        let highLabel = 'H';
-        let nowLabel = 'N';
+        // First check if the stats element already has the correct structure
+        const existingLabels = statsEl.querySelectorAll('.chart-stat-label-short');
         
-        let lowFullLabel = 'Low';
-        let avgFullLabel = 'Avg';
-        let highFullLabel = 'High';
-        let nowFullLabel = 'Now';
-        
-        // First try the new I18n system
-        if (window.I18n && typeof window.I18n.translate === 'function') {
-            // Get translations using new system
-            const lowTranslation = window.I18n.translate('low');
-            const avgTranslation = window.I18n.translate('avg');
-            const highTranslation = window.I18n.translate('high');
-            const nowTranslation = window.I18n.translate('now');
-            
-            // Set short labels (first letter capitalized)
-            lowLabel = lowTranslation && lowTranslation.length > 0 ? lowTranslation[0].toUpperCase() : 'L';
-            avgLabel = avgTranslation && avgTranslation.length > 0 ? avgTranslation[0].toUpperCase() : 'A';
-            highLabel = highTranslation && highTranslation.length > 0 ? highTranslation[0].toUpperCase() : 'H';
-            nowLabel = nowTranslation && nowTranslation.length > 0 ? nowTranslation[0].toUpperCase() : 'N';
-            
-            // Set full labels for data attributes
-            lowFullLabel = lowTranslation || 'Low';
-            avgFullLabel = avgTranslation || 'Avg';
-            highFullLabel = highTranslation || 'High';
-            nowFullLabel = nowTranslation || 'Now';
-        } 
-        // Fallback if I18n isn't available
-        else {
-            // Use default labels
-            lowLabel = 'L';
-            avgLabel = 'A';
-            highLabel = 'H';
-            nowLabel = 'N';
-            
-            // Set full labels to defaults
-            lowFullLabel = 'Low';
-            avgFullLabel = 'Avg';
-            highFullLabel = 'High';
-            nowFullLabel = 'Now';
+        // If stats already have the correct structure and labels, skip updating
+        if (existingLabels.length === 4) {
+            // Check if labels match
+            if (existingLabels[0].textContent === `${labels.lowLabel}:` &&
+                existingLabels[1].textContent === `${labels.avgLabel}:` &&
+                existingLabels[2].textContent === `${labels.highLabel}:` &&
+                existingLabels[3].textContent === `${labels.nowLabel}:`) {
+                // Structure and labels are correct, no need to update
+                return;
+            }
         }
         
         // Use chartConfig directly (already have it) for unit and formatting 
@@ -2437,26 +2570,26 @@ function fixTemperatureChartStats() {
         statsEl.innerHTML = `
             <div class="chart-stat">
                 <span class="chart-stat-label">
-                    <span class="chart-stat-label-short">${lowLabel}:</span>
-                    <span class="chart-stat-label-low" data-full-label="${lowFullLabel}:"></span>
+                    <span class="chart-stat-label-short">${labels.lowLabel}:</span>
+                    <span class="chart-stat-label-low" data-full-label="${labels.lowFullLabel}:"></span>
                 </span>${formattedMin}${unit}
             </div>
             <div class="chart-stat">
                 <span class="chart-stat-label">
-                    <span class="chart-stat-label-short">${avgLabel}:</span>
-                    <span class="chart-stat-label-avg" data-full-label="${avgFullLabel}:"></span>
+                    <span class="chart-stat-label-short">${labels.avgLabel}:</span>
+                    <span class="chart-stat-label-avg" data-full-label="${labels.avgFullLabel}:"></span>
                 </span>${formattedAvg}${unit}
             </div>
             <div class="chart-stat">
                 <span class="chart-stat-label">
-                    <span class="chart-stat-label-short">${highLabel}:</span>
-                    <span class="chart-stat-label-high" data-full-label="${highFullLabel}:"></span>
+                    <span class="chart-stat-label-short">${labels.highLabel}:</span>
+                    <span class="chart-stat-label-high" data-full-label="${labels.highFullLabel}:"></span>
                 </span>${formattedMax}${unit}
             </div>
             <div class="chart-stat chart-stat-current">
                 <span class="chart-stat-label">
-                    <span class="chart-stat-label-short">${nowLabel}:</span>
-                    <span class="chart-stat-label-now" data-full-label="${nowFullLabel}:"></span>
+                    <span class="chart-stat-label-short">${labels.nowLabel}:</span>
+                    <span class="chart-stat-label-now" data-full-label="${labels.nowFullLabel}:"></span>
                 </span>${formattedCurrent !== '—' ? formattedCurrent + unit : '—'}
             </div>
         `;
@@ -2472,21 +2605,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const range = getURLParameter('range') || '1';
     const results = parseInt(getURLParameter('results')) || 8000;
     
-    // Ensure translations are loaded before creating charts
-    if (window.I18n && typeof window.I18n.updatePageLanguage === 'function') {
-        // Translations already loaded, initialize charts
-        loadAllCharts(range, results);
-    } else {
-        // Wait for translations to be ready
-        const checkTranslations = setInterval(() => {
-            if (window.I18n && typeof window.I18n.updatePageLanguage === 'function') {
-                clearInterval(checkTranslations);
-                loadAllCharts(range, results);
-            }
-        }, 50);
-    }
+    // Initialize chart loading with a short delay to avoid blocking the initial render
+    setTimeout(() => {
+        // Ensure translations are loaded before creating charts
+        if (window.I18n && typeof window.I18n.updatePageLanguage === 'function') {
+            // Translations already loaded, initialize charts
+            loadAllCharts(range, results);
+        } else {
+            // Wait for translations to be ready
+            const checkTranslations = setInterval(() => {
+                if (window.I18n && typeof window.I18n.updatePageLanguage === 'function') {
+                    clearInterval(checkTranslations);
+                    loadAllCharts(range, results);
+                }
+            }, 50);
+        }
+    }, 100); // Short delay to allow UI to render first
     
-    // Add a failsafe for charts disappearing
+    // Add a failsafe for charts disappearing, but with reduced frequency to avoid performance issues
     setInterval(() => {
         const chartContainer = document.getElementById('chartContainer');
         if (chartContainer && chartContainer.children.length === 0) {
@@ -2499,7 +2635,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Reload all charts
             loadAllCharts(currentRange, currentResults);
         }
-    }, 30000); // Check every 30 seconds
+    }, 60000); // Check every 60 seconds (reduced from 30s)
     
     // Set up a function to initialize the sorting that can be called later
     // when we're sure the dropdown exists

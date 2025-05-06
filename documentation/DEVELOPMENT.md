@@ -146,15 +146,93 @@ The interface includes enhanced mobile support:
 
 ### Component Modules
 
-#### `/components/charts/chart-factory.js`
+### Chart Factory System
 
-**Primary Responsibility**: Create chart instances based on configuration.
+The Chart Factory System is a modular, extensible architecture for creating, managing, and updating charts. It follows modern software design patterns including Factory, Registry, Controller, and Event-based messaging to provide a robust foundation for chart management.
+
+#### `/js/core/chart-factory.js` (Implemented)
+
+**Primary Responsibility**: Create and manage chart instances based on configuration.
 
 **Specific Responsibilities**:
-- Instantiate charts with the right configuration
-- Apply chart plugins
-- Register chart types
-- Create chart instances
+- Provide a factory pattern for creating different types of charts
+- Register different chart type factories (line, multi-series, etc.)
+- Manage chart instances and provide lifecycle methods (create, update, destroy)
+- Handle chart configuration and options generation
+
+**Public API**:
+```javascript
+ChartFactory.initialize()                         // Initialize the factory
+ChartFactory.register(type, factory)             // Register a chart type factory
+ChartFactory.create(config, data, containerId)   // Create a chart instance
+ChartFactory.update(chartId, data)               // Update an existing chart
+ChartFactory.destroy(chartId)                    // Destroy a chart instance
+ChartFactory.getInstance(chartId)                // Get a chart instance
+ChartFactory.getAllInstances()                   // Get all chart instances
+ChartFactory.resizeAll()                         // Resize all charts
+```
+
+#### `/js/core/chart-loader.js` (Implemented)
+
+**Primary Responsibility**: Handle progressive loading of charts.
+
+**Specific Responsibilities**:
+- Manage the loading of multiple charts with state tracking
+- Initialize chart layout and grid positioning
+- Provide methods for loading and refreshing charts
+- Monitor loading progress and coordinate with chart factory
+
+**Public API**:
+```javascript
+ChartLoader.initialize(config)                   // Initialize the loader with configuration
+ChartLoader.loadAllCharts(range, results)        // Load all charts with range and results
+ChartLoader.refreshAllCharts()                   // Refresh all charts with current settings
+ChartLoader.setEventHandlers(handlers)           // Set event handlers for loading events
+ChartLoader.changeRange(range, results)          // Change date range and results count
+ChartLoader.sortChartsByCategory(category)       // Sort charts by category (mobile view)
+```
+
+#### `/js/core/chart-controller.js` (Implemented)
+
+**Primary Responsibility**: Provide state management for charts.
+
+**Specific Responsibilities**:
+- Maintain global and per-chart state
+- Handle chart interaction events and broadcasting
+- Manage global state like display mode, dark mode, stats visibility
+- Coordinate synchronization between charts
+- Provide event-based state updates
+
+**Public API**:
+```javascript
+ChartController.initialize(initialState)         // Initialize the controller
+ChartController.registerChart(chartId, config)   // Register a chart with the controller
+ChartController.unregisterChart(chartId)         // Unregister a chart
+ChartController.getGlobalState()                 // Get global state
+ChartController.getChartState(chartId)           // Get a chart's state
+ChartController.updateGlobalState(stateUpdate)   // Update global state
+ChartController.updateChartState(chartId, state) // Update a chart's state
+ChartController.addEventListener(type, callback) // Add an event listener
+ChartController.toggleStatsVisibility(visible)   // Toggle chart statistics visibility
+ChartController.syncCharts(...)                  // Synchronize charts for tooltips/highlighting
+```
+
+#### Key Benefits
+
+1. **Separation of Concerns**: Each module has a clear, focused responsibility.
+2. **Extensibility**: New chart types can be easily added through the registry.
+3. **Testability**: Modular design enables isolated testing of components.
+4. **Progressive Loading**: Charts load and display as their data becomes available.
+5. **State Management**: Centralized state tracking prevents inconsistencies.
+6. **Event System**: Enables responsive, reactive updates across components.
+
+#### Integration with Existing Code
+
+The chart factory system is designed to integrate with and eventually replace the current chart implementation in `chart_renderer.js`. The new system provides a more modular, maintainable approach while maintaining compatibility with existing chart configurations and data formats.
+
+#### Demo
+
+A demonstration page (`chart_factory_demo.html`) is included to showcase the chart factory system in action.
 
 #### `/components/charts/chart-renderer.js`
 
@@ -175,14 +253,17 @@ The interface includes enhanced mobile support:
 - Update annotations based on data
 - Manage annotation visibility
 
-#### `/components/header/header.js`
+#### `/components/header/header_components.js`
 
-**Primary Responsibility**: Create and manage the main header component.
+**Primary Responsibility**: Create and manage the main header component with a declarative approach.
 
 **Specific Responsibilities**:
-- Create header components
-- Manage header state
-- Handle header events
+- Create modular header components using a component registry
+- Provide a declarative configuration system for the header
+- Manage header state with the HeaderController
+- Handle component lifecycle and event binding
+- Enable dynamic updates of individual components
+- Support internationalization with translation keys
 
 #### `/components/weather/weather.js`
 
@@ -323,7 +404,7 @@ index.html
   ├─ api.js                 # API client
   ├─ data_fetcher.js        # Data fetching logic
   ├─ data_processor.js      # Data transformation
-  └─ cache.js               # Data caching
+  └─ cache.js               # In-memory data caching with expiration
 
 /components/
   ├─ charts/
@@ -334,10 +415,12 @@ index.html
   │   └─ statistics.js      # Chart statistics
   │
   ├─ header/
-  │   ├─ header.js          # Header component
-  │   ├─ data_chips.js      # Data display components
-  │   ├─ date_range.js      # Date range selector
-  │   └─ controls.js        # UI controls
+  │   ├─ header_components.js  # Header components and registry
+  │   ├─ header_controller.js  # Header state management
+  │   ├─ component_registry.js # Component registration system
+  │   ├─ data_chips.js         # Data display components
+  │   ├─ date_range.js         # Date range selector
+  │   └─ controls.js           # UI controls
   │
   └─ weather/
       └─ weather.js         # Weather component
