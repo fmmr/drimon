@@ -1,14 +1,25 @@
 /* Modern header styling */
 .modern-header {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: space-between;
+    flex-wrap: nowrap; /* Prevent wrapping to ensure single line */
+    justify-content: space-between; /* Better distribution of space */
     align-items: center;
     gap: 10px;
     padding: 8px 15px;
     background: linear-gradient(to right, #f8f9fa, #e9ecef);
     border-bottom: 1px solid #dee2e6;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.03);
+    /* Better space allocation for children */
+    width: 100%;
+    box-sizing: border-box;
+    overflow-x: auto; /* Allow horizontal scrolling if needed */
+    scrollbar-width: none; /* Hide scrollbar in Firefox */
+    -ms-overflow-style: none; /* Hide scrollbar in IE/Edge */
+}
+
+/* Hide scrollbar in Chrome/Safari/Opera */
+.modern-header::-webkit-scrollbar {
+    display: none;
 }
 
 /* Logo styling */
@@ -16,6 +27,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    flex: 0 0 auto; /* Don't grow or shrink */
 }
 
 .logo {
@@ -32,9 +44,21 @@
 /* Info section styling */
 .data-container {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap; /* Prevent wrapping to next line */
     gap: 8px;
-    flex: 1;
+    overflow-x: auto; /* Enable horizontal scrolling */
+    scrollbar-width: none; /* Hide scrollbar in Firefox */
+    -ms-overflow-style: none; /* Hide scrollbar in IE/Edge */
+    padding: 3px 0;
+    position: relative;
+    -webkit-overflow-scrolling: touch; /* Smooth scrolling on touch devices */
+    flex: 1 1 0; /* Fill available space, allowing shrinking */
+    min-width: 50px; /* Allow shrinking to very small size when needed */
+}
+
+/* Hide scrollbar in Chrome/Safari/Opera */
+.data-container::-webkit-scrollbar {
+    display: none;
 }
 
 .data-chip {
@@ -50,6 +74,7 @@
     justify-content: center;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     white-space: nowrap;
+    flex: 0 0 auto; /* Prevent shrinking - important for consistent appearance */
 }
 
 .data-chip:hover {
@@ -127,6 +152,8 @@
     display: flex;
     gap: 12px;
     align-items: center;
+    flex: 0 0 auto; /* Don't grow or shrink */
+    min-width: fit-content; /* Ensure all content is visible */
 }
 
 .results-container {
@@ -200,9 +227,18 @@
 /* Date range section */
 .date-ranges {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: wrap; /* Allow wrapping to keep them visible */
     gap: 6px;
+    padding: 3px 0;
+    margin: 0 10px; /* Add some margin for better spacing */
+    max-width: 100%; /* Ensure it doesn't overflow its container */
+    width: auto; /* Allow it to size based on available space */
+    position: relative;
+    flex: 0 1 auto; /* Don't grow, but allow shrinking */
+    min-width: fit-content; /* Keep chips visible */
 }
+
+/* Scrollbar not needed as date-ranges now wrap instead of scroll */
 
 .date-chip {
     padding: 4px 10px;
@@ -217,6 +253,7 @@
     min-width: 32px;
     border: 1px solid #d0d0d0;
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    flex: 0 0 auto; /* Prevent chips from shrinking or growing */
 }
 
 .date-chip:hover, .date-chip.active {
@@ -256,17 +293,20 @@
     .modern-header {
         flex-direction: column;
         align-items: flex-start;
+        flex-wrap: wrap; /* Allow wrapping for mobile */
         background: #f8f9fa;
         padding: 6px 10px;
         gap: 5px;
         position: sticky;
         top: 0;
         z-index: 10;
+        overflow-x: visible; /* Reset the overflow for mobile */
     }
     
     .search-container {
         width: 100%;
         margin-top: 5px;
+        margin-left: 0; /* Reset the auto margin for mobile */
         display: flex;
         flex-direction: row;
         justify-content: space-between;
@@ -322,36 +362,23 @@
     .data-container {
         order: 2;
         margin: 0;
-        display: flex;
-        flex-wrap: nowrap;
-        overflow-x: auto;
         width: 100%;
-        position: relative;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: none; /* Firefox */
-        -ms-overflow-style: none; /* IE and Edge */
-        padding: 3px 0;
-    }
-    
-    /* Hide scrollbar for Chrome, Safari and Opera */
-    .data-container::-webkit-scrollbar {
-        display: none;
+        min-height: 30px; /* Ensure container has enough height on mobile */
+        /* Already has horizontal scrolling styles from desktop */
     }
     
     .date-ranges {
         order: 3;
         width: 100%;
-        display: flex;
+        /* Override desktop settings for mobile */
         flex-wrap: nowrap;
         overflow-x: auto;
-        position: relative;
-        -webkit-overflow-scrolling: touch;
         scrollbar-width: none; /* Firefox */
         -ms-overflow-style: none; /* IE and Edge */
-        padding: 3px 0;
+        -webkit-overflow-scrolling: touch;
     }
     
-    /* Hide scrollbar for Chrome, Safari and Opera */
+    /* Hide scrollbar for mobile date-ranges */
     .date-ranges::-webkit-scrollbar {
         display: none;
     }
@@ -363,6 +390,16 @@
         position: relative;
         display: inline-flex;
         min-width: 40px;
+    }
+    
+    /* Fix height issue for data-chips on mobile */
+    .data-chip {
+        min-height: 22px; /* Ensure minimum height for visibility */
+        align-items: center; /* Center content vertically */
+        padding: 4px 8px; /* Slightly larger padding */
+        background-color: white; /* Ensure background is visible */
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Add shadow for better visibility */
+        border-radius: 16px; /* Keep consistent styling */
     }
     
     /* Add space for comfortable scrolling */

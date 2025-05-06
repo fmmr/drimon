@@ -108,6 +108,19 @@ window.chartConfigs = [
 
     // Row 2
     { 
+        id: 'chart-out-temp',
+        titleKey: 'outTempChart', 
+        channel: 2626867, 
+        field: 1, 
+        color: '#c62828',
+        row: 2,
+        category: 'temperature',
+        unit: '°C',
+        useIntegerFormat: false,
+        indicateMin: true,
+        indicateMax: true
+    },
+    { 
         id: 'chart-temp-diff',
         titleKey: 'tempDiffChart', 
         channel: 2626867, 
@@ -144,19 +157,6 @@ window.chartConfigs = [
         category: 'plant-temperature',  // Custom category to separate from other temperature charts
         unit: '°C',
         useIntegerFormat: false
-    },
-    { 
-        id: 'chart-out-temp',
-        titleKey: 'outTempChart', 
-        channel: 2626867, 
-        field: 1, 
-        color: '#c62828',
-        row: 2,
-        category: 'temperature',
-        unit: '°C',
-        useIntegerFormat: false,
-        indicateMin: true,
-        indicateMax: true
     },
     // Multi-series chart combining BME, AHT, and Floor temperature sensors
     {
