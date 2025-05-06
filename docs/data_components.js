@@ -468,7 +468,7 @@ function shouldUseIntegerValues(config) {
         return config.formatting.useIntegerFormat;
     }
     
-    // Then check for direct property (legacy but supported)
+    // Check for direct property configuration
     if (config && config.useIntegerFormat !== undefined) {
         return config.useIntegerFormat;
     }

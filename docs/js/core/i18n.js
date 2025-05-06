@@ -200,7 +200,7 @@ window.I18n = {
             this._missingKeys.add(key);
         }
         
-        // Return the key itself as a fallback
+        // Return the key itself when translation is missing
         return key;
     },
     

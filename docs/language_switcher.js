@@ -24,7 +24,6 @@ function createLanguageSwitcher() {
         { code: 'es', name: 'Español', emoji: '🇪🇸' }
     ];
     
-    // Use only the new I18n system - no fallbacks
     const currentLang = window.I18n.getCurrentLanguage();
     
     // Create flag buttons for each language
@@ -43,13 +42,8 @@ function createLanguageSwitcher() {
         button.addEventListener('click', () => {
             let langChanged = false;
             
-            // First try the new I18n system
             if (window.I18n && typeof window.I18n.setLanguage === 'function') {
                 langChanged = window.I18n.setLanguage(lang.code);
-            } 
-            // Fall back to the old i18n system if needed
-            else if (window.i18n && typeof window.i18n.setLanguage === 'function') {
-                langChanged = window.i18n.setLanguage(lang.code);
             }
             
             // If language was changed successfully, update the UI

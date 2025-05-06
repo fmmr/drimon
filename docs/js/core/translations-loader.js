@@ -7,7 +7,6 @@
  * 
  * IMPORTANT: This is the single source of truth for translations.
  * All translations must be added or modified here, not in other files.
- * The old systems (translations.json and translations.js) are being phased out.
  */
 
 // Define translations globally so they're available to all scripts

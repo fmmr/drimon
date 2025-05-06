@@ -613,12 +613,7 @@ function translateDatasetLabels(chart, chartConfig, isMultiSeries) {
             
             // Use titleKey if available, otherwise use series.title
             if (series.titleKey) {
-                // First try the new I18n system (preferred)
                 if (window.I18n && typeof window.I18n.translate === 'function') {
-                    translatedLabel = window.I18n.translate(series.titleKey);
-                } 
-                // Fallback to old system
-                else if (window.I18n && typeof window.I18n.translate === 'function') {
                     translatedLabel = window.I18n.translate(series.titleKey);
                 } 
                 // Fallback to title or original label if no i18n available

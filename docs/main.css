@@ -162,8 +162,8 @@ li.chartjs-legend-item span,
   
   /* 
    * Note: Mobile labels are now handled via JavaScript translation.
-   * The old CSS-based text insertion has been removed because it 
-   * caused incorrect translations to appear on language changes.
+   * CSS-based text insertion has been replaced with dynamic translation
+   * to ensure correct updating when the language is changed.
    */
   
   /* Hide short labels and show full labels on mobile */

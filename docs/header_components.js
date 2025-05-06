@@ -24,14 +24,12 @@ function createLogoContainer() {
     
     const timeIndicator = document.createElement('div');
     timeIndicator.className = 'time-indicator';
-    // Use only the new I18n system - no fallbacks
     timeIndicator.title = window.I18n.translate('time');
     timeIndicator.setAttribute('data-i18n-title', 'time');
     
     const timeSpan = document.createElement('span');
     timeSpan.id = 'time-since';
     
-    // Use only the new I18n system - no fallbacks
     const loadingText = window.I18n.translate('loading');
     timeSpan.textContent = loadingText;
     timeSpan.setAttribute('data-i18n', 'loading');
@@ -56,7 +54,6 @@ function createDataChip(id, iconClass, title, initialText = 'loading') {
     const dataChip = document.createElement('div');
     dataChip.className = 'data-chip';
     
-    // Use only the new I18n system - no fallbacks
     dataChip.title = window.I18n.translate(title);
     
     // Add data-i18n attributes for later translation updates
@@ -71,7 +68,6 @@ function createDataChip(id, iconClass, title, initialText = 'loading') {
     const span = document.createElement('span');
     span.id = id;
     
-    // Use only the new I18n system - no fallbacks
     const translatedText = window.I18n.translate(initialText);
     
     span.textContent = translatedText;
@@ -102,7 +98,6 @@ function createWeatherPill() {
     metLink.className = 'data-chip';
     metLink.id = 'met-link';
     
-    // Use only the new I18n system - no fallbacks
     const translatedTitle = window.I18n.translate('outTempChart');
     metLink.title = translatedTitle;
     
@@ -112,7 +107,6 @@ function createWeatherPill() {
     const metTemp = document.createElement('span');
     metTemp.id = 'met-temp';
     
-    // Use only the new I18n system - no fallbacks
     const loadingText = window.I18n.translate('loading');
     metTemp.textContent = loadingText;
     
@@ -181,7 +175,6 @@ function createDateChip(range, key, defaultText) {
     chip.className = 'date-chip';
     chip.dataset.range = range;
     
-    // Use only the new I18n system - no fallbacks
     chip.textContent = window.I18n.translate(key);
     
     // Add data-i18n attribute for later translation updates
@@ -234,7 +227,6 @@ function createSearchContainer() {
     const sortSelect = document.createElement('select');
     sortSelect.id = 'sortSelect';
     
-    // Use only the new I18n system - no fallbacks
     sortSelect.title = window.I18n.translate('sortBy');
     sortSelect.setAttribute('data-i18n-title', 'sortBy');
     
@@ -253,8 +245,7 @@ function createSearchContainer() {
         const optionEl = document.createElement('option');
         optionEl.value = option.value;
         
-        // Use only the new I18n system - no fallbacks
-        optionEl.textContent = window.I18n.translate(option.key);
+            optionEl.textContent = window.I18n.translate(option.key);
         
         // Add data-i18n attribute for later translation updates
         optionEl.setAttribute('data-i18n', option.key);
@@ -272,7 +263,6 @@ function createSearchContainer() {
     resultsInput.type = 'number';
     resultsInput.id = 'resultsInput';
     
-    // Use only the new I18n system - no fallbacks
     resultsInput.placeholder = window.I18n.translate('results');
     resultsInput.setAttribute('data-i18n-placeholder', 'results');
     resultsInput.min = '1';
@@ -280,14 +270,12 @@ function createSearchContainer() {
     const updateButton = document.createElement('button');
     updateButton.id = 'updateButton';
     
-    // Use only the new I18n system - no fallbacks
     updateButton.textContent = window.I18n.translate('update');
     updateButton.setAttribute('data-i18n', 'update');
     
     const darkModeToggle = document.createElement('button');
     darkModeToggle.id = 'darkModeToggle';
     
-    // Use only the new I18n system - no fallbacks
     darkModeToggle.title = window.I18n.translate('darkModeTooltip');
     darkModeToggle.setAttribute('data-i18n-title', 'darkModeTooltip');
     
@@ -298,7 +286,6 @@ function createSearchContainer() {
     const statsToggle = document.createElement('button');
     statsToggle.id = 'statsToggle';
     
-    // Use only the new I18n system - no fallbacks
     statsToggle.title = window.I18n.translate('statsTooltip');
     statsToggle.setAttribute('data-i18n-title', 'statsTooltip');
     
