@@ -22,14 +22,14 @@ window.testI18n = function() {
         return;
     }
     
-    console.log('Current language:', I18n.getCurrentLanguage());
-    console.log('Supported languages:', I18n.getSupportedLanguages());
+    console.log('Current language:', window.I18n.getCurrentLanguage());
+    console.log('Supported languages:', window.I18n.getSupportedLanguages());
     
     // Test some basic translations
     console.log('Translation examples:');
-    console.log('  "temperature" →', I18n.translate('temperature'));
-    console.log('  "loading" →', I18n.translate('loading'));
-    console.log('  "windowChart" →', I18n.translate('windowChart'));
+    console.log('  "temperature" →', window.I18n.translate('temperature'));
+    console.log('  "loading" →', window.I18n.translate('loading'));
+    console.log('  "windowChart" →', window.I18n.translate('windowChart'));
     
     // Test ChartI18n functionality
     if (window.ChartI18n) {
@@ -42,15 +42,21 @@ window.testI18n = function() {
     }
     
     // Test if charts have translations
-    if (window.charts && window.charts.length > 0) {
-        console.log('First chart test:');
-        const chart = window.charts[0];
-        console.log('  ID:', chart.id);
-        if (chart.data && chart.data.datasets && chart.data.datasets.length > 0) {
-            console.log('  Dataset label:', chart.data.datasets[0].label);
+    if (window.chartInstances) {
+        console.log('Chart instances test:');
+        const chartIds = Object.keys(window.chartInstances);
+        if (chartIds.length > 0) {
+            const firstChartId = chartIds[0];
+            const chart = window.chartInstances[firstChartId];
+            console.log('  ID:', firstChartId);
+            if (chart && chart.data && chart.data.datasets && chart.data.datasets.length > 0) {
+                console.log('  Dataset label:', chart.data.datasets[0].label);
+            }
+            const titleEl = document.getElementById(firstChartId).closest('.chart').querySelector('.chart-title');
+            console.log('  Title element:', titleEl ? titleEl.textContent : 'Not found');
+        } else {
+            console.warn('No chart instances found');
         }
-        const titleEl = document.getElementById(chart.id).closest('.chart').querySelector('.chart-title');
-        console.log('  Title element:', titleEl ? titleEl.textContent : 'Not found');
     }
     
     console.groupEnd();

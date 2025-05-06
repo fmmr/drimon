@@ -388,28 +388,39 @@ window.I18n = {
             const fullKey = prefix ? `${prefix}.${key}` : key;
             return this.translate(fullKey, params);
         };
-    }
-};
-
-// For compatibility with the old system, create global helpers
-// Expose the translate function globally
-window.__ = function(key, params = null) {
-    return window.I18n.translate(key, params);
-};
-
-// Backward compatibility with window.i18n
-window.i18n = {
-    __: window.__,
-    setLanguage: function(lang) {
-        return window.I18n.setLanguage(lang);
     },
-    getCurrentLanguage: function() {
-        return window.I18n.getCurrentLanguage();
+    
+    /**
+     * Translate a chart title using its titleKey from the chart configuration
+     * @param {string} title - Chart title (used for debugging/warning only)
+     * @param {string} [titleKey] - Translation key for the title
+     * @returns {string} Translated title or original title if no key found
+     */
+    translateChartTitle: function(title, titleKey) {
+        if (titleKey) {
+            return this.translate(titleKey);
+        } else {
+            // If no key is provided, just return the title itself
+            // In strict mode, we should warn about missing translation key
+            console.warn(`No translation key provided for chart title: ${title}`);
+            return title;
+        }
     },
-    updatePageLanguage: function() {
-        return window.I18n.updatePageLanguage();
-    },
-    supportedLanguages: function() {
-        return window.I18n.getSupportedLanguages();
+    
+    /**
+     * Translate a chart series title
+     * @param {string} title - Series title
+     * @param {string} [titleKey] - Translation key for the series title
+     * @returns {string} Translated series title or original title if no key found
+     */
+    translateSeriesTitle: function(title, titleKey) {
+        if (titleKey) {
+            return this.translate(titleKey);
+        } else {
+            // If no key is provided, just return the title itself
+            // In strict mode, we should warn about missing translation key
+            console.warn(`No translation key provided for series title: ${title}`);
+            return title;
+        }
     }
 };

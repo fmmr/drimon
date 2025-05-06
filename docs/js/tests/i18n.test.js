@@ -364,43 +364,47 @@ const i18nTests = {
         );
     },
     
-    testBackwardCompatibility: async () => {
+    testChartTranslations: async () => {
         // Initialize for this test
         I18n.initialize(testTranslations);
         I18n.setLanguage('en');
         
-        // Test if global __ function works
+        // Test chart title translation
+        const titleKey = 'greeting';
         assertEqual(
-            window.__(key = 'greeting'),
+            I18n.translateChartTitle('Test Chart', titleKey),
             'Hello',
-            'Global __ function should work'
+            'Chart title should be translated correctly with key'
         );
         
-        // Test if window.i18n is properly set up
-        assertTrue(
-            typeof window.i18n === 'object' && typeof window.i18n.__ === 'function',
-            'window.i18n object should be set up'
-        );
-        
-        // Test if window.i18n.__ function works
+        // Test without a key (should provide warning and return original)
         assertEqual(
-            window.i18n.__('greeting'),
-            'Hello',
-            'window.i18n.__ function should work'
+            I18n.translateChartTitle('Test Chart'),
+            'Test Chart',
+            'Chart title without key should return original title'
         );
         
-        // Test language management through window.i18n
-        window.i18n.setLanguage('es');
+        // Test series title translation
+        const seriesKey = 'farewell';
         assertEqual(
-            window.i18n.__('greeting'),
+            I18n.translateSeriesTitle('Test Series', seriesKey),
+            'Goodbye',
+            'Series title should be translated correctly with key'
+        );
+        
+        // Test without a key (should provide warning and return original)
+        assertEqual(
+            I18n.translateSeriesTitle('Test Series'),
+            'Test Series',
+            'Series title without key should return original title'
+        );
+        
+        // Test with different language
+        I18n.setLanguage('es');
+        assertEqual(
+            I18n.translateChartTitle('Test Chart', 'greeting'),
             'Hola',
-            'window.i18n.setLanguage should work'
-        );
-        
-        assertEqual(
-            window.i18n.getCurrentLanguage(),
-            'es',
-            'window.i18n.getCurrentLanguage should work'
+            'Chart title should be translated correctly after language change'
         );
     }
 };
@@ -417,7 +421,7 @@ document.addEventListener('DOMContentLoaded', () => {
     runner.addTest('keyManagement', i18nTests.testKeyManagement);
     runner.addTest('translationValidation', i18nTests.testTranslationValidation);
     runner.addTest('componentTranslator', i18nTests.testComponentTranslator);
-    runner.addTest('backwardCompatibility', i18nTests.testBackwardCompatibility);
+    runner.addTest('chartTranslations', i18nTests.testChartTranslations);
     
     // Run the tests
     runner.runTests().then(results => {

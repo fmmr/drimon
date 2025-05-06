@@ -9,36 +9,69 @@
 // Create the chart i18n helper as a global object
 window.ChartI18n = {
     /**
-     * Maps for common chart and series titles
+     * Find the appropriate translation key for a chart title
+     * This function is used to support legacy code that might pass
+     * actual titles instead of translation keys.
      * @private
+     * @param {string} chartTitle - The chart title to find a key for
+     * @returns {string|null} The translation key or null if not found
      */
-    _titleMap: {
-        'Temperatur': 'temperatureChart',
-        'Vindusåpning': 'windowChart',
-        'Lys': 'lightChart',
-        'Batteri (%)': 'batteryPercentChart',
-        'Temperatur Diff': 'tempDiffChart',
-        'Plante Temperaturer': 'plantsTempsChart',
-        'Utetemperatur': 'outTempChart',
-        'Sensor Temperaturer': 'sensorsTempsChart',
-        'Luftfuktighet': 'humidityChart',
-        'Lufttrykk': 'pressureChart',
-        'Vind': 'windChart',
-        'Nedbør': 'rainChart',
-        'Jordfuktighet': 'soilMoistureChart',
-        'Batteri (spenning)': 'batteryVoltageChart',
-        'WiFi': 'wifiChart',
-        'Tid brukt': 'timeUsedChart'
+    _getChartTitleKey: function(chartTitle) {
+        // Return null for empty titles
+        if (!chartTitle) return null;
+        
+        // For legacy support, we'll infer the key from the title
+        // but we won't have any language-specific mapping here
+        
+        // First try to create a valid key from the title itself
+        // We'll strip spaces and add 'Chart' suffix
+        const inferredKey = chartTitle.replace(/\s+/g, '') + 'Chart';
+        
+        // See if this key exists in our translations
+        if (window.I18n && window.I18n.hasKey && window.I18n.hasKey(inferredKey)) {
+            return inferredKey;
+        }
+        
+        // Check if the title actually is a key itself
+        if (window.I18n && window.I18n.hasKey && window.I18n.hasKey(chartTitle)) {
+            return chartTitle;
+        }
+        
+        // No key could be found
+        console.warn(`Could not find translation key for chart title: "${chartTitle}"`);
+        return null;
     },
     
-    _seriesMap: {
-        'Tak': 'ceiling',
-        'Intern': 'internal',
-        'Agurk': 'cucumber',
-        'Agurk 1': 'cucumber1',
-        'Agurk 2': 'cucumber2',
-        'Padron': 'padron',
-        'Gulv': 'floor'
+    /**
+     * Find the appropriate translation key for a series title
+     * This function is used to support legacy code that might pass
+     * actual titles instead of translation keys.
+     * @private
+     * @param {string} seriesTitle - The series title to find a key for
+     * @returns {string|null} The translation key or null if not found
+     */
+    _getSeriesKey: function(seriesTitle) {
+        // Return null for empty titles
+        if (!seriesTitle) return null;
+        
+        // For legacy support, we'll infer the key from the title
+        // but we won't have any language-specific mapping here
+        
+        // Check if the title already is a key itself
+        if (window.I18n && window.I18n.hasKey && window.I18n.hasKey(seriesTitle)) {
+            return seriesTitle;
+        }
+        
+        // Some series names convert directly to keys (like 'ceiling', 'internal')
+        // Try a simple lowercase conversion
+        const simpleKey = seriesTitle.toLowerCase().replace(/\s+/g, '');
+        if (window.I18n && window.I18n.hasKey && window.I18n.hasKey(simpleKey)) {
+            return simpleKey;
+        }
+        
+        // No key could be found
+        console.warn(`Could not find translation key for series title: "${seriesTitle}"`);
+        return null;
     },
     
     /**
@@ -91,30 +124,40 @@ window.ChartI18n = {
             }
             // Fallback to title property
             if (titleOrConfig.title) {
+                // Try to find a translation key for this title
+                const titleKey = this._getChartTitleKey(titleOrConfig.title);
+                if (titleKey) {
+                    return window.I18n.translate(titleKey);
+                }
                 return titleOrConfig.title;
             }
             return '';
         }
         
-        // Check if this is a known title in our map
-        if (typeof titleOrConfig === 'string' && this._titleMap[titleOrConfig]) {
-            return window.I18n.translate(this._titleMap[titleOrConfig]);
+        // For string titles, check if we have a mapping
+        if (typeof titleOrConfig === 'string') {
+            // Check if this is a known title in our map
+            const titleKey = this._getChartTitleKey(titleOrConfig);
+            if (titleKey) {
+                return window.I18n.translate(titleKey);
+            }
+            
+            // Otherwise treat as a direct title string that needs translation
+            // Use a consistent key pattern for chart titles
+            const generatedKey = titleOrConfig.replace(/\s+/g, '') + 'Chart';
+            
+            // Try to translate with the generated key
+            const translated = window.I18n.translate(generatedKey);
+            
+            // If the key wasn't found (returns the key itself), use the original title
+            if (translated === generatedKey) {
+                return titleOrConfig;
+            }
+            
+            return translated;
         }
         
-        // Otherwise treat as a direct title string that needs translation
-        // Use a consistent key pattern for chart titles
-        const key = typeof titleOrConfig === 'string' ? 
-            titleOrConfig.replace(/\s+/g, '') + 'Chart' : '';
-        
-        // Try to translate with the generated key
-        const translated = window.I18n.translate(key);
-        
-        // If the key wasn't found (returns the key itself), use the original title
-        if (translated === key) {
-            return titleOrConfig;
-        }
-        
-        return translated;
+        return titleOrConfig || '';
     },
     
     /**
@@ -137,6 +180,11 @@ window.ChartI18n = {
             }
             // Fallback to title property
             if (labelOrSeries.title) {
+                // Try to find a translation key for this title
+                const titleKey = this._getSeriesKey(labelOrSeries.title);
+                if (titleKey) {
+                    return window.I18n.translate(titleKey);
+                }
                 return labelOrSeries.title;
             }
             
@@ -145,14 +193,20 @@ window.ChartI18n = {
             return 'missing_series_title';
         }
         
-        // Check if this is a known series in our map
-        if (typeof labelOrSeries === 'string' && this._seriesMap[labelOrSeries]) {
-            return window.I18n.translate(this._seriesMap[labelOrSeries]);
+        // For string titles, check if we have a mapping
+        if (typeof labelOrSeries === 'string') {
+            // Check if this is a known series in our map
+            const seriesKey = this._getSeriesKey(labelOrSeries);
+            if (seriesKey) {
+                return window.I18n.translate(seriesKey);
+            }
+            
+            // Otherwise translate the label directly
+            // This will show the key itself if translation is missing (handled by I18n.translate)
+            return window.I18n.translate(String(labelOrSeries));
         }
         
-        // Otherwise translate the label directly
-        // This will show the key itself if translation is missing (handled by I18n.translate)
-        return window.I18n.translate(String(labelOrSeries));
+        return String(labelOrSeries);
     },
     
     /**
@@ -261,11 +315,4 @@ window.ChartI18n = {
     }
 };
 
-// For backward compatibility
-window.translateChartTitle = function(title) {
-    return window.ChartI18n.translateChartTitle(title);
-};
-
-window.translateSeriesLabel = function(label) {
-    return window.ChartI18n.translateSeriesLabel(label);
-};
+// No backward compatibility functions - use ChartI18n directly

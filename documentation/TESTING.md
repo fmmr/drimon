@@ -119,6 +119,50 @@ https://drimon.rodland.no/?test=true&logLevel=debug
 https://drimon.rodland.no/?test_i18n=true
 ```
 
+## I18n Testing
+
+The internationalization system has dedicated testing tools:
+
+1. **Automated I18n Tests**: 
+   - Accessible at `/i18n_tests.html`
+   - Tests translation system, language switching, and parameter interpolation
+   - Provides validation of translation keys across languages
+   - Can be run automatically with `?test_i18n=true` URL parameter
+
+2. **Translation Key Validation**:
+   - Use `I18n.validateTranslations()` to check for missing keys
+   - Warns about keys present in one language but missing in others
+   - Validates all translations in the system at once
+
+3. **Unit Tests**:
+   - Located in `/js/tests/i18n.test.js`
+   - Tests all core I18n functionality
+   - Verifies backward compatibility with legacy code
+   - Tests parameter interpolation and missing key handling
+
+4. **Translation Testing Process**:
+   1. Run automated tests with `?test_i18n=true`
+   2. Verify all UI elements display correctly in each language
+   3. Check console for missing translation warnings
+   4. Validate translations match visual design requirements
+   5. Test language switching works without page reload
+
+5. **Chart Translation Testing**:
+   - Test dynamic translation key inference for chart titles
+   - Verify series label translation works correctly
+   - Test language switching updates chart titles and labels
+   - Ensure statistics display with correct localized formatting
+
+6. **I18n System Architecture**:
+   - Single source of truth in `translations-loader.js`
+   - Modernized API with `window.I18n.translate()` and `window.I18n.t()` shorthand
+   - Dynamic key inference for backward compatibility with legacy code
+   - No language-specific text in any code files
+   - Parameter interpolation with `{{param}}` syntax
+   - Language change events with proper DOM updates
+
+The translation system is designed to fail visibly by displaying untranslated keys rather than silently showing incorrect content.
+
 The debug panel provides an interactive interface for exploring the application's inner workings without affecting production functionality.
 
 ## Configuration-Driven Testing

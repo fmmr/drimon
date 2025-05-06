@@ -138,7 +138,7 @@ const ChartUtils = {
             borderDash: [5, 5],
             label: {
                 enabled: false,
-                content: window.i18n ? window.i18n.__('avg') : 'Average',
+                content: window.I18n ? window.I18n.translate('avg') : 'avg',
                 position: 'start',
                 backgroundColor: 'rgba(136, 136, 136, 0.7)'
             }
@@ -184,7 +184,7 @@ const ChartUtils = {
                         radius: 5,
                         label: {
                             enabled: false,
-                            content: window.i18n ? window.i18n.__('high') : 'Max',
+                            content: window.I18n ? window.I18n.translate('high') : 'high',
                             position: 'top',
                             backgroundColor: 'rgba(255, 82, 82, 0.7)'
                         }
@@ -211,7 +211,7 @@ const ChartUtils = {
                         radius: 5,
                         label: {
                             enabled: false,
-                            content: window.i18n ? window.i18n.__('low') : 'Min',
+                            content: window.I18n ? window.I18n.translate('low') : 'low',
                             position: 'bottom',
                             backgroundColor: 'rgba(76, 175, 80, 0.7)'
                         }
@@ -296,8 +296,8 @@ function initializeChartLayout() {
         titleDiv.setAttribute('data-i18n', translationKey);
         
         // Apply translation immediately if available, otherwise use title from config
-        if (window.i18n && typeof window.i18n.__ === 'function') {
-            const translatedTitle = window.i18n.__(translationKey);
+        if (window.I18n && typeof window.I18n.translate === 'function') {
+            const translatedTitle = window.I18n.translate(translationKey);
             titleDiv.textContent = translatedTitle;
             titleDiv.title = translatedTitle;
         } else {
@@ -335,8 +335,8 @@ function initializeChartLayout() {
         
         // Get translated loading text
         let loadingTextValue = 'Laster data...';
-        if (window.i18n && typeof window.i18n.__ === 'function') {
-            loadingTextValue = window.i18n.__('loading');
+        if (window.I18n && typeof window.I18n.translate === 'function') {
+            loadingTextValue = window.I18n.translate('loading');
         }
         
         const loadingText = document.createElement('div');
@@ -490,11 +490,11 @@ function updateChartStats(chartId, minValue, maxValue, avgValue, currentValue, i
     let highLabel = 'H';
     let nowLabel = 'N';
     
-    if (window.i18n && typeof window.i18n.__ === 'function') {
-        const lowTranslation = window.i18n.__('low');
-        const avgTranslation = window.i18n.__('avg');
-        const highTranslation = window.i18n.__('high');
-        const nowTranslation = window.i18n.__('now');
+    if (window.I18n && typeof window.I18n.translate === 'function') {
+        const lowTranslation = window.I18n.translate('low');
+        const avgTranslation = window.I18n.translate('avg');
+        const highTranslation = window.I18n.translate('high');
+        const nowTranslation = window.I18n.translate('now');
         
         lowLabel = lowTranslation && lowTranslation.length > 0 ? lowTranslation[0].toUpperCase() : 'L';
         avgLabel = avgTranslation && avgTranslation.length > 0 ? avgTranslation[0].toUpperCase() : 'A';
@@ -558,7 +558,7 @@ function updateChartStats(chartId, minValue, maxValue, avgValue, currentValue, i
  * @returns {void}
  */
 window.translateChartLabels = function(chart) {
-    if (!chart || !chart.data || !chart.data.datasets || !window.chartTranslator) {
+    if (!chart || !chart.data || !chart.data.datasets || !window.ChartI18n) {
         return;
     }
 
@@ -618,8 +618,8 @@ function translateDatasetLabels(chart, chartConfig, isMultiSeries) {
                     translatedLabel = window.I18n.translate(series.titleKey);
                 } 
                 // Fallback to old system
-                else if (window.i18n && typeof window.i18n.__ === 'function') {
-                    translatedLabel = window.i18n.__(series.titleKey);
+                else if (window.I18n && typeof window.I18n.translate === 'function') {
+                    translatedLabel = window.I18n.translate(series.titleKey);
                 } 
                 // Fallback to title or original label if no i18n available
                 else {
@@ -630,10 +630,6 @@ function translateDatasetLabels(chart, chartConfig, isMultiSeries) {
                 // First check if there's a helper from chart-i18n.js
                 if (window.ChartI18n && typeof window.ChartI18n.translateSeriesLabel === 'function') {
                     translatedLabel = window.ChartI18n.translateSeriesLabel(series.title);
-                } 
-                // Otherwise use legacy chartTranslator
-                else if (window.chartTranslator && typeof window.chartTranslator.translateSeriesTitle === 'function') {
-                    translatedLabel = window.chartTranslator.translateSeriesTitle(series.title);
                 } 
                 // Direct fallback to title if no translation system
                 else {
@@ -647,13 +643,9 @@ function translateDatasetLabels(chart, chartConfig, isMultiSeries) {
             // For single series charts, use chart title
             if (chartConfig) {
                 if (chartConfig.titleKey) {
-                    // First try the new I18n system (preferred)
+                    // Use the I18n system
                     if (window.I18n && typeof window.I18n.translate === 'function') {
                         translatedLabel = window.I18n.translate(chartConfig.titleKey);
-                    } 
-                    // Fallback to old system
-                    else if (window.i18n && typeof window.i18n.__ === 'function') {
-                        translatedLabel = window.i18n.__(chartConfig.titleKey);
                     } 
                     // Fallback to title or original label if no i18n available
                     else {
@@ -663,10 +655,6 @@ function translateDatasetLabels(chart, chartConfig, isMultiSeries) {
                     // If no titleKey but has a title, try to use a mapping system
                     if (window.ChartI18n && typeof window.ChartI18n.translateChartTitle === 'function') {
                         translatedLabel = window.ChartI18n.translateChartTitle(chartConfig.title);
-                    } 
-                    // Otherwise use legacy chartTranslator
-                    else if (window.chartTranslator && typeof window.chartTranslator.translateChartTitle === 'function') {
-                        translatedLabel = window.chartTranslator.translateChartTitle(chartConfig.title);
                     } 
                     // Direct fallback to title
                     else {
@@ -690,8 +678,7 @@ function translateDatasetLabels(chart, chartConfig, isMultiSeries) {
             }
         }
         
-        // Add debug logs for troubleshooting
-        console.log(`Translating dataset ${index}: Original = "${originalLabel}", Translated = "${translatedLabel}"`);
+        // Debug logs removed to avoid console clutter
     });
 }
 
@@ -744,8 +731,6 @@ function updateChartLegend(chart, chartConfig, isMultiSeries, specialHandling) {
                                 if (dataset._titleKey) {
                                     if (window.I18n && typeof window.I18n.translate === 'function') {
                                         translatedTitle = window.I18n.translate(dataset._titleKey);
-                                    } else if (window.i18n && typeof window.i18n.__ === 'function') {
-                                        translatedTitle = window.i18n.__(dataset._titleKey);
                                     }
                                 } 
                                 // Fallback to original title
@@ -761,8 +746,6 @@ function updateChartLegend(chart, chartConfig, isMultiSeries, specialHandling) {
                             if (series.titleKey) {
                                 if (window.I18n && typeof window.I18n.translate === 'function') {
                                     translatedTitle = window.I18n.translate(series.titleKey);
-                                } else if (window.i18n && typeof window.i18n.__ === 'function') {
-                                    translatedTitle = window.i18n.__(series.titleKey);
                                 } else {
                                     translatedTitle = series.title || '';
                                 }
@@ -843,8 +826,8 @@ document.addEventListener('languageChanged', (event) => {
     // 1. First update chart DOM titles
     document.querySelectorAll('.chart-title').forEach(titleEl => {
         const translationKey = titleEl.getAttribute('data-i18n');
-        if (translationKey && window.i18n && typeof window.i18n.__ === 'function') {
-            const translatedTitle = window.i18n.__(translationKey);
+        if (translationKey && window.I18n && typeof window.I18n.translate === 'function') {
+            const translatedTitle = window.I18n.translate(translationKey);
             titleEl.textContent = translatedTitle;
             if (titleEl.hasAttribute('data-i18n-title')) {
                 titleEl.title = translatedTitle;
@@ -876,15 +859,10 @@ function createOrUpdateChart(config, data) {
     let loadingText = 'Laster data...';
     let noDataText = 'Ingen data tilgjengelig';
     
-    // First try the new i18n system (preferred)
+    // Use the I18n system
     if (window.I18n && typeof window.I18n.translate === 'function') {
         loadingText = window.I18n.translate('loading');
         noDataText = window.I18n.translate('noData');
-    }
-    // Fallback to the old i18n system
-    else if (window.i18n && typeof window.i18n.__ === 'function') {
-        loadingText = window.i18n.__('loading');
-        noDataText = window.i18n.__('noData');
     }
     
     // Reset loading element to its initial state
@@ -931,8 +909,8 @@ function createOrUpdateChart(config, data) {
             if (loadingEl) {
                 // Use translated no data text
                 let noDataText = 'Ingen gyldige dataverdier';
-                if (window.i18n && typeof window.i18n.__ === 'function') {
-                    noDataText = window.i18n.__('noData');
+                if (window.I18n && typeof window.I18n.translate === 'function') {
+                    noDataText = window.I18n.translate('noData');
                 }
                 loadingEl.innerHTML = `<div>${noDataText}</div>`;
             }
@@ -983,10 +961,10 @@ function createOrUpdateChart(config, data) {
             
             // Translate series title if possible
             let translatedTitle = series.title;
-            if (window.i18n && typeof window.i18n.__ === 'function') {
+            if (window.I18n && typeof window.I18n.translate === 'function') {
                 // Use titleKey from series config directly if available
                 if (series.titleKey) {
-                    const translated = window.i18n.__(series.titleKey);
+                    const translated = window.I18n.translate(series.titleKey);
                     if (translated !== series.titleKey) {
                         translatedTitle = translated;
                     }
@@ -1003,8 +981,6 @@ function createOrUpdateChart(config, data) {
             if (series.titleKey) {
                 if (window.I18n && typeof window.I18n.translate === 'function') {
                     datasetLabel = window.I18n.translate(series.titleKey);
-                } else if (window.i18n && typeof window.i18n.__ === 'function') {
-                    datasetLabel = window.i18n.__(series.titleKey);
                 }
             }
             
@@ -1061,8 +1037,8 @@ function createOrUpdateChart(config, data) {
             if (loadingEl) {
                 // Use translated no data text
                 let noDataText = 'Ingen gyldige dataverdier';
-                if (window.i18n && typeof window.i18n.__ === 'function') {
-                    noDataText = window.i18n.__('noData');
+                if (window.I18n && typeof window.I18n.translate === 'function') {
+                    noDataText = window.I18n.translate('noData');
                 }
                 loadingEl.innerHTML = `<div>${noDataText}</div>`;
             }
@@ -1083,8 +1059,8 @@ function createOrUpdateChart(config, data) {
         let chartTitle = config.title;
         
         // Use titleKey directly from config if available
-        if (config.titleKey && window.i18n && typeof window.i18n.__ === 'function') {
-            chartTitle = window.i18n.__(config.titleKey);
+        if (config.titleKey && window.I18n && typeof window.I18n.translate === 'function') {
+            chartTitle = window.I18n.translate(config.titleKey);
         }
         
         datasets.push({
@@ -1154,8 +1130,8 @@ function createOrUpdateChart(config, data) {
     updateChartStats(config.id, minValue, maxValue, avgValue, currentValue, data.is_multi_series);
     
     // Ensure we're using the correct locale for time formatting
-    if (window.moment && window.i18n) {
-        const lang = window.i18n.getCurrentLanguage();
+    if (window.moment && window.I18n) {
+        const lang = window.I18n.getCurrentLanguage();
         const momentLocale = lang === 'no' ? 'nb' : lang;
         window.moment.locale(momentLocale);
     }
@@ -1272,7 +1248,7 @@ function createOrUpdateChart(config, data) {
                             // Get series title - either from translation or from data
                             let title = '';
                             if (chartConfig && chartConfig.titleKey) {
-                                const configTitle = window.i18n ? window.i18n.__(chartConfig.titleKey) : chartConfig.title || '';
+                                const configTitle = window.I18n ? window.I18n.translate(chartConfig.titleKey) : chartConfig.title || '';
                                 title = `${configTitle} (${series.title || ''})`;
                             } else {
                                 title = `${rawData.title || chartId} (${series.title || ''})`;
@@ -1294,7 +1270,7 @@ function createOrUpdateChart(config, data) {
                         // Get chart title from translations if possible
                         let title = '';
                         if (chartConfig && chartConfig.titleKey) {
-                            title = window.i18n ? window.i18n.__(chartConfig.titleKey) : chartConfig.title || chartId;
+                            title = window.I18n ? window.I18n.translate(chartConfig.titleKey) : chartConfig.title || chartId;
                         } else {
                             title = rawData.title || chartId;
                         }
@@ -1578,7 +1554,7 @@ function createOrUpdateChart(config, data) {
                                 // Safety check for datasets and data.series
                                 if (i < data.series.length && datasets && datasets[i] && datasets[i].data && datasets[i].data.length > 0) {
                                     // First, ensure label text is translated if needed
-                                    if (window.i18n && typeof window.i18n.__ === 'function') {
+                                    if (window.I18n && typeof window.I18n.translate === 'function') {
                                         // Get original text (before any value is added)
                                         const originalText = (label.text || '').split(':')[0].trim();
                                         
@@ -1593,7 +1569,7 @@ function createOrUpdateChart(config, data) {
                                             // Try to find matching series by original text
                                             const matchingSeries = chartConfig.series.find(s => 
                                                 s.title === originalText || 
-                                                (window.i18n && s.titleKey && window.i18n.__(s.titleKey) === originalText)
+                                                (window.I18n && s.titleKey && window.I18n.translate(s.titleKey) === originalText)
                                             );
                                             
                                             if (matchingSeries && matchingSeries.titleKey) {
@@ -1608,7 +1584,7 @@ function createOrUpdateChart(config, data) {
                                         
                                         // Apply translation if found
                                         if (titleKey) {
-                                            const translated = window.i18n.__(titleKey);
+                                            const translated = window.I18n.translate(titleKey);
                                             if (translated !== titleKey) {
                                                 label.text = translated;
                                             }
@@ -1658,8 +1634,8 @@ function createOrUpdateChart(config, data) {
                     title: (tooltipItems) => {
                         const index = tooltipItems[0].dataIndex;
                         // Explicitly check current locale to make sure it's set correctly
-                        if (window.moment && window.i18n) {
-                            const lang = window.i18n.getCurrentLanguage();
+                        if (window.moment && window.I18n) {
+                            const lang = window.I18n.getCurrentLanguage();
                             // Set the locale each time to ensure it matches current language
                             const momentLocale = lang === 'no' ? 'nb' : lang;
                             window.moment.locale(momentLocale);
@@ -1711,7 +1687,7 @@ function createOrUpdateChart(config, data) {
                                 if (data && data.is_multi_series) {
                                     // Use titleKey or title with safe handling of undefined
                                     const configTitle = config.titleKey ? 
-                                        (window.i18n ? window.i18n.__(config.titleKey) : config.title || '') : 
+                                        (window.I18n ? window.I18n.translate(config.titleKey) : config.title || '') : 
                                         (config.title || '');
                                     
                                     // Safely split dataset label
@@ -1722,7 +1698,7 @@ function createOrUpdateChart(config, data) {
                                 } else {
                                     // Use titleKey or title with safe handling of undefined
                                     const configTitle = config.titleKey ? 
-                                        (window.i18n ? window.i18n.__(config.titleKey) : config.title || '') : 
+                                        (window.I18n ? window.I18n.translate(config.titleKey) : config.title || '') : 
                                         (config.title || '');
                                         
                                     visibleTitles.add(configTitle);
@@ -1782,9 +1758,9 @@ function createOrUpdateChart(config, data) {
                             // Always use translations if available (not just as fallback)
                             let headerText = '— Andre verdier —'; // Default fallback
                             
-                            if (window.i18n && typeof window.i18n.__ === 'function') {
+                            if (window.I18n && typeof window.I18n.translate === 'function') {
                                 // Get fresh translation for current language
-                                const translated = window.i18n.__(headerKey);
+                                const translated = window.I18n.translate(headerKey);
                                 headerText = `— ${translated} —`;
                             } else {
                                 // Fallback headers if i18n is not available
@@ -1876,7 +1852,7 @@ function createOrUpdateChart(config, data) {
             borderDash: [5, 5],
             label: {
                 enabled: false,
-                content: window.i18n ? window.i18n.__('avg') : 'Average',
+                content: window.I18n ? window.I18n.translate('avg') : 'avg',
                 position: 'start',
                 backgroundColor: 'rgba(136, 136, 136, 0.7)'
             }
@@ -1916,7 +1892,7 @@ function createOrUpdateChart(config, data) {
                         radius: 5,
                         label: {
                             enabled: false,
-                            content: window.i18n ? window.i18n.__('high') : 'Max',
+                            content: window.I18n ? window.I18n.translate('high') : 'high',
                             position: 'top',
                             backgroundColor: 'rgba(255, 82, 82, 0.7)'
                         }
@@ -1943,7 +1919,7 @@ function createOrUpdateChart(config, data) {
                         radius: 5,
                         label: {
                             enabled: false,
-                            content: window.i18n ? window.i18n.__('low') : 'Min',
+                            content: window.I18n ? window.I18n.translate('low') : 'low',
                             position: 'bottom',
                             backgroundColor: 'rgba(76, 175, 80, 0.7)'
                         }
@@ -2360,25 +2336,19 @@ function fixTemperatureChartStats() {
             highFullLabel = highTranslation || 'High';
             nowFullLabel = nowTranslation || 'Now';
         } 
-        // Fallback to the old i18n system
-        else if (window.i18n && typeof window.i18n.__ === 'function') {
-            // Get translations using old system
-            const lowTranslation = window.i18n.__('low');
-            const avgTranslation = window.i18n.__('avg');
-            const highTranslation = window.i18n.__('high');
-            const nowTranslation = window.i18n.__('now');
+        // Fallback if I18n isn't available
+        else {
+            // Use default labels
+            lowLabel = 'L';
+            avgLabel = 'A';
+            highLabel = 'H';
+            nowLabel = 'N';
             
-            // Set short labels
-            lowLabel = lowTranslation && lowTranslation.length > 0 ? lowTranslation[0].toUpperCase() : 'L';
-            avgLabel = avgTranslation && avgTranslation.length > 0 ? avgTranslation[0].toUpperCase() : 'A';
-            highLabel = highTranslation && highTranslation.length > 0 ? highTranslation[0].toUpperCase() : 'H';
-            nowLabel = nowTranslation && nowTranslation.length > 0 ? nowTranslation[0].toUpperCase() : 'N';
-            
-            // Set full labels
-            lowFullLabel = lowTranslation || 'Low';
-            avgFullLabel = avgTranslation || 'Avg';
-            highFullLabel = highTranslation || 'High';
-            nowFullLabel = nowTranslation || 'Now';
+            // Set full labels to defaults
+            lowFullLabel = 'Low';
+            avgFullLabel = 'Avg';
+            highFullLabel = 'High';
+            nowFullLabel = 'Now';
         }
         
         // Use chartConfig directly (already have it) for unit and formatting 
@@ -2508,13 +2478,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const results = parseInt(getURLParameter('results')) || 8000;
     
     // Ensure translations are loaded before creating charts
-    if (window.i18n && typeof window.i18n.updatePageLanguage === 'function') {
+    if (window.I18n && typeof window.I18n.updatePageLanguage === 'function') {
         // Translations already loaded, initialize charts
         loadAllCharts(range, results);
     } else {
         // Wait for translations to be ready
         const checkTranslations = setInterval(() => {
-            if (window.i18n && typeof window.i18n.updatePageLanguage === 'function') {
+            if (window.I18n && typeof window.I18n.updatePageLanguage === 'function') {
                 clearInterval(checkTranslations);
                 loadAllCharts(range, results);
             }

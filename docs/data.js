@@ -16,8 +16,8 @@ function getElements() {
 // Add an event listener for language changes
 document.addEventListener('languageChanged', () => {
     // Update moment.js locale for proper date formatting
-    if (window.moment && window.i18n) {
-        const lang = window.i18n.getCurrentLanguage();
+    if (window.moment && window.I18n) {
+        const lang = window.I18n.getCurrentLanguage();
         const momentLocale = lang === 'no' ? 'nb' : lang;
         window.moment.locale(momentLocale);
     }
@@ -197,15 +197,15 @@ function updateUIWithLatestData() {
     elements.batteryVolt.innerHTML = `${latestData.batteryVolt} v`;
     elements.batteryVolt.parentElement.className = `data-chip ${getBatteryClassName(latestData.battery)}`;
     
-    // Get translated window state if i18n is available
+    // Get translated window state using I18n system
     const windowState = getWindowText(latestData.windowOpening);
     let displayWindowState = windowState;
-    if (window.i18n && typeof window.i18n.__ === 'function') {
+    if (window.I18n && typeof window.I18n.translate === 'function') {
         // Map window state to translation key
         const stateKey = windowState === 'Lukket' ? 'closed' : 
                          windowState === 'Glippe' ? 'ajar' : 
                          windowState === 'Åpent' ? 'open' : windowState;
-        displayWindowState = window.i18n.__(stateKey);
+        displayWindowState = window.I18n.translate(stateKey);
     }
     
     elements.window.innerHTML = displayWindowState;
@@ -227,16 +227,16 @@ function updateUIWithLatestData() {
     elements.pressure.innerHTML = `${latestData.pressure} hPa`;
     elements.pressure.parentElement.className = `data-chip ${getPressureClassName(latestData.pressure)}`;
 
-    // Get translated light state if i18n is available
+    // Get translated light state using I18n system
     const lightState = getLightText(latestData.light);
     let displayLightState = lightState;
-    if (window.i18n && typeof window.i18n.__ === 'function') {
+    if (window.I18n && typeof window.I18n.translate === 'function') {
         // Map light state to translation key
         const lightKey = lightState === 'Natt' ? 'night' : 
                          lightState === 'Skumring' ? 'dusk' : 
                          lightState === 'Skyet' ? 'cloudy' : 
                          lightState === 'Sol' ? 'sunny' : lightState;
-        displayLightState = window.i18n.__(lightKey);
+        displayLightState = window.I18n.translate(lightKey);
     }
     
     elements.light.innerHTML = displayLightState;

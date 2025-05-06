@@ -128,14 +128,14 @@ function updateWeatherDisplay() {
     elements.metTemp.innerHTML = `yr: ${temperature} °C`;
     elements.metLink.className = `data-chip ${temperature > 25 ? 'high' : temperature < 15 ? 'low' : 'norm'}`;
     
-    // Get translated title if i18n is available
+    // Get translated title using I18n system
     let outTempTitle = 'Ute Temperatur';
     let updatedText = 'Oppdatert';
     let sourceText = 'Kilde';
     
-    if (window.i18n && typeof window.i18n.__ === 'function') {
-        outTempTitle = window.i18n.__('outTempChart');
-        updatedText = window.i18n.__('time');
+    if (window.I18n && typeof window.I18n.translate === 'function') {
+        outTempTitle = window.I18n.translate('outTempChart');
+        updatedText = window.I18n.translate('time');
         // Source doesn't need translation
     }
     

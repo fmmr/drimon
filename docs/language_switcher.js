@@ -72,15 +72,13 @@ function createLanguageSwitcher() {
                         window.updateChartLegendDOM();
                     }
                     
-                    // Force chart update to ensure proper translations in legends
+                    // Force chart update to ensure proper rendering (but NOT duplicate translations)
+                    // The translations are already handled by the languageChanged event listener
                     if (window.chartInstances) {
                         Object.values(window.chartInstances).forEach(chart => {
                             if (chart) {
-                                // Apply translations first
-                                if (typeof window.translateChartLabels === 'function') {
-                                    window.translateChartLabels(chart);
-                                }
-                                // Then update chart
+                                // Just update the chart - don't call translateChartLabels again
+                                // as it's already been called by the languageChanged event
                                 try {
                                     chart.update('none');
                                 } catch (e) {
