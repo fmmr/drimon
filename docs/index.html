@@ -80,6 +80,27 @@
     </div>
     
     <script>
+        // Simple pull-to-refresh implementation
+        // This is especially useful for iOS when the web app is added to the home screen
+        document.addEventListener('DOMContentLoaded', () => {
+            let startY = 0;
+            
+            document.addEventListener('touchstart', e => {
+                startY = e.touches[0].clientY;
+            });
+            
+            document.addEventListener('touchend', e => {
+                let endY = e.changedTouches[0].clientY;
+                let pullDistance = endY - startY;
+                
+                // If we've pulled down at least 100px and we're at the top of the page
+                if (pullDistance > 100 && window.scrollY <= 5) {
+                    // Reload the page
+                    location.reload();
+                }
+            });
+        });
+        
         // Initialize the header when DOM is loaded
         document.addEventListener('DOMContentLoaded', () => {
             // Get the header mount point
