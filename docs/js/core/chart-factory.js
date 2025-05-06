@@ -466,9 +466,9 @@ const ChartFactory = {
              * @returns {Object} Processed chart data
              */
             _processLineChartData: function(config, data) {
-                // Process timestamps into labels
+                // Process timestamps into Date objects for time scale
                 const timestamps = data.feeds.map(feed => feed.created_at);
-                const labels = timestamps.map(timestamp => moment(timestamp).format('LT'));
+                const labels = timestamps.map(timestamp => new Date(timestamp));
                 
                 // Process values
                 let values = data.feeds.map(feed => parseFloat(feed[`field${config.field}`]));
@@ -481,10 +481,13 @@ const ChartFactory = {
                 // Check for negative values
                 const hasNegativeValues = values.some(v => v < 0);
                 
-                // Create dataset
+                // Create dataset with data points as {x, y} objects for time scale
                 const dataset = {
                     label: config.title || config.id,
-                    data: values,
+                    data: labels.map((date, index) => ({
+                        x: date,
+                        y: values[index]
+                    })),
                     borderColor: config.color,
                     backgroundColor: hasNegativeValues ? 'rgba(0,0,0,0)' : `${config.color}20`,
                     borderWidth: 2,
@@ -556,6 +559,22 @@ const ChartFactory = {
                     
                     scales: {
                         x: {
+                            type: 'time', // Use time scale
+                            time: {
+                                displayFormats: {
+                                    millisecond: 'HH:mm:ss.SSS',
+                                    second: 'HH:mm:ss',
+                                    minute: 'HH:mm',
+                                    hour: 'HH:mm',
+                                    day: 'MMM D',
+                                    week: 'MMM D',
+                                    month: 'MMM YYYY',
+                                    quarter: 'MMM YYYY',
+                                    year: 'YYYY'
+                                },
+                                unit: 'auto',
+                                tooltipFormat: 'MMM D, YYYY, HH:mm',
+                            },
                             grid: {
                                 display: false // No X grid lines
                             },
@@ -713,7 +732,8 @@ const ChartFactory = {
                 
                 // Use timestamps from first series for consistency
                 const timestamps = data.series[0].feeds.map(feed => feed.created_at);
-                const labels = timestamps.map(timestamp => moment(timestamp).format('LT'));
+                // Use Date objects for time scale
+                const labels = timestamps.map(timestamp => new Date(timestamp));
                 
                 let hasNegativeValues = false;
                 
@@ -747,12 +767,15 @@ const ChartFactory = {
                         }
                     }
                     
-                    // Create dataset for this series
+                    // Create dataset for this series with {x, y} format for time scale
                     const yAxisID = seriesConfig.axis || 'y';
                     
                     return {
                         label: translatedTitle || series.title || `Series ${index + 1}`,
-                        data: seriesValues,
+                        data: labels.map((date, i) => ({
+                            x: date,
+                            y: seriesValues[i]
+                        })),
                         borderColor: series.color || seriesConfig.color,
                         backgroundColor: `${series.color || seriesConfig.color}20`,
                         borderWidth: 2,
@@ -826,6 +849,22 @@ const ChartFactory = {
                     
                     scales: {
                         x: {
+                            type: 'time', // Use time scale
+                            time: {
+                                displayFormats: {
+                                    millisecond: 'HH:mm:ss.SSS',
+                                    second: 'HH:mm:ss',
+                                    minute: 'HH:mm',
+                                    hour: 'HH:mm',
+                                    day: 'MMM D',
+                                    week: 'MMM D',
+                                    month: 'MMM YYYY',
+                                    quarter: 'MMM YYYY',
+                                    year: 'YYYY'
+                                },
+                                unit: 'auto',
+                                tooltipFormat: 'MMM D, YYYY, HH:mm',
+                            },
                             grid: {
                                 display: false // No X grid lines
                             },

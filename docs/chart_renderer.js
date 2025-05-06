@@ -1,9 +1,82 @@
+'use strict';
+
+// Register the moment.js adapter for Chart.js time scale
+// This ensures proper time formatting for the axis
+if (window.Chart && window.moment) {
+    // Create a simple adapter that uses moment.js for date handling
+    window.Chart.register({
+        id: 'moment',
+        _date: {
+            parse: function(value) {
+                return moment(value).toDate();
+            },
+            format: function(time, format) {
+                return moment(time).format(format);
+            },
+            add: function(time, amount, unit) {
+                return moment(time).add(amount, unit).toDate();
+            },
+            diff: function(max, min, unit) {
+                return moment(max).diff(moment(min), unit);
+            },
+            startOf: function(time, unit, weekday) {
+                return moment(time).startOf(unit).toDate();
+            },
+            endOf: function(time, unit) {
+                return moment(time).endOf(unit).toDate();
+            }
+        }
+    });
+}
+
 // Global Chart.js configuration
 Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
 Chart.defaults.font.size = 12;
 Chart.defaults.color = '#666';
 Chart.defaults.responsive = true;
 Chart.defaults.maintainAspectRatio = false;
+
+// Function to determine the appropriate time format based on date range
+// This simplified function is used for compatibility with existing code
+function determineTimeFormat(timestamps, range) {
+    return determineSmartTimeFormat(timestamps, range);
+}
+
+// Smarter time format detection based purely on the data timespan
+// Export globally to make available for script.js
+window.determineSmartTimeFormat = determineSmartTimeFormat;
+function determineSmartTimeFormat(timestamps, range) {
+    // Default to time only format if we can't determine range
+    if (!timestamps || timestamps.length < 2) return 'HH:mm';
+    
+    // Calculate data timespan in milliseconds
+    const firstTime = new Date(timestamps[0]);
+    const lastTime = new Date(timestamps[timestamps.length - 1]);
+    const timespan = lastTime.getTime() - firstTime.getTime();
+    const dayInMs = 24 * 60 * 60 * 1000;
+    const hourInMs = 60 * 60 * 1000;
+    
+    // Use different formats based on the timespan
+    if (timespan < 2 * hourInMs) {
+        // Less than 2 hours - show minutes
+        return 'HH:mm';
+    } else if (timespan < 2 * dayInMs) {
+        // Less than 1 day - show hours
+        return 'HH:mm';
+    } else if (timespan < 3 * dayInMs) {
+        // 1-2 days - show day of week + time
+        return 'ddd HH:mm';
+    } else if (timespan < 7 * dayInMs) {
+        // 2-7 days - show day of week + day of month
+        return 'dddd';
+    } else if (timespan < 120 * dayInMs) {
+        // 7-31 days - show day of month + month
+        return 'D/M';
+    } else {
+        // More than 1 year - show month + year
+        return 'MMMM';
+    }
+}
 
 // Store all created charts to allow updates
 // Export as a global variable for access by script.js
@@ -1131,9 +1204,20 @@ function createOrUpdateChart(config, data) {
         window.moment.locale(momentLocale);
     }
     
+    // Select appropriate time format based on date range and timespan
+    // Get the range parameter from URL for proper time formatting
+    const rangeParam = getURLParameter('range') || '1';
+    const timeFormat = determineSmartTimeFormat(timestamps, rangeParam);
+    
+    // Store the time format for reference by other functions
+    if (!window.chartTimeFormats) window.chartTimeFormats = {};
+    window.chartTimeFormats[config.id] = timeFormat;
+    
+    // Format timestamps with the determined format
     const chartData = {
-        labels: timestamps.map(timestamp => moment(timestamp).format('LT')),
-        datasets: datasets
+        labels: timestamps.map(timestamp => moment(timestamp).format(timeFormat)),
+        datasets: datasets,
+        _timeFormat: timeFormat // Store for reference
     };
     
     // Function for cross-chart highlighting
@@ -1144,6 +1228,9 @@ function createOrUpdateChart(config, data) {
         // Get the timestamp for this data point
         const timestamp = timestamps[dataIndex];
         if (!timestamp) return;
+        
+        // Make sure we have a Date object
+        const timestampDate = timestamp instanceof Date ? timestamp : new Date(timestamp);
         
         // Sync tooltips across all charts
         Object.values(chartInstances).forEach(otherChart => {
@@ -1159,7 +1246,7 @@ function createOrUpdateChart(config, data) {
             let minTimeDiff = Infinity;
             
             rawData.timestamps.forEach((time, idx) => {
-                const timeDiff = Math.abs(new Date(time) - new Date(timestamp));
+                const timeDiff = Math.abs(new Date(time) - timestampDate);
                 if (timeDiff < minTimeDiff) {
                     minTimeDiff = timeDiff;
                     closestIndex = idx;
@@ -1168,8 +1255,11 @@ function createOrUpdateChart(config, data) {
             
             // Only sync if the time difference is within 5 minutes
             if (minTimeDiff <= 5 * 60 * 1000 && closestIndex !== -1) {
+                // For time scale, we need to pass the actual Date object to getPixelForValue
+                const timeValue = new Date(rawData.timestamps[closestIndex]);
+                
                 const activeElements = otherChart.getElementsAtEventForMode(
-                    { x: otherChart.scales.x.getPixelForValue(closestIndex), y: otherChart.chartArea.top },
+                    { x: otherChart.scales.x.getPixelForValue(timeValue), y: otherChart.chartArea.top },
                     'nearest',
                     { intersect: false },
                     false
@@ -1318,6 +1408,8 @@ function createOrUpdateChart(config, data) {
         
         scales: {
             x: {
+                // For simplicity and maximum compatibility, we'll use a category scale
+                // with automatic formatting based on the timespan
                 grid: {
                     display: false // No X grid lines
                 },
@@ -1332,7 +1424,9 @@ function createOrUpdateChart(config, data) {
                     font: {
                         size: 9
                     },
-                    color: '#666'
+                    color: '#666',
+                    autoSkipPadding: 10,
+                    align: 'center'
                 },
                 border: {
                     display: false
@@ -1625,9 +1719,13 @@ function createOrUpdateChart(config, data) {
                 padding: 6,
                 backgroundColor: 'rgba(0, 0, 0, 0.7)',
                 callbacks: {
-                    // Customize title to show full date/time
+                    // Use Chart.js's native date formatting for tooltips
                     title: (tooltipItems) => {
-                        const index = tooltipItems[0].dataIndex;
+                        // With time scale, tooltipItem.label is already a formatted date string
+                        // But we can enhance it to include more information
+                        const item = tooltipItems[0];
+                        const timestamp = item.raw; // With time scale, raw is a Date object
+                        
                         // Explicitly check current locale to make sure it's set correctly
                         if (window.moment && window.I18n) {
                             const lang = window.I18n.getCurrentLanguage();
@@ -1635,7 +1733,9 @@ function createOrUpdateChart(config, data) {
                             const momentLocale = lang === 'no' ? 'nb' : lang;
                             window.moment.locale(momentLocale);
                         }
-                        return moment(timestamps[index]).format('LLL');
+                        
+                        // Use a comprehensive format that includes both date and time
+                        return moment(timestamp).format('ddd DD MMM YYYY, HH:mm');
                     },
                     
                     // Customize format for data values in tooltip
@@ -1786,6 +1886,9 @@ function createOrUpdateChart(config, data) {
                                 // Check chart config for integer formatting flag
                                 const useIntegerFormat = relatedChartConfig && 
                                     relatedChartConfig.useIntegerFormat === true;
+                                
+                                // Define the formatted value variable
+                                let formattedValue;
                                 
                                 // Always use integer formatting if config says so
                                 if (useIntegerFormat) {
@@ -2641,6 +2744,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // when we're sure the dropdown exists
     window.initializeSorting = function() {
         const sortSelect = document.getElementById('sortSelect');
+        const mobileSortSelect = document.getElementById('mobileSortSelect');
         
         if (!sortSelect) {
             // If sort select isn't found, try again after a delay
@@ -2653,17 +2757,38 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (lastSort) {
             sortSelect.value = lastSort;
+            if (mobileSortSelect) {
+                mobileSortSelect.value = lastSort;
+            }
         }
         
-        // Remove any existing event listeners
-        const newSortSelect = sortSelect.cloneNode(true);
-        sortSelect.parentNode.replaceChild(newSortSelect, sortSelect);
-        
-        // Add event listener to the new element
-        newSortSelect.addEventListener('change', (event) => {
-            const category = event.target.value;
+        // Setup sorting function to be used by both dropdowns
+        const handleSortChange = (category) => {
+            // Save preference to localStorage
+            localStorage.setItem('chartSortPreference', category);
+            // Perform the actual sorting
             window.sortChartsByCategory(category);
+        };
+        
+        // Set up desktop dropdown
+        sortSelect.addEventListener('change', (event) => {
+            const category = event.target.value;
+            // Update mobile dropdown if it exists
+            if (mobileSortSelect) {
+                mobileSortSelect.value = category;
+            }
+            handleSortChange(category);
         });
+        
+        // Set up mobile dropdown if it exists
+        if (mobileSortSelect) {
+            mobileSortSelect.addEventListener('change', (event) => {
+                const category = event.target.value;
+                // Update desktop dropdown
+                sortSelect.value = category;
+                handleSortChange(category);
+            });
+        }
         
         // Apply the initial sort if we're in mobile mode and a preference exists
         if (window.innerWidth <= 768 && lastSort) {

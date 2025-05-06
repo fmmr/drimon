@@ -8,7 +8,66 @@ document.addEventListener('DOMContentLoaded', () => {
         const momentLocale = lang === 'no' ? 'nb' : lang;
         window.moment.locale(momentLocale);
     }
+    
+    // Initialize mobile layout adjustments
+    setupMobileLayout();
 });
+
+// Function to handle mobile layout adjustments
+function setupMobileLayout() {
+    // Check if we're on mobile
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    
+    if (isMobile) {
+        // Move mobile sort element to header controls
+        const mobileSort = document.getElementById('mobileSortContainer');
+        const headerControls = document.querySelector('.mobile-header-controls');
+        
+        if (mobileSort && headerControls) {
+            headerControls.appendChild(mobileSort);
+            
+            // Sync mobile select with main select for value consistency
+            const mainSelect = document.getElementById('sortSelect');
+            const mobileSelect = document.getElementById('mobileSortSelect');
+            
+            if (mainSelect && mobileSelect) {
+                // Initial sync
+                mobileSelect.value = mainSelect.value;
+                
+                // Keep values in sync when either changes
+                mainSelect.addEventListener('change', () => {
+                    mobileSelect.value = mainSelect.value;
+                });
+                
+                mobileSelect.addEventListener('change', () => {
+                    mainSelect.value = mobileSelect.value;
+                    // Trigger change event on main select to keep behavior consistent
+                    mainSelect.dispatchEvent(new Event('change'));
+                });
+            }
+        }
+    }
+    
+    // Handle window resize to adjust layout
+    window.addEventListener('resize', () => {
+        const isMobileNow = window.matchMedia('(max-width: 768px)').matches;
+        const mobileSort = document.getElementById('mobileSortContainer');
+        const headerControls = document.querySelector('.mobile-header-controls');
+        const searchContainer = document.querySelector('.search-container');
+        
+        if (isMobileNow && mobileSort && headerControls) {
+            // Move to mobile position if not already there
+            if (mobileSort.parentElement !== headerControls) {
+                headerControls.appendChild(mobileSort);
+            }
+        } else if (!isMobileNow && mobileSort && searchContainer) {
+            // Move back to original position if not in mobile view
+            if (mobileSort.parentElement !== searchContainer) {
+                searchContainer.appendChild(mobileSort);
+            }
+        }
+    });
+}
 
 // Reference to fetchChartData function needed for periodic updates
 // This will be set by chart_renderer.js
@@ -206,7 +265,19 @@ document.addEventListener('DOMContentLoaded', () => {
                             
                             // Update labels from first series
                             if (newData.series[0] && newData.series[0].feeds && newData.series[0].feeds.length > 0) {
-                                const labels = newData.series[0].feeds.map(feed => moment(feed.created_at).format('LT'));
+                                // Format dates consistently with auto-detected format
+                                let timeFormat = 'HH:mm'; // Default format
+                                
+                                // Try to get the existing format the chart is using
+                                if (window.chartTimeFormats && window.chartTimeFormats[config.id]) {
+                                    timeFormat = window.chartTimeFormats[config.id];
+                                } else if (window.determineSmartTimeFormat) {
+                                    // Calculate smart format based on timestamps
+                                    const timestamps = newData.series[0].feeds.map(feed => feed.created_at);
+                                    timeFormat = window.determineSmartTimeFormat(timestamps);
+                                }
+                                
+                                const labels = newData.series[0].feeds.map(feed => moment(feed.created_at).format(timeFormat));
                                 window.chartInstances[config.id].data.labels = labels;
                             }
                             
@@ -221,7 +292,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Single series chart
                         else if (newData.feeds && newData.feeds.length > 0) {
                             const values = newData.feeds.map(feed => parseFloat(feed[`field${config.field}`]));
-                            const labels = newData.feeds.map(feed => moment(feed.created_at).format('LT'));
+                            // Format dates consistently with auto-detected format
+                            let timeFormat = 'HH:mm'; // Default format
+                            
+                            // Try to get the existing format the chart is using
+                            if (window.chartTimeFormats && window.chartTimeFormats[config.id]) {
+                                timeFormat = window.chartTimeFormats[config.id];
+                            } else if (window.determineSmartTimeFormat) {
+                                // Calculate smart format based on timestamps
+                                const timestamps = newData.feeds.map(feed => feed.created_at);
+                                timeFormat = window.determineSmartTimeFormat(timestamps);
+                            }
+                            
+                            const labels = newData.feeds.map(feed => moment(feed.created_at).format(timeFormat));
                             
                             window.chartInstances[config.id].data.labels = labels;
                             window.chartInstances[config.id].data.datasets[0].data = values;

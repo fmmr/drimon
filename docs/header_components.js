@@ -42,6 +42,12 @@ function createLogoContainer(config = null) {
     logoLink.appendChild(logoImg);
     logoContainer.appendChild(logoLink);
     
+    // Container for sort and flag elements on mobile
+    // Will be moved by CSS on mobile view
+    const controlsContainer = document.createElement('div');
+    controlsContainer.className = 'mobile-header-controls';
+    logoContainer.appendChild(controlsContainer);
+    
     // Add time indicator if configured
     if (options.showTimeIndicator) {
         const timeIndicator = document.createElement('div');
@@ -258,8 +264,8 @@ function createSearchContainer(config = null) {
         // Override with provided config
         ...(config || {})
     };
-    
-    // Only add categories if configured
+
+    // Create categories/sort container for desktop and mobile view
     if (options.includeCategories) {
         // Create sort container
         const sortContainer = document.createElement('div');
@@ -325,7 +331,21 @@ function createSearchContainer(config = null) {
         }
         
         sortContainer.appendChild(sortSelect);
+        
+        // For desktop view, append to searchContainer directly
+        // For mobile view, it will be moved to mobile-header-controls via JS
         searchContainer.appendChild(sortContainer);
+        
+        // Add a hidden duplicate to be used on mobile (will be positioned via CSS)
+        const mobileSortContainer = sortContainer.cloneNode(true);
+        mobileSortContainer.className = 'sort-container mobile-sort-container';
+        mobileSortContainer.id = 'mobileSortContainer';
+        
+        // Need to re-add event listeners for the cloned dropdown
+        const mobileSelect = mobileSortContainer.querySelector('select');
+        mobileSelect.id = 'mobileSortSelect';
+        
+        searchContainer.appendChild(mobileSortContainer);
     }
     
     // Create results container

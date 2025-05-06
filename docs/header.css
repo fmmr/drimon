@@ -145,6 +145,10 @@
     font-style: italic;
     opacity: 0.8;
     font-size: 0.8rem;
+    flex-shrink: 1; /* Allow shrinking to fit on small screens */
+    overflow: hidden; /* Prevent overflow */
+    text-overflow: ellipsis; /* Show ellipsis if text is too long */
+    white-space: nowrap; /* Keep on one line */
 }
 
 /* Search container styling */
@@ -295,12 +299,45 @@
         align-items: flex-start;
         flex-wrap: wrap; /* Allow wrapping for mobile */
         background: #f8f9fa;
-        padding: 6px 10px;
+        padding: 6px 0; /* Remove horizontal padding to allow child elements to control their own spacing */
         gap: 5px;
         position: sticky;
         top: 0;
         z-index: 10;
-        overflow-x: visible; /* Reset the overflow for mobile */
+        overflow-x: hidden; /* Prevent overflow beyond screen width */
+        max-width: 100%; /* Ensure it doesn't exceed viewport */
+        box-sizing: border-box;
+    }
+    
+    /* Mobile header controls container for dropdown between logo and time */
+    .mobile-header-controls {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1;
+        justify-content: flex-end;
+        padding-right: 10px;
+    }
+    
+    /* Hide desktop sort container on mobile */
+    .sort-container:not(.mobile-sort-container) {
+        display: none;
+    }
+    
+    /* Show mobile sort container */
+    .mobile-sort-container {
+        display: flex;
+        width: auto;
+        flex: 0 0 auto;
+    }
+    
+    /* Style for the mobile sort select */
+    #mobileSortSelect {
+        width: auto;
+        font-size: 0.7rem;
+        padding: 3px 6px;
+        background-color: #f1f3f5;
+        max-width: 90px; /* Limit width on very small screens */
     }
     
     .search-container {
@@ -309,21 +346,11 @@
         margin-left: 0; /* Reset the auto margin for mobile */
         display: flex;
         flex-direction: row;
-        justify-content: space-between;
+        justify-content: flex-end; /* Move all elements to the right */
         align-items: center;
         gap: 8px;
-    }
-    
-    .sort-container {
-        display: flex; /* Show on mobile */
-        width: auto;
-    }
-    
-    #sortSelect {
-        width: auto;
-        font-size: 0.8rem;
-        padding: 3px 6px;
-        background-color: #f1f3f5;
+        padding: 0 10px; /* Add horizontal padding */
+        box-sizing: border-box;
     }
     
     .results-container {
@@ -334,14 +361,20 @@
     }
     
     #resultsInput {
-        width: 70px;
-        font-size: 0.8rem;
+        width: 60px; /* Slightly smaller to fit better */
+        font-size: 0.75rem;
         padding: 3px 6px;
     }
     
     #updateButton {
-        font-size: 0.8rem;
+        font-size: 0.75rem;
         padding: 3px 8px;
+    }
+    
+    /* Buttons should be smaller on mobile */
+    #darkModeToggle, #statsToggle {
+        padding: 3px 5px;
+        font-size: 0.8rem;
     }
     
     .logo-container {
@@ -349,6 +382,8 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+        padding: 0 10px; /* Add horizontal padding */
+        box-sizing: border-box;
     }
     
     .logo {
@@ -362,34 +397,44 @@
     .data-container {
         order: 2;
         margin: 0;
-        width: 100%;
+        width: calc(100% - 20px);
         min-height: 30px; /* Ensure container has enough height on mobile */
         /* Already has horizontal scrolling styles from desktop */
+        margin: 0 10px;
+        box-sizing: border-box;
     }
     
     .date-ranges {
         order: 3;
-        width: 100%;
-        /* Override desktop settings for mobile */
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        scrollbar-width: none; /* Firefox */
-        -ms-overflow-style: none; /* IE and Edge */
-        -webkit-overflow-scrolling: touch;
+        margin: 0 10px;
+        width: calc(100% - 20px);
+        flex-wrap: nowrap; /* Prevent wrapping to next line */
+        gap: 8px;
+        overflow-x: auto; /* Enable horizontal scrolling */
+        scrollbar-width: none; /* Hide scrollbar in Firefox */
+        -ms-overflow-style: none; /* Hide scrollbar in IE/Edge */
+        padding: 3px 0;
+        position: relative;
+        -webkit-overflow-scrolling: touch; /* Smooth scrolling on touch devices */
+        min-width: 50px; /* Allow shrinking to very small size when needed */
+        box-sizing: border-box;
     }
     
-    /* Hide scrollbar for mobile date-ranges */
+    /* Hide scrollbar in Chrome/Safari/Opera */
     .date-ranges::-webkit-scrollbar {
         display: none;
     }
     
     .data-chip, .date-chip {
-        padding: 2px 6px;
+        padding: 4px 8px;
         font-size: 0.7rem;
-        flex: 0 0 auto;
+        flex: 0 0 auto; /* Prevent shrinking to ensure visibility */
         position: relative;
         display: inline-flex;
         min-width: 40px;
+        white-space: nowrap; /* Keep text on one line */
+        align-items: center;
+        justify-content: center;
     }
     
     /* Fix height issue for data-chips on mobile */
@@ -402,9 +447,19 @@
         border-radius: 16px; /* Keep consistent styling */
     }
     
-    /* Add space for comfortable scrolling */
+    /* Shared styling for scrollable containers */
     .data-container, .date-ranges {
         position: relative;
         padding-bottom: 2px;
+        /* Add horizontal padding to improve scrolling experience */
+        padding-left: 3px;
+        padding-right: 10px; /* Extra space on the right for better usability */
+        /* Ensure both containers behave the same for scrolling */
+        display: flex;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
     }
 }
