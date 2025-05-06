@@ -80,7 +80,7 @@ window.chartConfigs = [
         indicateMin: true,  // Add option to highlight the low value
         // Add data transformation configuration
         dataTransform: {
-            shiftBy: -57,  // Shift all values down by 57mm
+            shiftBy: -63,  // Shift all values down by 63mm (actually seen 57 in winter)
             normalizeToZero: true  // Indicates that this shift is intended to normalize to zero
         },
         // Structured y-axis configuration
