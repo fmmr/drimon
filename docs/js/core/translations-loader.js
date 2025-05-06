@@ -97,7 +97,11 @@ window.DriMonTranslations = {
     "language": "Språk",
     
     "darkModeTooltip": "Bytt mellom mørk og lys modus",
-    "statsTooltip": "Vis/skjul statistikker"
+    "statsTooltip": "Vis/skjul statistikker",
+    
+    "pullToRefresh": "Dra ned for å oppdatere",
+    "releaseToRefresh": "Slipp for å oppdatere",
+    "refreshing": "Oppdaterer..."
   },
   "en": {
     "loading": "Loading...",
@@ -185,7 +189,11 @@ window.DriMonTranslations = {
     "language": "Language",
     
     "darkModeTooltip": "Toggle between dark and light mode",
-    "statsTooltip": "Show/hide statistics"
+    "statsTooltip": "Show/hide statistics",
+    
+    "pullToRefresh": "Pull down to refresh",
+    "releaseToRefresh": "Release to refresh",
+    "refreshing": "Refreshing..."
   },
   "es": {
     "loading": "Cargando...",
@@ -273,6 +281,10 @@ window.DriMonTranslations = {
     "language": "Idioma",
     
     "darkModeTooltip": "Cambiar entre modo oscuro y claro",
-    "statsTooltip": "Mostrar/ocultar estadísticas"
+    "statsTooltip": "Mostrar/ocultar estadísticas",
+    
+    "pullToRefresh": "Desliza hacia abajo para actualizar",
+    "releaseToRefresh": "Suelta para actualizar",
+    "refreshing": "Actualizando..."
   }
 };
