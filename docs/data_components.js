@@ -200,34 +200,51 @@ async function fetchTimeRangeData(config, startDateStr, endDateStr, results = DE
  * @returns {Promise<Object>} - ThingSpeak API response
  */
 async function fetchSingleSeries(channel, field, startDateStr, endDateStr, results, title = "") {
-    // Build API URL with appropriate parameters
-    let url = `https://api.thingspeak.com/channels/${channel}/fields/${field}.json?timezone=${DEFAULT_TIMEZONE}&results=${results}`;
-    
-    if (startDateStr) {
-        url += `&start=${encodeURIComponent(startDateStr)}`;
-    }
-    
-    if (endDateStr) {
-        url += `&end=${encodeURIComponent(endDateStr)}`;
-    }
-    
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`API responded with status ${response.status}`);
+    // Check if DataRequestManager is available (should be loaded in index.html)
+    if (window.DataRequestManager) {
+        // Use optimized request manager
+        return window.DataRequestManager.fetchData({
+            channel,
+            field,
+            start: startDateStr,
+            end: endDateStr,
+            results,
+            timezone: DEFAULT_TIMEZONE,
+            title
+        });
+    } else {
+        // Fallback to original implementation if DataRequestManager isn't available
+        console.warn('DataRequestManager not available, using fallback fetch method');
+        
+        // Build API URL with appropriate parameters
+        let url = `https://api.thingspeak.com/channels/${channel}/fields/${field}.json?timezone=${DEFAULT_TIMEZONE}&results=${results}`;
+        
+        if (startDateStr) {
+            url += `&start=${encodeURIComponent(startDateStr)}`;
         }
         
-        const data = await response.json();
-        return data;
-    } catch (error) {
-        console.error(`Error fetching data for channel ${channel} field ${field}:`, error);
+        if (endDateStr) {
+            url += `&end=${encodeURIComponent(endDateStr)}`;
+        }
         
-        // Return empty data structure rather than null to avoid further errors
-        return {
-            channel: channel,
-            field: field,
-            feeds: []
-        };
+        try {
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error(`API responded with status ${response.status}`);
+            }
+            
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error(`Error fetching data for channel ${channel} field ${field}:`, error);
+            
+            // Return empty data structure rather than null to avoid further errors
+            return {
+                channel: channel,
+                field: field,
+                feeds: []
+            };
+        }
     }
 }
 

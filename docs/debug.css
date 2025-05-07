@@ -166,6 +166,75 @@
     background-color: #f8f9fa;
 }
 
+/* Optimization metrics styling */
+.optimization-section {
+    margin-bottom: 20px;
+}
+
+.optimization-section h4 {
+    margin: 15px 0 10px 0;
+    font-size: 14px;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+.optimization-metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.optimization-metric {
+    display: flex;
+    justify-content: space-between;
+    background-color: #f5f5f5;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.metric-name {
+    font-weight: bold;
+    color: #555;
+}
+
+.metric-value {
+    color: #333;
+}
+
+.metric-percentage {
+    font-size: 10px;
+    color: #777;
+    margin-left: 5px;
+}
+
+.optimization-techniques {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.optimization-technique {
+    background-color: #f5f5f5;
+    padding: 10px;
+    border-radius: 4px;
+    border-left: 3px solid #007bff;
+}
+
+.optimization-technique h5 {
+    margin: 0 0 5px 0;
+    font-size: 13px;
+    color: #007bff;
+}
+
+.optimization-technique p {
+    margin: 0;
+    font-size: 12px;
+    color: #333;
+}
+
 /* Log level controls */
 .debug-controls {
     margin-top: 12px;

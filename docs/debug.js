@@ -228,7 +228,8 @@ function addDebugUi() {
         { id: 'events-tab', label: 'Events' },
         { id: 'network-tab', label: 'Network' },
         { id: 'components-tab', label: 'Components' },
-        { id: 'errors-tab', label: 'Errors' }
+        { id: 'errors-tab', label: 'Errors' },
+        { id: 'optimization-tab', label: 'Optimization' }
     ];
     
     tabs.forEach((tab, index) => {
@@ -252,7 +253,8 @@ function addDebugUi() {
         { id: 'events-content', display: 'block' },
         { id: 'network-content', display: 'none' },
         { id: 'components-content', display: 'none' },
-        { id: 'errors-content', display: 'none' }
+        { id: 'errors-content', display: 'none' },
+        { id: 'optimization-content', display: 'none' }
     ];
     
     contentContainers.forEach(container => {
@@ -365,8 +367,9 @@ function refreshDebugPanel() {
     const networkContent = document.getElementById('network-content');
     const componentsContent = document.getElementById('components-content');
     const errorsContent = document.getElementById('errors-content');
+    const optimizationContent = document.getElementById('optimization-content');
     
-    if (!eventsContent || !networkContent || !componentsContent || !errorsContent) return;
+    if (!eventsContent || !networkContent || !componentsContent || !errorsContent || !optimizationContent) return;
     
     // Refresh events
     let eventsHtml = '';
@@ -414,6 +417,81 @@ function refreshDebugPanel() {
         </div>`;
     });
     errorsContent.innerHTML = errorsHtml || '<p>No errors logged yet.</p>';
+    
+    // Refresh optimization metrics
+    let optimizationHtml = '';
+    
+    // Check if the DataRequestManager is available
+    if (window.DataRequestManager) {
+        const stats = window.DataRequestManager.getStatistics();
+        
+        optimizationHtml += `
+        <div class="optimization-section">
+            <h4>Request Optimization Statistics</h4>
+            <div class="optimization-metrics">
+                <div class="optimization-metric">
+                    <div class="metric-name">Total Requests:</div>
+                    <div class="metric-value">${stats.totalRequests}</div>
+                </div>
+                <div class="optimization-metric">
+                    <div class="metric-name">Batched Requests:</div>
+                    <div class="metric-value">${stats.batchedRequests} <span class="metric-percentage">${Math.round((stats.batchedRequests / Math.max(stats.totalRequests, 1)) * 100)}%</span></div>
+                </div>
+                <div class="optimization-metric">
+                    <div class="metric-name">Cached Responses:</div>
+                    <div class="metric-value">${stats.cachedResponses} <span class="metric-percentage">${Math.round((stats.cachedResponses / Math.max(stats.totalRequests, 1)) * 100)}%</span></div>
+                </div>
+                <div class="optimization-metric">
+                    <div class="metric-name">Debounced Requests:</div>
+                    <div class="metric-value">${stats.debouncedRequests} <span class="metric-percentage">${Math.round((stats.debouncedRequests / Math.max(stats.totalRequests, 1)) * 100)}%</span></div>
+                </div>
+                <div class="optimization-metric">
+                    <div class="metric-name">Throttled Requests:</div>
+                    <div class="metric-value">${stats.throttledRequests} <span class="metric-percentage">${Math.round((stats.throttledRequests / Math.max(stats.totalRequests, 1)) * 100)}%</span></div>
+                </div>
+                <div class="optimization-metric">
+                    <div class="metric-name">Error Count:</div>
+                    <div class="metric-value">${stats.errors} <span class="metric-percentage">${Math.round((stats.errors / Math.max(stats.totalRequests, 1)) * 100)}%</span></div>
+                </div>
+                <div class="optimization-metric">
+                    <div class="metric-name">Optimization Rate:</div>
+                    <div class="metric-value">${stats.optimizationRate}</div>
+                </div>
+                <div class="optimization-metric">
+                    <div class="metric-name">Current Status:</div>
+                    <div class="metric-value">${stats.activeRequests} active, ${stats.queuedRequests} queued, ${stats.cacheSize} cached</div>
+                </div>
+            </div>
+            
+            <h4>Request Optimization Techniques</h4>
+            <div class="optimization-techniques">
+                <div class="optimization-technique">
+                    <h5>Request Throttling</h5>
+                    <p>Limits concurrent API calls to ${window.DataRequestManager.config.maxConcurrentRequests} max requests. Queues additional requests to prevent overloading the server or hitting rate limits.</p>
+                </div>
+                <div class="optimization-technique">
+                    <h5>Request Batching</h5>
+                    <p>Combines multiple field requests for the same channel and timeframe into a single API call, significantly reducing network traffic for multi-series charts.</p>
+                </div>
+                <div class="optimization-technique">
+                    <h5>Request Debouncing</h5>
+                    <p>Prevents duplicate identical requests within a ${window.DataRequestManager.config.debounceTimeframe}ms timeframe, sharing a single result with all requesters.</p>
+                </div>
+                <div class="optimization-technique">
+                    <h5>Response Caching</h5>
+                    <p>Stores API responses in memory for ${window.DataRequestManager.config.cacheTime/1000} seconds, instantly returning cached data for repeated requests without network calls.</p>
+                </div>
+                <div class="optimization-technique">
+                    <h5>Error Resilience</h5>
+                    <p>Gracefully handles network failures and API errors with fallback mechanisms to prevent UI failures.</p>
+                </div>
+            </div>
+        </div>`;
+    } else {
+        optimizationHtml = '<p>DataRequestManager is not available. Request optimization techniques are not active.</p>';
+    }
+    
+    optimizationContent.innerHTML = optimizationHtml;
 }
 
 /**
