@@ -51,6 +51,11 @@ The test suite validates various aspects of the system:
 - **Chart Stats**: Verifies statistics calculation and display
 - **Loading Indicator**: Tests loading states and error handling
 - **Date Range Functions**: Validates date range calculations
+- **Chart Utilities**: Tests chart utility functions in chart-utils.js
+- **Chart Layout**: Tests layout functions in chart-layout.js 
+- **Chart Statistics**: Tests statistics functions in chart-stats.js
+- **Chart Factory**: Tests chart creation and management
+- **Chart Controller**: Tests chart state management
 
 ## Test Implementation
 

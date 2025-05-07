@@ -76,6 +76,10 @@ This document outlines the comprehensive plan to refactor and simplify the DriMo
 - [x] Remove any ID-based or title-based conditionals
 - [x] Implement a more declarative approach to chart creation
 - [x] Split rendering logic from data processing
+- [x] Extract statistics functions to dedicated module
+- [x] Extract layout management functions to dedicated module
+- [x] Extract utilities to chart-utils.js
+- [x] Remove all backward compatibility and fallback code
 
 ### 3.2 Data Components
 - [x] Refactor `data_components.js` to focus solely on data fetching and processing
@@ -100,12 +104,17 @@ This document outlines the comprehensive plan to refactor and simplify the DriMo
 - [x] Simplify statistics calculation and display
 - [x] Implement a more uniform approach to statistics across chart types
 - [x] Move statistics format options to configuration
+- [x] Create dedicated chart-stats.js module for statistics handling
+- [x] Standardize statistics display across all chart types
 - [ ] Add validation for statistics values
 
 ### 4.2 Multi-Series Charts
 - [x] Refactor multi-series chart handling to be more consistent
 - [x] Implement better legend management
 - [x] Improve tooltip display for multi-series charts
+- [x] Fix legend flickering during language switching
+- [x] Improve tooltip synchronization between charts
+- [x] Add proper date formatting in tooltips based on timespan
 - [ ] Add validation for series configuration
 
 ### 4.3 Chart Annotations
@@ -138,6 +147,8 @@ This document outlines the comprehensive plan to refactor and simplify the DriMo
 - [x] Implement smarter data fetching strategy
 - [x] Ensure charts are fetched async and displayed as soon as possible
 - [x] Add progressive rendering of charts as data becomes available
+- [x] Improve chart syncing for better performance
+- [x] Use animation-free updates for language switching
 - [ ] Add request throttling and debouncing
 - [ ] Optimize payload sizes
 - [x] Implement proper caching headers
@@ -223,6 +234,8 @@ We have made excellent progress implementing many of the planned refactoring tas
    - ✅ Optimized chart statistics calculation with label caching
    - ✅ Reduced unnecessary DOM manipulations in chart rendering
    - ✅ Added error handling for chart loading to prevent cascading failures
+   - ✅ Fixed chart legend flickering during language switching
+   - ✅ Improved tooltip synchronization between charts
 
 4. **✅ Header Components Refactoring Completed**:
    - ✅ Implemented component registry system for header components
@@ -240,7 +253,17 @@ We have made excellent progress implementing many of the planned refactoring tas
    - ✅ Implemented comprehensive test suite for the chart factory system
    - ✅ Created demo page (`chart_factory_demo.html`) to showcase the new factory system
 
-6. **Request Optimization (Next)**:
+6. **✅ Chart Rendering Modularization Completed**:
+   - ✅ Created `chart-utils.js` module for shared chart utility functions
+   - ✅ Created `chart-layout.js` module for layout management and DOM structure
+   - ✅ Created `chart-stats.js` module for statistics calculation and display
+   - ✅ Simplified chart_renderer.js by delegating to specialized modules
+   - ✅ Removed all backward compatibility and fallback code
+   - ✅ Improved error handling and robustness
+   - ✅ Implemented smart date formatting for tooltips based on timespan
+   - ✅ Fixed cross-chart tooltip synchronization
+
+7. **Request Optimization (Next)**:
    - Implement request throttling and debouncing for data fetches
    - Add request batching for multiple chart data
    - Optimize payload sizes for network requests

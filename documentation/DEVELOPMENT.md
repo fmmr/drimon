@@ -36,12 +36,16 @@ The web interface uses:
 
 #### Application Logic
 - `chart_config.js`: Configuration for all charts with row-based layout
-- `chart_renderer.js`: Core chart rendering using Chart.js
+- `js/core/chart-utils.js`: Utility functions for chart operations
+- `js/core/chart-layout.js`: Layout management and DOM structure
+- `js/core/chart-stats.js`: Statistics calculation and display
+- `chart_renderer.js`: Core chart rendering using Chart.js (delegates to modules)
 - `data.js`: Data handling and sensor information processing
 - `weather.js`: Weather data integration with YR.no
 - `date_utils.js`: Date range handling and URL parameter parsing
 - `script.js`: Main application logic and UI interaction
-- `translations.js`: Internationalization system with multi-language support
+- `js/core/i18n.js`: Internationalization system with multi-language support
+- `js/core/translations-loader.js`: Translation data loader
 
 ### Chart Configuration
 
@@ -78,7 +82,7 @@ The interface includes enhanced mobile support:
 
 ### Core Modules
 
-#### `/core/utils.js` (Implemented)
+#### `/js/core/utils.js` (Implemented)
 
 **Primary Responsibility**: Provide general-purpose utility functions used across the application.
 
@@ -90,7 +94,44 @@ The interface includes enhanced mobile support:
 - Debounce and throttle functions
 - Event emitter implementation
 
-#### `/core/i18n.js`
+#### `/js/core/chart-utils.js` (Implemented)
+
+**Primary Responsibility**: Provide chart-specific utility functions.
+
+**Specific Responsibilities**:
+- Data transformation functions
+- Dataset configuration creation
+- Statistics calculation for charts
+- Chart data storage and retrieval
+- Tooltip configuration generation
+- Annotation generation
+- Smart time format determination
+- Value formatting based on range
+
+#### `/js/core/chart-layout.js` (Implemented)
+
+**Primary Responsibility**: Manage chart layout and DOM structure.
+
+**Specific Responsibilities**:
+- Calculate grid positions for charts
+- Initialize chart layout structure
+- Sort charts by category (mobile view)
+- Create chart titles and loading indicators
+- Manage responsive layout changes
+
+#### `/js/core/chart-stats.js` (Implemented)
+
+**Primary Responsibility**: Handle chart statistics calculation and display.
+
+**Specific Responsibilities**:
+- Get translation labels for statistics
+- Format statistic values based on range
+- Create HTML for statistics display
+- Update chart statistics with proper values
+- Recalculate statistics from chart data
+- Update all chart statistics consistently
+
+#### `/js/core/i18n.js` (Implemented)
 
 **Primary Responsibility**: Manage translations and language switching.
 
@@ -101,7 +142,7 @@ The interface includes enhanced mobile support:
 - Translation helper functions
 - Event dispatching for language changes
 
-#### `/core/config.js` (Implemented)
+#### `/js/core/config.js` (Implemented)
 
 **Primary Responsibility**: Manage application-wide configuration settings.
 
@@ -386,54 +427,91 @@ index.html
    - Defined in: translations.js
    - Used in: All modules with user-facing text
 
-### Proposed Module Structure
+### Current Module Structure
 
 ```
-/core/
+/js/core/
   ├─ utils.js               # Common utilities for all modules
-  │   ├─ date_utils.js      # Date handling functions
-  │   └─ dom_utils.js       # DOM manipulation helpers
-  │
+  ├─ chart-utils.js         # Chart-specific utility functions
+  ├─ chart-layout.js        # Layout management for charts
+  ├─ chart-stats.js         # Statistics calculation and display
+  ├─ chart-factory.js       # Chart creation factory
+  ├─ chart-loader.js        # Progressive chart loading
+  ├─ chart-controller.js    # Chart state management
   ├─ i18n.js                # Internationalization system
-  │   └─ translations.js    # Translation data
-  │
-  └─ config.js              # Configuration system
-      └─ chart_config.js    # Chart configuration data
+  ├─ i18n-init.js           # I18n initialization
+  ├─ translations-loader.js # Translation data
+  └─ config.js              # Configuration schema and validation
 
-/data/
+/js/tests/
+  ├─ chart-factory.test.js  # Tests for chart factory
+  ├─ chart-controller.test.js # Tests for chart controller
+  ├─ i18n.test.js           # Tests for i18n system
+  ├─ utils.test.js          # Tests for utilities
+  └─ config.test.js         # Tests for configuration system
+
+/ (root)
+  ├─ chart_config.js        # Chart configuration data
+  ├─ chart_renderer.js      # Chart rendering (delegates to modules)
+  ├─ data_components.js     # Data fetching and processing
+  ├─ header_components.js   # Header components and registry
+  ├─ chart_components.js    # Chart UI components
+  ├─ script.js              # Main application logic
+  ├─ data.js                # Sensor data handling
+  ├─ date_utils.js          # Date range utilities
+  ├─ weather.js             # Weather integration
+  ├─ component_tests.js     # Component testing framework
+  └─ debug.js               # Debug utilities
+```
+
+### Future Module Structure
+
+```
+/js/core/
+  ├─ utils.js               # Common utilities for all modules
+  ├─ chart-utils.js         # Chart-specific utility functions
+  ├─ chart-layout.js        # Layout management for charts
+  ├─ chart-stats.js         # Statistics calculation and display
+  ├─ chart-factory.js       # Chart creation factory
+  ├─ chart-loader.js        # Progressive chart loading
+  ├─ chart-controller.js    # Chart state management
+  ├─ i18n.js                # Internationalization system
+  ├─ i18n-init.js           # I18n initialization
+  ├─ translations-loader.js # Translation data
+  └─ config.js              # Configuration schema and validation
+
+/js/data/
   ├─ api.js                 # API client
-  ├─ data_fetcher.js        # Data fetching logic
-  ├─ data_processor.js      # Data transformation
+  ├─ data-fetcher.js        # Data fetching logic
+  ├─ data-processor.js      # Data transformation
   └─ cache.js               # In-memory data caching with expiration
 
-/components/
+/js/components/
   ├─ charts/
-  │   ├─ chart_factory.js   # Chart creation and initialization
-  │   ├─ chart_renderer.js  # Chart rendering and updates
   │   ├─ annotations.js     # Chart annotations
   │   ├─ tooltips.js        # Chart tooltips
-  │   └─ statistics.js      # Chart statistics
+  │   └─ legend.js          # Chart legend management
   │
   ├─ header/
-  │   ├─ header_components.js  # Header components and registry
-  │   ├─ header_controller.js  # Header state management
-  │   ├─ component_registry.js # Component registration system
-  │   ├─ data_chips.js         # Data display components
-  │   ├─ date_range.js         # Date range selector
+  │   ├─ header-components.js  # Header components and registry
+  │   ├─ header-controller.js  # Header state management
+  │   ├─ component-registry.js # Component registration system
+  │   ├─ data-chips.js         # Data display components
+  │   ├─ date-range.js         # Date range selector
   │   └─ controls.js           # UI controls
   │
   └─ weather/
       └─ weather.js         # Weather component
 
-/ui/
+/js/ui/
   ├─ layout.js              # Layout management
   ├─ theme.js               # Theme management
   └─ responsive.js          # Responsive design
 
-/debug/
+/js/debug/
   └─ debug.js               # Debug utilities
 
-main.js                     # Application entry point
+/js/main.js                 # Application entry point
 ```
 
 ## Development Workflow
