@@ -53,9 +53,9 @@ window.chartConfigs = [
             showMax: true,
             showAvg: true,
             colors: {
-                min: '#4caf50', // Green for min
-                max: '#ff5252', // Red for max
-                avg: '#888888'  // Gray for average
+                min: '#1e88e5', // Blue downward triangle
+                max: '#4caf50', // Green upward triangle
+                avg: '#888888'  // Gray for average line
             }
         },
         // Structured y-axis configuration
@@ -84,8 +84,12 @@ window.chartConfigs = [
         },
         minValue: 0,  // Changed from 50 to 0 since values will be normalized
         relatedCategories: ['temperature'],  // Show temperature values in tooltip
-        indicateMax: true,
-        indicateMin: true,  // Add option to highlight the low value
+        // Structured indicator configuration
+        indicators: {
+            showMin: true,
+            showMax: true,
+            showAvg: true
+        },
         // Add data transformation configuration
         dataTransform: {
             shiftBy: -63  // Shift all values down by 63mm (actually seen 57 in winter)
@@ -148,7 +152,11 @@ window.chartConfigs = [
         categoryHeaderKey: 'system', // Translation key for category headers in tooltips
         unit: '%',
         useIntegerFormat: true,
-        indicateMin: true
+        // Structured indicator configuration
+        indicators: {
+            showMin: true,
+            showAvg: true
+        }
     },
 
     // Row 2
@@ -165,8 +173,12 @@ window.chartConfigs = [
         useIntegerFormat: false,
         // Use LAHN (Low/Avg/High/Now) style for statistics labels
         statsLabelsStyle: 'LAHN',
-        indicateMin: true,
-        indicateMax: true
+        // Structured indicator configuration
+        indicators: {
+            showMin: true,
+            showMax: true,
+            showAvg: true
+        }
     },
     { 
         id: 'chart-temp-diff',
@@ -181,8 +193,12 @@ window.chartConfigs = [
         useIntegerFormat: false,
         // Use LAHN (Low/Avg/High/Now) style for statistics labels
         statsLabelsStyle: 'LAHN',
-        indicateMin: true,
-        indicateMax: true
+        // Structured indicator configuration
+        indicators: {
+            showMin: true,
+            showMax: true,
+            showAvg: true
+        }
     },
     // Multi-series chart combining cucumber and padron temperatures (positioned as 2nd chart in row 2)
     {
@@ -257,11 +273,15 @@ window.chartConfigs = [
         categoryHeaderKey: 'weather', // Translation key for category headers in tooltips
         unit: '%',
         useIntegerFormat: true,
-        indicateMin: true,
-        indicateMax: true
+        // Structured indicator configuration
+        indicators: {
+            showMin: true,
+            showMax: true,
+            showAvg: true
+        }
     },
     { 
-        id: 'chart-pressure',
+        id: 'chart-temperature',
         titleKey: 'pressureChart', 
         channel: 2568299, 
         field: 7, 
@@ -274,12 +294,12 @@ window.chartConfigs = [
         useIntegerFormat: true,
         // Structured formatting configuration
         formatting: {
-            useIntegerFormat: true // Always use integer format for pressure values
+            useIntegerFormat: true // Always use integer format for temperature values
         },
         // Structured indicator configuration
         indicators: {
-            showMin: false,
-            showMax: false,
+            showMin: true,
+            showMax: true,
             showAvg: true
         }
     },
@@ -372,7 +392,12 @@ window.chartConfigs = [
         categoryHeaderKey: 'system', // Translation key for category headers in tooltips
         unit: 'dBm',
         useIntegerFormat: true,
-        indicateMin: true
+        // Structured indicator configuration
+        indicators: {
+            showMin: true,
+            showMax: true,
+            showAvg: true
+        }
     },
     { 
         id: 'chart-time-used',
