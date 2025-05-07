@@ -223,7 +223,8 @@ function createDateRanges(config = null) {
     dateRanges.className = 'date-ranges';
     
     // If no config is provided, use default date ranges
-    const dateChips = config && config.ranges ? config.ranges : [
+    const allRanges = config && config.ranges ? config.ranges : [
+        { range: 'default', key: 'defaultDate' },
         { range: 'today', key: 'today' },
         { range: '1', key: 'twoDay' },
         { range: '2', key: 'threeDay' },
@@ -235,10 +236,119 @@ function createDateRanges(config = null) {
         { range: 'start', key: 'start' }
     ];
     
-    // Add all chips to the container
-    dateChips.forEach(chip => {
+    // Split into primary (visible as chips) and secondary (in dropdown) ranges
+    const primaryRanges = allRanges.slice(0, 6); // First 6 ranges as visible chips
+    const secondaryRanges = allRanges.slice(6);  // Remaining ranges go to dropdown
+    
+    // Add primary date chips directly to the container
+    primaryRanges.forEach(chip => {
         dateRanges.appendChild(createDateChip(chip.range, chip.key));
     });
+    
+    // Create a dropdown for additional date ranges
+    if (secondaryRanges.length > 0) {
+        const dropdownContainer = document.createElement('div');
+        dropdownContainer.className = 'date-dropdown';
+        
+        // Create dropdown button
+        const dropdownButton = document.createElement('button');
+        dropdownButton.className = 'date-dropdown-button';
+        dropdownButton.innerHTML = '<i class="fas fa-ellipsis-h"></i>';
+        dropdownButton.title = 'More date ranges';
+        
+        // Create dropdown content
+        const dropdownContent = document.createElement('div');
+        dropdownContent.className = 'date-dropdown-content';
+        
+        // Add secondary ranges to dropdown
+        secondaryRanges.forEach(chip => {
+            const link = createDateChip(chip.range, chip.key);
+            link.className = 'date-dropdown-item date-chip'; // Keep date-chip class for event handling
+            dropdownContent.appendChild(link);
+        });
+        
+        // Add dropdown elements to container
+        dropdownContainer.appendChild(dropdownButton);
+        dropdownContainer.appendChild(dropdownContent);
+        dateRanges.appendChild(dropdownContainer);
+        
+        // Toggle dropdown on button click
+        dropdownButton.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Get button position
+            const buttonRect = dropdownButton.getBoundingClientRect();
+            
+            // Position dropdown - account for mobile specific adjustments
+            const isMobile = window.matchMedia('(max-width: 768px)').matches;
+            
+            // Set initial position
+            dropdownContent.style.top = (buttonRect.bottom + 5) + 'px';
+            dropdownContent.style.left = buttonRect.left + 'px';
+            
+            // Adjust for mobile
+            if (isMobile) {
+                // Ensure dropdown isn't positioned off-screen
+                const viewportWidth = window.innerWidth;
+                const dropdownWidth = 150; // Approximate width
+                
+                // If dropdown would go off right edge, align to right
+                if (buttonRect.left + dropdownWidth > viewportWidth) {
+                    dropdownContent.style.left = (viewportWidth - dropdownWidth - 10) + 'px';
+                }
+                
+                // If the button is in the bottom half of the screen, position dropdown above
+                if (buttonRect.top > window.innerHeight / 2) {
+                    dropdownContent.style.top = 'auto';
+                    dropdownContent.style.bottom = (window.innerHeight - buttonRect.top + 5) + 'px';
+                }
+            }
+            
+            // Toggle dropdown
+            dropdownContent.classList.toggle('show');
+            
+            // Close dropdown when clicking outside
+            document.addEventListener('click', function closeDropdown(event) {
+                if (!dropdownContainer.contains(event.target)) {
+                    dropdownContent.classList.remove('show');
+                    document.removeEventListener('click', closeDropdown);
+                }
+            });
+        });
+        
+        // For better touch handling on mobile
+        if ('ontouchstart' in window) {
+            dropdownButton.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Same positioning logic as click event
+                const buttonRect = dropdownButton.getBoundingClientRect();
+                dropdownContent.style.top = (buttonRect.bottom + 5) + 'px';
+                dropdownContent.style.left = buttonRect.left + 'px';
+                
+                // Mobile adjustments
+                const isMobile = window.matchMedia('(max-width: 768px)').matches;
+                if (isMobile) {
+                    const viewportWidth = window.innerWidth;
+                    const dropdownWidth = 150;
+                    
+                    if (buttonRect.left + dropdownWidth > viewportWidth) {
+                        dropdownContent.style.left = (viewportWidth - dropdownWidth - 10) + 'px';
+                    }
+                    
+                    if (buttonRect.top > window.innerHeight / 2) {
+                        dropdownContent.style.top = 'auto';
+                        dropdownContent.style.bottom = (window.innerHeight - buttonRect.top + 5) + 'px';
+                    }
+                }
+                
+                // Toggle dropdown
+                dropdownContent.classList.toggle('show');
+            });
+        }
+    }
     
     return dateRanges;
 }
@@ -515,6 +625,7 @@ const HeaderConfig = {
             type: 'dateRanges',
             config: {
                 ranges: [
+                    { range: 'default', key: 'defaultDate' },
                     { range: 'today', key: 'today' },
                     { range: '1', key: 'twoDay' },
                     { range: '2', key: 'threeDay' },

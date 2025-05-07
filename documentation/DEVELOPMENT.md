@@ -50,6 +50,29 @@ The web interface uses:
 
 Charts are configured using a row-based layout system that automatically calculates grid positions. Each chart belongs to a specific row and category, with responsive layouts for both desktop and mobile devices.
 
+#### Default Range Feature
+
+Each chart can have a custom default time range when the "Default" date picker option (house icon) is selected:
+
+```javascript
+{
+    id: 'chart-temperature',
+    titleKey: 'temperatureChart',
+    // ... other properties
+    defaultRange: 1  // Default to 1 day for temperature chart
+},
+{
+    id: 'chart-pressure',
+    titleKey: 'pressureChart', 
+    // ... other properties
+    defaultRange: 13  // Default to 13 days for pressure chart
+}
+```
+
+The system uses these chart-specific defaults when:
+1. The "Default" (house icon) option is selected from the date picker
+2. No range parameter is provided in the URL (defaults to "Default")
+
 ### Statistical Indicators
 
 Charts include visual statistical indicators with configurable options:

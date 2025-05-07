@@ -167,7 +167,12 @@ function prepareChartData(config, data) {
     
     // Get appropriate time format
     const rangeParam = getURLParameter('range') || '1';
-    const timeFormat = window.ChartUtils.determineSmartTimeFormat(timestamps, rangeParam);
+    // If range is 'default', use the chart's defaultRange or fallback to 1
+    const effectiveRange = rangeParam === 'default' 
+        ? (config.defaultRange || 1).toString()
+        : rangeParam;
+    
+    const timeFormat = window.ChartUtils.determineSmartTimeFormat(timestamps, effectiveRange);
     
     // Store time format for reference
     window.chartTimeFormats = window.chartTimeFormats || {};
@@ -773,8 +778,11 @@ async function loadAllCharts(range = 1, results = 8000) {
     
     // Use Promise.allSettled to handle individual chart loading without waiting for all
     const fetchPromises = window.chartConfigs.map((config, index) => {
+        // For default range, use the chart's defaultRange property or fallback to 1
+        const effectiveRange = range === 'default' ? (config.defaultRange || 1) : range;
+        
         // Start fetching data for this chart
-        return fetchChartData(config, range, results)
+        return fetchChartData(config, effectiveRange, results)
             .then(data => {
                 // When data arrives, immediately render the chart
                 console.time(`Rendering chart ${config.id}`);
@@ -895,19 +903,28 @@ window.refreshCharts = function(range, results) {
 
 // Handle date range selection
 function setupDateRangeHandlers() {
-    const dateChips = document.querySelectorAll('.date-chip');
+    // This function is mainly preserved for backwards compatibility
+    // Most of the actual handler logic is now in attachDateChipHandlers
     
     // Get range and results from URL parameters or use defaults
-    let currentRange = getURLParameter('range') || '1'; // Default to 1 day
+    let currentRange = getURLParameter('range') || 'default'; // Default to 'default' (house icon)
     let currentResults = parseInt(getURLParameter('results')) || 8000; // Default to 8000 results
     
-    // Set active state for current range
+    // Clear all active states and set the correct one
+    const allDateChips = document.querySelectorAll('.date-chip');
+    
+    // First remove active class from all chips
+    allDateChips.forEach(chip => {
+        chip.classList.remove('active');
+    });
+    
+    // Then set active state for current range
     const activeChip = document.querySelector(`.date-chip[data-range="${currentRange}"]`);
     if (activeChip) {
         activeChip.classList.add('active');
     } else {
-        // Default to "1" if no matching chip is found
-        const defaultChip = document.querySelector('.date-chip[data-range="1"]');
+        // Default to "default" (house icon) if no matching chip is found
+        const defaultChip = document.querySelector('.date-chip[data-range="default"]');
         if (defaultChip) {
             defaultChip.classList.add('active');
         }
@@ -936,25 +953,72 @@ function setupDateRangeHandlers() {
         window.refreshCharts(range, results);
     }
     
-    // Add click handlers to all date range chips
-    dateChips.forEach(chip => {
-        chip.addEventListener('click', (e) => {
-            e.preventDefault();
+    // Add click handlers to all date range chips - including those in the dropdown
+    function attachDateChipHandlers() {
+        // Get all date chips, including those in the dropdown
+        const allDateChips = document.querySelectorAll('.date-chip');
+        
+        // First clear any existing active states
+        // This ensures we have a clean slate and fixes the multiple active issue
+        let currentRange = getURLParameter('range') || 'default';
+        
+        allDateChips.forEach(chip => {
+            // First remove active class from all chips
+            chip.classList.remove('active');
             
-            // Remove active class from all chips
-            dateChips.forEach(c => c.classList.remove('active'));
+            // Then add active class only to the current range chip
+            if (chip.getAttribute('data-range') === currentRange) {
+                chip.classList.add('active');
+            }
             
-            // Add active class to clicked chip
-            chip.classList.add('active');
+            // Remove any existing click handlers
+            const newChip = chip.cloneNode(true);
+            chip.parentNode.replaceChild(newChip, chip);
             
-            // Get selected range
-            const range = chip.getAttribute('data-range');
-            currentRange = range;
-            
-            // Update URL and refresh charts
-            updateChartsWithParams(currentRange, currentResults);
+            // Add the click handler to the new chip
+            newChip.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                // Get all chips again to ensure we have the latest set
+                const allChips = document.querySelectorAll('.date-chip');
+                
+                // Remove active class from all chips
+                allChips.forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked chip
+                newChip.classList.add('active');
+                
+                // Get selected range
+                const range = newChip.getAttribute('data-range');
+                
+                // Close any open dropdowns
+                document.querySelectorAll('.date-dropdown-content').forEach(dropdown => {
+                    dropdown.classList.remove('show');
+                });
+                
+                // If this is a dropdown item, also set active state on main chip
+                if (newChip.classList.contains('date-dropdown-item')) {
+                    // Update dropdown button text/appearance if needed
+                    const dropdownButtons = document.querySelectorAll('.date-dropdown-button');
+                    if (dropdownButtons.length > 0) {
+                        // Optional: Update the button appearance to show the selected item
+                    }
+                }
+                
+                // Update the current range
+                currentRange = range;
+                
+                // Update URL and refresh charts with the clicked range
+                updateChartsWithParams(range, currentResults);
+            });
         });
-    });
+    }
+    
+    // Initial attachment of handlers
+    attachDateChipHandlers();
+    
+    // Make handler attachment function available globally
+    window.attachDateChipHandlers = attachDateChipHandlers;
     
     // Handle results input and update button
     const resultsInput = document.getElementById('resultsInput');
@@ -1002,8 +1066,25 @@ document.addEventListener('DOMContentLoaded', () => {
     // after the header is created dynamically
     
     // Get range and results from URL parameters or use defaults
-    const range = getURLParameter('range') || '1';
+    // Default to 'default' range (house icon) if no range parameter is provided
+    const range = getURLParameter('range') || 'default';
     const results = parseInt(getURLParameter('results')) || 8000;
+    
+    // Ensure only one date chip is active on load
+    setTimeout(() => {
+        const allDateChips = document.querySelectorAll('.date-chip');
+        
+        // First remove active class from all chips
+        allDateChips.forEach(chip => {
+            chip.classList.remove('active');
+        });
+        
+        // Then find and activate the current range chip
+        const activeChip = document.querySelector(`.date-chip[data-range="${range}"]`);
+        if (activeChip) {
+            activeChip.classList.add('active');
+        }
+    }, 100);
     
     // Initialize chart loading with a short delay to avoid blocking the initial render
     setTimeout(() => {

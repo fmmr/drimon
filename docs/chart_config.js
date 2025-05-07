@@ -23,6 +23,8 @@
 //   Example: { shiftBy: -63 }
 // - categoryHeaderKey: Translation key for category headers in tooltips
 //   Example: 'temperatures' for temperature category
+// - defaultRange: Default range value for this chart when the 'default' date range is selected
+//   Example: 13 for air pressure chart (shows 14 days by default)
 //
 window.chartConfigs = [
     // Define chart groupings for linked tooltips
@@ -45,6 +47,8 @@ window.chartConfigs = [
             useIntegerFormat: false,
             decimalPlaces: 1 // Show 1 decimal place for most temperature values
         },
+        // Default range for this chart when using the 'default' date range
+        defaultRange: 1,
         // Use LAHN (Low/Avg/High/Now) style for statistics labels
         statsLabelsStyle: 'LAHN',
         // Structured indicator configuration
@@ -82,6 +86,8 @@ window.chartConfigs = [
             useIntegerFormat: true,
             decimalPlaces: 0  // Force exactly 0 decimal places
         },
+        // Default range for this chart when using the 'default' date range
+        defaultRange: 1,
         minValue: 0,  // Changed from 50 to 0 since values will be normalized
         relatedCategories: ['temperature'],  // Show temperature values in tooltip
         // Structured indicator configuration
@@ -105,6 +111,8 @@ window.chartConfigs = [
     {
         id: 'chart-light',
         titleKey: 'lightChart', 
+        // Default range for this chart when using the 'default' date range
+        defaultRange: 1,
         series: [
             {
                 titleKey: 'ceiling',   // External/ceiling light
@@ -156,7 +164,9 @@ window.chartConfigs = [
         indicators: {
             showMin: true,
             showAvg: true
-        }
+        },
+        // Default range for this chart when using the 'default' date range
+        defaultRange: 6
     },
 
     // Row 2
@@ -171,6 +181,8 @@ window.chartConfigs = [
         categoryHeaderKey: 'temperatures', // Translation key for category headers in tooltips
         unit: '°C',
         useIntegerFormat: false,
+        // Default range for this chart when using the 'default' date range
+        defaultRange: 1,
         // Use LAHN (Low/Avg/High/Now) style for statistics labels
         statsLabelsStyle: 'LAHN',
         // Structured indicator configuration
@@ -191,6 +203,8 @@ window.chartConfigs = [
         categoryHeaderKey: 'temperatures', // Translation key for category headers in tooltips
         unit: '°C',
         useIntegerFormat: false,
+        // Default range for this chart when using the 'default' date range
+        defaultRange: 1,
         // Use LAHN (Low/Avg/High/Now) style for statistics labels
         statsLabelsStyle: 'LAHN',
         // Structured indicator configuration
@@ -204,6 +218,8 @@ window.chartConfigs = [
     {
         id: 'chart-plants-temp',
         titleKey: 'plantsTempsChart',
+        // Default range for this chart when using the 'default' date range
+        defaultRange: 1,
         // Define multiple data series for a single chart
         series: [
             {
@@ -230,6 +246,8 @@ window.chartConfigs = [
     {
         id: 'chart-sensors-temp',
         titleKey: 'sensorsTempsChart',
+        // Default range for this chart when using the 'default' date range
+        defaultRange: 1,
         // Define multiple data series for a single chart
         series: [
             {
@@ -273,6 +291,8 @@ window.chartConfigs = [
         categoryHeaderKey: 'weather', // Translation key for category headers in tooltips
         unit: '%',
         useIntegerFormat: true,
+        // Default range for this chart when using the 'default' date range
+        defaultRange: 1,
         // Structured indicator configuration
         indicators: {
             showMin: true,
@@ -301,7 +321,9 @@ window.chartConfigs = [
             showMin: true,
             showMax: true,
             showAvg: true
-        }
+        },
+        // Default range for this chart when using the 'default' date range
+        defaultRange: 13
     },
     { 
         id: 'chart-wind',
@@ -313,7 +335,9 @@ window.chartConfigs = [
         category: 'weather',
         categoryHeaderKey: 'weather', // Translation key for category headers in tooltips
         unit: 'm/s',
-        useIntegerFormat: false
+        useIntegerFormat: false,
+        // Default range for this chart when using the 'default' date range
+        defaultRange: 1
     },
     { 
         id: 'chart-rain',
@@ -325,7 +349,9 @@ window.chartConfigs = [
         category: 'weather',
         categoryHeaderKey: 'weather', // Translation key for category headers in tooltips
         unit: 'mm',
-        useIntegerFormat: false
+        useIntegerFormat: false,
+        // Default range for this chart when using the 'default' date range
+        defaultRange: 13
     },
 
     // Row 4
@@ -333,6 +359,8 @@ window.chartConfigs = [
     {
         id: 'chart-soil-moisture',
         titleKey: 'soilMoistureChart', 
+        // Default range for this chart when using the 'default' date range
+        defaultRange: 1,
         series: [
             {
                 titleKey: 'cucumber1',
@@ -378,7 +406,9 @@ window.chartConfigs = [
         formatting: {
             decimalPlaces: 1, // Always show 1 decimal place for battery voltage
             useIntegerFormat: false
-        }
+        },
+        // Default range for this chart when using the 'default' date range
+        defaultRange: 6
     },
     { 
         id: 'chart-wifi',
@@ -397,7 +427,9 @@ window.chartConfigs = [
             showMin: true,
             showMax: true,
             showAvg: true
-        }
+        },
+        // Default range for this chart when using the 'default' date range
+        defaultRange: 30
     },
     { 
         id: 'chart-time-used',
@@ -409,6 +441,8 @@ window.chartConfigs = [
         category: 'system',
         categoryHeaderKey: 'system', // Translation key for category headers in tooltips
         unit: 'ms',  // Adding missing unit
-        useIntegerFormat: true
+        useIntegerFormat: true,
+        // Default range for this chart when using the 'default' date range
+        defaultRange: 1
     },
 ];

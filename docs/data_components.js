@@ -77,6 +77,11 @@ const dataCache = {
  * @returns {Promise<Object>} - Chart data object
  */
 async function fetchChartData(config, range = 1, results = DEFAULT_RESULTS) {
+    // Handle 'default' range by using the chart's defaultRange or falling back to 1
+    if (range === 'default') {
+        range = config.defaultRange || 1;
+    }
+    
     // Check if we have cached data
     const cacheKey = dataCache.generateKey(config, range, results);
     const cachedData = dataCache.get(cacheKey);

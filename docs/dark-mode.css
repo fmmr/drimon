@@ -80,6 +80,44 @@ html, body {
     color: var(--pill-active-color);
 }
 
+/* Date dropdown dark mode styles */
+.date-dropdown-button {
+    background-color: var(--pill-bg);
+    color: var(--pill-color);
+    border: 1px solid var(--pill-border);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.date-dropdown-button:hover {
+    background-color: var(--pill-active-bg);
+    color: var(--pill-active-color);
+    border-color: var(--pill-active-bg);
+}
+
+.date-dropdown-content {
+    background-color: var(--chart-bg);
+    border-color: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+}
+
+.date-dropdown-item {
+    color: var(--text-color);
+    background-color: var(--chart-bg);
+    border-color: transparent;
+}
+
+.date-dropdown-item:hover {
+    background-color: var(--pill-bg);
+    color: var(--pill-active-color);
+    border-color: var(--pill-border);
+}
+
+.date-dropdown-item.active {
+    background-color: var(--pill-active-bg);
+    color: var(--pill-active-color);
+    border-color: var(--pill-active-bg);
+}
+
 #resultsInput {
     background-color: var(--chip-bg);
     color: var(--text-color);

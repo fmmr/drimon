@@ -238,15 +238,20 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchData();
         
         // Also refresh charts if showing the latest data
-        const currentRange = getURLParameter('range') || '1';
-        if (currentRange === '1' || currentRange === 'today') {
+        const currentRange = getURLParameter('range') || 'default';
+        if (currentRange === '1' || currentRange === 'today' || currentRange === 'default') {
             const currentResults = parseInt(getURLParameter('results')) || 8000;
             
             // Use a gentle refresh approach that won't destroy the charts
             // but will update them with new data
             window.chartConfigs.forEach(async (config) => {
                 try {
-                    const newData = await fetchChartData(config, currentRange, currentResults);
+                    // Get the effective range - if currentRange is 'default', use the chart's defaultRange or fallback to 1
+                    const effectiveRange = currentRange === 'default' 
+                        ? (config.defaultRange || 1)
+                        : currentRange;
+                    
+                    const newData = await fetchChartData(config, effectiveRange, currentResults);
                     if (window.chartInstances[config.id] && newData) {
                         // Check if it's a multi-series chart
                         if (newData.is_multi_series && newData.series && newData.series.length > 0) {
@@ -344,6 +349,93 @@ document.addEventListener('DOMContentLoaded', () => {
             if (typeof window.resizeAllCharts === 'function') {
                 window.resizeAllCharts();
             }
+            
+            // Reattach date dropdown handlers after DOM manipulation
+            reattachDateDropdownHandlers();
         }, 250);
     });
+    
+    // Function to position and show dropdown
+    function positionAndShowDropdown(button, dropdown) {
+        // Get button position
+        const buttonRect = button.getBoundingClientRect();
+        
+        // Position dropdown - account for mobile specific adjustments
+        const isMobile = window.matchMedia('(max-width: 768px)').matches;
+        
+        // Set initial position
+        dropdown.style.top = (buttonRect.bottom + 5) + 'px';
+        dropdown.style.left = buttonRect.left + 'px';
+        
+        // Adjust for mobile
+        if (isMobile) {
+            // Ensure dropdown isn't positioned off-screen
+            const viewportWidth = window.innerWidth;
+            const dropdownWidth = 150; // Approximate width
+            
+            // If dropdown would go off right edge, align to right
+            if (buttonRect.left + dropdownWidth > viewportWidth) {
+                dropdown.style.left = (viewportWidth - dropdownWidth - 10) + 'px';
+            }
+            
+            // If the button is in the bottom half of the screen, position dropdown above
+            if (buttonRect.top > window.innerHeight / 2) {
+                dropdown.style.top = 'auto';
+                dropdown.style.bottom = (window.innerHeight - buttonRect.top + 5) + 'px';
+            }
+        }
+        
+        // Show the dropdown
+        dropdown.classList.toggle('show');
+    }
+    
+    // Function to reattach date dropdown handlers
+    function reattachDateDropdownHandlers() {
+        const dropdownButtons = document.querySelectorAll('.date-dropdown-button');
+        
+        dropdownButtons.forEach(button => {
+            // Remove any existing listeners
+            const newButton = button.cloneNode(true);
+            button.parentNode.replaceChild(newButton, button);
+            
+            const dropdownContent = newButton.nextElementSibling;
+            
+            if (dropdownContent && dropdownContent.classList.contains('date-dropdown-content')) {
+                // Add click handler to toggle dropdown
+                newButton.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Position and show the dropdown
+                    positionAndShowDropdown(newButton, dropdownContent);
+                    
+                    // Close dropdown when clicking outside
+                    const closeDropdown = function(event) {
+                        if (!dropdownContent.parentNode.contains(event.target)) {
+                            dropdownContent.classList.remove('show');
+                            document.removeEventListener('click', closeDropdown);
+                        }
+                    };
+                    
+                    document.addEventListener('click', closeDropdown);
+                });
+                
+                // For better touch handling on mobile
+                if ('ontouchstart' in window) {
+                    newButton.addEventListener('touchstart', (e) => {
+                        e.preventDefault();
+                        positionAndShowDropdown(newButton, dropdownContent);
+                    });
+                }
+            }
+        });
+        
+        // Also reattach handlers to all date chips (including dropdown items)
+        if (window.attachDateChipHandlers && typeof window.attachDateChipHandlers === 'function') {
+            window.attachDateChipHandlers();
+        }
+    }
+    
+    // Call once on load to ensure handlers are attached
+    setTimeout(reattachDateDropdownHandlers, 500);
 });
