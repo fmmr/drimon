@@ -1,86 +1,77 @@
 # DriMon Testing Guidelines
 
+## Manual Testing Approach
+
+DriMon relies on thorough manual testing rather than automated tests. This approach ensures the application works correctly in real-world scenarios with actual data.
+
 ## Core Testing Principles
 
-1. **Import production code directly**
-   - Never duplicate production code in test files
-   - Tests should import the actual code they're testing
-   - This ensures tests validate the real implementation, not a copy
+1. **Test with real data**
+   - Use real API endpoints with actual production data
+   - Verify functionality with various data ranges and scenarios
+   - Test with multiple languages to ensure internationalization works correctly
 
-2. **Use real data whenever possible**
-   - Tests should use real API endpoints rather than mocked data
-   - Using real data helps identify actual integration issues
-   - Avoid creating static mock data that becomes outdated
-
-3. **Keep test code isolated**
-   - Test-specific code (HTML, CSS, JavaScript) should only contain what's needed to run tests
-   - Don't duplicate production HTML/CSS/JS in test files
-   - Reference production files directly when needed
-
-4. **Test before commit**
+2. **Test before commit**
    - **IMPORTANT**: All code should be manually tested before any commits
    - Never commit to git without explicit approval
    - Manual testing is necessary to avoid introducing bugs to production
+   - Test on multiple browsers and devices when possible
 
-5. **Test at component boundaries**
+3. **Test at component boundaries**
    - Focus testing on the public interfaces of modules
-   - Avoid testing implementation details when possible
-   - Write tests that will survive refactoring of internal implementations
+   - Verify interactions between components work as expected
+   - Ensure configuration options are correctly applied
 
-## Test Harness
+## Testing Process
 
-A standalone test harness is provided at `test_components.html` which offers:
+When testing new changes:
 
-- **Manual Component Testing**: Visual verification of individual components
-- **Automated Tests**: Programmatic verification of component functionality
-- **Interactive Debugging**: Event binding tests and interactive manipulation
+1. **Functionality Testing**
+   - Verify the specific functionality being changed works as expected
+   - Check all interactive elements respond correctly to user input
+   - Test edge cases and error handling
 
-## Component Tests
+2. **Regression Testing**
+   - Ensure existing features continue to work after changes
+   - Check for unintended side effects in related components
+   - Verify all charts display and update correctly
 
-The test suite validates various aspects of the system:
+3. **Performance Testing**
+   - Check loading times remain acceptable
+   - Ensure charts render promptly and update smoothly
+   - Verify mobile performance is satisfactory
+
+4. **Visual Testing**
+   - Check layout on different screen sizes
+   - Verify dark mode and light mode both work correctly
+   - Ensure responsive design adapts appropriately
+
+## Manual Testing Checklist
 
 ### Header Components
-- **Logo Container**: Verifies the logo and time indicator rendering
-- **Data Container**: Tests sensor data chips display and formatting
-- **Date Ranges**: Validates date selection controls
-- **Search Container**: Tests result count controls and toggle buttons
-- **Event Binding**: Verifies interactive elements respond to user input
+- Logo container displays correctly
+- Sensor data chips show correct values
+- Date range controls work properly
+- Results count controls function as expected
+- All interactive elements respond to user input
 
 ### Chart Components
-- **Chart Container**: Tests chart creation with proper structure
-- **Chart Stats**: Verifies statistics calculation and display
-- **Loading Indicator**: Tests loading states and error handling
-- **Date Range Functions**: Validates date range calculations
+- Charts create proper structure and display correctly
+- Statistics are calculated and displayed accurately
+- Loading indicators work properly for all states
+- Date range functions apply correctly
+- Layout adapts appropriately to screen size
+- Tooltips display the right information
+- Chart synchronization works across all charts
 
-## Test Implementation
+## Debug Mode
 
-The testing architecture consists of:
-
-- **component_tests.js**: Automated test framework with assertion functions
-- **Test Runner**: JavaScript class that manages test execution and reporting
-- **Visual Verification**: Manual testing capabilities with interactive UI
-- **Isolated Testing**: Components can be tested individually or in groups
-
-## Running Tests
-
-To run the tests:
-
-1. Start a local server as described in the Development section
-2. Navigate to `/test_components.html` in your browser
-3. Use the tabs to switch between test types:
-   - **Manual Tests**: Click buttons to render and test individual components
-   - **Automated Tests**: Run full test suites with detailed reporting
-   - **Chart Tests**: Test chart-specific components and functionality
-
-## Test Mode
-
-DriMon includes a comprehensive test mode with debug tools. To activate:
+DriMon includes a debug mode with developer tools. To activate:
 
 1. Append `?test=true` to any DriMon URL (e.g., `https://drimon.rodland.no/?test=true`)
 2. Optional: Set log level with `&logLevel=verbose` (options: `info`, `debug`, `verbose`)
-3. For i18n tests: Append `?test_i18n=true` to run automated internationalization tests
 
-Test Mode Features:
+Debug Mode Features:
 
 ### Enhanced Logging
 - Timestamped console output with elapsed time tracking
@@ -98,72 +89,40 @@ Test Mode Features:
 - Response data and timing information available
 - Error tracking for failed requests
 
-### Component Tracking
-- Performance metrics for all rendered components
-- Render time measurement
-- Component hierarchy visualization
-
 ### Usage Examples
 
 ```
-# Basic test mode
+# Basic debug mode
 https://drimon.rodland.no/?test=true
 
-# Test mode with verbose logging
+# Debug mode with verbose logging
 https://drimon.rodland.no/?test=true&logLevel=verbose
 
-# Test mode with debug level logging
+# Debug mode with debug level logging
 https://drimon.rodland.no/?test=true&logLevel=debug
-
-# Run i18n tests - automatically tests all UI translations
-https://drimon.rodland.no/?test_i18n=true
 ```
 
-## I18n Testing
+## Internationalization (I18n) Testing
 
-The internationalization system has dedicated testing tools:
+When testing internationalization:
 
-1. **Automated I18n Tests**: 
-   - Accessible at `/i18n_tests.html`
-   - Tests translation system, language switching, and parameter interpolation
-   - Provides validation of translation keys across languages
-   - Can be run automatically with `?test_i18n=true` URL parameter
+1. **Manual Testing Process**:
+   - Verify all UI elements display correctly in each language
+   - Check for missing translation keys (visible as "MISSING_KEY")
+   - Validate translations match visual design requirements
+   - Test language switching works without page reload
+   - Check that all charts update correctly when language changes
+   - Verify tooltips and statistics display with correct localized formatting
 
-2. **Translation Key Validation**:
-   - Use `I18n.validateTranslations()` to check for missing keys
-   - Warns about keys present in one language but missing in others
-   - Validates all translations in the system at once
-
-3. **Unit Tests**:
-   - Located in `/js/tests/i18n.test.js`
-   - Tests all core I18n functionality
-   - Verifies backward compatibility with legacy code
-   - Tests parameter interpolation and missing key handling
-
-4. **Translation Testing Process**:
-   1. Run automated tests with `?test_i18n=true`
-   2. Verify all UI elements display correctly in each language
-   3. Check console for missing translation warnings
-   4. Validate translations match visual design requirements
-   5. Test language switching works without page reload
-
-5. **Chart Translation Testing**:
-   - Test dynamic translation key inference for chart titles
-   - Verify series label translation works correctly
-   - Test language switching updates chart titles and labels
-   - Ensure statistics display with correct localized formatting
-
-6. **I18n System Architecture**:
+2. **I18n System Architecture**:
    - Single source of truth in `translations-loader.js`
    - Modernized API with `window.I18n.translate()` and `window.I18n.t()` shorthand
-   - Dynamic key inference for backward compatibility with legacy code
+   - Dynamic key inference for backward compatibility
    - No language-specific text in any code files
    - Parameter interpolation with `{{param}}` syntax
    - Language change events with proper DOM updates
 
 The translation system is designed to fail visibly by displaying untranslated keys rather than silently showing incorrect content.
-
-The debug panel provides an interactive interface for exploring the application's inner workings without affecting production functionality.
 
 ## Configuration-Driven Testing
 

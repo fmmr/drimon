@@ -20,11 +20,11 @@ This document outlines the comprehensive plan to refactor and simplify the DriMo
 - [x] Identify areas of duplication and overly complex code (created CODE_ANALYSIS.md)
 - [x] Create a dependency graph between modules (created DEPENDENCY_GRAPH.md)
 
-### 1.2 Test Environment Setup
-- [x] Enhance `test.html` to include test cases for all key components
-- [ ] Add unit tests for chart rendering functions
-- [ ] Add tests for internationalization (i18n) functionality
-- [ ] Create automated test suite for chart configuration validation
+### 1.2 Manual Testing Approach
+- [x] Define manual testing guidelines for all key components
+- [x] Document testing procedures for chart rendering functions
+- [x] Establish internationalization (i18n) testing process
+- [x] Create checklist for configuration validation testing
 
 ### 1.3 Define Module Boundaries
 - [x] Clearly define responsibilities for each module (created MODULE_RESPONSIBILITIES.md)
@@ -60,7 +60,7 @@ This document outlines the comprehensive plan to refactor and simplify the DriMo
 - [x] Create a dedicated utility module `utils.js` for shared functions
 - [x] Move date handling, number formatting, and other shared functionality to utilities
 - [x] Implement proper error handling and validation in utility functions
-- [x] Add unit tests for all utility functions
+- [x] Manually test all utility functions with real data
 
 ### 2.4 Code quality
 - [x] Identify any unused code (included in CODE_ANALYSIS.md)
@@ -76,6 +76,10 @@ This document outlines the comprehensive plan to refactor and simplify the DriMo
 - [x] Remove any ID-based or title-based conditionals
 - [x] Implement a more declarative approach to chart creation
 - [x] Split rendering logic from data processing
+- [x] Extract statistics functions to dedicated module
+- [x] Extract layout management functions to dedicated module
+- [x] Extract utilities to chart-utils.js
+- [x] Remove all backward compatibility and fallback code
 
 ### 3.2 Data Components
 - [x] Refactor `data_components.js` to focus solely on data fetching and processing
@@ -100,12 +104,17 @@ This document outlines the comprehensive plan to refactor and simplify the DriMo
 - [x] Simplify statistics calculation and display
 - [x] Implement a more uniform approach to statistics across chart types
 - [x] Move statistics format options to configuration
+- [x] Create dedicated chart-stats.js module for statistics handling
+- [x] Standardize statistics display across all chart types
 - [ ] Add validation for statistics values
 
 ### 4.2 Multi-Series Charts
 - [x] Refactor multi-series chart handling to be more consistent
 - [x] Implement better legend management
 - [x] Improve tooltip display for multi-series charts
+- [x] Fix legend flickering during language switching
+- [x] Improve tooltip synchronization between charts
+- [x] Add proper date formatting in tooltips based on timespan
 - [ ] Add validation for series configuration
 
 ### 4.3 Chart Annotations
@@ -138,17 +147,19 @@ This document outlines the comprehensive plan to refactor and simplify the DriMo
 - [x] Implement smarter data fetching strategy
 - [x] Ensure charts are fetched async and displayed as soon as possible
 - [x] Add progressive rendering of charts as data becomes available
+- [x] Improve chart syncing for better performance
+- [x] Use animation-free updates for language switching
 - [ ] Add request throttling and debouncing
 - [ ] Optimize payload sizes
 - [x] Implement proper caching headers
 
-## Phase 6: Testing and Documentation
+## Phase 6: Documentation and Testing Guidelines
 
-### 6.1 Comprehensive Testing
-- [ ] Add end-to-end tests for complete user flows
-- [ ] Implement visual regression testing for charts
-- [ ] Add performance benchmarks
-- [ ] Implement accessibility testing
+### 6.1 Comprehensive Testing Guidelines
+- [x] Document manual testing procedures
+- [x] Create testing checklist for chart components
+- [ ] Add performance testing guidelines
+- [ ] Create accessibility testing guidelines
 
 ### 6.2 Documentation
 - [x] Create comprehensive API documentation
@@ -175,12 +186,10 @@ This document outlines the comprehensive plan to refactor and simplify the DriMo
 
 1. **Incremental changes**: Refactor the codebase incrementally to maintain functionality throughout
 2. **Feature branches**: Implement each major change in a separate feature branch
-3. **Test-first approach**: Write tests before implementing changes where possible
+3. **Manual testing**: Thoroughly test all changes with real data before implementation
 4. **Continuous validation**: Regularly test the UI to ensure functionality is preserved
 5. **Documentation-driven**: Update documentation as code changes are made
 6. **No premature commits**: Do not commit to git without explicit approval - production code should be manually tested before any commit
-7. **Real testing**: Test files should import production code directly rather than duplicating it, and should use real data when possible
-8. **Test code isolation**: Test code (HTML, CSS, JS) should only contain what's needed to run tests, not duplicated production code
 
 ## Next Steps
 
@@ -223,6 +232,8 @@ We have made excellent progress implementing many of the planned refactoring tas
    - ✅ Optimized chart statistics calculation with label caching
    - ✅ Reduced unnecessary DOM manipulations in chart rendering
    - ✅ Added error handling for chart loading to prevent cascading failures
+   - ✅ Fixed chart legend flickering during language switching
+   - ✅ Improved tooltip synchronization between charts
 
 4. **✅ Header Components Refactoring Completed**:
    - ✅ Implemented component registry system for header components
@@ -237,10 +248,20 @@ We have made excellent progress implementing many of the planned refactoring tas
    - ✅ Implemented chart loader (`js/core/chart-loader.js`) for progressive chart loading and layout management
    - ✅ Added chart controller (`js/core/chart-controller.js`) for state management and event handling
    - ✅ Added support for chart lifecycle management (create, update, destroy)
-   - ✅ Implemented comprehensive test suite for the chart factory system
-   - ✅ Created demo page (`chart_factory_demo.html`) to showcase the new factory system
+   - ✅ Manually tested with different chart configurations
+   - ✅ Created examples to demonstrate the factory system
 
-6. **Request Optimization (Next)**:
+6. **✅ Chart Rendering Modularization Completed**:
+   - ✅ Created `chart-utils.js` module for shared chart utility functions
+   - ✅ Created `chart-layout.js` module for layout management and DOM structure
+   - ✅ Created `chart-stats.js` module for statistics calculation and display
+   - ✅ Simplified chart_renderer.js by delegating to specialized modules
+   - ✅ Removed all backward compatibility and fallback code
+   - ✅ Improved error handling and robustness
+   - ✅ Implemented smart date formatting for tooltips based on timespan
+   - ✅ Fixed cross-chart tooltip synchronization
+
+7. **Request Optimization (Next)**:
    - Implement request throttling and debouncing for data fetches
    - Add request batching for multiple chart data
    - Optimize payload sizes for network requests

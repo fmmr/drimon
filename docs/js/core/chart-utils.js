@@ -10,6 +10,64 @@
  */
 window.ChartUtils = window.ChartUtils || {
     /**
+     * Synchronizes tooltips across multiple charts based on timestamp
+     * @param {Chart} chart - The source chart that triggered the tooltip
+     * @param {number} dataIndex - Index of the data point in the source chart
+     * @returns {void}
+     */
+    syncTooltips: function(chart, dataIndex) {
+        // Skip if invalid index
+        if (dataIndex === null || dataIndex === undefined) return;
+        
+        // Get the timestamp for the data point from raw data
+        const rawData = window.chartRawData?.[chart.canvas.id];
+        if (!rawData || !rawData.timestamps || !rawData.timestamps[dataIndex]) return;
+        
+        const timestamp = rawData.timestamps[dataIndex];
+        
+        // Make sure we have a Date object
+        const timestampDate = timestamp instanceof Date ? timestamp : new Date(timestamp);
+        
+        // Sync tooltips across all charts
+        Object.values(window.chartInstances || {}).forEach(otherChart => {
+            if (!otherChart || otherChart === chart) return;
+            
+            // Get raw data for the other chart
+            const chartId = otherChart.canvas.id;
+            const otherRawData = window.chartRawData?.[chartId];
+            if (!otherRawData || !otherRawData.timestamps) return;
+            
+            // Find the closest timestamp in the other chart
+            let closestIndex = -1;
+            let minTimeDiff = Infinity;
+            
+            otherRawData.timestamps.forEach((time, idx) => {
+                const timeDiff = Math.abs(new Date(time) - timestampDate);
+                if (timeDiff < minTimeDiff) {
+                    minTimeDiff = timeDiff;
+                    closestIndex = idx;
+                }
+            });
+            
+            // Only sync if the time difference is within 5 minutes
+            if (minTimeDiff <= 5 * 60 * 1000 && closestIndex !== -1) {
+                // For time scale, we need to pass the actual Date object to getPixelForValue
+                const timeValue = new Date(otherRawData.timestamps[closestIndex]);
+                
+                const activeElements = otherChart.getElementsAtEventForMode(
+                    { x: otherChart.scales.x.getPixelForValue(timeValue), y: otherChart.chartArea.top },
+                    'nearest',
+                    { intersect: false },
+                    false
+                );
+                
+                // Activate the tooltip on the other chart
+                otherChart.tooltip.setActiveElements(activeElements, { x: 0, y: 0 });
+                otherChart.update('none');
+            }
+        });
+    },
+    /**
      * Apply transformations to data values
      * @param {Array<number>} values - Array of numeric values to transform
      * @param {Object} transform - Transformation configuration

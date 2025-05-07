@@ -36,12 +36,228 @@ window.ChartI18n = {
      */
     updateAllChartTranslations: function() {
         // Update all charts in the global charts array
-        if (window.charts && Array.isArray(window.charts)) {
-            window.charts.forEach(chart => {
-                if (chart.id) {
-                    this.updateChartTranslations(chart.id);
+        if (window.chartInstances) {
+            Object.values(window.chartInstances).forEach(chart => {
+                if (chart) {
+                    this.translateChart(chart);
                 }
             });
+        }
+    },
+    
+    /**
+     * Translates all chart labels and updates the chart display
+     * @param {Chart} chart - The Chart.js instance to translate
+     * @returns {void}
+     */
+    translateChart: function(chart) {
+        if (!chart || !chart.data || !chart.data.datasets) {
+            return;
+        }
+
+        // Get chart info
+        const chartId = chart.canvas.id;
+        const chartConfig = window.chartConfigs.find(c => c.id === chartId);
+        const isMultiSeries = chartConfig && chartConfig.series && 
+                            Array.isArray(chartConfig.series) && chartConfig.series.length > 1;
+        
+        // Get special handling options from chart config
+        const specialHandling = chartConfig && chartConfig.specialHandling;
+
+        // Update all dataset labels with correct translations
+        this.translateDatasetLabels(chart, chartConfig, isMultiSeries);
+        
+        // Update chart legend with translated labels
+        this.updateChartLegend(chart, chartConfig, isMultiSeries, specialHandling);
+        
+        // Apply changes directly with animation disabled to avoid flicker
+        try {
+            // Use animation.duration = 0 to prevent legend flicker
+            const originalAnimation = chart.options.animation;
+            chart.options.animation = { duration: 0 };
+            
+            // Update with animation disabled
+            chart.update();
+            
+            // Restore original animation settings
+            chart.options.animation = originalAnimation;
+        } catch (e) {
+            console.error("Error updating chart after translation:", e);
+        }
+    },
+    
+    /**
+     * Translates all dataset labels in a chart
+     * @param {Chart} chart - The Chart.js instance
+     * @param {Object} chartConfig - Configuration for the chart
+     * @param {boolean} isMultiSeries - Whether chart has multiple series
+     * @returns {void}
+     */
+    translateDatasetLabels: function(chart, chartConfig, isMultiSeries) {
+        chart.data.datasets.forEach((dataset, index) => {
+            if (!dataset.label) return;
+            
+            // Get original label (without any current value)
+            const originalLabel = dataset.label.split(':')[0].trim();
+            let translatedLabel;
+            
+            // For multi-series charts, look up series titles from chart config
+            if (isMultiSeries && chartConfig && chartConfig.series && chartConfig.series[index]) {
+                const series = chartConfig.series[index];
+                translatedLabel = this.translateSeriesLabel(series);
+            } else {
+                // For single series charts, use chart title
+                translatedLabel = this.translateChartTitle(chartConfig);
+            }
+            
+            // Apply translations and preserve value part
+            if (translatedLabel && translatedLabel !== originalLabel) {
+                const parts = dataset.label.split(':');
+                if (parts.length > 1) {
+                    dataset.label = `${translatedLabel}: ${parts[1].trim()}`;
+                } else {
+                    dataset.label = translatedLabel;
+                }
+            }
+        });
+    },
+    
+    /**
+     * Updates chart legend with translated labels
+     * @param {Chart} chart - The Chart.js instance
+     * @param {Object} chartConfig - Configuration for the chart
+     * @param {boolean} isMultiSeries - Whether chart has multiple series
+     * @param {Object} specialHandling - Special handling options from chart config
+     * @returns {void}
+     */
+    updateChartLegend: function(chart, chartConfig, isMultiSeries, specialHandling) {
+        if (!chart.options || !chart.options.plugins || !chart.options.plugins.legend) {
+            return;
+        }
+        
+        try {
+            // Store original legend settings
+            const originalLegendSettings = {
+                display: chart.options.plugins.legend.display,
+                labels: {...chart.options.plugins.legend.labels}
+            };
+            
+            // Update legend styling without hiding it first
+            if (isMultiSeries) {
+                // Apply consistent styling without changing display state
+                Object.assign(chart.options.plugins.legend, {
+                    align: 'center', // Center the legend
+                    labels: {
+                        ...originalLegendSettings.labels,
+                        usePointStyle: false, // Don't use point style for better line representation
+                        boxWidth: 15, // Width for line representation
+                        boxHeight: 0, // No explicit height for proper line rendering
+                        lineWidth: 2, // Thickness of the line in the legend
+                        padding: 8, // Add padding for better spacing
+                        font: {
+                            size: 9, // Smaller font size
+                            weight: '600' // Semi-bold weight (between normal 400 and bold 700)
+                        }
+                    }
+                });
+            }
+            
+            // Set up custom legend generator that properly handles translations
+            const defaultGenerateLabels = Chart.defaults.plugins.legend.labels.generateLabels;
+            chart.options.plugins.legend.labels.generateLabels = function(chart) {
+                const labels = defaultGenerateLabels(chart);
+                
+                // For multi-series charts, handle legend labels specially
+                if (isMultiSeries) {
+                    labels.forEach((label, i) => {
+                        if (i < chart.data.datasets.length && chartConfig && chartConfig.series && i < chartConfig.series.length) {
+                            const dataset = chart.data.datasets[i];
+                            
+                            // Get original series title from configuration (source of truth)
+                            const series = chartConfig.series[i];
+                            let translatedTitle = '';
+                            
+                            // First check if we have the dataset with stored information
+                            if (dataset) {
+                                // First try to use the translated label that should be set in the dataset directly
+                                if (dataset.label) {
+                                    translatedTitle = dataset.label.split(':')[0].trim(); // Strip any value part
+                                }
+                                // If no valid dataset label, try to regenerate it
+                                else if (dataset._titleKey || dataset._originalTitle) {
+                                    // Use stored titleKey
+                                    if (dataset._titleKey) {
+                                        if (window.I18n && typeof window.I18n.translate === 'function') {
+                                            translatedTitle = window.I18n.translate(dataset._titleKey);
+                                        }
+                                    } 
+                                    // Fallback to original title
+                                    else if (dataset._originalTitle) {
+                                        translatedTitle = dataset._originalTitle;
+                                    }
+                                }
+                            }
+                                
+                            // If we couldn't get the translation from the dataset, try the series config
+                            if (!translatedTitle && series) {
+                                // Get translated title using the chartI18n helper
+                                translatedTitle = window.ChartI18n.translateSeriesLabel(series);
+                            }
+                            
+                            // Last resort fallback
+                            if (!translatedTitle) {
+                                translatedTitle = `Series ${i+1}`;
+                            }
+                            
+                            // Extract current value if present to append to label
+                            let valuePart = '';
+                            if (dataset && dataset.data && dataset.data.length > 0) {
+                                const currentValue = dataset.data[dataset.data.length - 1];
+                                if (currentValue !== undefined && !isNaN(currentValue)) {
+                                    // Format based on the value range
+                                    const range = 0; // Default range for formatting
+                                    valuePart = `: ${window.ChartUtils.formatNumber(currentValue, chartConfig, range)}`;
+                                }
+                            }
+                            
+                            // Special handling for charts that need consistent labels
+                            if (specialHandling && specialHandling.consistentLegendLabels) {
+                                // Apply the translation directly to both the dataset label and legend text
+                                const fullLabel = `${translatedTitle}${valuePart}`;
+                                
+                                // Update in both places to ensure consistency
+                                dataset.label = fullLabel;
+                                label.text = fullLabel;
+                            } else {
+                                // For other charts, ensure the dataset label is properly set first
+                                if (dataset && translatedTitle) {
+                                    // Update dataset label if it doesn't match the translation
+                                    const currentLabelBase = dataset.label ? dataset.label.split(':')[0].trim() : '';
+                                    if (currentLabelBase !== translatedTitle) {
+                                        if (valuePart) {
+                                            dataset.label = `${translatedTitle}${valuePart}`;
+                                        } else {
+                                            dataset.label = translatedTitle;
+                                        }
+                                    }
+                                }
+                                
+                                // Then set the legend text from the dataset
+                                if (dataset && dataset.label) {
+                                    label.text = dataset.label;
+                                } else if (translatedTitle) {
+                                    // Fallback if dataset.label is not available
+                                    label.text = `${translatedTitle}${valuePart}`;
+                                }
+                            }
+                        }
+                    });
+                }
+                
+                return labels;
+            };
+        } catch (e) {
+            console.error("Error updating legend:", e);
         }
     },
     
