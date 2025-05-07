@@ -53,35 +53,53 @@ function createLanguageSwitcher() {
                     btn.classList.toggle('active', btn.getAttribute('data-lang') === lang.code);
                 });
                 
-                // Apply the temperature chart stats fix
-                if (typeof fixTemperatureChartStats === 'function') {
+                // Update all chart stats with proper translations
+                if (window.ChartStats && typeof window.ChartStats.updateAllChartStats === 'function') {
                     // Give time for chart translations to complete first
-                    setTimeout(fixTemperatureChartStats, 200);
+                    setTimeout(window.ChartStats.updateAllChartStats, 200);
                 }
                 
                 // Use the direct DOM manipulation utility after a delay
+                // But avoid unnecessary chart updates that can cause flickering
                 setTimeout(() => {
                     // If we have the utility function, use it
                     if (window.updateChartLegendDOM) {
                         window.updateChartLegendDOM();
                     }
                     
-                    // Force chart update to ensure proper rendering (but NOT duplicate translations)
-                    // The translations are already handled by the languageChanged event listener
+                    // Apply animation disabling to prevent flickering on language change
                     if (window.chartInstances) {
-                        Object.values(window.chartInstances).forEach(chart => {
-                            if (chart) {
-                                // Just update the chart - don't call translateChartLabels again
-                                // as it's already been called by the languageChanged event
-                                try {
-                                    chart.update('none');
-                                } catch (e) {
-                                    console.error("Error updating chart:", e);
-                                }
+                        // First disable animation globally for all charts
+                        const instances = Object.values(window.chartInstances).filter(chart => chart);
+                        
+                        // Store original animation settings
+                        const originalAnimations = instances.map(chart => chart.options.animation);
+                        
+                        // Disable animations
+                        instances.forEach(chart => {
+                            if (chart && chart.options) {
+                                chart.options.animation = { duration: 0 };
+                            }
+                        });
+                        
+                        // Update all charts silently with no animation
+                        instances.forEach(chart => {
+                            try {
+                                // Update without animation to avoid flickering
+                                chart.update();
+                            } catch (e) {
+                                // Silently ignore errors
+                            }
+                        });
+                        
+                        // Restore original animation settings
+                        instances.forEach((chart, index) => {
+                            if (chart && chart.options) {
+                                chart.options.animation = originalAnimations[index];
                             }
                         });
                     }
-                }, 300);
+                }, 100);
             }
         });
         

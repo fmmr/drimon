@@ -10,6 +10,153 @@
  */
 window.ChartUtils = window.ChartUtils || {
     /**
+     * Apply transformations to data values
+     * @param {Array<number>} values - Array of numeric values to transform
+     * @param {Object} transform - Transformation configuration
+     * @returns {Array<number>} Transformed values
+     */
+    transformValues: function(values, transform) {
+        if (!transform) return values;
+        
+        return values.map(value => {
+            if (isNaN(value)) return value;
+            
+            // Apply shift transformation
+            if (transform.shiftBy !== undefined) {
+                return value + transform.shiftBy;
+            }
+            
+            return value;
+        });
+    },
+    
+    /**
+     * Create dataset configuration based on series information
+     * @param {Object} series - Series configuration
+     * @param {Array<number>} values - Data values for the series
+     * @param {string} axis - Y-axis ID for this dataset
+     * @param {boolean} hasNegativeValues - Whether data contains negative values
+     * @returns {Object} Dataset configuration for Chart.js
+     */
+    /**
+     * Calculate statistics for a dataset
+     * @param {Array<number>} values - Array of numeric values
+     * @returns {Object} Statistics object with min, max, avg, and hasNegativeValues
+     */
+    calculateDataStatistics: function(values) {
+        const filteredValues = values.filter(v => !isNaN(v));
+        
+        // Handle empty dataset
+        if (filteredValues.length === 0) {
+            return {
+                minValue: 0,
+                maxValue: 0,
+                avgValue: 0,
+                currentValue: null,
+                hasNegativeValues: false
+            };
+        }
+        
+        const minValue = Math.min(...filteredValues);
+        const maxValue = Math.max(...filteredValues);
+        const sum = filteredValues.reduce((acc, val) => acc + val, 0);
+        const avgValue = sum / filteredValues.length;
+        const currentValue = filteredValues[filteredValues.length - 1];
+        const hasNegativeValues = filteredValues.some(v => v < 0);
+        
+        // Calculate padded values for display
+        const range = maxValue - minValue;
+        const paddingAmount = range < 0.1 ? (Math.abs(minValue) * 0.05 || 0.1) : range * 0.05;
+        const paddedMinValue = hasNegativeValues ? minValue - paddingAmount : Math.max(0, minValue - paddingAmount);
+        const paddedMaxValue = maxValue + paddingAmount;
+        
+        return {
+            filteredValues,
+            minValue,
+            maxValue,
+            avgValue,
+            currentValue,
+            hasNegativeValues,
+            range,
+            paddedMinValue,
+            paddedMaxValue
+        };
+    },
+    
+    /**
+     * Store chart data in global storage for tooltip syncing
+     * @param {string} chartId - ID of the chart
+     * @param {Object} config - Chart configuration
+     * @param {Array} timestamps - Array of timestamps
+     * @param {Array} datasets - Prepared datasets
+     * @param {boolean} isMultiSeries - Whether chart has multiple series
+     * @param {Object} sourceData - Original source data
+     */
+    storeChartData: function(chartId, config, timestamps, datasets, isMultiSeries, sourceData) {
+        // Ensure the global storage exists
+        window.chartRawData = window.chartRawData || {};
+        
+        if (isMultiSeries) {
+            // Store data for each series in multi-series chart
+            window.chartRawData[chartId] = {
+                timestamps: timestamps,
+                series: sourceData.series.map(series => ({
+                    title: series.title || '',
+                    titleKey: series.titleKey,
+                    values: series.feeds.map(feed => parseFloat(feed[`field${series.field}`])),
+                    color: series.color
+                })),
+                is_multi_series: true,
+                title: config.title || '',
+                titleKey: config.titleKey,
+                category: config.category || '',
+                unit: config.unit || ''
+            };
+        } else {
+            // Store data for single-series chart
+            window.chartRawData[chartId] = {
+                timestamps: timestamps,
+                values: datasets[0].data,
+                title: config.title || '',
+                titleKey: config.titleKey,
+                category: config.category || '',
+                color: config.color,
+                unit: config.unit || ''
+            };
+        }
+    },
+    
+    createDatasetConfig: function(config, values, isMultiSeries = false) {
+        const hasNegativeValues = values.some(v => v < 0);
+        let datasetLabel = '';
+        const yAxisID = isMultiSeries ? (config.axis || 'y') : 'y';
+        
+        // Get dataset label based on config
+        if (config.titleKey) {
+            datasetLabel = window.I18n.translate(config.titleKey);
+        } else if (config.title) {
+            datasetLabel = config.title;
+        } else if (isMultiSeries) {
+            datasetLabel = `Series ${config.index || 0}`;
+        }
+        
+        return {
+            label: datasetLabel,
+            data: values,
+            borderColor: config.color,
+            backgroundColor: hasNegativeValues && !isMultiSeries ? 'rgba(0,0,0,0)' : `${config.color}20`,
+            borderWidth: 2,
+            pointRadius: 0,
+            pointHoverRadius: 4,
+            fill: isMultiSeries ? false : !hasNegativeValues,
+            tension: 0.1,
+            yAxisID: yAxisID,
+            _titleKey: config.titleKey,
+            _originalTitle: config.title
+        };
+    },
+    
+    /**
      * Smart time format detection based purely on the data timespan
      * Determines the best time format for displaying time-based charts
      * 
@@ -216,8 +363,34 @@ window.ChartUtils = window.ChartUtils || {
             callbacks: {
                 // 1. Title formatter - shows formatted date/time
                 title: (tooltipItems) => {
+                    if (!tooltipItems || tooltipItems.length === 0) return '';
+                    
                     const item = tooltipItems[0];
-                    const timestamp = item.raw;
+                    // Get the real timestamp from our stored raw data
+                    const dataIndex = item.dataIndex;
+                    const chartId = item.chart.canvas.id;
+                    
+                    let timestamp;
+                    
+                    // Try to get the timestamp from raw data store
+                    if (window.chartRawData && 
+                        window.chartRawData[chartId] && 
+                        window.chartRawData[chartId].timestamps && 
+                        dataIndex !== undefined && 
+                        dataIndex < window.chartRawData[chartId].timestamps.length) {
+                        
+                        timestamp = window.chartRawData[chartId].timestamps[dataIndex];
+                    } else {
+                        // Fallback to using the label value (which might be already formatted)
+                        // and try to parse it back to a date object
+                        const labelValue = item.label;
+                        try {
+                            timestamp = moment(labelValue, 'DD MMM YYYY, HH:mm').toDate();
+                        } catch (e) {
+                            // If parsing fails, just use the label as-is
+                            return labelValue;
+                        }
+                    }
                     
                     // Ensure correct locale is set
                     if (window.moment && window.I18n) {
@@ -226,8 +399,37 @@ window.ChartUtils = window.ChartUtils || {
                         window.moment.locale(momentLocale);
                     }
                     
-                    // Full date and time format
-                    return moment(timestamp).format('ddd DD MMM YYYY, HH:mm');
+                    // Get the chart's time format from global storage
+                    let timeFormat = 'ddd DD MMM YYYY, HH:mm'; // Default full format
+                    
+                    if (window.chartTimeFormats && window.chartTimeFormats[chartId]) {
+                        // Use the same format as the chart's x-axis
+                        timeFormat = window.chartTimeFormats[chartId];
+                        
+                        // For very short timeformats, add additional context
+                        if (timeFormat === 'HH:mm') {
+                            // For time-only formats, add the date for context in tooltip
+                            return moment(timestamp).format('HH:mm') + ' (' + moment(timestamp).format('D MMM') + ')';
+                        } else if (timeFormat === 'ddd HH:mm') {
+                            // For day+time formats, add the full date for context
+                            return moment(timestamp).format('ddd HH:mm') + ' (' + moment(timestamp).format('D MMM YYYY') + ')';
+                        } else if (timeFormat === 'dddd') {
+                            // For day name formats, add the date for context
+                            return moment(timestamp).format('dddd') + ' (' + moment(timestamp).format('D MMM') + ')';
+                        } else if (timeFormat === 'D/M') {
+                            // For day/month format, add the year and time
+                            return moment(timestamp).format('D/M') + ' (' + moment(timestamp).format('YYYY, HH:mm') + ')';
+                        } else if (timeFormat === 'MMMM') {
+                            // For month only format, add the year
+                            return moment(timestamp).format('MMMM YYYY');
+                        }
+                    } else {
+                        // Fallback to smart detection
+                        timeFormat = this.determineSmartTimeFormat([timestamp]);
+                    }
+                    
+                    // Use the determined format
+                    return moment(timestamp).format(timeFormat);
                 },
                 
                 // 2. Label formatter - shows dataset value with unit
