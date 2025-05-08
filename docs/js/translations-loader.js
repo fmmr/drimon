@@ -103,7 +103,32 @@ window.DriMonTranslations = {
     
     "pullToRefresh": "Dra ned for å oppdatere",
     "releaseToRefresh": "Slipp for å oppdatere",
-    "refreshing": "Oppdaterer..."
+    "refreshing": "Oppdaterer...",
+    
+    // Astronomical data
+    "sunrise": "Soloppgang",
+    "sunset": "Solnedgang", 
+    "dusk": "Skumring",
+    "moonrise": "Måneoppgang",
+    "moonset": "Månenedgang",
+    "untilSunrise": "til soloppgang",
+    "untilSunset": "til solnedgang",
+    "sunEventsTooltip": "Astronomiske hendelser",
+    "tomorrow": "i morgen",
+    "moonPhase": "Månefase",
+    "dayLength": "Daglengde",
+    "nightLength": "Nattlengde",
+    "hourSymbol": "t",
+    
+    // Moon phases
+    "newMoon": "Nymåne",
+    "waxingCrescent": "Tiltagende måne",
+    "firstQuarter": "Første kvarter",
+    "waxingGibbous": "Tiltagende måne",
+    "fullMoon": "Fullmåne",
+    "waningGibbous": "Avtagende måne",
+    "lastQuarter": "Siste kvarter",
+    "waningCrescent": "Avtagende måne"
   },
   "en": {
     "loading": "Loading...",
@@ -197,7 +222,32 @@ window.DriMonTranslations = {
     
     "pullToRefresh": "Pull down to refresh",
     "releaseToRefresh": "Release to refresh",
-    "refreshing": "Refreshing..."
+    "refreshing": "Refreshing...",
+    
+    // Astronomical data
+    "sunrise": "Sunrise",
+    "sunset": "Sunset", 
+    "dusk": "Dusk",
+    "moonrise": "Moonrise",
+    "moonset": "Moonset",
+    "untilSunrise": "until sunrise",
+    "untilSunset": "until sunset",
+    "sunEventsTooltip": "Astronomical events",
+    "tomorrow": "tomorrow",
+    "moonPhase": "Moon phase",
+    "dayLength": "Day length",
+    "nightLength": "Night length",
+    "hourSymbol": "h",
+    
+    // Moon phases
+    "newMoon": "New Moon",
+    "waxingCrescent": "Waxing Crescent",
+    "firstQuarter": "First Quarter",
+    "waxingGibbous": "Waxing Gibbous",
+    "fullMoon": "Full Moon",
+    "waningGibbous": "Waning Gibbous",
+    "lastQuarter": "Last Quarter",
+    "waningCrescent": "Waning Crescent"
   },
   "es": {
     "loading": "Cargando...",
@@ -291,6 +341,31 @@ window.DriMonTranslations = {
     
     "pullToRefresh": "Desliza hacia abajo para actualizar",
     "releaseToRefresh": "Suelta para actualizar",
-    "refreshing": "Actualizando..."
+    "refreshing": "Actualizando...",
+    
+    // Astronomical data
+    "sunrise": "Amanecer",
+    "sunset": "Atardecer", 
+    "dusk": "Crepúsculo",
+    "moonrise": "Salida lunar",
+    "moonset": "Puesta lunar",
+    "untilSunrise": "hasta amanecer",
+    "untilSunset": "hasta atardecer",
+    "sunEventsTooltip": "Eventos astronómicos",
+    "tomorrow": "mañana",
+    "moonPhase": "Fase lunar",
+    "dayLength": "Duración del día",
+    "nightLength": "Duración de la noche",
+    "hourSymbol": "h",
+    
+    // Moon phases
+    "newMoon": "Luna Nueva",
+    "waxingCrescent": "Luna Creciente",
+    "firstQuarter": "Cuarto Creciente",
+    "waxingGibbous": "Gibosa Creciente",
+    "fullMoon": "Luna Llena",
+    "waningGibbous": "Gibosa Menguante",
+    "lastQuarter": "Cuarto Menguante",
+    "waningCrescent": "Luna Menguante"
   }
 };

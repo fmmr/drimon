@@ -50,6 +50,8 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchData();
     }
     
+    // Sun events data is updated via the header:initialized event
+    
     // Set up periodic data refresh for header (every minute)
     setInterval(() => {
         // Update header data (weather updates on its own schedule)

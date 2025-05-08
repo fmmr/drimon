@@ -148,6 +148,68 @@ function createWeatherPill() {
 }
 
 /**
+ * Creates the sun events chip with moon phase SVG
+ * @returns {HTMLElement} The sun events chip
+ */
+function createSunEventChip() {
+    const chip = document.createElement('div');
+    chip.className = 'data-chip sun-events-chip';
+    chip.id = 'sun-events-chip';
+    
+    // Create moon phase SVG icon container
+    const moonPhaseIcon = document.createElement('div');
+    moonPhaseIcon.className = 'moon-phase-icon';
+    moonPhaseIcon.id = 'moon-phase-icon';
+    
+    // Default moon SVG (new moon)
+    moonPhaseIcon.innerHTML = `<svg viewBox="0 0 20 20" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="10" cy="10" r="9" fill="#222" stroke="#666" stroke-width="0.5" />
+    </svg>`;
+    
+    // Create time display element
+    const timeDisplay = document.createElement('div');
+    timeDisplay.className = 'sun-event-time';
+    
+    // Main time element for next event
+    const nextEventTime = document.createElement('span');
+    nextEventTime.id = 'next-event-time';
+    nextEventTime.textContent = '--:--';
+    
+    // Remaining time element
+    const remainingTime = document.createElement('span');
+    remainingTime.id = 'remaining-time';
+    remainingTime.className = 'remaining-time';
+    remainingTime.textContent = '';
+    
+    // Add elements to time display
+    timeDisplay.appendChild(nextEventTime);
+    timeDisplay.appendChild(remainingTime);
+    
+    // Add icon and time to chip
+    chip.appendChild(moonPhaseIcon);
+    chip.appendChild(timeDisplay);
+    
+    // Create tooltip content (will be populated by script)
+    const tooltipContent = {
+        sunrise: '--:--',
+        sunset: '--:--',
+        dusk: '--:--',
+        moonrise: '--:--',
+        moonset: '--:--'
+    };
+    
+    // Set data attribute to store tooltip content
+    chip.dataset.tooltipContent = JSON.stringify(tooltipContent);
+    
+    // Set basic tooltip text that will be updated later
+    chip.title = 'Loading astronomical data...';
+    
+    // Initial data will be populated by sun-events.js when ready
+    
+    return chip;
+}
+
+/**
  * Creates the data container with all data chips
  * @param {Object} [config] - Configuration object for the data container
  * @returns {HTMLElement} The data container element
@@ -161,6 +223,7 @@ function createDataContainer(config = null) {
     const chips = config && config.chips ? config.chips : [
         { id: 'temperature', icon: 'fas fa-thermometer-half', titleKey: 'temperature' },
         { id: 'weather', type: 'weatherPill' },
+        { id: 'sunEvents', type: 'sunEventChip' },
         { id: 'light', icon: 'fas fa-sun', titleKey: 'light', initialText: '' },
         { id: 'battery', icon: 'fas fa-battery-half', titleKey: 'battery' },
         { id: 'batteryVolt', icon: 'fas fa-bolt', titleKey: 'batteryVoltage' },
@@ -172,9 +235,11 @@ function createDataContainer(config = null) {
     chips.forEach(chipConfig => {
         let chip;
         
-        // Special handling for weather pill
+        // Special handling for custom chip types
         if (chipConfig.type === 'weatherPill') {
             chip = createWeatherPill();
+        } else if (chipConfig.type === 'sunEventChip') {
+            chip = createSunEventChip();
         } else {
             // Create regular data chip
             chip = createDataChip(
@@ -520,6 +585,7 @@ const ComponentRegistry = {
         'dateRanges': createDateRanges,
         'searchContainer': createSearchContainer,
         'weatherPill': createWeatherPill,
+        'sunEventChip': createSunEventChip,
         'dataChip': createDataChip
     },
     
@@ -589,6 +655,7 @@ const HeaderConfig = {
                 chips: [
                     { id: 'temperature', icon: 'fas fa-thermometer-half', titleKey: 'temperature' },
                     { id: 'weather', type: 'weatherPill' },
+                    { id: 'sunEvents', type: 'sunEventChip' },
                     { id: 'light', icon: 'fas fa-sun', titleKey: 'light', initialText: '' },
                     { id: 'battery', icon: 'fas fa-battery-half', titleKey: 'battery' },
                     { id: 'batteryVolt', icon: 'fas fa-bolt', titleKey: 'batteryVoltage' },

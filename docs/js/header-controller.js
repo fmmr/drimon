@@ -51,4 +51,10 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
     });
+    
+    // Dispatch a custom event to indicate the header is fully initialized
+    // This helps other components that depend on the header being ready
+    setTimeout(() => {
+        document.dispatchEvent(new CustomEvent('header:initialized'));
+    }, 0);
 });

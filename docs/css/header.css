@@ -71,10 +71,12 @@
     font-weight: 500;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     min-width: 50px;
+    height: 28px; /* Consistent height for all data chips */
     justify-content: center;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     white-space: nowrap;
     flex: 0 0 auto; /* Prevent shrinking - important for consistent appearance */
+    box-sizing: border-box; /* Include padding in height calculation */
 }
 
 .data-chip:hover {
@@ -86,6 +88,45 @@
     cursor: help;
 }
 
+/* Sun events chip styling */
+.sun-events-chip {
+    background-color: #f5f0e0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.sun-events-chip .moon-phase-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 1px rgba(0,0,0,0.2));
+}
+
+.sun-events-chip .sun-event-time {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+}
+
+.sun-events-chip .remaining-time {
+    font-size: 0.7rem;
+    opacity: 0.7;
+    white-space: nowrap;
+}
+
+/* Dark mode styling for sun events chip */
+.dark-mode .sun-events-chip {
+    background-color: #3a3832;
+    color: #e0e0e0;
+}
+
+/* Extra styling for the moon phase in dark mode */
+.dark-mode .sun-events-chip .moon-phase-icon {
+    filter: drop-shadow(0 0 1px rgba(255,255,255,0.3));
+}
+
 /* Weather pill container and icon styling */
 .weather-pill-container {
     display: flex;
@@ -93,6 +134,7 @@
     position: relative;
     margin: 0;
     padding: 0;
+    height: 28px; /* Match the standard data-chip height */
 }
 
 .weather-icon-container {
@@ -117,6 +159,10 @@
 
 .weather-pill-container .data-chip {
     padding-left: 28px; /* Extra padding to account for the icon */
+    height: 100%; /* Fill the entire height of the container */
+    box-sizing: border-box; /* Include padding in height calculation */
+    display: flex;
+    align-items: center; /* Ensure content is vertically centered */
 }
 
 /* Colors for different states */
@@ -538,12 +584,18 @@
     
     /* Fix height issue for data-chips on mobile */
     .data-chip {
-        min-height: 22px; /* Ensure minimum height for visibility */
+        height: 26px; /* Slightly smaller on mobile but still consistent */
+        min-height: 26px; /* Ensure minimum height for visibility */
         align-items: center; /* Center content vertically */
         padding: 4px 8px; /* Slightly larger padding */
         background-color: white; /* Ensure background is visible */
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Add shadow for better visibility */
         border-radius: 16px; /* Keep consistent styling */
+    }
+    
+    /* Ensure the weather pill also has consistent height on mobile */
+    .weather-pill-container {
+        height: 26px; /* Match the mobile data-chip height */
     }
     
     /* Shared styling for scrollable containers */
