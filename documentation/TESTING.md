@@ -46,7 +46,7 @@ When testing new changes:
    - Verify dark mode and light mode both work correctly
    - Ensure responsive design adapts appropriately
 
-## Manual Testing Checklist
+## Testing Checklist
 
 ### Header Components
 - Logo container displays correctly
@@ -132,7 +132,7 @@ The DriMon application follows a configuration-driven approach, where module beh
 2. Avoid relying on ID-based or naming convention-based defaults
 3. Validate that configuration validation properly rejects invalid configurations
 4. Test default values to ensure they provide meaningful fallbacks
-5. Use direct property access instead of helper functions where appropriate (e.g., `config.unit` instead of `getUnitForChart(config)`)
+5. Use direct property access instead of helper functions where appropriate
 6. Ensure test fixtures include all required configuration properties
 
 Example of configuration-driven testing:
@@ -148,5 +148,3 @@ const formatString = formatValue(42, {
   decimals: 1
 });
 ```
-
-This approach ensures our tests will remain valid even as we evolve the application's implementation details and reinforces the principle that all behavior should be driven by explicit configuration.

@@ -1,30 +1,34 @@
-<meta name="google-site-verification" content="FM1YRYn40sX8BMJEtySkmjXelYIegzNxT7Ig2Ma3eSE" />
-
 # DriMon - Drivhus Monitor
 
 ![logo](/docs/logos/1_1000x550.webp)
 
-Monitoring our greenhouse at Rødtangen, Norway
+DriMon is a web-based visualization platform for monitoring a greenhouse at Rødtangen, Norway. It displays sensor data from a network of ESP32-based monitoring systems installed during summer 2024.
+
+## Quick Links
+
+- [Live Dashboard](https://drimon.rodland.no/) - Real-time charts and data
+- [ThingSpeak](https://thingspeak.com/channels/2568299) - Raw data storage
+
+## Key Features
+
+- **Real-time Monitoring**: Temperature, humidity, pressure, light, soil moisture, window status
+- **Interactive Charts**: Time-series data with statistics (min/max/avg)
+- **Mobile-Optimized**: Responsive design for all devices
+- **Weather Integration**: YR.no forecast data
+- **Multi-language**: Norwegian, English, Spanish support
+- **Dark Mode**: Toggleable theme
 
 ## Documentation
 
-- [Project Overview](/documentation/DRIMON.md) - The main description of the DriMon project
-- [Development Documentation](/documentation/DEVELOPMENT.md) - Architecture, components, and development guidelines
-- [Testing Guidelines](/documentation/TESTING.md) - Testing approach and best practices
+- [Project Overview](/documentation/DRIMON.md) - Complete description of hardware and software
+- [Development Guide](/documentation/DEVELOPMENT.md) - Architecture, components, and code organization
+- [Testing Guidelines](/documentation/TESTING.md) - Manual testing procedures and best practices
 - [Future Enhancements](/documentation/FUTURE.md) - Planned features and improvements
-- [Refactoring Plan](/documentation/REFACTORING_PLAN.md) - Detailed plan for code refactoring
-
-## Links
-
-* [Main site - Charts and Data](https://drimon.rodland.no/)
-* [Thingspeak Channel 1](https://thingspeak.com/channels/2568299)
-* [Thingspeak Channel 2](https://thingspeak.com/channels/2584548)
-* [Thingspeak Channel 3](https://thingspeak.com/channels/2584547)
-* [Github page](https://github.com/fmmr/drimon)
+- [Refactoring Plan](/documentation/REFACTORING_PLAN.md) - Code refactoring roadmap
 
 ## Getting Started
 
-To preview this site locally, you can use any static file server:
+To run the project locally:
 
 ```bash
 # Using Python
@@ -34,4 +38,8 @@ python -m http.server
 npx serve
 ```
 
-For more detailed information, see the [Project Overview](/documentation/DRIMON.md) and [Development Documentation](/documentation/DEVELOPMENT.md)
+## Project Components
+
+- **Hardware**: ESP32-based sensors with solar power and battery backup
+- **Data Storage**: ThingSpeak channels for time-series data
+- **Web Visualization**: Chart.js-based dashboard with responsive design
