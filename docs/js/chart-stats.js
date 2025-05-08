@@ -39,24 +39,8 @@ window.ChartStats = window.ChartStats || {
      * @returns {string} Formatted number as string
      */
     formatStatValue: function(value, config, range) {
-        // Handle missing values
-        if (value === null || value === undefined || isNaN(value)) {
-            return '—';
-        }
-        
-        // Check for integer formatting in config
-        if (config?.formatting?.decimalPlaces === 0 || config?.useIntegerFormat) {
-            return Math.round(value).toString();
-        }
-        
-        // Format based on range
-        if (range >= 10) {
-            return Math.round(value).toString();
-        } else if (range < 1 || Math.abs(value) < 1) {
-            return value.toFixed(2);
-        } else {
-            return value.toFixed(1);
-        }
+        // Use the centralized Utils.formatNumber function
+        return window.Utils.formatNumber(value, config, range);
     },
     
     /**
@@ -77,7 +61,7 @@ window.ChartStats = window.ChartStats || {
             <span class="chart-stat-label">
                 <span class="chart-stat-label-short">${label}:</span>
                 <span class="chart-stat-label-${labelClass}" data-full-label="${fullLabel}:"></span>
-            </span>${value !== null ? formatFunc(value, config, range) + unit : '—'}
+            </span>${value !== null ? this.formatStatValue(value, config, range) + unit : '—'}
         </div>`;
     },
     
@@ -105,15 +89,12 @@ window.ChartStats = window.ChartStats || {
         // Get translated labels
         const labels = this.getStatLabels();
         
-        // Use formatting function
-        const formatFunc = this.formatStatValue;
-        
         // Build HTML for stats display
         const html = `
-            ${this.createStatHtml(labels.lowLabel, 'low', labels.lowFullLabel, minValue, unit, formatFunc, config, range)}
-            ${this.createStatHtml(labels.avgLabel, 'avg', labels.avgFullLabel, avgValue, unit, formatFunc, config, range)}
-            ${this.createStatHtml(labels.highLabel, 'high', labels.highFullLabel, maxValue, unit, formatFunc, config, range)}
-            ${!isMultiSeries ? this.createStatHtml(labels.nowLabel, 'now', labels.nowFullLabel, currentValue, unit, formatFunc, config, range, 'chart-stat-current') : ''}
+            ${this.createStatHtml(labels.lowLabel, 'low', labels.lowFullLabel, minValue, unit, null, config, range)}
+            ${this.createStatHtml(labels.avgLabel, 'avg', labels.avgFullLabel, avgValue, unit, null, config, range)}
+            ${this.createStatHtml(labels.highLabel, 'high', labels.highFullLabel, maxValue, unit, null, config, range)}
+            ${!isMultiSeries ? this.createStatHtml(labels.nowLabel, 'now', labels.nowFullLabel, currentValue, unit, null, config, range, 'chart-stat-current') : ''}
         `;
         
         // Update stats container
@@ -144,8 +125,10 @@ window.ChartStats = window.ChartStats || {
         // Get active datasets using utility function
         const activeDatasets = window.ChartUtils.getActiveDatasets(chart);
         
-        // Calculate statistics using utility function
-        const stats = window.ChartUtils.calculateStats(activeDatasets);
+        // Calculate statistics using centralized Utils function
+        const stats = window.Utils.calculateStatistics({
+            datasets: activeDatasets
+        });
         
         // Update the stats display
         this.updateChartStats(chartId, stats, isMultiSeries);

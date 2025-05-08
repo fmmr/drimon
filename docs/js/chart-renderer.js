@@ -1,31 +1,6 @@
 'use strict';
 
-// Import chart utilities and core modules
-(function() {
-    const utilsScript = document.createElement('script');
-    utilsScript.src = 'js/core/chart-utils.js';
-    utilsScript.async = false;
-    utilsScript.defer = false;
-    document.head.appendChild(utilsScript);
-    
-    const layoutScript = document.createElement('script');
-    layoutScript.src = 'js/core/chart-layout.js';
-    layoutScript.async = false;
-    layoutScript.defer = false;
-    document.head.appendChild(layoutScript);
-    
-    const statsScript = document.createElement('script');
-    statsScript.src = 'js/core/chart-stats.js';
-    statsScript.async = false;
-    statsScript.defer = false;
-    document.head.appendChild(statsScript);
-    
-    const i18nScript = document.createElement('script');
-    i18nScript.src = 'js/core/chart-i18n.js';
-    i18nScript.async = false;
-    i18nScript.defer = false;
-    document.head.appendChild(i18nScript);
-})();
+// Chart renderer module for visualizing data using Chart.js
 
 // Register the moment.js adapter for Chart.js time scale
 // This ensures proper time formatting for the axis
@@ -61,10 +36,8 @@ Chart.defaults.color = '#666';
 Chart.defaults.responsive = true;
 Chart.defaults.maintainAspectRatio = false;
 
-// Export determineSmartTimeFormat function globally for use by script.js
-window.determineSmartTimeFormat = function(timestamps, range) {
-    return window.ChartUtils.determineSmartTimeFormat(timestamps, range);
-};
+// Export ChartUtils.determineSmartTimeFormat function globally for direct access
+window.determineSmartTimeFormat = window.ChartUtils.determineSmartTimeFormat;
 
 // Store all created charts to allow updates
 // Export as a global variable for access by script.js
@@ -155,7 +128,10 @@ function prepareChartData(config, data) {
     }
     
     // 3. Calculate data statistics
-    const stats = window.ChartUtils.calculateDataStatistics(allValues);
+    const stats = window.Utils.calculateStatistics({
+        values: allValues,
+        includePadding: true
+    });
     
     // 4. Prepare chart storage for tooltips and syncing
     window.ChartUtils.storeChartData(config.id, config, timestamps, datasets, data.is_multi_series, data);
@@ -166,7 +142,8 @@ function prepareChartData(config, data) {
     window.moment.locale(momentLocale);
     
     // Get appropriate time format
-    const rangeParam = getURLParameter('range') || '1';
+    const rangeParam = window.Utils ? window.Utils.getURLParameter('range') : 
+                       (new URLSearchParams(window.location.search).get('range')) || '1';
     // If range is 'default', use the chart's defaultRange or fallback to 1
     const effectiveRange = rangeParam === 'default' 
         ? (config.defaultRange || 1).toString()
@@ -491,16 +468,6 @@ function createChartOptions(config, chartData, meta) {
 // Export recalculation function for access from script.js
 window.recalculateChartStats = recalculateChartStats;
 
-// Initialize the charts layout - Delegated to ChartLayout module
-function initializeChartLayout() {
-    window.ChartLayout.initializeChartLayout();
-}
-
-// Calculate grid positions for each chart - Delegated to ChartLayout module
-function calculateGridPositions(rowGroups) {
-    window.ChartLayout.calculateGridPositions(rowGroups);
-}
-
 // Use data component functions for fetching data
 // Create a reference to the fetchChartData function from data_components.js
 window.fetchChartData = window.DataComponents.fetchChartData;
@@ -574,7 +541,9 @@ document.addEventListener('languageChanged', (event) => {
     
     // 3. Update all chart stats to ensure consistent labels and formatting
     // Add a slight delay to ensure other chart updates have completed
-    setTimeout(() => window.ChartStats.updateAllChartStats(), 50);
+    setTimeout(() => {
+        window.ChartStats.updateAllChartStats();
+    }, 50);
 });
 
 /**
@@ -705,7 +674,11 @@ function createOrUpdateChart(config, data) {
     // For example, temperature charts use LAHN (Low/Avg/High/Now) style
     if (config.statsLabelsStyle === 'LAHN') {
         // Update chart stats with a small delay to ensure the chart is fully rendered
-        setTimeout(() => window.ChartStats.updateAllChartStats(), 100);
+        setTimeout(() => {
+            if (window.ChartStats && typeof window.ChartStats.updateAllChartStats === 'function') {
+                window.ChartStats.updateAllChartStats();
+            }
+        }, 100);
     }
 }
 
@@ -729,9 +702,15 @@ window.resizeAllCharts = function() {
         // Clear chart instances
         Object.keys(chartInstances).forEach(key => delete chartInstances[key]);
         
+        // Get URL parameters
+        function getURLParam(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name) || '';
+        }
+        
         // Reinitialize layout
-        const currentRange = getURLParameter('range') || '1';
-        const currentResults = parseInt(getURLParameter('results')) || 8000;
+        const currentRange = getURLParam('range') || '1';
+        const currentResults = parseInt(getURLParam('results')) || 8000;
         loadAllCharts(currentRange, currentResults);
         return;
     }
@@ -754,7 +733,9 @@ window.resizeAllCharts = function() {
             // Fix special stats labels if needed (e.g., temperature charts)
             const chartConfig = window.chartConfigs.find(c => c.id === chart.canvas.id);
             if (chartConfig && chartConfig.statsLabelsStyle === 'LAHN') {
-                setTimeout(() => window.ChartStats.updateAllChartStats(), 100);
+                setTimeout(() => {
+                    window.ChartStats.updateAllChartStats();
+                }, 100);
             }
         }
     });
@@ -762,19 +743,14 @@ window.resizeAllCharts = function() {
 
 // Load data for all charts with progressive rendering
 async function loadAllCharts(range = 1, results = 8000) {
-    console.time('Total chart loading');
+    const startTime = performance.now();
     
-    // Initialize chart layout first
-    console.time('Chart layout initialization');
-    initializeChartLayout();
-    console.timeEnd('Chart layout initialization');
+    // Initialize chart layout
+    window.ChartLayout.initializeChartLayout();
     
     // Start a counter to track when all charts are loaded
     let chartsLoaded = 0;
     const totalCharts = window.chartConfigs.length;
-    
-    // Create and track all fetch promises
-    console.time('Data fetching (total)');
     
     // Use Promise.allSettled to handle individual chart loading without waiting for all
     const fetchPromises = window.chartConfigs.map((config, index) => {
@@ -785,17 +761,15 @@ async function loadAllCharts(range = 1, results = 8000) {
         return fetchChartData(config, effectiveRange, results)
             .then(data => {
                 // When data arrives, immediately render the chart
-                console.time(`Rendering chart ${config.id}`);
                 createOrUpdateChart(config, data);
-                console.timeEnd(`Rendering chart ${config.id}`);
                 
                 // Increment counter
                 chartsLoaded++;
                 
-                // If this is the last chart, log completion
+                // If this is the last chart, log completion time
                 if (chartsLoaded === totalCharts) {
-                    console.timeEnd('Data fetching (total)');
-                    console.timeEnd('Total chart loading');
+                    const totalTime = Math.round(performance.now() - startTime);
+                    console.log(`Charts loaded in ${totalTime}ms`);
                 }
                 
                 // Return the data for Promise tracking
@@ -807,10 +781,10 @@ async function loadAllCharts(range = 1, results = 8000) {
                 // Even on error, increment counter
                 chartsLoaded++;
                 
-                // If this is the last chart, log completion
+                // If this is the last chart, log completion time
                 if (chartsLoaded === totalCharts) {
-                    console.timeEnd('Data fetching (total)');
-                    console.timeEnd('Total chart loading');
+                    const totalTime = Math.round(performance.now() - startTime);
+                    console.log(`Charts loaded in ${totalTime}ms (with errors)`);
                 }
                 
                 // Return null data for failed charts
@@ -824,10 +798,9 @@ async function loadAllCharts(range = 1, results = 8000) {
 
 // Refresh all charts - expose globally for script.js
 window.refreshCharts = function(range, results) {
-    console.time('Refresh charts');
+    const startTime = performance.now();
     
     // Properly destroy all existing chart instances first
-    console.time('Destroy charts');
     Object.keys(chartInstances).forEach(id => {
         if (chartInstances[id]) {
             chartInstances[id].destroy();
@@ -837,7 +810,6 @@ window.refreshCharts = function(range, results) {
     
     // Clear chart instances object
     Object.keys(chartInstances).forEach(key => delete chartInstances[key]);
-    console.timeEnd('Destroy charts');
     
     // Now load all charts with new parameters using the progressive loading approach
     loadAllCharts(range, results);
@@ -860,10 +832,11 @@ window.refreshCharts = function(range, results) {
             
             // If we have canvas elements for all charts, run the stats fix
             if (canvasElements.length >= window.chartConfigs.length) {
-                console.time('Update chart stats');
                 window.ChartStats.updateAllChartStats();
-                console.timeEnd('Update chart stats');
-                console.timeEnd('Refresh charts');
+                
+                // Log completion time
+                const totalTime = Math.round(performance.now() - startTime);
+                console.log(`Charts refreshed in ${totalTime}ms`);
                 
                 // Mark stats as fixed
                 statsFixed = true;
@@ -883,16 +856,11 @@ window.refreshCharts = function(range, results) {
                 // Disconnect the observer
                 observer.disconnect();
                 
-                console.time('Update chart stats (fallback)');
                 window.ChartStats.updateAllChartStats();
-                console.timeEnd('Update chart stats (fallback)');
                 
-                // Only end the timer if it hasn't been ended yet
-                try {
-                    console.timeEnd('Refresh charts');
-                } catch (e) {
-                    // Timer already ended, ignore
-                }
+                // Log completion time with fallback note
+                const totalTime = Math.round(performance.now() - startTime);
+                console.log(`Charts refreshed in ${totalTime}ms (fallback method)`);
                 
                 // Mark stats as fixed
                 statsFixed = true;
@@ -901,152 +869,7 @@ window.refreshCharts = function(range, results) {
     }
 }
 
-// Handle date range selection
-function setupDateRangeHandlers() {
-    // This function is mainly preserved for backwards compatibility
-    // Most of the actual handler logic is now in attachDateChipHandlers
-    
-    // Get range and results from URL parameters or use defaults
-    let currentRange = getURLParameter('range') || 'default'; // Default to 'default' (house icon)
-    let currentResults = parseInt(getURLParameter('results')) || 8000; // Default to 8000 results
-    
-    // Clear all active states and set the correct one
-    const allDateChips = document.querySelectorAll('.date-chip');
-    
-    // First remove active class from all chips
-    allDateChips.forEach(chip => {
-        chip.classList.remove('active');
-    });
-    
-    // Then set active state for current range
-    const activeChip = document.querySelector(`.date-chip[data-range="${currentRange}"]`);
-    if (activeChip) {
-        activeChip.classList.add('active');
-    } else {
-        // Default to "default" (house icon) if no matching chip is found
-        const defaultChip = document.querySelector('.date-chip[data-range="default"]');
-        if (defaultChip) {
-            defaultChip.classList.add('active');
-        }
-    }
-    
-    /**
-     * Updates URL parameters and refreshes charts
-     * @param {string} range - The selected date range
-     * @param {number} results - The number of results to show
-     */
-    function updateChartsWithParams(range, results) {
-        // Update URL with new parameters
-        const url = new URL(window.location.href);
-        url.searchParams.set('range', range);
-        
-        if (results !== 8000) {
-            url.searchParams.set('results', results);
-        } else {
-            url.searchParams.delete('results');
-        }
-        
-        // Update browser history without reloading
-        window.history.replaceState({}, '', url);
-        
-        // Refresh charts with new parameters
-        window.refreshCharts(range, results);
-    }
-    
-    // Add click handlers to all date range chips - including those in the dropdown
-    function attachDateChipHandlers() {
-        // Get all date chips, including those in the dropdown
-        const allDateChips = document.querySelectorAll('.date-chip');
-        
-        // First clear any existing active states
-        // This ensures we have a clean slate and fixes the multiple active issue
-        let currentRange = getURLParameter('range') || 'default';
-        
-        allDateChips.forEach(chip => {
-            // First remove active class from all chips
-            chip.classList.remove('active');
-            
-            // Then add active class only to the current range chip
-            if (chip.getAttribute('data-range') === currentRange) {
-                chip.classList.add('active');
-            }
-            
-            // Remove any existing click handlers
-            const newChip = chip.cloneNode(true);
-            chip.parentNode.replaceChild(newChip, chip);
-            
-            // Add the click handler to the new chip
-            newChip.addEventListener('click', (e) => {
-                e.preventDefault();
-                
-                // Get all chips again to ensure we have the latest set
-                const allChips = document.querySelectorAll('.date-chip');
-                
-                // Remove active class from all chips
-                allChips.forEach(c => c.classList.remove('active'));
-                
-                // Add active class to clicked chip
-                newChip.classList.add('active');
-                
-                // Get selected range
-                const range = newChip.getAttribute('data-range');
-                
-                // Close any open dropdowns
-                document.querySelectorAll('.date-dropdown-content').forEach(dropdown => {
-                    dropdown.classList.remove('show');
-                });
-                
-                // If this is a dropdown item, also set active state on main chip
-                if (newChip.classList.contains('date-dropdown-item')) {
-                    // Update dropdown button text/appearance if needed
-                    const dropdownButtons = document.querySelectorAll('.date-dropdown-button');
-                    if (dropdownButtons.length > 0) {
-                        // Optional: Update the button appearance to show the selected item
-                    }
-                }
-                
-                // Update the current range
-                currentRange = range;
-                
-                // Update URL and refresh charts with the clicked range
-                updateChartsWithParams(range, currentResults);
-            });
-        });
-    }
-    
-    // Initial attachment of handlers
-    attachDateChipHandlers();
-    
-    // Make handler attachment function available globally
-    window.attachDateChipHandlers = attachDateChipHandlers;
-    
-    // Handle results input and update button
-    const resultsInput = document.getElementById('resultsInput');
-    const updateButton = document.getElementById('updateButton');
-    
-    if (resultsInput && updateButton) {
-        resultsInput.value = currentResults;
-        
-        // Process results input and update charts
-        function processResultsInput() {
-            const newResults = parseInt(resultsInput.value) || 8000;
-            currentResults = newResults;
-            
-            // Update URL and refresh charts
-            updateChartsWithParams(currentRange, currentResults);
-        }
-        
-        // Set up button click handler
-        updateButton.addEventListener('click', processResultsInput);
-        
-        // Set up enter key handler
-        resultsInput.addEventListener('keyup', (e) => {
-            if (e.key === 'Enter') {
-                processResultsInput();
-            }
-        });
-    }
-}
+// Note: Date range selection functionality has been moved to date-controller.js
 
 /**
  * Sort charts by category - only on mobile devices
@@ -1064,6 +887,12 @@ window.sortChartsByCategory = sortChartsByCategory;
 document.addEventListener('DOMContentLoaded', () => {
     // We'll skip setupDateRangeHandlers() here since it's now called in index.html
     // after the header is created dynamically
+    
+    // Get URL parameters helper
+    function getURLParameter(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name) || '';
+    }
     
     // Get range and results from URL parameters or use defaults
     // Default to 'default' range (house icon) if no range parameter is provided
@@ -1109,9 +938,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (chartContainer && chartContainer.children.length === 0) {
             console.log('Charts disappeared, reloading...');
             
+            // Make sure Utils is defined before using it
+            if (!window.Utils) {
+                console.error('Utils is not defined in failsafe interval. Critical dependency missing.');
+                return;
+            }
+            
             // Get current range and results
-            const currentRange = getURLParameter('range') || '1';
-            const currentResults = parseInt(getURLParameter('results')) || 8000;
+            const currentRange = window.Utils.getURLParameter('range') || '1';
+            const currentResults = parseInt(window.Utils.getURLParameter('results')) || 8000;
             
             // Reload all charts
             loadAllCharts(currentRange, currentResults);

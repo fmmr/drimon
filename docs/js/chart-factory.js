@@ -514,18 +514,7 @@ const ChartFactory = {
              * @returns {Array} Transformed values
              */
             _applyDataTransform: function(values, transform) {
-                if (!values || !Array.isArray(values)) return values;
-                
-                return values.map(value => {
-                    if (isNaN(value)) return value;
-                    
-                    // Apply shift transformation
-                    if (transform.shiftBy !== undefined) {
-                        return value + transform.shiftBy;
-                    }
-                    
-                    return value;
-                });
+                return window.ChartUtils.transformValues(values, transform);
             },
             
             /**
@@ -804,18 +793,7 @@ const ChartFactory = {
              * @returns {Array} Transformed values
              */
             _applyDataTransform: function(values, transform) {
-                if (!values || !Array.isArray(values)) return values;
-                
-                return values.map(value => {
-                    if (isNaN(value)) return value;
-                    
-                    // Apply shift transformation
-                    if (transform.shiftBy !== undefined) {
-                        return value + transform.shiftBy;
-                    }
-                    
-                    return value;
-                });
+                return window.ChartUtils.transformValues(values, transform);
             },
             
             /**
@@ -969,6 +947,3 @@ const ChartFactory = {
 if (typeof window !== 'undefined') {
     window.ChartFactory = ChartFactory;
 }
-
-// Export as ES module for testing - uncomment when using with module system
-// export default ChartFactory;

@@ -6,11 +6,11 @@
     <title>DriMon - Fredrik Rødland - 2024</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link rel="stylesheet" href="header.css">
-    <link rel="stylesheet" href="main.css">
-    <link rel="stylesheet" href="dark-mode.css">
-    <link rel="stylesheet" href="debug.css">
-    <link rel="stylesheet" href="language_switcher.css">
+    <link rel="stylesheet" href="css/header.css">
+    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/dark-mode.css">
+    <link rel="stylesheet" href="css/debug.css">
+    <link rel="stylesheet" href="css/language_switcher.css">
     
     <!-- Base libraries -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -22,62 +22,43 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation"></script>
     
     <!-- Debug utilities -->
-    <script src="debug.js"></script>
+    <script src="js/debug.js"></script>
     
     <!-- Core modules - new architecture (normal scripts, not ES modules) -->
     <!-- Load critical utilities first -->
-    <script src="js/core/translations-loader.js"></script>
-    <script src="js/core/data-request-manager.js"></script>
-    <script src="js/core/chart-utils.js"></script>
-    <script src="js/core/i18n.js"></script>
-    <script src="js/core/chart-i18n.js"></script>
-    <script>
-        // Initialize translations when the page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Initialize I18n with the translations from translations-loader.js
-            if (window.I18n && typeof window.I18n.initialize === 'function' && window.DriMonTranslations) {
-                const success = window.I18n.initialize(window.DriMonTranslations, {
-                    defaultLanguage: 'no',
-                    warnOnMissing: true
-                });
-                
-                if (success && window.ChartI18n) {
-                    // Initialize chart translator
-                    window.ChartI18n.initialize();
-                    
-                    // Signal that the new i18n system is ready
-                    document.dispatchEvent(new CustomEvent('i18nReady'));
-                }
-            } else {
-                console.error('Failed to initialize i18n system - required components not available');
-            }
-        });
-    </script>
+    <script src="js/utils.js"></script>
+    <script src="js/translations-loader.js"></script>
+    <script src="js/data-request-manager.js"></script>
+    <script src="js/chart-utils.js"></script>
+    <script src="js/chart-stats.js"></script>
+    <script src="js/chart-layout.js"></script>
+    <script src="js/i18n.js"></script>
+    <script src="js/chart-i18n.js"></script>
+    <script src="js/i18n-controller.js"></script>
     
     <!-- Application modules -->
-    <script src="header_components.js"></script>
-    <script src="chart_components.js"></script>
-    <script src="data_components.js"></script>
-    <script src="language_switcher.js"></script>
-    <script src="date_utils.js"></script>
-    <script src="data.js"></script>
-    <script src="weather.js"></script>
-    <script src="chart_config.js"></script>
-    <script src="chart_renderer.js"></script>
-    <script src="script.js"></script>
-    <script src="js/core/pull-to-refresh.js"></script>
+    <script src="js/header-components.js"></script>
+    <!-- chart-components.js removed - functionality consolidated into chart-layout.js -->
+    <script src="js/data-components.js"></script>
+    <script src="js/language-switcher.js"></script>
+    <script src="js/date-utils.js"></script>
+    <script src="js/data-handler.js"></script>
+    <script src="js/weather.js"></script>
+    <script src="js/chart-config.js"></script>
+    <script src="js/chart-renderer.js"></script>
+    <script src="js/layout-controller.js"></script>
+    <script src="js/theme-controller.js"></script>
+    <script src="js/stats-controller.js"></script>
+    <script src="js/date-controller.js"></script>
+    <script src="js/app.js"></script>
+    <script src="js/pull-to-refresh.js"></script>
     
     <link rel="canonical" href="https://drimon.rodland.no/" />
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png">
     <link rel="icon" type="image/png" sizes="48x48" href="favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-    <script>
-        // Only include manifest when served from HTTP/HTTPS (not file://)
-        if (window.location.protocol.startsWith('http')) {
-            document.write('<link rel="manifest" href="site.webmanifest">');
-        }
-    </script>
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="img/favicon-16x16.png">
+    <script src="js/manifest-handler.js"></script>
 </head>
 <body>
     <div class="page-container">
@@ -85,55 +66,7 @@
         <div id="chartContainer" class="chart-container"></div>
     </div>
     
-    <script>
-        // Initialize the header when DOM is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            // Get the header mount point
-            const headerMountPoint = document.getElementById('header-mount-point');
-            
-            // Create the header using the component
-            const header = createHeader();
-            
-            // Mount the header to the DOM
-            headerMountPoint.appendChild(header);
-
-            // Initialize the page after header is created
-            // This ensures all event handlers are attached to the newly created header elements
-            if (typeof toggleDarkMode === 'function' && 
-                typeof toggleStats === 'function' && 
-                typeof setupDateRangeHandlers === 'function') {
-                
-                // Set up dark mode toggle button (from script.js)
-                const darkModeToggle = document.getElementById('darkModeToggle');
-                if (darkModeToggle) {
-                    darkModeToggle.addEventListener('click', toggleDarkMode);
-                }
-                
-                // Set up stats toggle button (from script.js)
-                const statsToggle = document.getElementById('statsToggle');
-                if (statsToggle) {
-                    statsToggle.addEventListener('click', toggleStats);
-                }
-                
-                // Set up date range handlers (from chart_renderer.js)
-                setupDateRangeHandlers();
-            }
-            
-            // Apply translations to the page
-            document.addEventListener('i18nReady', () => {
-                // Update all translatable elements on the page
-                I18n.updatePageLanguage();
-                
-                // Allow ChartI18n to update chart translations
-                if (window.charts && window.charts.length > 0) {
-                    window.charts.forEach(chart => {
-                        if (chart.id) {
-                            ChartI18n.updateChartTranslations(chart.id);
-                        }
-                    });
-                }
-            });
-        });
-    </script>
+    <!-- Load header controller at the end to ensure all dependencies are available -->
+    <script src="js/header-controller.js"></script>
 </body>
 </html>

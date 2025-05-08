@@ -639,16 +639,21 @@ function patchComponentFunctions() {
             };
         }
         
-        // Patch chart components if they exist
-        if (window.ChartComponents) {
-            const original = window.ChartComponents.createChartContainer;
-            window.ChartComponents.createChartContainer = function(config, isMobile) {
+        // Patch ChartLayout if it exists
+        if (window.ChartLayout) {
+            // We can't easily patch the initializeChartLayout method since it doesn't return individual containers
+            // Instead, add a tracking hook to be called whenever a chart container is created
+            window.DriMonDebug.trackChartCreation = function(config) {
+                if (!window.DriMonDebug.enabled) return;
+                
                 console.debug(`Creating chart container: ${config.id}`);
                 const startTime = performance.now();
-                const result = original(config, isMobile);
-                const endTime = performance.now();
-                logComponentRender('ChartContainer', config.id, endTime - startTime);
-                return result;
+                
+                // Return a function to be called when creation is complete
+                return function() {
+                    const endTime = performance.now();
+                    logComponentRender('ChartContainer', config.id, endTime - startTime);
+                };
             };
         }
     });
@@ -660,6 +665,74 @@ document.addEventListener('DOMContentLoaded', () => {
     window.DriMonDebug.refreshDebugPanel = refreshDebugPanel;
     window.DriMonDebug.expandRequestDetails = expandRequestDetails;
     window.DriMonDebug.logComponentRender = logComponentRender;
+    
+    // Create ChartComponents shim if it doesn't exist (for backward compatibility)
+    if (!window.ChartComponents && window.ChartLayout) {
+        console.debug('Creating ChartComponents compatibility shim for legacy code');
+        window.ChartComponents = {
+            // This shim redirects any calls to ChartComponents methods to their ChartLayout equivalents
+            createChartContainer: function() {
+                console.warn('ChartComponents.createChartContainer is deprecated, use ChartLayout.initializeChartLayout instead');
+                return document.createElement('div'); // Return empty div as fallback
+            },
+            createChartTitle: window.ChartLayout.createChartTitle.bind(window.ChartLayout),
+            createChartStats: function(chartId) {
+                console.warn('ChartComponents.createChartStats is deprecated');
+                const statsDiv = document.createElement('div');
+                statsDiv.className = 'chart-stats';
+                statsDiv.id = `stats-${chartId}`;
+                return statsDiv;
+            },
+            createChartCanvasContainer: function(chartId) {
+                console.warn('ChartComponents.createChartCanvasContainer is deprecated');
+                const container = document.createElement('div');
+                container.className = 'chart-canvas-container';
+                const canvas = document.createElement('canvas');
+                canvas.id = chartId;
+                container.appendChild(canvas);
+                if (window.ChartLayout && window.ChartLayout.createLoadingIndicator) {
+                    container.appendChild(window.ChartLayout.createLoadingIndicator(chartId));
+                }
+                return container;
+            },
+            createLoadingIndicator: window.ChartLayout.createLoadingIndicator.bind(window.ChartLayout),
+            updateChartStats: function(chartId, statsData, isMultiSeries, unit, formatNumber) {
+                console.warn('ChartComponents.updateChartStats is deprecated');
+                // Forward to ChartStats.updateStats if available
+                if (window.ChartStats && window.ChartStats.updateStats) {
+                    window.ChartStats.updateStats(chartId, statsData, unit, formatNumber);
+                }
+            },
+            updateLoadingIndicator: function(chartId, message, show) {
+                console.warn('ChartComponents.updateLoadingIndicator is deprecated');
+                const loadingEl = document.getElementById(`loading-${chartId}`);
+                if (!loadingEl) return;
+                
+                loadingEl.style.display = show ? 'block' : 'none';
+                if (show && message) {
+                    const textEl = loadingEl.querySelector('div:not(.loading-spinner)');
+                    if (textEl) textEl.textContent = message;
+                }
+            },
+            // Placeholder for createChartOptions and related methods
+            createChartOptions: function() {
+                console.warn('ChartComponents.createChartOptions is deprecated');
+                return {}; // Return empty options object as fallback
+            },
+            createSecondaryYAxisOptions: function() { 
+                console.warn('ChartComponents.createSecondaryYAxisOptions is deprecated');
+                return {}; 
+            },
+            createLegendOptions: function() { 
+                console.warn('ChartComponents.createLegendOptions is deprecated');
+                return {}; 
+            },
+            createTooltipOptions: function() { 
+                console.warn('ChartComponents.createTooltipOptions is deprecated');
+                return {}; 
+            }
+        };
+    }
     
     // Initialize debug mode
     initDebugMode();

@@ -499,6 +499,3 @@ const ChartController = {
 if (typeof window !== 'undefined') {
     window.ChartController = ChartController;
 }
-
-// Export as ES module for testing - uncomment when using with module system
-// export default ChartController;

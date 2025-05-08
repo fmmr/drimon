@@ -54,10 +54,10 @@ function createLanguageSwitcher() {
                 });
                 
                 // Update all chart stats with proper translations
-                if (window.ChartStats && typeof window.ChartStats.updateAllChartStats === 'function') {
-                    // Give time for chart translations to complete first
-                    setTimeout(window.ChartStats.updateAllChartStats, 200);
-                }
+                // Give time for chart translations to complete first
+                setTimeout(() => {
+                    window.ChartStats.updateAllChartStats();
+                }, 200);
                 
                 // Use the direct DOM manipulation utility after a delay
                 // But avoid unnecessary chart updates that can cause flickering

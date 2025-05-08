@@ -188,6 +188,10 @@ window.ChartLayout = window.ChartLayout || {
         // Add all charts to the container at once
         orderedConfigs.forEach(config => {
             // Create chart div
+            // Support debug tracking if enabled
+            const completionCallback = window.DriMonDebug && window.DriMonDebug.trackChartCreation ? 
+                window.DriMonDebug.trackChartCreation(config) : null;
+                
             const chartDiv = document.createElement('div');
             chartDiv.className = 'chart';
             
@@ -234,6 +238,11 @@ window.ChartLayout = window.ChartLayout || {
             chartDiv.appendChild(canvasContainer);
             
             chartContainer.appendChild(chartDiv);
+            
+            // Call completion callback for debug tracking if it exists
+            if (completionCallback && typeof completionCallback === 'function') {
+                completionCallback();
+            }
         });
         
         // Add window resize handler (but avoid duplicate listeners)

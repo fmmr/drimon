@@ -88,7 +88,6 @@ async function fetchChartData(config, range = 1, results = DEFAULT_RESULTS) {
     
     // Return cached data if available
     if (cachedData) {
-        console.log(`Using cached data for ${config.id}`);
         return cachedData;
     }
     
@@ -173,7 +172,7 @@ async function fetchTimeRangeData(config, startDateStr, endDateStr, results = DE
             
             return combinedData;
         } catch (error) {
-            console.error(`Error fetching multi-series data for ${config.title}:`, error);
+            // Failed to fetch multi-series data
             return {
                 chart_id: config.id,
                 series: [],
@@ -219,7 +218,6 @@ async function fetchSingleSeries(channel, field, startDateStr, endDateStr, resul
         });
     } else {
         // Fallback to original implementation if DataRequestManager isn't available
-        console.warn('DataRequestManager not available, using fallback fetch method');
         
         // Build API URL with appropriate parameters
         let url = `https://api.thingspeak.com/channels/${channel}/fields/${field}.json?timezone=${DEFAULT_TIMEZONE}&results=${results}`;
@@ -241,9 +239,7 @@ async function fetchSingleSeries(channel, field, startDateStr, endDateStr, resul
             const data = await response.json();
             return data;
         } catch (error) {
-            console.error(`Error fetching data for channel ${channel} field ${field}:`, error);
-            
-            // Return empty data structure rather than null to avoid further errors
+            // Failed to fetch data - return empty data structure rather than null to avoid further errors
             return {
                 channel: channel,
                 field: field,
@@ -533,8 +529,9 @@ function getDateRange(range) {
             
         case 'start':
             // From the beginning of data collection to now
+            const startOfData = now.clone().subtract(60, 'days'); // Use 60 days ago as start date
             return {
-                startDate: '2024-07-24 00:00:00', // Default start date if not specified in chart config
+                startDate: startOfData.format(format),
                 endDate: now.format(format)
             };
             
@@ -573,10 +570,7 @@ function shouldUseIntegerValues(config) {
         return config.useIntegerFormat;
     }
     
-    // Log warning about missing formatting configuration
-    if (config && config.id) {
-        console.warn(`Configuration warning: Missing formatting.useIntegerFormat for chart ${config.id}. Add 'formatting.useIntegerFormat' property to chart config.`);
-    }
+    // Missing formatting configuration - use default
     
     // Default to false - decimal formatting
     return false;
@@ -605,10 +599,7 @@ function formatChartNumber(value, config, range) {
         return Math.round(value).toString();
     }
     
-    // If no explicit formatting config, log warning and use sensible defaults
-    if (config && config.id) {
-        console.warn(`Configuration warning: Missing formatting.decimalPlaces for chart ${config.id}. Using default formatting.`);
-    }
+    // If no explicit formatting config, use sensible defaults
     
     // Default formatting based on value range
     if (range >= 10) {

@@ -272,8 +272,8 @@ function createDateRanges(config = null) {
         dropdownContainer.appendChild(dropdownContent);
         dateRanges.appendChild(dropdownContainer);
         
-        // Toggle dropdown on button click
-        dropdownButton.addEventListener('click', (e) => {
+        // Function to handle dropdown positioning and display
+        const handleDropdownEvent = (e) => {
             e.preventDefault();
             e.stopPropagation();
             
@@ -307,6 +307,11 @@ function createDateRanges(config = null) {
             
             // Toggle dropdown
             dropdownContent.classList.toggle('show');
+        };
+        
+        // Toggle dropdown on button click
+        dropdownButton.addEventListener('click', (e) => {
+            handleDropdownEvent(e);
             
             // Close dropdown when clicking outside
             document.addEventListener('click', function closeDropdown(event) {
@@ -319,34 +324,7 @@ function createDateRanges(config = null) {
         
         // For better touch handling on mobile
         if ('ontouchstart' in window) {
-            dropdownButton.addEventListener('touchstart', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                
-                // Same positioning logic as click event
-                const buttonRect = dropdownButton.getBoundingClientRect();
-                dropdownContent.style.top = (buttonRect.bottom + 5) + 'px';
-                dropdownContent.style.left = buttonRect.left + 'px';
-                
-                // Mobile adjustments
-                const isMobile = window.matchMedia('(max-width: 768px)').matches;
-                if (isMobile) {
-                    const viewportWidth = window.innerWidth;
-                    const dropdownWidth = 150;
-                    
-                    if (buttonRect.left + dropdownWidth > viewportWidth) {
-                        dropdownContent.style.left = (viewportWidth - dropdownWidth - 10) + 'px';
-                    }
-                    
-                    if (buttonRect.top > window.innerHeight / 2) {
-                        dropdownContent.style.top = 'auto';
-                        dropdownContent.style.bottom = (window.innerHeight - buttonRect.top + 5) + 'px';
-                    }
-                }
-                
-                // Toggle dropdown
-                dropdownContent.classList.toggle('show');
-            });
+            dropdownButton.addEventListener('touchstart', handleDropdownEvent);
         }
     }
     
@@ -552,7 +530,6 @@ const ComponentRegistry = {
      */
     register: function(type, factory) {
         if (typeof factory !== 'function') {
-            console.error(`Invalid factory for component type '${type}'. Factory must be a function.`);
             return;
         }
         
@@ -567,7 +544,6 @@ const ComponentRegistry = {
      */
     create: function(type, config) {
         if (!this._factories[type]) {
-            console.error(`Unknown component type: ${type}`);
             return null;
         }
         
@@ -727,7 +703,6 @@ const HeaderController = {
     updateComponent: function(componentKey, newConfig) {
         // Check if the component exists in the configuration
         if (!this._config.components[componentKey]) {
-            console.error(`Component '${componentKey}' not found in header configuration`);
             return false;
         }
         

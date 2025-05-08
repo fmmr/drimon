@@ -241,28 +241,6 @@ function updateLoadingIndicator(chartId, message = null, show = true) {
     }
 }
 
-/**
- * Creates a chart dataset configuration object for Chart.js
- * @param {Object} seriesConfig - Series configuration 
- * @param {Array} values - Data values for the series
- * @param {boolean} hasNegativeValues - Whether the dataset has negative values
- * @param {string} axisId - ID of the Y axis to use
- * @returns {Object} Chart.js dataset configuration
- */
-function createChartDataset(seriesConfig, values, hasNegativeValues = false, axisId = 'y') {
-    return {
-        label: seriesConfig.title,
-        data: values,
-        borderColor: seriesConfig.color,
-        backgroundColor: hasNegativeValues ? 'rgba(0,0,0,0)' : `${seriesConfig.color}20`,
-        borderWidth: 2,
-        pointRadius: 0,
-        pointHoverRadius: 4,
-        fill: !hasNegativeValues,
-        tension: 0.1,
-        yAxisID: axisId // Y-axis ID
-    };
-}
 
 /**
  * Creates a complete Chart.js configuration object
@@ -507,7 +485,6 @@ if (typeof window !== 'undefined') {
         createLoadingIndicator,
         updateChartStats,
         updateLoadingIndicator,
-        createChartDataset,
         createChartOptions,
         createSecondaryYAxisOptions,
         createLegendOptions,

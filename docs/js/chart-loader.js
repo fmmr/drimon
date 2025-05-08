@@ -46,8 +46,8 @@ const ChartLoader = {
         
         // Initialize state
         this._state.isMobile = window.innerWidth <= this._config.mobileBreakpoint;
-        this._state.currentRange = this._getURLParameter('range') || this._config.defaultRange;
-        this._state.currentResults = parseInt(this._getURLParameter('results')) || this._config.defaultResults;
+        this._state.currentRange = Utils.getURLParameter('range') || this._config.defaultRange;
+        this._state.currentResults = parseInt(Utils.getURLParameter('results')) || this._config.defaultResults;
         
         // Make sure ChartFactory is initialized
         if (window.ChartFactory && typeof window.ChartFactory.initialize === 'function') {
@@ -854,22 +854,10 @@ const ChartLoader = {
         }
     },
     
-    /**
-     * Get a URL parameter value
-     * @private
-     * @param {string} name - Parameter name
-     * @returns {string|null} Parameter value or null if not found
-     */
-    _getURLParameter: function(name) {
-        const url = new URL(window.location.href);
-        return url.searchParams.get(name);
-    }
+    // _getURLParameter function removed - using Utils.getURLParameter directly instead
 };
 
 // Export for browser context
 if (typeof window !== 'undefined') {
     window.ChartLoader = ChartLoader;
 }
-
-// Export as ES module for testing - uncomment when using with module system
-// export default ChartLoader;
