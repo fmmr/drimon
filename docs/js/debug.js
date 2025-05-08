@@ -229,7 +229,8 @@ function addDebugUi() {
         { id: 'network-tab', label: 'Network' },
         { id: 'components-tab', label: 'Components' },
         { id: 'errors-tab', label: 'Errors' },
-        { id: 'optimization-tab', label: 'Optimization' }
+        { id: 'optimization-tab', label: 'Optimization' },
+        { id: 'memory-tab', label: 'Memory' }
     ];
     
     tabs.forEach((tab, index) => {
@@ -254,7 +255,8 @@ function addDebugUi() {
         { id: 'network-content', display: 'none' },
         { id: 'components-content', display: 'none' },
         { id: 'errors-content', display: 'none' },
-        { id: 'optimization-content', display: 'none' }
+        { id: 'optimization-content', display: 'none' },
+        { id: 'memory-content', display: 'none' }
     ];
     
     contentContainers.forEach(container => {
@@ -368,8 +370,9 @@ function refreshDebugPanel() {
     const componentsContent = document.getElementById('components-content');
     const errorsContent = document.getElementById('errors-content');
     const optimizationContent = document.getElementById('optimization-content');
+    const memoryContent = document.getElementById('memory-content');
     
-    if (!eventsContent || !networkContent || !componentsContent || !errorsContent || !optimizationContent) return;
+    if (!eventsContent || !networkContent || !componentsContent || !errorsContent || !optimizationContent || !memoryContent) return;
     
     // Refresh events
     let eventsHtml = '';
@@ -492,6 +495,288 @@ function refreshDebugPanel() {
     }
     
     optimizationContent.innerHTML = optimizationHtml;
+    
+    // Refresh memory usage data
+    let memoryHtml = '';
+    
+    // Check if ChartLifecycleManager is available
+    if (window.ChartLifecycleManager) {
+        const memoryStats = window.ChartLifecycleManager.getMemoryUsage();
+        
+        memoryHtml += `
+        <div class="memory-section">
+            <h4>Chart Lifecycle Statistics</h4>
+            <div class="memory-metrics">
+                <div class="memory-metric">
+                    <div class="metric-name">Active Charts:</div>
+                    <div class="metric-value">${memoryStats.activeCharts}</div>
+                </div>
+                <div class="memory-metric">
+                    <div class="metric-name">Total Charts Created:</div>
+                    <div class="metric-value">${memoryStats.totalCreated}</div>
+                </div>
+                <div class="memory-metric">
+                    <div class="metric-name">Total Charts Destroyed:</div>
+                    <div class="metric-value">${memoryStats.totalDestroyed}</div>
+                </div>
+            </div>
+            
+            <h4>Resource Tracking</h4>
+            <div class="memory-resources">
+                <div class="memory-resource">
+                    <div class="resource-name">DOM Elements:</div>
+                    <div class="resource-value">${memoryStats.resourceCounts.elements}</div>
+                </div>
+                <div class="memory-resource">
+                    <div class="resource-name">Event Listeners:</div>
+                    <div class="resource-value">${memoryStats.resourceCounts.eventListeners}</div>
+                </div>
+                <div class="memory-resource">
+                    <div class="resource-name">Data References:</div>
+                    <div class="resource-value">${memoryStats.resourceCounts.data}</div>
+                </div>
+                <div class="memory-resource">
+                    <div class="resource-name">Timers:</div>
+                    <div class="resource-value">${memoryStats.resourceCounts.timers}</div>
+                </div>
+                <div class="memory-resource">
+                    <div class="resource-name">Observers:</div>
+                    <div class="resource-value">${memoryStats.resourceCounts.observers}</div>
+                </div>
+            </div>
+            
+            <h4>Chart Ages</h4>
+            <div class="memory-chart-ages">
+                <div class="memory-chart-age">
+                    <div class="age-name">Average Chart Age:</div>
+                    <div class="age-value">${(memoryStats.chartAges.averageAgeMs / 1000).toFixed(1)} seconds</div>
+                </div>
+                <div class="memory-chart-age">
+                    <div class="age-name">Oldest Chart:</div>
+                    <div class="age-value">${memoryStats.chartAges.oldestChartId || 'None'} (${(memoryStats.chartAges.oldestChartAgeMs / 1000).toFixed(1)} seconds)</div>
+                </div>
+            </div>
+            
+            <div class="memory-actions">
+                <button onclick="window.DriMonDebug.cleanupStaleCharts()">Clean Up Stale Charts</button>
+                <button onclick="window.DriMonDebug.forceGarbageCollection()">Force Garbage Collection</button>
+            </div>
+        </div>`;
+        
+        // Add Resource Pool statistics if available
+        if (window.ResourcePool) {
+            const poolStats = window.ResourcePool.getPoolStats();
+            
+            memoryHtml += `
+            <div class="memory-section">
+                <h4>Resource Pool Statistics</h4>
+                <div class="memory-metrics">
+                    <div class="memory-metric">
+                        <div class="metric-name">Total Pools:</div>
+                        <div class="metric-value">${poolStats.pools.length}</div>
+                    </div>
+                    <div class="memory-metric">
+                        <div class="metric-name">Total Created:</div>
+                        <div class="metric-value">${poolStats.totalCreated}</div>
+                    </div>
+                    <div class="memory-metric">
+                        <div class="metric-name">Total Acquired:</div>
+                        <div class="metric-value">${poolStats.totalAcquired}</div>
+                    </div>
+                    <div class="memory-metric">
+                        <div class="metric-name">Total Released:</div>
+                        <div class="metric-value">${poolStats.totalReleased}</div>
+                    </div>
+                    <div class="memory-metric">
+                        <div class="metric-name">Total Pool Size:</div>
+                        <div class="metric-value">${poolStats.totalSize}</div>
+                    </div>
+                </div>
+                
+                <h4>Pool Details</h4>
+                <div class="memory-pools">`;
+                
+            // Add each individual pool's statistics
+            poolStats.pools.forEach(poolName => {
+                const pool = poolStats.poolStats[poolName];
+                if (!pool) return;
+                
+                const hitRateFormatted = pool.hitRate.toFixed(1);
+                const utilizationRate = ((pool.inUse / (pool.available + pool.inUse)) * 100).toFixed(1);
+                
+                memoryHtml += `
+                    <div class="memory-pool">
+                        <h5>${poolName}</h5>
+                        <div class="pool-stats">
+                            <div class="pool-stat">
+                                <div class="stat-name">Available:</div>
+                                <div class="stat-value">${pool.available}</div>
+                            </div>
+                            <div class="pool-stat">
+                                <div class="stat-name">In Use:</div>
+                                <div class="stat-value">${pool.inUse}</div>
+                            </div>
+                            <div class="pool-stat">
+                                <div class="stat-name">Max Size:</div>
+                                <div class="stat-value">${pool.maxSize}</div>
+                            </div>
+                            <div class="pool-stat">
+                                <div class="stat-name">Hit Rate:</div>
+                                <div class="stat-value">${hitRateFormatted}%</div>
+                            </div>
+                            <div class="pool-stat">
+                                <div class="stat-name">Utilization:</div>
+                                <div class="stat-value">${utilizationRate}%</div>
+                            </div>
+                        </div>
+                    </div>`;
+            });
+            
+            memoryHtml += `
+                </div>
+                
+                <div class="memory-actions">
+                    <button onclick="window.DriMonDebug.clearResourcePools()">Clear All Pools</button>
+                </div>
+            </div>`;
+        }
+        
+        // Add browser memory info if available
+        if (window.performance && window.performance.memory) {
+            const memory = window.performance.memory;
+            memoryHtml += `
+            <div class="memory-section">
+                <h4>Browser Memory Statistics</h4>
+                <div class="memory-browser">
+                    <div class="browser-memory-metric">
+                        <div class="metric-name">Used JS Heap:</div>
+                        <div class="metric-value">${formatBytes(memory.usedJSHeapSize)}</div>
+                    </div>
+                    <div class="browser-memory-metric">
+                        <div class="metric-name">Total JS Heap:</div>
+                        <div class="metric-value">${formatBytes(memory.totalJSHeapSize)}</div>
+                    </div>
+                    <div class="browser-memory-metric">
+                        <div class="metric-name">JS Heap Limit:</div>
+                        <div class="metric-value">${formatBytes(memory.jsHeapSizeLimit)}</div>
+                    </div>
+                </div>
+            </div>`;
+        }
+    } else {
+        memoryHtml = '<p>ChartLifecycleManager is not available. Memory monitoring is not active.</p>';
+    }
+    
+    memoryContent.innerHTML = memoryHtml;
+}
+
+/**
+ * Format bytes into a human-readable string
+ * @param {number} bytes - Number of bytes
+ * @returns {string} Formatted size string
+ */
+function formatBytes(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+/**
+ * Clean up stale charts
+ */
+function cleanupStaleCharts() {
+    if (window.ChartLifecycleManager) {
+        const cleaned = window.ChartLifecycleManager.cleanupStaleCharts(300000); // 5 minutes
+        
+        // Show a message with the results
+        const message = `Cleaned up ${cleaned} stale chart${cleaned === 1 ? '' : 's'}`;
+        window.DriMonDebug.events.push({
+            type: 'info',
+            timestamp: new Date(),
+            elapsed: new Date() - window.DriMonDebug.startTime,
+            message
+        });
+        
+        // Refresh the panel
+        refreshDebugPanel();
+    }
+}
+
+/**
+ * Force garbage collection hint
+ */
+function forceGarbageCollection() {
+    // We can't directly force GC, but we can hint the browser
+    if (window.gc) {
+        try {
+            window.gc();
+            window.DriMonDebug.events.push({
+                type: 'info',
+                timestamp: new Date(),
+                elapsed: new Date() - window.DriMonDebug.startTime,
+                message: 'Garbage collection requested'
+            });
+        } catch (e) {
+            console.warn('Could not request garbage collection');
+        }
+    } else {
+        // If direct GC is not available, try to hint by allocating a large object and then removing it
+        const memoryPressure = [];
+        try {
+            // Create some memory pressure to encourage GC
+            for (let i = 0; i < 10000; i++) {
+                memoryPressure.push(new Array(10000).fill(Math.random()));
+            }
+        } finally {
+            // Clear the reference
+            memoryPressure.length = 0;
+            
+            window.DriMonDebug.events.push({
+                type: 'info',
+                timestamp: new Date(),
+                elapsed: new Date() - window.DriMonDebug.startTime,
+                message: 'Garbage collection hinted'
+            });
+        }
+    }
+    
+    // Refresh the panel after a short delay
+    setTimeout(refreshDebugPanel, 500);
+}
+
+/**
+ * Clear all resource pools
+ */
+function clearResourcePools() {
+    if (window.ResourcePool) {
+        const poolStats = window.ResourcePool.getPoolStats();
+        
+        // Clear each pool
+        poolStats.pools.forEach(poolName => {
+            try {
+                const pool = window.ResourcePool.getPool(poolName);
+                if (pool) {
+                    pool.clear();
+                }
+            } catch (e) {
+                console.warn(`Could not clear pool ${poolName}:`, e);
+            }
+        });
+        
+        window.DriMonDebug.events.push({
+            type: 'info',
+            timestamp: new Date(),
+            elapsed: new Date() - window.DriMonDebug.startTime,
+            message: `Cleared ${poolStats.pools.length} resource pools`
+        });
+        
+        // Refresh the panel
+        refreshDebugPanel();
+    }
 }
 
 /**
@@ -665,6 +950,9 @@ document.addEventListener('DOMContentLoaded', () => {
     window.DriMonDebug.refreshDebugPanel = refreshDebugPanel;
     window.DriMonDebug.expandRequestDetails = expandRequestDetails;
     window.DriMonDebug.logComponentRender = logComponentRender;
+    window.DriMonDebug.cleanupStaleCharts = cleanupStaleCharts;
+    window.DriMonDebug.forceGarbageCollection = forceGarbageCollection;
+    window.DriMonDebug.clearResourcePools = clearResourcePools;
     
     // Create ChartComponents shim if it doesn't exist (for backward compatibility)
     if (!window.ChartComponents && window.ChartLayout) {

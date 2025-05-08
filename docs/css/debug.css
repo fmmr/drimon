@@ -299,3 +299,103 @@
 .debug-panel {
     animation: fadeIn 0.3s ease;
 }
+
+/* Memory tab styling */
+.memory-section {
+    margin-bottom: 20px;
+}
+
+.memory-section h4 {
+    margin: 15px 0 10px 0;
+    font-size: 14px;
+    color: #333;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 5px;
+}
+
+.memory-metrics,
+.memory-resources,
+.memory-chart-ages,
+.memory-browser {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 15px;
+}
+
+.memory-metric,
+.memory-resource,
+.memory-chart-age,
+.browser-memory-metric {
+    display: flex;
+    justify-content: space-between;
+    background-color: #f5f5f5;
+    padding: 6px 10px;
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.resource-name,
+.age-name {
+    font-weight: bold;
+    color: #555;
+}
+
+.resource-value,
+.age-value {
+    color: #333;
+}
+
+.memory-actions {
+    display: flex;
+    gap: 10px;
+    margin: 15px 0;
+}
+
+.memory-actions button {
+    padding: 5px 10px;
+    background-color: #f0f0f0;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background-color 0.2s;
+}
+
+.memory-actions button:hover {
+    background-color: #e0e0e0;
+}
+
+/* Dark mode for memory tab */
+[data-theme="dark"] .memory-metric,
+[data-theme="dark"] .memory-resource,
+[data-theme="dark"] .memory-chart-age,
+[data-theme="dark"] .browser-memory-metric {
+    background-color: #333;
+    border-color: #555;
+}
+
+[data-theme="dark"] .memory-section h4 {
+    color: #e0e0e0;
+    border-bottom-color: #444;
+}
+
+[data-theme="dark"] .resource-name,
+[data-theme="dark"] .age-name {
+    color: #aaa;
+}
+
+[data-theme="dark"] .resource-value,
+[data-theme="dark"] .age-value {
+    color: #e0e0e0;
+}
+
+[data-theme="dark"] .memory-actions button {
+    background-color: #444;
+    border-color: #666;
+    color: #e0e0e0;
+}
+
+[data-theme="dark"] .memory-actions button:hover {
+    background-color: #555;
+}

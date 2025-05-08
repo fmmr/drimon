@@ -160,6 +160,13 @@ const ChartFactory = {
         }
         
         try {
+            // Use ChartLifecycleManager if available for complete cleanup
+            if (window.ChartLifecycleManager) {
+                return window.ChartLifecycleManager.cleanupChart(chartId);
+            }
+            
+            // Otherwise, fall back to basic cleanup
+            
             // Call Chart.js destroy method
             if (chart.destroy && typeof chart.destroy === 'function') {
                 chart.destroy();

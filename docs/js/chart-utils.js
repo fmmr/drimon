@@ -198,20 +198,55 @@ window.ChartUtils = window.ChartUtils || {
             datasetLabel = `Series ${config.index || 0}`;
         }
         
-        return {
-            label: datasetLabel,
-            data: values,
-            borderColor: config.color,
-            backgroundColor: hasNegativeValues && !isMultiSeries ? 'rgba(0,0,0,0)' : `${config.color}20`,
-            borderWidth: 2,
-            pointRadius: 0,
-            pointHoverRadius: 4,
-            fill: isMultiSeries ? false : !hasNegativeValues,
-            tension: 0.1,
-            yAxisID: yAxisID,
-            _titleKey: config.titleKey,
-            _originalTitle: config.title
-        };
+        // Use ResourcePool if available
+        let datasetConfig;
+        
+        if (window.ResourcePool) {
+            // Get a dataset config from the pool or create a new one if pool doesn't exist
+            const pool = window.ResourcePool.getPool('datasetConfig');
+            if (pool) {
+                // Custom reset function for dataset configuration
+                datasetConfig = pool.acquire(function(config) {
+                    // Keep structure but reset all values
+                    config.data = [];
+                    config.backgroundColor = 'rgba(0, 0, 0, 0)';
+                    config.borderColor = '#000000';
+                    config.borderWidth = 2;
+                    config.pointRadius = 0;
+                    config.pointHoverRadius = 4;
+                    config.tension = 0.1;
+                    config.fill = false;
+                    delete config.label;
+                    delete config.yAxisID;
+                    delete config._titleKey;
+                    delete config._originalTitle;
+                    return config;
+                });
+            }
+        }
+        
+        // If no pool or acquisition failed, create a new object
+        if (!datasetConfig) {
+            datasetConfig = {
+                data: [],
+                borderWidth: 2,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                tension: 0.1
+            };
+        }
+        
+        // Configure the dataset with the provided values
+        datasetConfig.label = datasetLabel;
+        datasetConfig.data = values;
+        datasetConfig.borderColor = config.color;
+        datasetConfig.backgroundColor = hasNegativeValues && !isMultiSeries ? 'rgba(0,0,0,0)' : `${config.color}20`;
+        datasetConfig.fill = isMultiSeries ? false : !hasNegativeValues;
+        datasetConfig.yAxisID = yAxisID;
+        datasetConfig._titleKey = config.titleKey;
+        datasetConfig._originalTitle = config.title;
+        
+        return datasetConfig;
     },
     
     /**

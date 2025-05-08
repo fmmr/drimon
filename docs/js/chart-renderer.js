@@ -639,12 +639,39 @@ function createOrUpdateChart(config, data) {
     
     if (chartInstances[config.id]) {
         // Update existing chart
+        
+        // If ResourcePool is available, handle dataset reuse
+        if (window.ResourcePool && chartInstances[config.id].data && chartInstances[config.id].data.datasets) {
+            const datasetPool = window.ResourcePool.getPool('datasetConfig');
+            if (datasetPool) {
+                // Get current datasets
+                const currentDatasets = chartInstances[config.id].data.datasets;
+                
+                // If the number of datasets is changing, we need to handle addition/removal
+                if (currentDatasets.length !== chartData.datasets.length) {
+                    // If the new chart has fewer datasets, release excess datasets back to the pool
+                    if (currentDatasets.length > chartData.datasets.length) {
+                        // Release excess datasets to the pool
+                        for (let i = chartData.datasets.length; i < currentDatasets.length; i++) {
+                            datasetPool.release(currentDatasets[i]);
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Update chart data and options
         chartInstances[config.id].data = chartData;
         chartInstances[config.id].options = chartOptions;
         chartInstances[config.id].update('none');
         
         // Always recalculate stats to ensure they're correct
         recalculateChartStats(chartInstances[config.id]);
+        
+        // Record update in lifecycle manager
+        if (window.ChartLifecycleManager) {
+            window.ChartLifecycleManager.recordUpdate(config.id);
+        }
     } else {
         // Create new chart
         chartInstances[config.id] = new Chart(canvas, {
@@ -655,6 +682,20 @@ function createOrUpdateChart(config, data) {
         
         // Calculate initial stats for new chart
         recalculateChartStats(chartInstances[config.id]);
+        
+        // Register with lifecycle manager
+        if (window.ChartLifecycleManager) {
+            const container = canvas.closest('.chart');
+            const statsElement = document.getElementById(`stats-${config.id}`);
+            const loadingElement = document.getElementById(`loading-${config.id}`);
+            
+            window.ChartLifecycleManager.registerChart(config.id, chartInstances[config.id], {
+                container,
+                statsElement,
+                loadingElement,
+                config
+            });
+        }
     }
     
     // Apply translations to all chart elements (labels, legend, stats)
@@ -691,10 +732,14 @@ window.resizeAllCharts = function() {
     
     // If layout has changed, reinitialize the entire chart layout
     if (wasMobile !== isMobile) {
-        // Properly destroy all existing chart instances
+        // Properly destroy all existing chart instances using lifecycle manager if available
         Object.keys(chartInstances).forEach(id => {
             if (chartInstances[id]) {
-                chartInstances[id].destroy();
+                if (window.ChartLifecycleManager) {
+                    window.ChartLifecycleManager.cleanupChart(id);
+                } else {
+                    chartInstances[id].destroy();
+                }
                 chartInstances[id] = null;
             }
         });
@@ -800,10 +845,14 @@ async function loadAllCharts(range = 1, results = 8000) {
 window.refreshCharts = function(range, results) {
     const startTime = performance.now();
     
-    // Properly destroy all existing chart instances first
+    // Properly destroy all existing chart instances first, using lifecycle manager if available
     Object.keys(chartInstances).forEach(id => {
         if (chartInstances[id]) {
-            chartInstances[id].destroy();
+            if (window.ChartLifecycleManager) {
+                window.ChartLifecycleManager.cleanupChart(id);
+            } else {
+                chartInstances[id].destroy();
+            }
             chartInstances[id] = null;
         }
     });
