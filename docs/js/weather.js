@@ -155,11 +155,11 @@ function updateWeatherDisplay() {
     let outTempTitle = 'Ute Temperatur';
     let updatedText = 'Oppdatert';
     let sourceText = 'Kilde';
-    
+
     if (window.I18n && typeof window.I18n.translate === 'function') {
         outTempTitle = window.I18n.translate('outTempChart');
         updatedText = window.I18n.translate('time');
-        // Source doesn't need translation
+        sourceText = window.I18n.translate('source');
     }
     
     // Create custom tooltip content

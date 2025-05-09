@@ -121,7 +121,8 @@ window.DriMonTranslations = {
     "dayLength": "Daglengde",
     "nightLength": "Nattlengde",
     "hourSymbol": "t",
-    
+    "source": "Kilde",
+
     // Moon phases
     "newMoon": "Nymåne",
     "waxingCrescent": "Tiltagende måne",
@@ -241,7 +242,8 @@ window.DriMonTranslations = {
     "dayLength": "Day length",
     "nightLength": "Night length",
     "hourSymbol": "h",
-    
+    "source": "Source",
+
     // Moon phases
     "newMoon": "New Moon",
     "waxingCrescent": "Waxing Crescent",
@@ -361,7 +363,8 @@ window.DriMonTranslations = {
     "dayLength": "Duración del día",
     "nightLength": "Duración de la noche",
     "hourSymbol": "h",
-    
+    "source": "Fuente",
+
     // Moon phases
     "newMoon": "Luna Nueva",
     "waxingCrescent": "Luna Creciente",
