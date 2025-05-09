@@ -88,6 +88,7 @@ window.DriMonTranslations = {
     "avg": "Gj.snitt",
     "high": "Høy",
     "now": "Nå",
+    "statsLoading": "Laster statistikk...",
     
     "otherValues": "Andre verdier",
     "temperatures": "Temperaturer",
@@ -207,6 +208,7 @@ window.DriMonTranslations = {
     "avg": "Avg",
     "high": "High",
     "now": "Now",
+    "statsLoading": "Loading statistics...",
     
     "otherValues": "Other values",
     "temperatures": "Temperatures",
@@ -326,6 +328,7 @@ window.DriMonTranslations = {
     "avg": "Prom",
     "high": "Alto",
     "now": "Ahora",
+    "statsLoading": "Cargando estadísticas...",
     
     "otherValues": "Otros valores",
     "temperatures": "Temperaturas",
