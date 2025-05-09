@@ -309,8 +309,8 @@ function createDateRanges(config = null) {
     const allRanges = config && config.ranges
     
     // Split into primary (visible as chips) and secondary (in dropdown) ranges
-    const primaryRanges = allRanges.slice(0, 7); // First 6 ranges as visible chips
-    const secondaryRanges = allRanges.slice(7);  // Remaining ranges go to dropdown
+    const primaryRanges = allRanges.slice(0, 6); // First 6 ranges as visible chips
+    const secondaryRanges = allRanges.slice(6);  // Remaining ranges go to dropdown
     
     // Add primary date chips directly to the container
     primaryRanges.forEach(chip => {
@@ -725,12 +725,12 @@ const HeaderConfig = {
             config: {
                 ranges: [
                     { range: 'default', key: 'defaultDate' },
-                    { range: 'today', key: 'today' },
                     { range: '1', key: 'twoDay' },
                     { range: '2', key: 'threeDay' },
                     { range: '6', key: 'sevenDay' },
                     { range: '13', key: 'fourteenDay' },
                     { range: '30', key: 'thirtyDay' },
+                    { range: 'today', key: 'today' },
                     { range: 'yesterday', key: 'yesterday' },
                     { range: 'this-week', key: 'week' },
                     { range: 'last-week', key: 'lastWeek' },
