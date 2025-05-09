@@ -56,12 +56,13 @@ window.ChartStats = window.ChartStats || {
      * @returns {string} HTML string for the stat item
      */
     createStatHtml: function(label, labelClass, fullLabel, value, unit, formatFunc, config, range, extraClass = '') {
+        // Don't append unit here as formatStatValue already includes it
         return `
         <div class="chart-stat ${extraClass}">
             <span class="chart-stat-label">
                 <span class="chart-stat-label-short">${label}:</span>
                 <span class="chart-stat-label-${labelClass}" data-full-label="${fullLabel}:"></span>
-            </span>${value !== null ? this.formatStatValue(value, config, range) + unit : '—'}
+            </span>${value !== null ? this.formatStatValue(value, config, range) : '—'}
         </div>`;
     },
     
