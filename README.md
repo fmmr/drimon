@@ -24,7 +24,6 @@ DriMon is a web-based visualization platform for monitoring a greenhouse at Rød
 - [Development Guide](/documentation/DEVELOPMENT.md) - Architecture, components, and code organization
 - [Testing Guidelines](/documentation/TESTING.md) - Manual testing procedures and best practices
 - [Future Enhancements](/documentation/FUTURE.md) - Planned features and improvements
-- [Refactoring Plan](/documentation/REFACTORING_PLAN.md) - Code refactoring roadmap
 
 ## Getting Started
 

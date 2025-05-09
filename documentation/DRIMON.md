@@ -129,6 +129,7 @@ The DriMon system was installed in our greenhouse at Rødtangen, Norway, built d
 ## Future Plans
 
 Future enhancements include:
+- Install a webcam, and provide a web-based-GUI for this.
 - Automated watering system
 - Nutrient monitoring and control
 - Additional sensors for soil and air quality
