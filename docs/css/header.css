@@ -427,8 +427,8 @@
         align-items: flex-start;
         flex-wrap: wrap; /* Allow wrapping for mobile */
         background: #f8f9fa;
-        padding: 6px 0; /* Remove horizontal padding to allow child elements to control their own spacing */
-        gap: 5px;
+        padding: 6px 0; /* Minimal vertical padding */
+        gap: 2px; /* Minimal gap between sections */
         position: sticky;
         top: 0;
         z-index: 10;
@@ -526,26 +526,33 @@
         order: 2;
         margin: 0;
         width: calc(100% - 20px);
-        min-height: 30px; /* Ensure container has enough height on mobile */
+        min-height: 46px; /* Increased height to fully prevent vertical scrolling */
+        height: 46px; /* Fixed height to contain all content */
+        overflow-y: hidden; /* Explicitly prevent vertical scrolling */
         /* Already has horizontal scrolling styles from desktop */
         margin: 0 10px;
         box-sizing: border-box;
+        padding-bottom: 5px; /* Space at bottom */
+        padding-top: 5px; /* Space at top */
     }
-    
+
     .date-ranges {
         order: 3;
         margin: 0 10px;
         width: calc(100% - 20px);
         flex-wrap: nowrap; /* Prevent wrapping to next line */
-        gap: 8px;
+        gap: 6px;
         overflow-x: auto; /* Enable horizontal scrolling */
         scrollbar-width: none; /* Hide scrollbar in Firefox */
         -ms-overflow-style: none; /* Hide scrollbar in IE/Edge */
-        padding: 3px 0;
+        padding: 5px 0;
         position: relative;
         -webkit-overflow-scrolling: touch; /* Smooth scrolling on touch devices */
         min-width: 50px; /* Allow shrinking to very small size when needed */
         box-sizing: border-box;
+        min-height: 40px; /* Fixed height to match data container */
+        height: 40px; /* Fixed height */
+        overflow-y: hidden; /* Prevent vertical scrolling */
     }
     
     /* Mobile dropdown styles */
@@ -590,28 +597,31 @@
     
     /* Fix height issue for data-chips on mobile */
     .data-chip {
-        height: 30px; /* Taller height for mobile */
-        min-height: 30px; /* Ensure minimum height for visibility */
+        height: 36px; /* Increased height for mobile */
+        min-height: 36px; /* Ensure minimum height for visibility */
         align-items: center; /* Center content vertically */
-        padding: 5px 12px; /* More generous padding */
-        margin: 0 3px; /* More space between chips */
+        padding: 5px 10px; /* Adjusted padding */
+        margin: 0 4px; /* More space between chips */
         background-color: white; /* Ensure background is visible */
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Add shadow for better visibility */
         border-radius: 16px; /* Keep consistent styling */
+        min-width: 60px; /* Ensure minimum width */
+        box-sizing: border-box; /* Include padding in width calculation */
+        font-size: 0.8rem; /* Slightly smaller font size */
+        white-space: nowrap; /* Prevent text wrapping */
     }
     
     /* Ensure the weather pill also has consistent height on mobile */
     .weather-pill-container {
-        height: 30px; /* Match the data-chip height */
+        height: 36px; /* Match the updated data-chip height */
     }
     
     /* Shared styling for scrollable containers */
     .data-container, .date-ranges {
         position: relative;
-        padding-bottom: 5px; /* More breathing room */
-        padding-top: 3px; /* Space above chips */
+        /* Padding is now set specifically for each container */
         /* Add horizontal padding to improve scrolling experience */
-        padding-left: 5px;
+        padding-left: 6px;
         padding-right: 15px; /* Extra space on the right for better usability */
         /* Ensure both containers behave the same for scrolling */
         display: flex;
@@ -620,6 +630,7 @@
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
         -ms-overflow-style: none;
-        gap: 5px; /* Add space between items */
+        gap: 6px; /* Space between items */
+        align-items: center; /* Center items vertically */
     }
 }
