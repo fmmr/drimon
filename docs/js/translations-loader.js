@@ -130,6 +130,13 @@ window.DriMonTranslations = {
     "hourSymbol": "t",
     "source": "Kilde",
 
+    // Position info
+    "sunPosition": "Sol posisjon",
+    "moonPosition": "Måne posisjon",
+    "direction": "Retning",
+    "height": "Høyde",
+    "notVisible": "Ikke synlig",
+
     // Moon phases
     "newMoon": "Ny",
     "waxingCrescent": "Tiltagende",
@@ -258,6 +265,13 @@ window.DriMonTranslations = {
     "hourSymbol": "h",
     "source": "Source",
 
+    // Position info
+    "sunPosition": "Sun position",
+    "moonPosition": "Moon position",
+    "direction": "Direction",
+    "height": "Height",
+    "notVisible": "Not visible",
+
     // Moon phases
     "newMoon": "New Moon",
     "waxingCrescent": "Waxing Crescent",
@@ -385,6 +399,13 @@ window.DriMonTranslations = {
     "nightLength": "Duración de la noche",
     "hourSymbol": "h",
     "source": "Fuente",
+
+    // Position info
+    "sunPosition": "Posición del sol",
+    "moonPosition": "Posición de la luna",
+    "direction": "Dirección",
+    "height": "Altura",
+    "notVisible": "No visible",
 
     // Moon phases
     "newMoon": "Luna Nueva",

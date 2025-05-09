@@ -41,11 +41,17 @@ window.SunEvents = (function() {
         if (!cachedData || !cacheDate || cacheDate.getTime() !== today.getTime()) {
             // Calculate sun times
             const sunTimes = SunCalc.getTimes(now, LOCATION.lat, LOCATION.lng);
-            
+
+            // Get sun position (azimuth and altitude)
+            const sunPosition = SunCalc.getPosition(now, LOCATION.lat, LOCATION.lng);
+
             // Calculate moon times and illumination
             const moonTimes = SunCalc.getMoonTimes(now, LOCATION.lat, LOCATION.lng);
             const moonIllumination = SunCalc.getMoonIllumination(now);
-            
+
+            // Get moon position (azimuth and altitude)
+            const moonPosition = SunCalc.getMoonPosition(now, LOCATION.lat, LOCATION.lng);
+
             // Generate moon phase svg
             const moonPhaseSvg = generateMoonPhaseSvg(moonIllumination);
             
@@ -71,6 +77,16 @@ window.SunEvents = (function() {
                 minutes: nightLengthRemainingMinutes
             };
             
+            // Format sun and moon positions
+            const formattedSunPosition = formatPosition(sunPosition);
+            const formattedMoonPosition = formatPosition(moonPosition);
+
+            // Check if sun is actually visible (altitude > 0)
+            const isSunVisible = sunPosition.altitude > 0;
+
+            // Check if moon is actually visible (altitude > 0)
+            const isMoonVisible = moonPosition.altitude > 0;
+
             // Create data structure
             cachedData = {
                 sun: {
@@ -79,14 +95,26 @@ window.SunEvents = (function() {
                     dawn: sunTimes.dawn,
                     dusk: sunTimes.dusk,
                     dayLength: dayLengthFormatted,
-                    nightLength: nightLengthFormatted
+                    nightLength: nightLengthFormatted,
+                    position: {
+                        raw: sunPosition,
+                        direction: isSunVisible ? formattedSunPosition.direction : null,
+                        height: isSunVisible ? formattedSunPosition.height : null,
+                        visible: isSunVisible
+                    }
                 },
                 moon: {
                     rise: moonTimes.rise,
                     set: moonTimes.set,
                     illumination: moonIllumination.fraction,
                     phase: moonIllumination.phase,
-                    phaseSvg: moonPhaseSvg
+                    phaseSvg: moonPhaseSvg,
+                    position: {
+                        raw: moonPosition,
+                        direction: isMoonVisible ? formattedMoonPosition.direction : null,
+                        height: isMoonVisible ? formattedMoonPosition.height : null,
+                        visible: isMoonVisible
+                    }
                 }
             };
             
@@ -254,6 +282,45 @@ window.SunEvents = (function() {
     }
     
     /**
+     * Convert azimuth angle (in radians) to compass direction
+     * @param {number} azimuth - Azimuth angle in radians (0 = south, positive = clockwise)
+     * @returns {string} Compass direction as 1-2 letter abbreviation (N, NE, E, etc.)
+     */
+    function azimuthToCompass(azimuth) {
+        // Convert azimuth to degrees and normalize (0-360, with 0 = North)
+        // SunCalc returns azimuth with 0 = South, moving clockwise, so we add 180 degrees to get North as 0
+        const degrees = (azimuth * 180 / Math.PI + 180) % 360;
+
+        // Define compass directions
+        const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'];
+
+        // Calculate index in directions array (each sector is 22.5 degrees)
+        const index = Math.round(degrees / 22.5) % 16;
+
+        return directions[index];
+    }
+
+    /**
+     * Get human-readable text for celestial body position
+     * @param {Object} position - Position object with azimuth and altitude in radians
+     * @returns {Object} Object with direction (compass direction) and height (degrees)
+     */
+    function formatPosition(position) {
+        if (!position) return { direction: '—', height: '—' };
+
+        // Get compass direction from azimuth
+        const direction = azimuthToCompass(position.azimuth);
+
+        // Convert altitude from radians to degrees and round to nearest degree
+        const heightDegrees = Math.round(position.altitude * 180 / Math.PI);
+
+        // Format height with degree symbol
+        const height = `${heightDegrees}°`;
+
+        return { direction, height };
+    }
+
+    /**
      * Get descriptive text for moon phase
      * @param {Object} illumination - Moon illumination data from SunCalc
      * @returns {Object} Phase key for translation and phase value (0-1)
@@ -345,6 +412,16 @@ window.SunEvents = (function() {
             [window.I18n.translate('nightLength')]: nightLengthFormatted
         };
 
+        // Add sun position data
+        const sunPositionLabel = window.I18n.translate('sunPosition');
+        if (data.sun.position.visible) {
+            // Format position with emojis for easier understanding
+            // Use compass emoji for direction and angle emoji for height
+            tooltipData[sunPositionLabel] = `${data.sun.position.direction} · ${data.sun.position.height}`;
+        } else {
+            tooltipData[sunPositionLabel] = window.I18n.translate('notVisible');
+        }
+
         // Add moon data if available
         if (tooltipContent.moonrise && tooltipContent.moonset) {
             tooltipData[window.I18n.translate('moonrise')] = tooltipContent.moonrise;
@@ -354,11 +431,20 @@ window.SunEvents = (function() {
         // Add moon phase
         tooltipData[window.I18n.translate('moonPhase')] = moonPhaseName;
 
+        // Add moon position data
+        const moonPositionLabel = window.I18n.translate('moonPosition');
+        if (data.moon.position.visible) {
+            // Same format as sun position for consistency
+            tooltipData[moonPositionLabel] = `${data.moon.position.direction} · ${data.moon.position.height}`;
+        } else {
+            tooltipData[moonPositionLabel] = window.I18n.translate('notVisible');
+        }
+
         // Format using the HTML tabular tooltip utility
         // Divide the tooltip into two sections - sun events and moon events
         const tooltipText = Utils.formatTabularTooltip(tooltipData, {
             useHTML: true,
-            dividerAfter: window.I18n.translate('nightLength')
+            dividerAfter: window.I18n.translate('sunPosition')
         });
 
         // Use the tooltip directly
