@@ -130,42 +130,49 @@
     filter: drop-shadow(0 0 1px rgba(255,255,255,0.3));
 }
 
-/* Weather pill container and icon styling */
-.weather-pill-container {
+/* Weather data chip styling (aligned with sun-events-chip) */
+.weather-data-chip {
+    background-color: #e8f4fa;
     display: flex;
     align-items: center;
-    position: relative;
-    margin: 0;
-    padding: 0;
-    height: 28px; /* Match the standard data-chip height */
+    gap: 6px;
 }
 
-.weather-icon-container {
+.weather-data-chip .weather-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    position: absolute;
-    left: 8px; /* Position inside the pill */
-    top: 50%;
-    transform: translateY(-50%);
+    flex-shrink: 0;
+    filter: drop-shadow(0 0 1px rgba(0,0,0,0.2));
     width: 16px;
     height: 16px;
-    z-index: 3; /* Ensure icon is on top */
 }
 
-.weather-icon-container object,
-.weather-icon-container img {
+.weather-data-chip .weather-temp-display {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    line-height: 1.2;
+    white-space: nowrap;
+}
+
+.weather-data-chip svg,
+.weather-data-chip object,
+.weather-data-chip img {
     width: 16px;
     height: 16px;
     overflow: visible;
 }
 
-.weather-pill-container .data-chip {
-    padding-left: 28px; /* Extra padding to account for the icon */
-    height: 100%; /* Fill the entire height of the container */
-    box-sizing: border-box; /* Include padding in height calculation */
-    display: flex;
-    align-items: center; /* Ensure content is vertically centered */
+/* Dark mode styling for weather data chip */
+.dark-mode .weather-data-chip {
+    background-color: #2d3b45;
+    color: #e0e0e0;
+}
+
+/* Extra styling for the weather icon in dark mode */
+.dark-mode .weather-data-chip .weather-icon {
+    filter: drop-shadow(0 0 1px rgba(255,255,255,0.3));
 }
 
 /* Colors for different states */
@@ -611,9 +618,12 @@
         white-space: nowrap; /* Prevent text wrapping */
     }
     
-    /* Ensure the weather pill also has consistent height on mobile */
-    .weather-pill-container {
+    /* Ensure the weather data chip has consistent styling on mobile */
+    .weather-data-chip {
         height: 36px; /* Match the updated data-chip height */
+        min-height: 36px;
+        align-items: center;
+        padding: 5px 10px;
     }
     
     /* Shared styling for scrollable containers */

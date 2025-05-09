@@ -26,13 +26,8 @@ async function fetchWeather() {
         setTimeout(fetchWeather, 500);
         return;
     }
-    
-    // Skip for Safari
-    if (/^((?!chrome|android).)*safari/i.test(navigator.userAgent)) {
-        if (elements.metLink) elements.metLink.style.display = 'none';
-        if (elements.weatherIcon) elements.weatherIcon.style.display = 'none';
-        return;
-    }
+
+    // No longer skipping for Safari - our new implementation should work on all browsers
     
     // Røtangen coordinates
     const url = 'https://api.met.no/weatherapi/nowcast/2.0/complete?lat=59.532213&lon=10.418231';
@@ -57,33 +52,61 @@ async function fetchWeather() {
         let source = 'yr.no';
         
         try {
-            // Try direct API call
+            // Check if we're on Safari
+            const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+
+            // For Safari, go directly to proxy to avoid CORS issues
+            if (isSafari) {
+                throw new Error('Safari detected, skipping direct API call');
+            }
+
+            // Try direct API call for non-Safari browsers
             const response = await fetch(url, {
                 headers: {
                     'Accept': 'application/json',
-                    'User-Agent': 'drimon/1.0 (https://drimon.rodland.no)'
+                    'User-Agent': 'DriMon/1.0 (https://drimon.rodland.no; contact@drimon.rodland.no)'
                 },
-                mode: 'cors'
+                mode: 'cors',
+                credentials: 'omit' // Explicitly omit credentials to avoid CORS issues
             });
-            
+
             if (!response.ok) throw new Error(`API status: ${response.status}`);
             data = await response.json();
-            
+
         } catch (err) {
             // Fall back to proxy
             log('Direct API failed, trying proxy', err);
-            const proxyUrl = 'https://cors-anywhere.herokuapp.com/';
-            const response = await fetch(proxyUrl + url, {
-                headers: {
-                    'Accept': 'application/json',
-                    'User-Agent': 'drimon/1.0 (https://drimon.rodland.no)',
-                    'Origin': 'https://drimon.rodland.no'
-                }
-            });
-            
-            if (!response.ok) throw new Error(`Proxy status: ${response.status}`);
-            data = await response.json();
-            source = 'yr.no (proxy)';
+
+            // Use a more reliable proxy that works with Safari
+            const proxyUrl = 'https://corsproxy.io/?';
+
+            try {
+                const response = await fetch(proxyUrl + encodeURIComponent(url), {
+                    headers: {
+                        'Accept': 'application/json',
+                        'User-Agent': 'DriMon/1.0 (https://drimon.rodland.no; contact@drimon.rodland.no)',
+                        'Origin': 'https://drimon.rodland.no'
+                    }
+                });
+
+                if (!response.ok) throw new Error(`Proxy status: ${response.status}`);
+                data = await response.json();
+                source = 'yr.no (proxy)';
+            } catch (proxyErr) {
+                log('Proxy failed too, trying another proxy', proxyErr);
+
+                // Try one more proxy as a last resort
+                const backupProxyUrl = 'https://api.allorigins.win/raw?url=';
+                const backupResponse = await fetch(backupProxyUrl + encodeURIComponent(url), {
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (!backupResponse.ok) throw proxyErr; // Re-throw if backup also fails
+                data = await backupResponse.json();
+                source = 'yr.no (backup proxy)';
+            }
         }
         
         // Add source info and cache the data
@@ -126,7 +149,7 @@ function updateWeatherDisplay() {
     
     // Update temperature display
     elements.metTemp.innerHTML = `yr: ${temperature} °C`;
-    elements.metLink.className = `data-chip ${temperature > 25 ? 'high' : temperature < 15 ? 'low' : 'norm'}`;
+    elements.metLink.className = `data-chip weather-data-chip ${temperature > 25 ? 'high' : temperature < 15 ? 'low' : 'norm'}`;
     
     // Get translated title using I18n system
     let outTempTitle = 'Ute Temperatur';
@@ -149,12 +172,12 @@ function updateWeatherDisplay() {
     // Update weather icon if available
     const symbolData = latestWeatherData.properties.timeseries[0].data.next_1_hours?.summary;
     if (symbolData?.symbol_code && elements.weatherIcon) {
+        // Use direct SVG element instead of object tag for better cross-browser compatibility
         elements.weatherIcon.innerHTML = `
-            <object type="image/svg+xml" data="weather-icons/${symbolData.symbol_code}.svg" 
-                    width="16" height="16" class="weather-svg">
-                <img src="weather-icons/${symbolData.symbol_code}.svg" 
-                     alt="${symbolData.symbol_code}" width="16" height="16">
-            </object>
+            <svg class="weather-svg" width="16" height="16" viewBox="0 0 100 100">
+                <image href="weather-icons/${symbolData.symbol_code}.svg"
+                      width="100" height="100" preserveAspectRatio="xMidYMid meet" />
+            </svg>
         `;
         elements.weatherIcon.style.display = 'flex';
     }

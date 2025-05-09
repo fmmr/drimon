@@ -119,45 +119,50 @@ function createDataChip(id, iconClass, title, initialText = 'loading') {
 }
 
 /**
- * Creates the weather pill container element
- * @returns {HTMLElement} The weather pill container element
+ * Creates the weather data chip, restructured to match the sun-events-chip pattern
+ * @returns {HTMLElement} The weather data chip element
  */
 function createWeatherPill() {
-    const weatherContainer = document.createElement('div');
-    weatherContainer.className = 'weather-pill-container';
-    
-    const iconContainer = document.createElement('div');
-    iconContainer.id = 'weather-icon-container';
-    iconContainer.className = 'weather-icon-container';
-    
-    const metLink = document.createElement('a');
-    metLink.href = 'https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/1-60206/Norge/Akershus/Asker/R%C3%B8dtangen';
-    metLink.className = 'data-chip';
-    metLink.id = 'met-link';
-    
-    const translatedTitle = window.I18n.translate('outTempChart');
-    
-    // Use data-tooltip-content instead of title for our custom tooltip
-    metLink.setAttribute('data-tooltip-content', translatedTitle);
-    metLink.setAttribute('data-has-tooltip', 'true');
-    
-    // Add data-i18n attribute for later translation updates
-    metLink.setAttribute('data-i18n-title', 'outTempChart');
-    
+    // Create a single data-chip as the main container (like sun-events-chip)
+    const chip = document.createElement('a');
+    chip.href = 'https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/1-60206/Norge/Akershus/Asker/R%C3%B8dtangen';
+    chip.className = 'data-chip weather-data-chip';
+    chip.id = 'met-link';
+
+    // Create weather icon container
+    const weatherIcon = document.createElement('div');
+    weatherIcon.className = 'weather-icon';
+    weatherIcon.id = 'weather-icon-container';
+
+    // Default empty SVG placeholder (will be replaced by weather.js)
+    weatherIcon.innerHTML = `<svg viewBox="0 0 20 20" width="16" height="16" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="10" cy="10" r="9" fill="transparent" stroke="#666" stroke-width="0.5" />
+    </svg>`;
+
+    // Create temperature display container
+    const temperatureDisplay = document.createElement('div');
+    temperatureDisplay.className = 'weather-temp-display';
+
+    // Temperature text element
     const metTemp = document.createElement('span');
     metTemp.id = 'met-temp';
-    
-    const loadingText = window.I18n.translate('loading');
-    metTemp.textContent = loadingText;
-    
-    // Add data-i18n attribute for later translation updates
+    metTemp.textContent = window.I18n.translate('loading');
     metTemp.setAttribute('data-i18n', 'loading');
-    
-    metLink.appendChild(metTemp);
-    weatherContainer.appendChild(iconContainer);
-    weatherContainer.appendChild(metLink);
-    
-    return weatherContainer;
+
+    // Add elements to temperature display
+    temperatureDisplay.appendChild(metTemp);
+
+    // Add icon and temperature to chip
+    chip.appendChild(weatherIcon);
+    chip.appendChild(temperatureDisplay);
+
+    // Add tooltip data
+    const translatedTitle = window.I18n.translate('outTempChart');
+    chip.setAttribute('data-tooltip-content', translatedTitle);
+    chip.setAttribute('data-has-tooltip', 'true');
+    chip.setAttribute('data-i18n-title', 'outTempChart');
+
+    return chip;
 }
 
 /**
