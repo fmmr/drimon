@@ -12,6 +12,9 @@ window.SunEvents = (function() {
         lat: 59.532221,
         lng: 10.418494
     };
+
+    // Visible planets to include in the tooltip
+    const VISIBLE_PLANETS = ['venus', 'mars', 'jupiter', 'saturn', 'mercury'];
     
     // Moon phase names
     const MOON_PHASES = {
@@ -87,6 +90,28 @@ window.SunEvents = (function() {
             // Check if moon is actually visible (altitude > 0)
             const isMoonVisible = moonPosition.altitude > 0;
 
+            // Calculate planet positions if the planetary module is available
+            let planets = {};
+            if (window.PlanetPositions) {
+                const planetPositions = window.PlanetPositions.calculatePlanetPositions(now, LOCATION);
+
+                // Format positions for all planets
+                VISIBLE_PLANETS.forEach(planet => {
+                    if (planetPositions[planet] && planetPositions[planet].visible) {
+                        planets[planet] = {
+                            raw: planetPositions[planet],
+                            direction: formatPosition(planetPositions[planet]).direction,
+                            height: formatPosition(planetPositions[planet]).height,
+                            visible: true
+                        };
+                    } else {
+                        planets[planet] = {
+                            visible: false
+                        };
+                    }
+                });
+            }
+
             // Create data structure
             cachedData = {
                 sun: {
@@ -115,7 +140,8 @@ window.SunEvents = (function() {
                         height: isMoonVisible ? formattedMoonPosition.height : null,
                         visible: isMoonVisible
                     }
-                }
+                },
+                planets: planets
             };
             
             // Update cache date
@@ -440,11 +466,28 @@ window.SunEvents = (function() {
             tooltipData[moonPositionLabel] = window.I18n.translate('notVisible');
         }
 
+        // Add planet positions section
+        if (data.planets && Object.keys(data.planets).length > 0) {
+            // First add a visible planets section label
+            tooltipData[window.I18n.translate('planetPositions')] = '';
+
+            // Add each visible planet
+            VISIBLE_PLANETS.forEach(planetName => {
+                const planet = data.planets[planetName];
+                if (planet && planet.visible) {
+                    const translatedName = window.I18n.translate(planetName);
+                    tooltipData[translatedName] = `${planet.direction} · ${planet.height}`;
+                }
+            });
+        }
+
         // Format using the HTML tabular tooltip utility
-        // Divide the tooltip into two sections - sun events and moon events
+        // Divide the tooltip into sections with dividers
         const tooltipText = Utils.formatTabularTooltip(tooltipData, {
             useHTML: true,
-            dividerAfter: window.I18n.translate('sunPosition')
+            dividerAfter: window.I18n.translate('sunPosition'),
+            // Add a second divider after moon phase if planets are available
+            secondDividerAfter: window.I18n.translate('moonPosition')
         });
 
         // Use the tooltip directly

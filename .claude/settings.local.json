@@ -31,7 +31,9 @@
       "Bash(python3:*)",
       "Bash(python:*)",
       "Bash(sed:*)",
-      "Bash(/Users/fmr/projects/drimon/docs/js/core/translations*)"
+      "Bash(/Users/fmr/projects/drimon/docs/js/core/translations*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:www.npmjs.com)"
     ],
     "deny": []
   }

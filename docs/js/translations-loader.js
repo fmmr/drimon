@@ -136,6 +136,14 @@ window.DriMonTranslations = {
     "direction": "Retning",
     "height": "Høyde",
     "notVisible": "Ikke synlig",
+    "planetPositions": "Planeter",
+
+    // Planet names
+    "mercury": "Merkur",
+    "venus": "Venus",
+    "mars": "Mars",
+    "jupiter": "Jupiter",
+    "saturn": "Saturn",
 
     // Moon phases
     "newMoon": "Ny",
@@ -271,6 +279,14 @@ window.DriMonTranslations = {
     "direction": "Direction",
     "height": "Height",
     "notVisible": "Not visible",
+    "planetPositions": "Planets",
+
+    // Planet names
+    "mercury": "Mercury",
+    "venus": "Venus",
+    "mars": "Mars",
+    "jupiter": "Jupiter",
+    "saturn": "Saturn",
 
     // Moon phases
     "newMoon": "New Moon",
@@ -406,6 +422,14 @@ window.DriMonTranslations = {
     "direction": "Dirección",
     "height": "Altura",
     "notVisible": "No visible",
+    "planetPositions": "Planetas",
+
+    // Planet names
+    "mercury": "Mercurio",
+    "venus": "Venus",
+    "mars": "Marte",
+    "jupiter": "Júpiter",
+    "saturn": "Saturno",
 
     // Moon phases
     "newMoon": "Luna Nueva",
