@@ -31,7 +31,7 @@ async function fetchWeather() {
     
     // Røtangen coordinates
     const url = 'https://api.met.no/weatherapi/nowcast/2.0/complete?lat=59.532213&lon=10.418231';
-    const cacheTTL = 10 * 60 * 1000; // 10 minutes
+    const cacheTTL = 3 * 60 * 1000; // 3 minutes
     
     try {
         // Check cache first
@@ -139,33 +139,105 @@ function updateDisplay(data) {
 function updateWeatherDisplay() {
     // Skip if we don't have weather data yet
     if (!latestWeatherData) return;
-    
+
     const elements = getWeatherElements();
     if (!elements.metTemp) return;
-    
-    const temperature = Math.round(latestWeatherData.properties.timeseries[0].data.instant.details.air_temperature * 10) / 10;
-    const lastUpdated = moment(latestWeatherData.properties.timeseries[0].time).format('L LTS');
+
+    // Get all the weather data from the first timeseries entry
+    const details = latestWeatherData.properties.timeseries[0].data.instant.details;
+    const temperature = Math.round(details.air_temperature * 10) / 10;
+    const humidity = details.relative_humidity ? Math.round(details.relative_humidity) : null;
+    const windDirection = details.wind_from_direction ? Math.round(details.wind_from_direction) : null;
+    const windSpeed = details.wind_speed ? Math.round(details.wind_speed * 10) / 10 : null;
+    const windGust = details.wind_speed_of_gust ? Math.round(details.wind_speed_of_gust * 10) / 10 : null;
+
+    // Get precipitation data from next_1_hours if available
+    const precipitationData = latestWeatherData.properties.timeseries[0].data.next_1_hours?.details;
+    const precipitation = precipitationData?.precipitation_amount !== undefined ?
+                         Math.round(precipitationData.precipitation_amount * 10) / 10 : null;
+
+    // Get all relevant timestamps:
+    // 1. When the API data was updated at met.no
+    const metaUpdated = latestWeatherData.properties.meta?.updated_at ?
+                      moment(latestWeatherData.properties.meta.updated_at).format('HH:mm:ss') : null;
+    // 2. The forecast time (showing just time since it's the current conditions)
+    const forecastTime = moment(latestWeatherData.properties.timeseries[0].time).format('HH:mm:ss');
+    // 3. When we fetched the data locally (current time)
+    const fetchedTime = moment().format('HH:mm:ss');
     const source = latestWeatherData._source || 'yr.no';
-    
-    // Update temperature display
+
+    // Update temperature display in the data chip
     elements.metTemp.innerHTML = `yr: ${temperature} °C`;
     elements.metLink.className = `data-chip weather-data-chip ${temperature > 25 ? 'high' : temperature < 15 ? 'low' : 'norm'}`;
-    
-    // Get translated title using I18n system
+
+    // Get translated labels using I18n system
     let outTempTitle = 'Ute Temperatur';
     let updatedText = 'Oppdatert';
     let sourceText = 'Kilde';
+    let humidityText = 'Luftfuktighet';
+    let windDirectionText = 'Vindretning';
+    let windSpeedText = 'Vindhastighet';
+    let gustText = 'Vindkast';
+    let precipitationText = 'Nedbør';
+    let forecastTimeText = 'Prognose';
+    let fetchedTimeText = 'Hentet';
 
     if (window.I18n && typeof window.I18n.translate === 'function') {
         outTempTitle = window.I18n.translate('outTempChart');
         updatedText = window.I18n.translate('time');
         sourceText = window.I18n.translate('source');
+        humidityText = window.I18n.translate('humidity');
+        windDirectionText = window.I18n.translate('windDirection');
+        windSpeedText = window.I18n.translate('windSpeed');
+        gustText = window.I18n.translate('gust');
+        precipitationText = window.I18n.translate('precipitation');
+        forecastTimeText = window.I18n.translate('forecastTime');
+        fetchedTimeText = window.I18n.translate('fetchedTime');
     }
-    
-    // Create custom tooltip content
-    const weatherTooltip = `${outTempTitle}: ${temperature} °C\n${updatedText}: ${lastUpdated}\n${sourceText}: ${source}`;
-    
-    // Set the tooltip data attribute instead of title attribute
+
+    // Helper function to convert degree to cardinal direction
+    function degreesToCardinal(degrees) {
+        if (degrees === null || degrees === undefined) return '';
+        const cardinals = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW', 'N'];
+        const index = Math.round(degrees / 22.5) % 16;
+        return cardinals[index];
+    }
+
+    // Create custom tooltip content with all available weather data
+    let weatherTooltip = `${outTempTitle}: ${temperature} °C`;
+
+    // Add other details if available
+    if (humidity !== null) {
+        weatherTooltip += `\n${humidityText}: ${humidity}%`;
+    }
+
+    if (windSpeed !== null) {
+        const direction = degreesToCardinal(windDirection);
+        weatherTooltip += `\n${windSpeedText}: ${windSpeed} m/s`;
+
+        if (direction) {
+            weatherTooltip += ` (${direction})`;
+        }
+    }
+
+    if (windGust !== null && windGust > windSpeed) {
+        weatherTooltip += `\n${gustText}: ${windGust} m/s`;
+    }
+
+    if (precipitation !== null) {
+        weatherTooltip += `\n${precipitationText}: ${precipitation} mm`;
+    }
+
+    // Add all timestamps and source at the end - order: Updated, Forecast, Fetched
+    weatherTooltip += `\n\n`;
+    if (metaUpdated) {
+        weatherTooltip += `${updatedText}: ${metaUpdated}\n`;
+    }
+    weatherTooltip += `${forecastTimeText}: ${forecastTime}\n`;
+    weatherTooltip += `${fetchedTimeText}: ${fetchedTime}\n`;
+    weatherTooltip += `${sourceText}: ${source}`;
+
+    // Set the tooltip data attribute
     elements.metLink.setAttribute('data-tooltip-content', weatherTooltip);
     elements.metLink.setAttribute('data-has-tooltip', 'true');
     
@@ -186,5 +258,5 @@ function updateWeatherDisplay() {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     fetchWeather();
-    setInterval(fetchWeather, 10 * 60 * 1000); // Refresh every 10 minutes
+    setInterval(fetchWeather, 3 * 60 * 1000); // Refresh every 3 minutes to match cache TTL
 });

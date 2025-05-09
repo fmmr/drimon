@@ -123,9 +123,14 @@ function createDataChip(id, iconClass, title, initialText = 'loading') {
  * @returns {HTMLElement} The weather data chip element
  */
 function createWeatherPill() {
+    // Use div for mobile and anchor for desktop
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+
     // Create a single data-chip as the main container (like sun-events-chip)
-    const chip = document.createElement('a');
-    chip.href = 'https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/1-60206/Norge/Akershus/Asker/R%C3%B8dtangen';
+    const chip = document.createElement(isMobile ? 'div' : 'a');
+    if (!isMobile) {
+        chip.href = 'https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/1-60206/Norge/Akershus/Asker/R%C3%B8dtangen';
+    }
     chip.className = 'data-chip weather-data-chip';
     chip.id = 'met-link';
 

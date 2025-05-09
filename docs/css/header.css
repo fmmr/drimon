@@ -138,6 +138,16 @@
     gap: 6px;
 }
 
+/* Add subtle visual indicator for desktop (link) version */
+@media (min-width: 769px) {
+    a.weather-data-chip:after {
+        content: "↗";
+        font-size: 8px;
+        opacity: 0.6;
+        margin-left: 3px;
+    }
+}
+
 .weather-data-chip .weather-icon {
     display: flex;
     align-items: center;
