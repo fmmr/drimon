@@ -1,3 +1,4 @@
+
 /**
  * @file translations-loader.js
  * @description Pre-loads translations for the DriMon application
@@ -34,7 +35,7 @@ window.DriMonTranslations = {
     "battery": "Batteri",
     "batteryVoltage": "Batteri Spenning",
     "light": "Lysnivå",
-    "window": "Vindusåpning",
+    "window": "Vindu",
     "time": "Sist oppdatert",
     "BME": "BME",
     "AHT": "AHT",
@@ -153,7 +154,7 @@ window.DriMonTranslations = {
     "battery": "Battery",
     "batteryVoltage": "Battery Voltage",
     "light": "Light Level",
-    "window": "Window Opening",
+    "window": "Window",
     "time": "Last updated",
     "BME": "BME",
     "AHT": "AHT",
@@ -272,7 +273,7 @@ window.DriMonTranslations = {
     "battery": "Batería",
     "batteryVoltage": "Voltaje de Batería",
     "light": "Nivel de Luz",
-    "window": "Apertura de Ventana",
+    "window": "Ventana",
     "time": "Última actualización",
     "BME": "BME",
     "AHT": "AHT",

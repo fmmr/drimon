@@ -226,7 +226,7 @@ function updateUIWithLatestData() {
     elements.window.parentElement.className = `data-chip`;
     
     // Set tooltip content to show the actual value
-    const windowTooltip = `${window.I18n.translate('window')}: ${displayWindowState} (${latestData.windowOpening}mm)`;
+    const windowTooltip = `${window.I18n.translate('window')}: ${latestData.windowOpening}mm\n${displayWindowState}`;
     elements.window.parentElement.setAttribute('data-tooltip-content', windowTooltip);
     elements.window.parentElement.setAttribute('data-has-tooltip', 'true');
     
@@ -261,7 +261,7 @@ function updateUIWithLatestData() {
     elements.light.parentElement.className = `data-chip`;
     
     // Set tooltip content to show the actual light value
-    const lightTooltip = `${window.I18n.translate('light')}: ${displayLightState} (${latestData.light} lux)`;
+    const lightTooltip = `${window.I18n.translate('ceiling')}: ${latestData.light} lux\n${displayLightState}`;
     elements.light.parentElement.setAttribute('data-tooltip-content', lightTooltip);
     elements.light.parentElement.setAttribute('data-has-tooltip', 'true');
 
