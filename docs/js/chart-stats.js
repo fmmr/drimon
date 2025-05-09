@@ -124,29 +124,60 @@ window.ChartStats = window.ChartStats || {
      */
     recalculateChartStats: function(chart) {
         if (!chart || !chart.data || !chart.data.datasets) return;
-        
+
         // Get chart info
         const chartId = chart.canvas.id;
         const chartConfig = window.chartConfigs.find(c => c.id === chartId);
         if (!chartConfig) return;
-        
-        const isMultiSeries = chartConfig.series && 
-                             Array.isArray(chartConfig.series) && 
+
+        const isMultiSeries = chartConfig.series &&
+                             Array.isArray(chartConfig.series) &&
                              chartConfig.series.length > 1;
-        
+
         // Get active datasets using utility function
         const activeDatasets = window.ChartUtils.getActiveDatasets(chart);
-        
-        // Calculate statistics using centralized Utils function
+
+        // For multi-series charts, calculate individual series stats
+        if (isMultiSeries) {
+            // Process each dataset and dispatch individual events
+            activeDatasets.forEach((dataset, index) => {
+                // Skip if dataset doesn't have data
+                if (!dataset?.data) return;
+
+                // Calculate statistics for this individual dataset
+                const seriesStats = window.Utils.calculateStatistics({
+                    datasets: [dataset]
+                });
+
+                // Get series config if available
+                const seriesConfig = chartConfig.series && chartConfig.series[index] ?
+                    chartConfig.series[index] : null;
+
+                // Dispatch event for this series
+                if (seriesConfig) {
+                    document.dispatchEvent(new CustomEvent('chart:stats:updated', {
+                        detail: {
+                            chartId,
+                            stats: seriesStats,
+                            isMultiSeries: true,
+                            unit: chartConfig.unit || '',
+                            seriesData: seriesConfig
+                        }
+                    }));
+                }
+            });
+        }
+
+        // Calculate combined statistics using centralized Utils function
         const stats = window.Utils.calculateStatistics({
             datasets: activeDatasets
         });
-        
+
         // If this is the temperature chart, make sure we have the current value
         if (chartId === 'chart-temp' && window.latestData && window.latestData.temperature !== null) {
             stats.currentValue = window.latestData.temperature;
         }
-        
+
         // Update the stats display
         this.updateChartStats(chartId, stats, isMultiSeries);
     },
