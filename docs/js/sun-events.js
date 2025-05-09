@@ -15,6 +15,14 @@ window.SunEvents = (function() {
 
     // Visible planets to include in the tooltip
     const VISIBLE_PLANETS = ['venus', 'mars', 'jupiter', 'saturn', 'mercury'];
+
+    // Solstice dates for day length comparison
+    const SOLSTICES = {
+        // Definition of solstices (approximate dates, recalculated each year)
+        // For accurate calculations, we should look up exact dates for each year
+        SUMMER: { month: 6, day: 21 },  // June 21
+        WINTER: { month: 12, day: 21 }  // December 21
+    };
     
     // Moon phase names
     const MOON_PHASES = {
@@ -58,27 +66,24 @@ window.SunEvents = (function() {
             // Generate moon phase svg
             const moonPhaseSvg = generateMoonPhaseSvg(moonIllumination);
             
-            // Calculate day and night length
+            // Calculate day and night length using our utility function
+            const dayLength = calculateDayLength(now);
             const dayLengthMs = sunTimes.sunset.getTime() - sunTimes.sunrise.getTime();
-            const dayLengthMinutes = Math.round(dayLengthMs / 60000);
-            const dayLengthHours = Math.floor(dayLengthMinutes / 60);
-            const dayLengthRemainingMinutes = dayLengthMinutes % 60;
-            
+
+            // Calculate night length
             const nightLengthMs = (24 * 60 * 60 * 1000) - dayLengthMs;
             const nightLengthMinutes = Math.round(nightLengthMs / 60000);
             const nightLengthHours = Math.floor(nightLengthMinutes / 60);
             const nightLengthRemainingMinutes = nightLengthMinutes % 60;
-            
-            // Will be formatted correctly when displayed, store the raw values
-            const dayLengthFormatted = {
-                hours: dayLengthHours,
-                minutes: dayLengthRemainingMinutes
-            };
-            
+
+            // Format night length
             const nightLengthFormatted = {
                 hours: nightLengthHours,
                 minutes: nightLengthRemainingMinutes
             };
+
+            // Calculate day length change since last solstice
+            const dayLengthChange = calculateDayLengthChange(now, dayLength);
             
             // Format sun and moon positions
             const formattedSunPosition = formatPosition(sunPosition);
@@ -119,8 +124,9 @@ window.SunEvents = (function() {
                     sunset: sunTimes.sunset,
                     dawn: sunTimes.dawn,
                     dusk: sunTimes.dusk,
-                    dayLength: dayLengthFormatted,
+                    dayLength: dayLength.formatted,
                     nightLength: nightLengthFormatted,
+                    dayLengthChange: dayLengthChange,
                     position: {
                         raw: sunPosition,
                         direction: isSunVisible ? formattedSunPosition.direction : null,
@@ -327,6 +333,108 @@ window.SunEvents = (function() {
     }
 
     /**
+     * Calculate day length at a given date
+     * @param {Date} date - Date to calculate for
+     * @returns {Object} Object with dayLengthMinutes and formatted hours/minutes
+     */
+    function calculateDayLength(date) {
+        // Calculate sun times for the given date
+        const sunTimes = SunCalc.getTimes(date, LOCATION.lat, LOCATION.lng);
+
+        // Calculate day length in milliseconds
+        const dayLengthMs = sunTimes.sunset.getTime() - sunTimes.sunrise.getTime();
+
+        // Convert to minutes
+        const dayLengthMinutes = Math.round(dayLengthMs / 60000);
+
+        // Convert to hours and minutes
+        const hours = Math.floor(dayLengthMinutes / 60);
+        const minutes = dayLengthMinutes % 60;
+
+        return {
+            totalMinutes: dayLengthMinutes,
+            formatted: {
+                hours: hours,
+                minutes: minutes
+            }
+        };
+    }
+
+    /**
+     * Find the last solstice date relative to the given date
+     * @param {Date} currentDate - Reference date
+     * @returns {Object} Last solstice info with date and type
+     */
+    function findLastSolstice(currentDate) {
+        const year = currentDate.getFullYear();
+        const month = currentDate.getMonth() + 1; // JS months are 0-indexed
+        const day = currentDate.getDate();
+
+        // Create dates for solstices this year
+        const summerSolsticeThisYear = new Date(year, SOLSTICES.SUMMER.month - 1, SOLSTICES.SUMMER.day);
+        const winterSolsticeThisYear = new Date(year, SOLSTICES.WINTER.month - 1, SOLSTICES.WINTER.day);
+
+        // Create dates for solstices last year (in case we're in Jan-Jun before summer solstice)
+        const summerSolsticeLastYear = new Date(year - 1, SOLSTICES.SUMMER.month - 1, SOLSTICES.SUMMER.day);
+        const winterSolsticeLastYear = new Date(year - 1, SOLSTICES.WINTER.month - 1, SOLSTICES.WINTER.day);
+
+        // Determine which solstice was most recent
+        let lastSolstice = null;
+        let solsticeType = null;
+
+        if (currentDate >= summerSolsticeThisYear) {
+            // After summer solstice this year, it's the most recent
+            lastSolstice = summerSolsticeThisYear;
+            solsticeType = 'SUMMER';
+        } else if (currentDate >= winterSolsticeLastYear) {
+            // Between winter solstice last year and summer solstice this year
+            lastSolstice = winterSolsticeLastYear;
+            solsticeType = 'WINTER';
+        } else {
+            // Very early in the year, last solstice was summer solstice of last year
+            lastSolstice = summerSolsticeLastYear;
+            solsticeType = 'SUMMER';
+        }
+
+        return {
+            date: lastSolstice,
+            type: solsticeType
+        };
+    }
+
+    /**
+     * Calculate day length change since the last solstice
+     * @param {Date} currentDate - Current date to compare from
+     * @param {Object} currentDayLength - Current day length in minutes
+     * @returns {Object} Object with change info and formatted result
+     */
+    function calculateDayLengthChange(currentDate, currentDayLength) {
+        // Find the last solstice
+        const lastSolstice = findLastSolstice(currentDate);
+
+        // Calculate day length at the solstice
+        const solsticeDayLength = calculateDayLength(lastSolstice.date);
+
+        // Calculate the difference in minutes
+        const diffMinutes = currentDayLength.totalMinutes - solsticeDayLength.totalMinutes;
+
+        // Convert to hours and minutes (absolute value)
+        const absDiffMinutes = Math.abs(diffMinutes);
+        const hours = Math.floor(absDiffMinutes / 60);
+        const minutes = absDiffMinutes % 60;
+
+        return {
+            solstice: lastSolstice,
+            diffMinutes: diffMinutes,
+            formatted: {
+                hours: hours,
+                minutes: minutes
+            },
+            increasing: diffMinutes > 0
+        };
+    }
+
+    /**
      * Get human-readable text for celestial body position
      * @param {Object} position - Position object with azimuth and altitude in radians
      * @returns {Object} Object with direction (compass direction) and height (degrees)
@@ -437,6 +545,29 @@ window.SunEvents = (function() {
             [window.I18n.translate('dayLength')]: dayLengthFormatted,
             [window.I18n.translate('nightLength')]: nightLengthFormatted
         };
+
+        // Add day length change information
+        if (data.sun.dayLengthChange) {
+            const hourSymbol = window.I18n.translate('hourSymbol');
+            const change = data.sun.dayLengthChange;
+            const hours = change.formatted.hours;
+            const minutes = change.formatted.minutes;
+
+            // Format: "4t 23m"
+            const changeFormatted = `${hours}${hourSymbol} ${minutes}m`;
+
+            // Different label depending on whether days are getting longer or shorter
+            let changeLabel;
+            if (change.solstice.type === 'WINTER') {
+                // After winter solstice, days are getting longer
+                changeLabel = window.I18n.translate('dayLengthIncrease');
+            } else {
+                // After summer solstice, days are getting shorter
+                changeLabel = window.I18n.translate('dayLengthDecrease');
+            }
+
+            tooltipData[changeLabel] = changeFormatted;
+        }
 
         // Add sun position data
         const sunPositionLabel = window.I18n.translate('sunPosition');
