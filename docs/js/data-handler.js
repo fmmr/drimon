@@ -3,7 +3,7 @@ function getElements() {
     return {
         temperature: document.getElementById('temperature'),
         battery: document.getElementById('battery'),
-        batteryVolt: document.getElementById('batteryVolt'),
+        // batteryVolt removed from header so don't include it here
         window: document.getElementById('window'),
         pressure: document.getElementById('pressure'),
         light: document.getElementById('light'),
@@ -42,7 +42,9 @@ document.addEventListener('languageChanged', () => {
 // Weather functions are now in weather.js
 
 // Store the latest data values for re-use when language changes
-let latestData = {
+// Expose globally so other components can access it
+window.latestData = {
+    // Initial values
     temperature: null,
     battery: null,
     batteryVolt: null,
@@ -53,6 +55,9 @@ let latestData = {
     lastUpdated: null,
     createdAt: null
 };
+
+// Local reference for the module
+let latestData = window.latestData;
 
 async function fetchData() {
     try {
@@ -181,6 +186,11 @@ function updateUIWithLatestData() {
     elements.battery.innerHTML = `${latestData.battery} %`;
     elements.battery.parentElement.className = `data-chip ${getBatteryClassName(latestData.battery)}`;
     
+    // Set tooltip content for battery that includes voltage
+    const batteryTooltip = `${window.I18n.translate('battery')}: ${latestData.battery}%\n${window.I18n.translate('batteryVoltage')}: ${latestData.batteryVolt}V`;
+    elements.battery.parentElement.setAttribute('data-tooltip-content', batteryTooltip);
+    elements.battery.parentElement.setAttribute('data-has-tooltip', 'true');
+    
     // Update battery icon based on level
     const batteryIcon = elements.battery.parentElement.querySelector('i');
     if (batteryIcon) {
@@ -199,8 +209,7 @@ function updateUIWithLatestData() {
         }
     }
 
-    elements.batteryVolt.innerHTML = `${latestData.batteryVolt} v`;
-    elements.batteryVolt.parentElement.className = `data-chip ${getBatteryClassName(latestData.battery)}`;
+    // Battery voltage element is no longer shown as a separate chip
     
     // Get translated window state using I18n system
     const windowState = getWindowText(latestData.windowOpening);
@@ -258,7 +267,11 @@ function updateUIWithLatestData() {
 
     elements.timeSince.textContent = latestData.timeSince;
     elements.timeSince.setAttribute('data-timestamp', latestData.createdAt.toISOString());
-    elements.timeSince.parentElement.title = latestData.lastUpdated;
+    
+    // Use data-tooltip-content instead of title
+    const timeIndicator = elements.timeSince.parentElement;
+    timeIndicator.setAttribute('data-tooltip-content', latestData.lastUpdated);
+    timeIndicator.setAttribute('data-has-tooltip', 'true');
     
     if (elements.title) {
         elements.title.title = latestData.status;

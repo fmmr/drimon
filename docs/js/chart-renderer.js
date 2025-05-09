@@ -680,8 +680,38 @@ function createOrUpdateChart(config, data) {
             options: chartOptions
         });
         
+        // Emit chart rendered event
+        document.dispatchEvent(new CustomEvent('chart:rendered', {
+            detail: {
+                chartId: config.id,
+                chartType: 'line',
+                isMultiSeries: config.series && Array.isArray(config.series) && config.series.length > 1
+            }
+        }));
+        
         // Calculate initial stats for new chart
         recalculateChartStats(chartInstances[config.id]);
+        
+        // Force emit a chart stats update event to ensure tooltips get updated
+        if (config.id === 'chart-temp' && window.latestData && window.latestData.temperature !== null) {
+            // Get the most current stats
+            const currentStats = {
+                minValue: window.latestData.temperature,
+                maxValue: window.latestData.temperature,
+                avgValue: window.latestData.temperature,
+                currentValue: window.latestData.temperature
+            };
+            
+            // Emit chart stats updated event with current data
+            document.dispatchEvent(new CustomEvent('chart:stats:updated', {
+                detail: {
+                    chartId: 'chart-temp',
+                    stats: currentStats,
+                    isMultiSeries: false,
+                    unit: '°C'
+                }
+            }));
+        }
         
         // Register with lifecycle manager
         if (window.ChartLifecycleManager) {

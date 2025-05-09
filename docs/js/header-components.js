@@ -52,7 +52,9 @@ function createLogoContainer(config = null) {
     if (options.showTimeIndicator) {
         const timeIndicator = document.createElement('div');
         timeIndicator.className = 'time-indicator';
-        timeIndicator.title = window.I18n.translate(options.timeKey);
+        // Use data-tooltip-content instead of title
+        timeIndicator.setAttribute('data-tooltip-content', window.I18n.translate(options.timeKey));
+        timeIndicator.setAttribute('data-has-tooltip', 'true');
         timeIndicator.setAttribute('data-i18n-title', options.timeKey);
         
         const timeSpan = document.createElement('span');
@@ -82,7 +84,7 @@ function createDataChip(id, iconClass, title, initialText = 'loading') {
     dataChip.className = 'data-chip';
     
     // Only add tooltip for specific data chips
-    const showTooltipFor = ['temperature', 'light', 'window'];
+    const showTooltipFor = ['temperature', 'light', 'window', 'battery'];
     
     if (showTooltipFor.includes(id)) {
         // Use data-tooltip-content instead of title for our custom tooltip
@@ -230,17 +232,12 @@ function createDataContainer(config = null) {
     dataContainer.className = 'data-container';
     dataContainer.id = 'infoSection';
     
-    // If no config is provided, use default chip settings
-    const chips = config && config.chips ? config.chips : [
-        { id: 'temperature', icon: 'fas fa-thermometer-half', titleKey: 'temperature' },
-        { id: 'weather', type: 'weatherPill' },
-        { id: 'sunEvents', type: 'sunEventChip' },
-        { id: 'light', icon: 'fas fa-sun', titleKey: 'light', initialText: '' },
-        { id: 'battery', icon: 'fas fa-battery-half', titleKey: 'battery' },
-        { id: 'batteryVolt', icon: 'fas fa-bolt', titleKey: 'batteryVoltage' },
-        { id: 'pressure', icon: 'fas fa-compress-alt', titleKey: 'pressure' },
-        { id: 'window', icon: 'fas fa-window-maximize', titleKey: 'window', initialText: '' }
-    ];
+    // Config must provide chips, otherwise fail
+    if (!config || !config.chips) {
+        throw new Error('DataContainer requires chips configuration');
+    }
+    
+    const chips = config.chips;
     
     // Create and add each chip to the container
     chips.forEach(chipConfig => {
@@ -669,7 +666,6 @@ const HeaderConfig = {
                     { id: 'sunEvents', type: 'sunEventChip' },
                     { id: 'light', icon: 'fas fa-sun', titleKey: 'light', initialText: '' },
                     { id: 'battery', icon: 'fas fa-battery-half', titleKey: 'battery' },
-                    { id: 'batteryVolt', icon: 'fas fa-bolt', titleKey: 'batteryVoltage' },
                     { id: 'pressure', icon: 'fas fa-compress-alt', titleKey: 'pressure' },
                     { id: 'window', icon: 'fas fa-window-maximize', titleKey: 'window', initialText: '' }
                 ]

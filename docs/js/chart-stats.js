@@ -104,6 +104,17 @@ window.ChartStats = window.ChartStats || {
         // Apply visibility based on user preference
         const statsVisible = localStorage.getItem('statsVisible') !== 'false';
         statsEl.style.display = statsVisible ? 'flex' : 'none';
+        
+        // Dispatch event to notify that stats have been updated
+        // This allows other components to react to stats updates
+        document.dispatchEvent(new CustomEvent('chart:stats:updated', {
+            detail: {
+                chartId,
+                stats,
+                isMultiSeries,
+                unit
+            }
+        }));
     },
     
     /**
@@ -130,6 +141,11 @@ window.ChartStats = window.ChartStats || {
         const stats = window.Utils.calculateStatistics({
             datasets: activeDatasets
         });
+        
+        // If this is the temperature chart, make sure we have the current value
+        if (chartId === 'chart-temp' && window.latestData && window.latestData.temperature !== null) {
+            stats.currentValue = window.latestData.temperature;
+        }
         
         // Update the stats display
         this.updateChartStats(chartId, stats, isMultiSeries);

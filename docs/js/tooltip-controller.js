@@ -29,8 +29,8 @@ const TooltipController = (function() {
             tooltipElement = createTooltipElement();
         }
         
-        // Find all elements with custom tooltips
-        const elements = document.querySelectorAll('[data-tooltip-content]');
+        // Find all elements with custom tooltips or marked for tooltips
+        const elements = document.querySelectorAll('[data-tooltip-content], [data-has-tooltip="true"]');
         
         // Attach event listeners
         elements.forEach(el => {
@@ -78,17 +78,37 @@ const TooltipController = (function() {
         // Prevent default behavior to avoid navigation
         event.preventDefault();
         
-        const tooltipContent = getTooltipContent(event.currentTarget);
+        // Make sure we have the actual element with the tooltip attribute
+        // This handles cases where the user taps on a child element
+        let targetElement = event.target;
+        
+        // Walk up the DOM tree until we find an element with data-tooltip-content
+        // or until we reach the document body
+        while (targetElement && !targetElement.hasAttribute('data-tooltip-content')) {
+            // If we found the parent with data-has-tooltip attribute, that's good enough
+            if (targetElement.hasAttribute('data-has-tooltip')) {
+                break;
+            }
+            targetElement = targetElement.parentElement;
+        }
+        
+        // If we didn't find an element with tooltip data, use currentTarget as fallback
+        if (!targetElement || (!targetElement.hasAttribute('data-tooltip-content') && 
+                              !targetElement.hasAttribute('data-has-tooltip'))) {
+            targetElement = event.currentTarget;
+        }
+        
+        const tooltipContent = getTooltipContent(targetElement);
         if (!tooltipContent) return;
         
         // If tooltip is already showing for this element, hide it
-        if (isActive && tooltipElement.dataset.activeTarget === event.currentTarget.id) {
+        if (isActive && tooltipElement.dataset.activeTarget === targetElement.id) {
             hideTooltip();
             return;
         }
         
         // Position and show tooltip
-        showTooltip(tooltipContent, event.currentTarget);
+        showTooltip(tooltipContent, targetElement);
         
         // Track active state
         isActive = true;
@@ -103,22 +123,58 @@ const TooltipController = (function() {
     // Handle document touch - hide tooltip if touching outside
     function handleDocumentTouch(event) {
         // If tooltip is active and touch is outside the current target and tooltip
-        if (isActive && 
-            tooltipElement && 
-            !event.target.hasAttribute('data-tooltip-content') &&
-            event.target !== tooltipElement) {
-            hideTooltip();
+        if (isActive && tooltipElement) {
+            // Check if we clicked inside a tooltip element or a tooltip-enabled element
+            let targetElement = event.target;
+            let isTooltipRelated = false;
+            
+            // Check if the touch is on the tooltip itself
+            if (targetElement === tooltipElement) {
+                isTooltipRelated = true;
+            }
+            
+            // Check if we tapped on or within an element with tooltip data
+            while (targetElement && !isTooltipRelated) {
+                if (targetElement.hasAttribute('data-tooltip-content') || 
+                    targetElement.hasAttribute('data-has-tooltip')) {
+                    isTooltipRelated = true;
+                }
+                targetElement = targetElement.parentElement;
+            }
+            
+            // Hide tooltip if we clicked outside of any tooltip elements
+            if (!isTooltipRelated) {
+                hideTooltip();
+            }
         }
     }
     
     // Handle document click - hide tooltip if clicking outside
     function handleDocumentClick(event) {
         // If tooltip is active and click is outside the current target and tooltip
-        if (isActive && 
-            tooltipElement && 
-            !event.target.hasAttribute('data-tooltip-content') &&
-            event.target !== tooltipElement) {
-            hideTooltip();
+        if (isActive && tooltipElement) {
+            // Check if we clicked inside a tooltip element or a tooltip-enabled element
+            let targetElement = event.target;
+            let isTooltipRelated = false;
+            
+            // Check if the click is on the tooltip itself
+            if (targetElement === tooltipElement) {
+                isTooltipRelated = true;
+            }
+            
+            // Check if we clicked on or within an element with tooltip data
+            while (targetElement && !isTooltipRelated) {
+                if (targetElement.hasAttribute('data-tooltip-content') || 
+                    targetElement.hasAttribute('data-has-tooltip')) {
+                    isTooltipRelated = true;
+                }
+                targetElement = targetElement.parentElement;
+            }
+            
+            // Hide tooltip if we clicked outside of any tooltip elements
+            if (!isTooltipRelated) {
+                hideTooltip();
+            }
         }
     }
     
@@ -204,17 +260,23 @@ const TooltipController = (function() {
         const isMobile = window.innerWidth <= 768;
         
         if (isMobile) {
-            // Center horizontally, place below on mobile
+            // First set the tooltip to be centered below the target
             tooltipElement.style.left = Math.max(10, Math.min(
                 window.innerWidth - tooltipElement.offsetWidth - 10,
-                targetRect.left - (tooltipElement.offsetWidth / 2) + (targetRect.width / 2)
+                targetRect.left + (targetRect.width / 2) - (tooltipElement.offsetWidth / 2)
             )) + 'px';
             
-            tooltipElement.style.top = (targetRect.bottom + 10) + 'px';
+            // Position below with enough distance to prevent accidental closing
+            tooltipElement.style.top = (targetRect.bottom + 15) + 'px';
             
             // If too close to bottom of screen, position above target instead
-            if (targetRect.bottom + 10 + tooltipElement.offsetHeight > window.innerHeight - 10) {
-                tooltipElement.style.top = (targetRect.top - tooltipElement.offsetHeight - 10) + 'px';
+            if (targetRect.bottom + 15 + tooltipElement.offsetHeight > window.innerHeight - 10) {
+                tooltipElement.style.top = (targetRect.top - tooltipElement.offsetHeight - 15) + 'px';
+            }
+            
+            // Check if tooltip would go off-screen to the top and adjust if needed
+            if (parseInt(tooltipElement.style.top) < 10) {
+                tooltipElement.style.top = '10px';
             }
         } else {
             // Regular desktop position - to the right of target

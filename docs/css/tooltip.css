@@ -21,9 +21,11 @@
   opacity: 1;
 }
 
-.data-chip[data-has-tooltip="true"] {
+.data-chip[data-has-tooltip="true"],
+.time-indicator[data-has-tooltip="true"] {
   position: relative;
   cursor: pointer;
+  -webkit-tap-highlight-color: rgba(0,0,0,0.1); /* Subtle feedback on mobile */
 }
 
 /* Show "more info" indicator on chips with tooltips */
@@ -47,4 +49,33 @@
 
 [data-theme="dark"] .data-chip[data-has-tooltip="true"]::after {
   background: #5cadff;
+}
+
+/* Mobile enhancements - larger touch areas */
+@media (max-width: 768px) {
+  .custom-tooltip {
+    padding: 14px;
+    font-size: 15px;
+    max-width: 250px;
+  }
+  
+  /* Make tooltip indicators more visible on mobile */
+  .data-chip[data-has-tooltip="true"]::after {
+    width: 6px;
+    height: 6px;
+    right: 3px;
+    bottom: 3px;
+  }
+  
+  /* Improve touch target size */
+  .data-chip[data-has-tooltip="true"] {
+    padding: 1px;
+    margin: -1px;
+  }
+  
+  /* Make time indicator touch target larger without visual indicator */
+  .time-indicator[data-has-tooltip="true"] {
+    padding: 2px;
+    margin: -2px;
+  }
 }
