@@ -106,14 +106,17 @@
 
 .sun-events-chip .sun-event-time {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: center;
     line-height: 1.2;
+    white-space: nowrap;
 }
 
 .sun-events-chip .remaining-time {
     font-size: 0.7rem;
     opacity: 0.7;
     white-space: nowrap;
+    margin-left: 3px;
 }
 
 /* Dark mode styling for sun events chip */
@@ -570,24 +573,28 @@
         display: none;
     }
     
-    .data-chip, .date-chip {
-        padding: 4px 8px;
-        font-size: 0.7rem;
-        flex: 0 0 auto; /* Prevent shrinking to ensure visibility */
+    /* Improved mobile-specific styling for date-chip */
+    .date-chip {
+        padding: 5px 10px;
+        font-size: 0.75rem; /* Slightly larger font */
+        flex: 0 0 auto;
         position: relative;
         display: inline-flex;
-        min-width: 40px;
-        white-space: nowrap; /* Keep text on one line */
+        min-width: 44px; /* Wider touch target */
+        white-space: nowrap;
         align-items: center;
         justify-content: center;
+        margin: 0 2px; /* Space between date chips */
+        height: 30px; /* Match data-chip height */
     }
     
     /* Fix height issue for data-chips on mobile */
     .data-chip {
-        height: 26px; /* Slightly smaller on mobile but still consistent */
-        min-height: 26px; /* Ensure minimum height for visibility */
+        height: 30px; /* Taller height for mobile */
+        min-height: 30px; /* Ensure minimum height for visibility */
         align-items: center; /* Center content vertically */
-        padding: 4px 8px; /* Slightly larger padding */
+        padding: 5px 12px; /* More generous padding */
+        margin: 0 3px; /* More space between chips */
         background-color: white; /* Ensure background is visible */
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); /* Add shadow for better visibility */
         border-radius: 16px; /* Keep consistent styling */
@@ -595,16 +602,17 @@
     
     /* Ensure the weather pill also has consistent height on mobile */
     .weather-pill-container {
-        height: 26px; /* Match the mobile data-chip height */
+        height: 30px; /* Match the data-chip height */
     }
     
     /* Shared styling for scrollable containers */
     .data-container, .date-ranges {
         position: relative;
-        padding-bottom: 2px;
+        padding-bottom: 5px; /* More breathing room */
+        padding-top: 3px; /* Space above chips */
         /* Add horizontal padding to improve scrolling experience */
-        padding-left: 3px;
-        padding-right: 10px; /* Extra space on the right for better usability */
+        padding-left: 5px;
+        padding-right: 15px; /* Extra space on the right for better usability */
         /* Ensure both containers behave the same for scrolling */
         display: flex;
         flex-wrap: nowrap;
@@ -612,5 +620,6 @@
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
         -ms-overflow-style: none;
+        gap: 5px; /* Add space between items */
     }
 }

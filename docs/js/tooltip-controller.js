@@ -28,31 +28,38 @@ const TooltipController = (function() {
         if (!tooltipElement) {
             tooltipElement = createTooltipElement();
         }
-        
+
         // Find all elements with custom tooltips or marked for tooltips
         const elements = document.querySelectorAll('[data-tooltip-content], [data-has-tooltip="true"]');
-        
+
         // Attach event listeners
         elements.forEach(el => {
             // Mark element as having a tooltip
             el.setAttribute('data-has-tooltip', 'true');
-            
+
+            // Remove existing event listeners to prevent duplicates
+            el.removeEventListener('mouseenter', handleMouseEnter);
+            el.removeEventListener('mouseleave', handleMouseLeave);
+            el.removeEventListener('touchstart', handleTouch);
+
             // Handle mouse events (desktop)
             el.addEventListener('mouseenter', handleMouseEnter);
             el.addEventListener('mouseleave', handleMouseLeave);
-            
+
             // Handle touch events (mobile)
-            el.addEventListener('touchstart', handleTouch);
-            
+            el.addEventListener('touchstart', handleTouch, { passive: false });
+
             // Remove standard title attribute to prevent native tooltip
             if (el.title) {
                 el.setAttribute('data-original-title', el.title);
                 el.removeAttribute('title');
             }
         });
-        
+
         // Close tooltip when clicking or touching elsewhere
-        document.addEventListener('touchstart', handleDocumentTouch);
+        document.removeEventListener('touchstart', handleDocumentTouch);
+        document.removeEventListener('click', handleDocumentClick);
+        document.addEventListener('touchstart', handleDocumentTouch, { passive: true });
         document.addEventListener('click', handleDocumentClick);
     }
     
@@ -75,13 +82,18 @@ const TooltipController = (function() {
     
     // Handle touch - toggle tooltip
     function handleTouch(event) {
-        // Prevent default behavior to avoid navigation
-        event.preventDefault();
-        
+        // Do NOT prevent default behavior for horizontal scrolling containers
+        const isInsideScrollableContainer = event.target.closest('.data-container') !== null;
+
+        // Only prevent default for non-scrollable elements to maintain normal touch behavior
+        if (!isInsideScrollableContainer) {
+            event.preventDefault();
+        }
+
         // Make sure we have the actual element with the tooltip attribute
         // This handles cases where the user taps on a child element
         let targetElement = event.target;
-        
+
         // Walk up the DOM tree until we find an element with data-tooltip-content
         // or until we reach the document body
         while (targetElement && !targetElement.hasAttribute('data-tooltip-content')) {
@@ -91,28 +103,28 @@ const TooltipController = (function() {
             }
             targetElement = targetElement.parentElement;
         }
-        
+
         // If we didn't find an element with tooltip data, use currentTarget as fallback
-        if (!targetElement || (!targetElement.hasAttribute('data-tooltip-content') && 
+        if (!targetElement || (!targetElement.hasAttribute('data-tooltip-content') &&
                               !targetElement.hasAttribute('data-has-tooltip'))) {
             targetElement = event.currentTarget;
         }
-        
+
         const tooltipContent = getTooltipContent(targetElement);
         if (!tooltipContent) return;
-        
+
         // If tooltip is already showing for this element, hide it
         if (isActive && tooltipElement.dataset.activeTarget === targetElement.id) {
             hideTooltip();
             return;
         }
-        
+
         // Position and show tooltip
         showTooltip(tooltipContent, targetElement);
-        
+
         // Track active state
         isActive = true;
-        
+
         // Auto-hide after 5 seconds on mobile
         clearTimeout(hideTimer);
         hideTimer = setTimeout(() => {
@@ -122,26 +134,32 @@ const TooltipController = (function() {
     
     // Handle document touch - hide tooltip if touching outside
     function handleDocumentTouch(event) {
+        // Don't interfere with scrolling in scrollable containers
+        const isScrollAction = event.target.closest('.data-container') !== null;
+        if (isScrollAction) {
+            return; // Let scroll actions proceed without interference
+        }
+
         // If tooltip is active and touch is outside the current target and tooltip
         if (isActive && tooltipElement) {
             // Check if we clicked inside a tooltip element or a tooltip-enabled element
             let targetElement = event.target;
             let isTooltipRelated = false;
-            
+
             // Check if the touch is on the tooltip itself
             if (targetElement === tooltipElement) {
                 isTooltipRelated = true;
             }
-            
+
             // Check if we tapped on or within an element with tooltip data
             while (targetElement && !isTooltipRelated) {
-                if (targetElement.hasAttribute('data-tooltip-content') || 
+                if (targetElement.hasAttribute('data-tooltip-content') ||
                     targetElement.hasAttribute('data-has-tooltip')) {
                     isTooltipRelated = true;
                 }
                 targetElement = targetElement.parentElement;
             }
-            
+
             // Hide tooltip if we clicked outside of any tooltip elements
             if (!isTooltipRelated) {
                 hideTooltip();

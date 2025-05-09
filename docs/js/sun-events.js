@@ -313,7 +313,7 @@ window.SunEvents = (function() {
         // Update remaining time
         const remainingTime = document.getElementById('remaining-time');
         if (remainingTime) {
-            remainingTime.textContent = ` (${nextEvent.remaining})`;
+            remainingTime.textContent = `(${nextEvent.remaining})`;
         }
         
         // Create tooltip content

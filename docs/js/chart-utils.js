@@ -445,7 +445,10 @@ window.ChartUtils = window.ChartUtils || {
     createTooltipConfig: function(config, data, timestamps) {
         // Get translated text
         const getTranslatedText = (key) => window.I18n.translate(key);
-            
+
+        // Variable to store tooltip auto-hide timeout
+        let tooltipHideTimeout = null;
+
         return {
             mode: 'index',
             intersect: false,
@@ -453,6 +456,32 @@ window.ChartUtils = window.ChartUtils || {
             bodyFont: { size: 11 },
             padding: 6,
             backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            enabled: true, // Ensure tooltips are enabled
+            events: ['mousemove', 'mouseout', 'touchstart', 'touchmove'],
+            onShow: function(tooltipModel) {
+                // Clear any existing timeout
+                if (tooltipHideTimeout) {
+                    clearTimeout(tooltipHideTimeout);
+                    tooltipHideTimeout = null;
+                }
+
+                // On mobile, set a timeout to automatically hide the tooltip
+                if (window.innerWidth <= 768) {
+                    tooltipHideTimeout = setTimeout(() => {
+                        // Hide this tooltip
+                        this.setActiveElements([], { x: 0, y: 0 });
+                        this.chart.update('none');
+
+                        // Also hide any other active tooltips
+                        Object.values(window.chartInstances || {}).forEach(chart => {
+                            if (chart && chart !== this.chart) {
+                                chart.tooltip.setActiveElements([], { x: 0, y: 0 });
+                                chart.update('none');
+                            }
+                        });
+                    }, 5000); // 5 seconds, matching the custom tooltips
+                }
+            },
             callbacks: {
                 // 1. Title formatter - shows formatted date/time
                 title: (tooltipItems) => {
