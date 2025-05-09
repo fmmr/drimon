@@ -367,7 +367,7 @@
     min-width: 120px;
     box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15);
     border-radius: 12px; /* Rounded corners to match date chips */
-    z-index: 1000;
+    z-index: 9999; /* Higher z-index to ensure it's above all other elements */
     padding: 6px;
     border: 1px solid rgba(0, 0, 0, 0.05);
     overflow: hidden; /* Ensure contents don't overflow the rounded corners */
@@ -576,10 +576,13 @@
     .date-dropdown-content {
         position: fixed;  /* Use fixed positioning on mobile too */
         /* The left and top will be set dynamically by JavaScript */
-        z-index: 1001; /* Ensure it's above other elements */
+        z-index: 9999; /* Higher z-index to ensure it's above charts and all other elements */
         min-width: 120px;
         max-height: 300px;
         overflow-y: auto;
+        max-width: 80vw; /* Limit width on small screens */
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Stronger shadow for better visibility */
+        border: 1px solid rgba(0, 0, 0, 0.1); /* Stronger border */
     }
     
     .date-dropdown-button {

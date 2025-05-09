@@ -361,19 +361,53 @@ function createDateRanges(config = null) {
             
             // Adjust for mobile
             if (isMobile) {
-                // Ensure dropdown isn't positioned off-screen
+                // Get viewport dimensions
                 const viewportWidth = window.innerWidth;
+                const viewportHeight = window.innerHeight;
                 const dropdownWidth = 150; // Approximate width
-                
-                // If dropdown would go off right edge, align to right
-                if (buttonRect.left + dropdownWidth > viewportWidth) {
-                    dropdownContent.style.left = (viewportWidth - dropdownWidth - 10) + 'px';
+                const dropdownHeight = 200; // Approximate max height
+
+                // First, try to position to the right of the button
+                let leftPos = buttonRect.left;
+
+                // Check if dropdown would go off right edge
+                if (leftPos + dropdownWidth > viewportWidth) {
+                    // Align to right edge of viewport with padding
+                    leftPos = viewportWidth - dropdownWidth - 10;
                 }
-                
-                // If the button is in the bottom half of the screen, position dropdown above
-                if (buttonRect.top > window.innerHeight / 2) {
+
+                // Ensure it's not off the left edge
+                leftPos = Math.max(10, leftPos);
+
+                // Determine if we should show dropdown above or below
+                let topPos = buttonRect.bottom + 5;
+                let useTop = true;
+
+                // If would extend below visible area, try to position above button
+                if (topPos + dropdownHeight > viewportHeight) {
+                    const abovePos = buttonRect.top - dropdownHeight - 5;
+                    // Only position above if there's enough room
+                    if (abovePos > 0) {
+                        topPos = abovePos;
+                        useTop = true;
+                    }
+                    // If there's not enough room above or below, position at top of screen
+                    // and let it scroll if needed
+                    else if (topPos + dropdownHeight > viewportHeight) {
+                        topPos = 60; // Position below header
+                        useTop = true;
+                    }
+                }
+
+                // Apply the calculated position
+                dropdownContent.style.left = leftPos + 'px';
+
+                if (useTop) {
+                    dropdownContent.style.top = topPos + 'px';
+                    dropdownContent.style.bottom = 'auto';
+                } else {
                     dropdownContent.style.top = 'auto';
-                    dropdownContent.style.bottom = (window.innerHeight - buttonRect.top + 5) + 'px';
+                    dropdownContent.style.bottom = (viewportHeight - buttonRect.top + 5) + 'px';
                 }
             }
             
@@ -396,7 +430,23 @@ function createDateRanges(config = null) {
         
         // For better touch handling on mobile
         if ('ontouchstart' in window) {
-            dropdownButton.addEventListener('touchstart', handleDropdownEvent);
+            // Add touchstart event for faster response on mobile
+            dropdownButton.addEventListener('touchstart', (e) => {
+                // Prevent any parent elements from scrolling
+                e.preventDefault();
+                handleDropdownEvent(e);
+            });
+
+            // Add click event as a fallback
+            dropdownButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Ensure dropdown is positioned above all content
+                dropdownContent.style.zIndex = '9999';
+
+                handleDropdownEvent(e);
+            });
         }
     }
     
