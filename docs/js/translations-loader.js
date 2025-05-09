@@ -30,7 +30,7 @@ window.DriMonTranslations = {
     "twoDay": "2️⃣",
     "update": "↻" ,        // spinning arrows = refresh/update
     "week": "📆7️⃣",          // tear-off calendar = current week
-    "yesterday": "🕒",     // clock = yesterday / recent
+    "yesterday": "↩️📅",     // clock = yesterday / recent
     
     "temperature": "Temperatur",
     "humidity": "Luftfuktighet",
@@ -179,7 +179,7 @@ window.DriMonTranslations = {
     "twoDay": "2️⃣",
     "update": "↻" ,        // spinning arrows = refresh/update
     "week": "📆7️⃣",          // tear-off calendar = current week
-    "yesterday": "🕒",     // clock = yesterday / recent
+    "yesterday": "↩️📅",     // clock = yesterday / recent
     
     "temperature": "Temperature",
     "humidity": "Humidity",
@@ -328,7 +328,7 @@ window.DriMonTranslations = {
     "twoDay": "2️⃣",
     "update": "↻" ,        // spinning arrows = refresh/update
     "week": "📆7️⃣",          // tear-off calendar = current week
-    "yesterday": "🕒",     // clock = yesterday / recent
+    "yesterday": "↩️📅",     // clock = yesterday / recent
 		
     "temperature": "Temperatura",
     "humidity": "Humedad",
