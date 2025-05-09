@@ -95,33 +95,38 @@ window.LightTooltipUpdater = (function() {
         const ceilingLabel = window.I18n.translate('ceiling');
         const internalLabel = window.I18n.translate('internal');
         
-        let tooltipContent = '';
-        
-        // Start with the ceiling light value which is always available
-        tooltipContent = `${ceilingLabel}: ${ceilingLight} lux`;
-        
+        // Create tooltip data object for tabular formatting
+        const tooltipData = {
+            [ceilingLabel]: `${ceilingLight} lux`
+        };
+
         // Add internal light value if available
         if (internalLight !== null) {
-            tooltipContent += `\n${internalLabel}: ${internalLight} lux`;
+            tooltipData[internalLabel] = `${internalLight} lux`;
         }
-        
+
         // Add current light state from latestData
         if (window.latestData && window.latestData.light !== null) {
             const lightState = getLightText(window.latestData.light);
             let displayLightState = lightState;
-            
+
             if (window.I18n && typeof window.I18n.translate === 'function') {
                 // Map light state to translation key
-                const lightKey = lightState === 'Natt' ? 'night' : 
-                               lightState === 'Skumring' ? 'dusk' : 
-                               lightState === 'Skyet' ? 'cloudy' : 
+                const lightKey = lightState === 'Natt' ? 'night' :
+                               lightState === 'Skumring' ? 'dusk' :
+                               lightState === 'Skyet' ? 'cloudy' :
                                lightState === 'Sol' ? 'sunny' : lightState;
                 displayLightState = window.I18n.translate(lightKey);
             }
-            
+
             // Add light state to tooltip
-            tooltipContent += `\n${lightLabel}: ${displayLightState}`;
+            tooltipData[lightLabel] = displayLightState;
         }
+
+        // Format the tooltip content using the HTML tabular formatter
+        let tooltipContent = window.Utils.formatTabularTooltip(tooltipData, {
+            useHTML: true
+        });
         
         // Update tooltip content
         lightChipElement.setAttribute('data-tooltip-content', tooltipContent);

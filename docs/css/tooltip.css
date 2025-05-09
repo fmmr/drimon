@@ -17,6 +17,48 @@
   text-align: left;
 }
 
+/* Tooltip table styling */
+.tooltip-table {
+  display: table;
+  border-spacing: 0;
+  width: 100%;
+}
+
+.tooltip-row {
+  display: table-row;
+}
+
+.tooltip-label, .tooltip-value {
+  display: table-cell;
+  padding: 2px 0;
+}
+
+.tooltip-label {
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+  padding-right: 12px;
+}
+
+.tooltip-value {
+  text-align: right;
+}
+
+/* Divider styling */
+.tooltip-divider {
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.2);
+  margin: 5px 0;
+}
+
+/* Dark mode styles for table */
+[data-theme="dark"] .tooltip-label {
+  color: rgba(220, 220, 220, 0.8);
+}
+
+[data-theme="dark"] .tooltip-divider {
+  background-color: rgba(200, 200, 200, 0.2);
+}
+
 .custom-tooltip.visible {
   opacity: 1;
 }
@@ -58,7 +100,7 @@
     font-size: 15px;
     max-width: 250px;
   }
-  
+
   /* Make tooltip indicators more visible on mobile */
   .data-chip[data-has-tooltip="true"]::after {
     width: 6px;
@@ -66,16 +108,25 @@
     right: 3px;
     bottom: 3px;
   }
-  
+
   /* Improve touch target size */
   .data-chip[data-has-tooltip="true"] {
     padding: 1px;
     margin: -1px;
   }
-  
+
   /* Make time indicator touch target larger without visual indicator */
   .time-indicator[data-has-tooltip="true"] {
     padding: 2px;
     margin: -2px;
+  }
+
+  /* Smaller table elements for mobile */
+  .tooltip-label, .tooltip-value {
+    padding: 3px 0;
+  }
+
+  .tooltip-label {
+    padding-right: 8px;
   }
 }

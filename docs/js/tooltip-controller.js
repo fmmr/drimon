@@ -218,50 +218,59 @@ const TooltipController = (function() {
     function formatTooltipContent(contentObj) {
         // For sun events chip
         if (contentObj.sunrise || contentObj.sunset) {
-            let text = "";
-            
-            // Check each field and add if present
+            // Create formatted data object
+            const tooltipData = {};
+
+            // Add fields if present
             if (contentObj.sunrise) {
-                text += `${window.I18n.translate('sunrise')}: ${contentObj.sunrise}\n`;
+                tooltipData[window.I18n.translate('sunrise')] = contentObj.sunrise;
             }
-            
+
             if (contentObj.sunset) {
-                text += `${window.I18n.translate('sunset')}: ${contentObj.sunset}\n`;
+                tooltipData[window.I18n.translate('sunset')] = contentObj.sunset;
             }
-            
+
             if (contentObj.dusk) {
-                text += `${window.I18n.translate('dusk')}: ${contentObj.dusk}\n`;
+                tooltipData[window.I18n.translate('dusk')] = contentObj.dusk;
             }
-            
+
             // Format day length
             if (contentObj.dayLength) {
                 const hourSymbol = window.I18n.translate('hourSymbol');
                 const dayLengthFormatted = `${contentObj.dayLength.hours}${hourSymbol} ${contentObj.dayLength.minutes}m`;
-                text += `${window.I18n.translate('dayLength')}: ${dayLengthFormatted}\n`;
+                tooltipData[window.I18n.translate('dayLength')] = dayLengthFormatted;
             }
-            
+
             // Format night length
             if (contentObj.nightLength) {
                 const hourSymbol = window.I18n.translate('hourSymbol');
                 const nightLengthFormatted = `${contentObj.nightLength.hours}${hourSymbol} ${contentObj.nightLength.minutes}m`;
-                text += `${window.I18n.translate('nightLength')}: ${nightLengthFormatted}\n`;
+                tooltipData[window.I18n.translate('nightLength')] = nightLengthFormatted;
             }
-            
+
             if (contentObj.moonrise) {
-                text += `${window.I18n.translate('moonrise')}: ${contentObj.moonrise}\n`;
+                tooltipData[window.I18n.translate('moonrise')] = contentObj.moonrise;
             }
-            
+
             if (contentObj.moonset) {
-                text += `${window.I18n.translate('moonset')}: ${contentObj.moonset}\n`;
+                tooltipData[window.I18n.translate('moonset')] = contentObj.moonset;
             }
-            
+
             if (contentObj.moonPhase) {
-                text += `${window.I18n.translate('moonPhase')}: ${contentObj.moonPhase}`;
+                tooltipData[window.I18n.translate('moonPhase')] = contentObj.moonPhase;
             }
-            
-            return text;
+
+            // Use tabular formatting utility if available
+            if (window.Utils && typeof window.Utils.formatTabularTooltip === 'function') {
+                return window.Utils.formatTabularTooltip(tooltipData);
+            } else {
+                // Fallback to direct formatting if utility is not available
+                return Object.entries(tooltipData)
+                    .map(([key, value]) => `${key}: ${value}`)
+                    .join('\n');
+            }
         }
-        
+
         // For other types of content, just return a string representation
         return JSON.stringify(contentObj, null, 2);
     }
@@ -269,10 +278,14 @@ const TooltipController = (function() {
     // Show tooltip at the right position
     function showTooltip(content, targetElement) {
         if (!tooltipElement) return;
-        
-        // Set content
-        tooltipElement.textContent = content;
-        
+
+        // Check if content is HTML (starts with <)
+        if (content.trim().startsWith('<')) {
+            tooltipElement.innerHTML = content;
+        } else {
+            tooltipElement.textContent = content;
+        }
+
         // Get position
         const targetRect = targetElement.getBoundingClientRect();
         const isMobile = window.innerWidth <= 768;

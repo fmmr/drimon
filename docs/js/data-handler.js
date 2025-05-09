@@ -187,7 +187,16 @@ function updateUIWithLatestData() {
     elements.battery.parentElement.className = `data-chip ${getBatteryClassName(latestData.battery)}`;
     
     // Set tooltip content for battery that includes voltage
-    const batteryTooltip = `${window.I18n.translate('battery')}: ${latestData.battery}%\n${window.I18n.translate('batteryVoltage')}: ${latestData.batteryVolt}V`;
+    const batteryTooltipData = {
+        [window.I18n.translate('battery')]: `${latestData.battery}%`,
+        [window.I18n.translate('batteryVoltage')]: `${latestData.batteryVolt}V`
+    };
+
+    // Format battery tooltip using HTML tabular formatter if available
+    const batteryTooltip = window.Utils && typeof window.Utils.formatTabularTooltip === 'function'
+        ? window.Utils.formatTabularTooltip(batteryTooltipData, { useHTML: true })
+        : `${window.I18n.translate('battery')}: ${latestData.battery}%\n${window.I18n.translate('batteryVoltage')}: ${latestData.batteryVolt}V`;
+
     elements.battery.parentElement.setAttribute('data-tooltip-content', batteryTooltip);
     elements.battery.parentElement.setAttribute('data-has-tooltip', 'true');
     
@@ -226,7 +235,16 @@ function updateUIWithLatestData() {
     elements.window.parentElement.className = `data-chip`;
     
     // Set tooltip content to show the actual value
-    const windowTooltip = `${window.I18n.translate('window')}: ${latestData.windowOpening}mm\n${displayWindowState}`;
+    const windowTooltipData = {
+        [window.I18n.translate('window')]: `${latestData.windowOpening}mm`,
+        [window.I18n.translate('status')]: displayWindowState
+    };
+
+    // Format window tooltip using HTML tabular formatter if available
+    const windowTooltip = window.Utils && typeof window.Utils.formatTabularTooltip === 'function'
+        ? window.Utils.formatTabularTooltip(windowTooltipData, { useHTML: true })
+        : `${window.I18n.translate('window')}: ${latestData.windowOpening}mm\n${displayWindowState}`;
+
     elements.window.parentElement.setAttribute('data-tooltip-content', windowTooltip);
     elements.window.parentElement.setAttribute('data-has-tooltip', 'true');
     
@@ -261,7 +279,16 @@ function updateUIWithLatestData() {
     elements.light.parentElement.className = `data-chip`;
     
     // Set tooltip content to show the actual light value
-    const lightTooltip = `${window.I18n.translate('ceiling')}: ${latestData.light} lux\n${displayLightState}`;
+    const lightTooltipData = {
+        [window.I18n.translate('ceiling')]: `${latestData.light} lux`,
+        [window.I18n.translate('light')]: displayLightState
+    };
+
+    // Format light tooltip using HTML tabular formatter if available
+    const lightTooltip = window.Utils && typeof window.Utils.formatTabularTooltip === 'function'
+        ? window.Utils.formatTabularTooltip(lightTooltipData, { useHTML: true })
+        : `${window.I18n.translate('ceiling')}: ${latestData.light} lux\n${displayLightState}`;
+
     elements.light.parentElement.setAttribute('data-tooltip-content', lightTooltip);
     elements.light.parentElement.setAttribute('data-has-tooltip', 'true');
 
@@ -270,7 +297,17 @@ function updateUIWithLatestData() {
     
     // Use data-tooltip-content instead of title
     const timeIndicator = elements.timeSince.parentElement;
-    timeIndicator.setAttribute('data-tooltip-content', latestData.lastUpdated);
+
+    const timeTooltipData = {
+        [window.I18n.translate('lastUpdated')]: latestData.lastUpdated
+    };
+
+    // Format time tooltip using HTML tabular formatter if available
+    const timeTooltip = window.Utils && typeof window.Utils.formatTabularTooltip === 'function'
+        ? window.Utils.formatTabularTooltip(timeTooltipData, { useHTML: true })
+        : latestData.lastUpdated;
+
+    timeIndicator.setAttribute('data-tooltip-content', timeTooltip);
     timeIndicator.setAttribute('data-has-tooltip', 'true');
     
     if (elements.title) {

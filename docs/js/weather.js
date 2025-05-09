@@ -203,39 +203,50 @@ function updateWeatherDisplay() {
         return cardinals[index];
     }
 
-    // Create custom tooltip content with all available weather data
-    let weatherTooltip = `${outTempTitle}: ${temperature} °C`;
+    // Create tooltip data object for tabular formatting
+    const tooltipData = {
+        // First section: measurement data
+        [outTempTitle]: `${temperature} °C`
+    };
 
     // Add other details if available
     if (humidity !== null) {
-        weatherTooltip += `\n${humidityText}: ${humidity}%`;
+        tooltipData[humidityText] = `${humidity}%`;
     }
 
     if (windSpeed !== null) {
         const direction = degreesToCardinal(windDirection);
-        weatherTooltip += `\n${windSpeedText}: ${windSpeed} m/s`;
-
-        if (direction) {
-            weatherTooltip += ` (${direction})`;
-        }
+        tooltipData[windSpeedText] = `${windSpeed} m/s${direction ? ` (${direction})` : ''}`;
     }
 
     if (windGust !== null && windGust > windSpeed) {
-        weatherTooltip += `\n${gustText}: ${windGust} m/s`;
+        tooltipData[gustText] = `${windGust} m/s`;
     }
 
     if (precipitation !== null) {
-        weatherTooltip += `\n${precipitationText}: ${precipitation} mm`;
+        tooltipData[precipitationText] = `${precipitation} mm`;
     }
 
-    // Add all timestamps and source at the end - order: Updated, Forecast, Fetched
-    weatherTooltip += `\n\n`;
+    // Add timestamp and source section as a continuation of the data
+    // but mark precipitation as the last element of the first section
+    const dividerAfter = precipitation !== null ? precipitationText :
+                        windGust !== null && windGust > windSpeed ? gustText :
+                        windSpeed !== null ? windSpeedText :
+                        humidity !== null ? humidityText : outTempTitle;
+
     if (metaUpdated) {
-        weatherTooltip += `${updatedText}: ${metaUpdated}\n`;
+        tooltipData[updatedText] = metaUpdated;
     }
-    weatherTooltip += `${forecastTimeText}: ${forecastTime}\n`;
-    weatherTooltip += `${fetchedTimeText}: ${fetchedTime}\n`;
-    weatherTooltip += `${sourceText}: ${source}`;
+    tooltipData[forecastTimeText] = forecastTime;
+    tooltipData[fetchedTimeText] = fetchedTime;
+    tooltipData[sourceText] = source;
+
+    // Generate HTML tooltip with all data and a divider
+    let weatherTooltip = Utils.formatTabularTooltip(tooltipData, {
+        useHTML: true,
+        dividerAfter: dividerAfter
+    });
+    
 
     // Set the tooltip data attribute
     elements.metLink.setAttribute('data-tooltip-content', weatherTooltip);

@@ -330,31 +330,42 @@ window.SunEvents = (function() {
             nightLength: data.sun.nightLength
         };
         
-        // Format tooltip text - without the heading
-        let tooltipText = "";
-        
-        // Simple sunrise label
-        tooltipText += `${window.I18n.translate('sunrise')}: ${tooltipContent.sunrise}\n`;
-        tooltipText += `${window.I18n.translate('sunset')}: ${tooltipContent.sunset}\n`;
-        tooltipText += `${window.I18n.translate('dusk')}: ${tooltipContent.dusk}\n`;
+        // Format tooltip text using tabular layout
         // Format lengths with correct language symbol
         const hourSymbol = window.I18n.translate('hourSymbol');
         const dayLengthFormatted = `${data.sun.dayLength.hours}${hourSymbol} ${data.sun.dayLength.minutes}m`;
         const nightLengthFormatted = `${data.sun.nightLength.hours}${hourSymbol} ${data.sun.nightLength.minutes}m`;
-        
-        tooltipText += `${window.I18n.translate('dayLength')}: ${dayLengthFormatted}\n`;
-        tooltipText += `${window.I18n.translate('nightLength')}: ${nightLengthFormatted}\n`;
-        
+
+        // Create tooltip data object for tabular formatting
+        const tooltipData = {
+            [window.I18n.translate('sunrise')]: tooltipContent.sunrise,
+            [window.I18n.translate('sunset')]: tooltipContent.sunset,
+            [window.I18n.translate('dusk')]: tooltipContent.dusk,
+            [window.I18n.translate('dayLength')]: dayLengthFormatted,
+            [window.I18n.translate('nightLength')]: nightLengthFormatted
+        };
+
+        // Add moon data if available
         if (tooltipContent.moonrise && tooltipContent.moonset) {
-            tooltipText += `${window.I18n.translate('moonrise')}: ${tooltipContent.moonrise}\n`;
-            tooltipText += `${window.I18n.translate('moonset')}: ${tooltipContent.moonset}\n`;
+            tooltipData[window.I18n.translate('moonrise')] = tooltipContent.moonrise;
+            tooltipData[window.I18n.translate('moonset')] = tooltipContent.moonset;
         }
-        
+
         // Add moon phase
-        tooltipText += `${window.I18n.translate('moonPhase')}: ${moonPhaseName}`;
-        
-        // Store data for potential use by other components and our custom tooltip
-        chip.dataset.tooltipContent = JSON.stringify(tooltipContent);
+        tooltipData[window.I18n.translate('moonPhase')] = moonPhaseName;
+
+        // Format using the HTML tabular tooltip utility
+        // Divide the tooltip into two sections - sun events and moon events
+        const tooltipText = Utils.formatTabularTooltip(tooltipData, {
+            useHTML: true,
+            dividerAfter: window.I18n.translate('nightLength')
+        });
+
+        // Use the tooltip directly
+        chip.setAttribute('data-tooltip-content', tooltipText);
+
+        // Keep storing the JSON data for backward compatibility
+        chip.dataset.tooltipData = JSON.stringify(tooltipContent);
         chip.dataset.nextEvent = JSON.stringify(nextEvent);
     }
     

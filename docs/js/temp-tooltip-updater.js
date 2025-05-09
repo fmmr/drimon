@@ -68,23 +68,37 @@ window.TempTooltipUpdater = (function() {
         const avgLabel = window.I18n.translate('avg');
         
         // Create tooltip content with stats
-        let tooltipContent = `${tempLabel}: ${currentTemp} °C`;
-        
+        let tooltipData = {};
+
         // Add statistics if available
         if (tempChartStats.minValue !== null) {
-            tooltipContent += `\n${minLabel}: ${minTemp} °C`;
-            tooltipContent += `\n${avgLabel}: ${avgTemp} °C`;
-            tooltipContent += `\n${maxLabel}: ${maxTemp} °C`;
+            tooltipData = {
+                [tempLabel]: `${currentTemp} °C`,
+                [minLabel]: `${minTemp} °C`,
+                [avgLabel]: `${avgTemp} °C`,
+                [maxLabel]: `${maxTemp} °C`
+            };
         } else if (window.latestData && window.latestData.temperature !== null) {
             // Use current temperature as fallback for all stats until real stats arrive
             const current = window.latestData.temperature;
-            tooltipContent += `\n${minLabel}: ${formatValue(current)} °C`;
-            tooltipContent += `\n${avgLabel}: ${formatValue(current)} °C`;
-            tooltipContent += `\n${maxLabel}: ${formatValue(current)} °C`;
+            tooltipData = {
+                [tempLabel]: `${currentTemp} °C`,
+                [minLabel]: `${formatValue(current)} °C`,
+                [avgLabel]: `${formatValue(current)} °C`,
+                [maxLabel]: `${formatValue(current)} °C`
+            };
         } else {
             // Show simple statistics info if chart data isn't loaded yet
-            tooltipContent = `${tempLabel}: ${currentTemp} °C\n${window.I18n.translate('statsLoading') || 'Loading stats...'}`;
+            tooltipData = {
+                [tempLabel]: `${currentTemp} °C`,
+                '': window.I18n.translate('statsLoading') || 'Loading stats...'
+            };
         }
+
+        // Format the tooltip content using the HTML tabular formatter
+        let tooltipContent = window.Utils.formatTabularTooltip(tooltipData, {
+            useHTML: true
+        });
         
         // Update tooltip content
         tempChipElement.setAttribute('data-tooltip-content', tooltipContent);

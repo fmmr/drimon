@@ -587,6 +587,69 @@ const Utils = {
         }
         
         return stats;
+    },
+    
+    /**
+     * Format a tooltip with tabular layout
+     * @param {Object} dataRows - Object where each key is a label and each value is the content
+     * @param {Object} [options] - Formatting options
+     * @param {boolean} [options.skipEmptyValues=true] - Whether to skip null/undefined values
+     * @param {boolean} [options.useHTML=false] - Whether to generate HTML instead of text
+     * @param {string} [options.dividerAfter] - Key after which to add a divider (only for HTML)
+     * @returns {string} Formatted tooltip text with aligned labels or HTML
+     */
+    formatTabularTooltip: function(dataRows, options = {}) {
+        if (!dataRows || typeof dataRows !== 'object') {
+            return '';
+        }
+
+        const skipEmptyValues = options.skipEmptyValues !== false; // Default to true
+        const useHTML = options.useHTML !== false; // Default to true now that we have CSS
+
+        // Filter out empty values if requested
+        const filteredRows = Object.entries(dataRows).filter(([_, value]) => {
+            if (skipEmptyValues) {
+                return value !== null && value !== undefined && value !== '';
+            }
+            return true;
+        });
+
+        if (filteredRows.length === 0) {
+            return '';
+        }
+
+        // Option 1: Generate HTML table format
+        if (useHTML) {
+            let html = '<div class="tooltip-table">';
+
+            filteredRows.forEach(([label, value], index) => {
+                html += '<div class="tooltip-row">';
+                html += `<div class="tooltip-label">${label}</div>`;
+                html += `<div class="tooltip-value">${value}</div>`;
+                html += '</div>';
+
+                // Add divider if specified and not the last row
+                if (options.dividerAfter === label && index < filteredRows.length - 1) {
+                    html += '<div class="tooltip-divider"></div>';
+                }
+            });
+
+            html += '</div>';
+            return html;
+        }
+        // Option 2: Fallback to text-based spacing
+        else {
+            // Find the longest label length
+            const longestLabelLength = Math.max(...filteredRows.map(([label]) => label.length));
+            const spacing = 3; // Default spacing between label and value
+
+            // Format each row with consistent padding
+            return filteredRows.map(([label, value]) => {
+                // Pad the label to align all values
+                const paddedLabel = label.padEnd(longestLabelLength + spacing);
+                return `${paddedLabel}: ${value}`;
+            }).join('\n');
+        }
     }
 };
 

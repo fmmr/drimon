@@ -131,14 +131,14 @@ window.DriMonTranslations = {
     "source": "Kilde",
 
     // Moon phases
-    "newMoon": "Nymåne",
-    "waxingCrescent": "Tiltagende måne",
-    "firstQuarter": "Første kvarter",
-    "waxingGibbous": "Tiltagende måne",
-    "fullMoon": "Fullmåne",
-    "waningGibbous": "Avtagende måne",
-    "lastQuarter": "Siste kvarter",
-    "waningCrescent": "Avtagende måne"
+    "newMoon": "Ny",
+    "waxingCrescent": "Tiltagende",
+    "firstQuarter": "Første kv.",
+    "waxingGibbous": "Nesten full",
+    "fullMoon": "Full",
+    "waningGibbous": "Avtagende",
+    "lastQuarter": "Siste kv.",
+    "waningCrescent": "Nesten Ny"
   },
   "en": {
     "loading": "Loading...",
