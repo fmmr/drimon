@@ -150,6 +150,11 @@ function updateUIWithLatestData() {
     elements.temperature.innerHTML = `${latestData.temperature} °C`;
     elements.temperature.parentElement.className = `data-chip ${getClassName(latestData.temperature, 16, 35)}`;
     
+    // Set tooltip content for temperature
+    const tempTooltip = `${window.I18n.translate('temperature')}: ${latestData.temperature} °C`;
+    elements.temperature.parentElement.setAttribute('data-tooltip-content', tempTooltip);
+    elements.temperature.parentElement.setAttribute('data-has-tooltip', 'true');
+    
     // Update temperature icon based on value
     const tempIcon = elements.temperature.parentElement.querySelector('i');
     if (tempIcon) {
@@ -210,7 +215,11 @@ function updateUIWithLatestData() {
     
     elements.window.innerHTML = displayWindowState;
     elements.window.parentElement.className = `data-chip`;
-    elements.window.parentElement.title = `${latestData.windowOpening}mm`;
+    
+    // Set tooltip content to show the actual value
+    const windowTooltip = `${window.I18n.translate('window')}: ${displayWindowState} (${latestData.windowOpening}mm)`;
+    elements.window.parentElement.setAttribute('data-tooltip-content', windowTooltip);
+    elements.window.parentElement.setAttribute('data-has-tooltip', 'true');
     
     // Update window icon based on state
     const windowIcon = elements.window.parentElement.querySelector('i');
@@ -240,8 +249,12 @@ function updateUIWithLatestData() {
     }
     
     elements.light.innerHTML = displayLightState;
-    elements.light.parentElement.title = `${latestData.light} lux`;
     elements.light.parentElement.className = `data-chip`;
+    
+    // Set tooltip content to show the actual light value
+    const lightTooltip = `${window.I18n.translate('light')}: ${displayLightState} (${latestData.light} lux)`;
+    elements.light.parentElement.setAttribute('data-tooltip-content', lightTooltip);
+    elements.light.parentElement.setAttribute('data-has-tooltip', 'true');
 
     elements.timeSince.textContent = latestData.timeSince;
     elements.timeSince.setAttribute('data-timestamp', latestData.createdAt.toISOString());

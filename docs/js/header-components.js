@@ -81,7 +81,15 @@ function createDataChip(id, iconClass, title, initialText = 'loading') {
     const dataChip = document.createElement('div');
     dataChip.className = 'data-chip';
     
-    dataChip.title = window.I18n.translate(title);
+    // Only add tooltip for specific data chips
+    const showTooltipFor = ['temperature', 'light', 'window'];
+    
+    if (showTooltipFor.includes(id)) {
+        // Use data-tooltip-content instead of title for our custom tooltip
+        const tooltipText = window.I18n.translate(title);
+        dataChip.setAttribute('data-tooltip-content', tooltipText);
+        dataChip.setAttribute('data-has-tooltip', 'true');
+    }
     
     // Add data-i18n attributes for later translation updates
     dataChip.setAttribute('data-i18n-title', title);
@@ -126,7 +134,10 @@ function createWeatherPill() {
     metLink.id = 'met-link';
     
     const translatedTitle = window.I18n.translate('outTempChart');
-    metLink.title = translatedTitle;
+    
+    // Use data-tooltip-content instead of title for our custom tooltip
+    metLink.setAttribute('data-tooltip-content', translatedTitle);
+    metLink.setAttribute('data-has-tooltip', 'true');
     
     // Add data-i18n attribute for later translation updates
     metLink.setAttribute('data-i18n-title', 'outTempChart');
@@ -201,8 +212,8 @@ function createSunEventChip() {
     // Set data attribute to store tooltip content
     chip.dataset.tooltipContent = JSON.stringify(tooltipContent);
     
-    // Set basic tooltip text that will be updated later
-    chip.title = 'Loading astronomical data...';
+    // Mark this element as having a tooltip
+    chip.setAttribute('data-has-tooltip', 'true');
     
     // Initial data will be populated by sun-events.js when ready
     

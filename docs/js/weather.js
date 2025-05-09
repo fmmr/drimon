@@ -139,7 +139,12 @@ function updateWeatherDisplay() {
         // Source doesn't need translation
     }
     
-    elements.metLink.title = `${outTempTitle} - ${updatedText}: ${lastUpdated} (${sourceText}: ${source})`;
+    // Create custom tooltip content
+    const weatherTooltip = `${outTempTitle}: ${temperature} °C\n${updatedText}: ${lastUpdated}\n${sourceText}: ${source}`;
+    
+    // Set the tooltip data attribute instead of title attribute
+    elements.metLink.setAttribute('data-tooltip-content', weatherTooltip);
+    elements.metLink.setAttribute('data-has-tooltip', 'true');
     
     // Update weather icon if available
     const symbolData = latestWeatherData.properties.timeseries[0].data.next_1_hours?.summary;

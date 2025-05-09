@@ -353,10 +353,7 @@ window.SunEvents = (function() {
         // Add moon phase
         tooltipText += `${window.I18n.translate('moonPhase')}: ${moonPhaseName}`;
         
-        // Update tooltip
-        chip.title = tooltipText;
-        
-        // Store data for potential use by other components
+        // Store data for potential use by other components and our custom tooltip
         chip.dataset.tooltipContent = JSON.stringify(tooltipContent);
         chip.dataset.nextEvent = JSON.stringify(nextEvent);
     }

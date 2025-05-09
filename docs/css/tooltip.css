@@ -1,0 +1,50 @@
+/* Custom tooltip styling */
+.custom-tooltip {
+  position: fixed;
+  z-index: 9999;
+  background-color: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  border-radius: 6px;
+  padding: 12px;
+  font-size: 14px;
+  max-width: 280px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  line-height: 1.5;
+  white-space: pre-line;
+  text-align: left;
+}
+
+.custom-tooltip.visible {
+  opacity: 1;
+}
+
+.data-chip[data-has-tooltip="true"] {
+  position: relative;
+  cursor: pointer;
+}
+
+/* Show "more info" indicator on chips with tooltips */
+.data-chip[data-has-tooltip="true"]::after {
+  content: "";
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 4px;
+  height: 4px;
+  background: #007bff;
+  border-radius: 50%;
+}
+
+/* Dark mode styles */
+[data-theme="dark"] .custom-tooltip {
+  background-color: rgba(30, 30, 30, 0.9);
+  color: #ddd;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+}
+
+[data-theme="dark"] .data-chip[data-has-tooltip="true"]::after {
+  background: #5cadff;
+}
