@@ -93,20 +93,16 @@ async function fetchChartData(config, range = 1, results = DEFAULT_RESULTS) {
     
     // Get date range either from range parameter or URL
     let startDateStr, endDateStr;
-    
-    if (typeof range === 'string') {
-        const dateRange = getDateRange(range);
-        startDateStr = dateRange.startDate;
-        endDateStr = dateRange.endDate;
-    } else if (typeof range === 'number') {
-        // Backward compatibility for numeric ranges
-        const dateRange = getDateRange(range.toString());
+
+    if (typeof range === 'string' || typeof range === 'number') {
+        // Use centralized DateUtils implementation for all range types
+        const dateRange = window.DateUtils.getDateRange(range);
         startDateStr = dateRange.startDate;
         endDateStr = dateRange.endDate;
     } else {
-        // Default to last 24 hours
+        // Default to last 24 hours (should not occur with proper input)
         const now = moment();
-        const format = 'YYYY-MM-DD HH:mm:ss';
+        const format = window.DateUtils.format;
         startDateStr = now.subtract(1, 'days').format(format);
         endDateStr = '';
     }
@@ -490,71 +486,6 @@ function processChartData(config, data) {
 }
 
 /**
- * Gets date range start and end dates based on range code
- * @param {string} range - Range code or number of days
- * @returns {Object} - Object with startDate and endDate
- */
-function getDateRange(range) {
-    const now = moment();
-    const format = 'YYYY-MM-DD HH:mm:ss';
-    
-    switch (range) {
-        case 'today':
-            // Just today, from midnight to now
-            return {
-                startDate: now.clone().startOf('day').format(format),
-                endDate: now.format(format)
-            };
-            
-        case 'yesterday':
-            // Just yesterday, full day
-            return {
-                startDate: now.clone().subtract(1, 'days').startOf('day').format(format),
-                endDate: now.clone().subtract(1, 'days').endOf('day').format(format)
-            };
-            
-        case 'this-week':
-            // This week, from Monday midnight to now
-            return {
-                startDate: now.clone().startOf('isoWeek').format(format),
-                endDate: now.format(format)
-            };
-            
-        case 'last-week':
-            // Last week, full week Monday-Sunday
-            return {
-                startDate: now.clone().subtract(1, 'weeks').startOf('isoWeek').format(format),
-                endDate: now.clone().subtract(1, 'weeks').endOf('isoWeek').format(format)
-            };
-            
-        case 'start':
-            // From the beginning of data collection to now
-            const startOfData = now.clone().subtract(60, 'days'); // Use 60 days ago as start date
-            return {
-                startDate: startOfData.format(format),
-                endDate: now.format(format)
-            };
-            
-        default:
-            // If it's a number, interpret as number of days ago to now
-            const days = parseInt(range);
-            if (!isNaN(days)) {
-                return {
-                    startDate: now.clone().subtract(days, 'days').format(format),
-                    endDate: now.format(format)
-                };
-            } else {
-                // Default to last 24 hours
-                return {
-                    startDate: now.clone().subtract(1, 'days').format(format),
-                    endDate: now.format(format)
-                };
-            }
-    }
-}
-
-
-/**
  * Determines whether a chart should use integer values
  * @param {Object} config - Chart configuration
  * @returns {boolean} - True if chart should use only integers
@@ -619,7 +550,6 @@ if (typeof window !== 'undefined') {
         fetchTimeRangeData,
         fetchSingleSeries,
         processChartData,
-        getDateRange,
         shouldUseIntegerValues,
         formatChartNumber
     };

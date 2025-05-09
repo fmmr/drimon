@@ -306,22 +306,11 @@ function createDateRanges(config = null) {
     dateRanges.className = 'date-ranges';
     
     // If no config is provided, use default date ranges
-    const allRanges = config && config.ranges ? config.ranges : [
-        { range: 'default', key: 'defaultDate' },
-        { range: 'today', key: 'today' },
-        { range: '1', key: 'twoDay' },
-        { range: '2', key: 'threeDay' },
-        { range: '6', key: 'sevenDay' },
-        { range: '13', key: 'fourteenDay' },
-        { range: 'yesterday', key: 'yesterday' },
-        { range: 'this-week', key: 'week' },
-        { range: 'last-week', key: 'lastWeek' },
-        { range: 'start', key: 'start' }
-    ];
+    const allRanges = config && config.ranges
     
     // Split into primary (visible as chips) and secondary (in dropdown) ranges
-    const primaryRanges = allRanges.slice(0, 6); // First 6 ranges as visible chips
-    const secondaryRanges = allRanges.slice(6);  // Remaining ranges go to dropdown
+    const primaryRanges = allRanges.slice(0, 7); // First 6 ranges as visible chips
+    const secondaryRanges = allRanges.slice(7);  // Remaining ranges go to dropdown
     
     // Add primary date chips directly to the container
     primaryRanges.forEach(chip => {
@@ -691,9 +680,12 @@ const HeaderConfig = {
                     { range: '2', key: 'threeDay' },
                     { range: '6', key: 'sevenDay' },
                     { range: '13', key: 'fourteenDay' },
+                    { range: '30', key: 'thirtyDay' },
                     { range: 'yesterday', key: 'yesterday' },
                     { range: 'this-week', key: 'week' },
                     { range: 'last-week', key: 'lastWeek' },
+                    { range: 'this-month', key: 'month' },
+                    { range: 'last-month', key: 'lastMonth' },
                     { range: 'start', key: 'start' }
                 ]
             }

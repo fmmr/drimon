@@ -15,19 +15,22 @@ window.DriMonTranslations = {
   "no": {
     "loading": "Laster...",
     "noData": "Ingen data tilgjengelig",
-    "today": "i dag",
-    "yesterday": "i går",
-    "week": "uke",
-    "lastWeek": "uke-1",
-    "start": "start",
     "default": "Standard",
-    "defaultDate": "⌂",
-    "twoDay": "2d",
-    "threeDay": "3d",
-    "sevenDay": "7d",
-    "fourteenDay": "14d",
-    "results": "Resultater",
-    "update": "Oppdater",
+    "defaultDate": "⌂",    // house = default / home view
+    "fourteenDay": "1️⃣4️⃣", // loop = ongoing period
+    "lastMonth": "↩️📆3️⃣0️⃣",     // back + calendar = last week
+    "lastWeek": "↩️📆7️⃣",     // back + calendar = last week
+    "month": "📆3️⃣0️⃣",          // tear-off calendar = current week
+    "results": "🔢",       // bar chart = results
+    "sevenDay": "7️⃣",
+    "start": "⏳",         // hourglass = since start
+    "thirtyDay": "3️⃣0️⃣",
+    "threeDay": "3️⃣",
+    "today": "📅",         // calendar = today
+    "twoDay": "2️⃣",
+    "update": "↻" ,        // spinning arrows = refresh/update
+    "week": "📆7️⃣",          // tear-off calendar = current week
+    "yesterday": "🕒",     // clock = yesterday / recent
     
     "temperature": "Temperatur",
     "humidity": "Luftfuktighet",
@@ -161,19 +164,22 @@ window.DriMonTranslations = {
   "en": {
     "loading": "Loading...",
     "noData": "No data available",
-    "today": "today",
-    "yesterday": "yesterday",
-    "week": "week",
-    "lastWeek": "week-1",
-    "start": "start",
-    "default": "Default",
-    "defaultDate": "⌂",
-    "twoDay": "2d",
-    "threeDay": "3d",
-    "sevenDay": "7d",
-    "fourteenDay": "14d",
-    "results": "Results",
-    "update": "Update",
+    "default": "Standard",
+    "defaultDate": "⌂",    // house = default / home view
+    "fourteenDay": "1️⃣4️⃣", // loop = ongoing period
+    "lastMonth": "↩️📆3️⃣0️⃣",     // back + calendar = last week
+    "lastWeek": "↩️📆7️⃣",     // back + calendar = last week
+    "month": "📆3️⃣0️⃣",          // tear-off calendar = current week
+    "results": "🔢",       // bar chart = results
+    "sevenDay": "7️⃣",
+    "start": "⏳",         // hourglass = since start
+    "thirtyDay": "3️⃣0️⃣",
+    "threeDay": "3️⃣",
+    "today": "📅",         // calendar = today
+    "twoDay": "2️⃣",
+    "update": "↻" ,        // spinning arrows = refresh/update
+    "week": "📆7️⃣",          // tear-off calendar = current week
+    "yesterday": "🕒",     // clock = yesterday / recent
     
     "temperature": "Temperature",
     "humidity": "Humidity",
@@ -307,20 +313,23 @@ window.DriMonTranslations = {
   "es": {
     "loading": "Cargando...",
     "noData": "Datos no disponibles",
-    "today": "hoy",
-    "yesterday": "ayer",
-    "week": "semana",
-    "lastWeek": "semana-1",
-    "start": "inicio",
-    "default": "Predeterminado",
-    "defaultDate": "⌂",
-    "twoDay": "2d",
-    "threeDay": "3d",
-    "sevenDay": "7d",
-    "fourteenDay": "14d",
-    "results": "Resultados",
-    "update": "Actualizar",
-    
+    "default": "Standard",
+    "defaultDate": "⌂",    // house = default / home view
+    "fourteenDay": "1️⃣4️⃣", // loop = ongoing period
+    "lastMonth": "↩️📆3️⃣0️⃣",     // back + calendar = last week
+    "lastWeek": "↩️📆7️⃣",     // back + calendar = last week
+    "month": "📆3️⃣0️⃣",          // tear-off calendar = current week
+    "results": "🔢",       // bar chart = results
+    "sevenDay": "7️⃣",
+    "start": "⏳",         // hourglass = since start
+    "thirtyDay": "3️⃣0️⃣",
+    "threeDay": "3️⃣",
+    "today": "📅",         // calendar = today
+    "twoDay": "2️⃣",
+    "update": "↻" ,        // spinning arrows = refresh/update
+    "week": "📆7️⃣",          // tear-off calendar = current week
+    "yesterday": "🕒",     // clock = yesterday / recent
+		
     "temperature": "Temperatura",
     "humidity": "Humedad",
     "pressure": "Presión",

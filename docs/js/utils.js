@@ -167,40 +167,8 @@ const Utils = {
      * @returns {Object} Object with startDate and endDate
      */
     getDateRange: function(rangeCode) {
-        const now = moment();
-        const format = 'YYYY-MM-DD HH:mm:ss';
-        let startDate = '';
-        let endDate = '';
-        
-        if (rangeCode.match(/^\d+$/)) {
-            // If range is a number, subtract that many days
-            const days = parseInt(rangeCode);
-            startDate = moment().subtract(days, 'days').startOf('day').format(format);
-        } else {
-            switch (rangeCode) {
-                case 'start':
-                    startDate = moment('2024-07-15').format(format);
-                    break;
-                case 'today':
-                    startDate = moment().startOf('day').format(format);
-                    break;
-                case 'yesterday':
-                    startDate = moment().subtract(1, 'days').startOf('day').format(format);
-                    endDate = moment().subtract(1, 'days').endOf('day').format(format);
-                    break;
-                case 'this-week':
-                    startDate = moment().startOf('isoWeek').format(format);
-                    break;
-                case 'last-week':
-                    startDate = moment().subtract(1, 'weeks').startOf('isoWeek').format(format);
-                    endDate = moment().subtract(1, 'weeks').endOf('isoWeek').format(format);
-                    break;
-                default:
-                    startDate = moment().subtract(1, 'days').format(format);
-            }
-        }
-        
-        return { startDate, endDate };
+        // Use the centralized DateUtils.getDateRange implementation
+        return window.DateUtils.getDateRange(rangeCode);
     },
     
     /**
