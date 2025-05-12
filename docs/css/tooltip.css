@@ -7,7 +7,7 @@
   border-radius: 6px;
   padding: 12px;
   font-size: 14px;
-  max-width: 280px;
+  max-width: 500px; /* Increased for forecast table */
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
   pointer-events: none;
   opacity: 0;
@@ -93,12 +93,154 @@
   background: #5cadff;
 }
 
+/* Forecast tooltip specific styling */
+.forecast-tooltip {
+  font-size: 13px;
+}
+
+.current-weather-section {
+  margin-bottom: 12px;
+}
+
+.current-weather-icon {
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.current-weather-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.current-weather-table td {
+  padding: 2px 4px;
+}
+
+.current-weather-table td:first-child {
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.current-weather-table td:last-child {
+  text-align: right;
+}
+
+.forecast-divider {
+  height: 1px;
+  background-color: rgba(255, 255, 255, 0.2);
+  margin: 10px 0;
+}
+
+[data-theme="dark"] .forecast-divider {
+  background-color: rgba(200, 200, 200, 0.2);
+}
+
+.forecast-header {
+  margin: 8px 0;
+  padding: 0;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.forecast-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+}
+
+.forecast-table th {
+  text-align: center;
+  font-weight: 500;
+  font-size: 12px;
+  padding: 4px 8px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.forecast-table td {
+  text-align: center;
+  padding: 4px 6px;
+  font-size: 13px;
+}
+
+.forecast-day {
+  text-align: left;
+  font-weight: 500;
+}
+
+.forecast-day.today {
+  color: #ffcc33;
+}
+
+.forecast-period {
+  position: relative;
+}
+
+.forecast-symbol img {
+  display: block;
+  width: 24px;
+  height: 24px;
+  margin: 0 auto 2px;
+}
+
+.forecast-temp {
+  font-size: 12px;
+}
+
+.forecast-high-low {
+  text-align: right;
+  font-size: 12px;
+}
+
+.forecast-high-low .high {
+  color: #ff6b6b;
+}
+
+.forecast-high-low .low {
+  color: #74b9ff;
+}
+
+.forecast-footer {
+  font-size: 11px;
+  text-align: right;
+  color: rgba(255, 255, 255, 0.7);
+  margin-top: 5px;
+  padding-top: 5px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .forecast-footer {
+  color: rgba(220, 220, 220, 0.7);
+  border-top: 1px solid rgba(200, 200, 200, 0.2);
+}
+
 /* Mobile enhancements - larger touch areas */
 @media (max-width: 768px) {
   .custom-tooltip {
-    padding: 14px;
-    font-size: 15px;
-    max-width: 250px;
+    padding: 10px;
+    font-size: 14px;
+    max-width: 350px; /* Increased for forecast */
+  }
+
+  .forecast-tooltip {
+    font-size: 11px;
+  }
+
+  .forecast-table th,
+  .forecast-table td {
+    padding: 3px 4px;
+    font-size: 11px;
+  }
+
+  .forecast-symbol img {
+    width: 20px;
+    height: 20px;
+  }
+
+  .forecast-footer {
+    font-size: 10px;
   }
 
   /* Make tooltip indicators more visible on mobile */

@@ -7,10 +7,10 @@
 
 // Store astronomical data globally
 window.SunEvents = (function() {
-    // Coordinates for Rødtangen, Norway
+    // Use global location constants, note SunCalc uses 'lng' instead of 'lon'
     const LOCATION = {
-        lat: 59.532221,
-        lng: 10.418494
+        lat: window.LOCATION.LAT,
+        lng: window.LOCATION.LON
     };
 
     // Visible planets to include in the tooltip
@@ -98,7 +98,12 @@ window.SunEvents = (function() {
             // Calculate planet positions if the planetary module is available
             let planets = {};
             if (window.PlanetPositions) {
-                const planetPositions = window.PlanetPositions.calculatePlanetPositions(now, LOCATION);
+                // Adjust parameter to match PlanetPositions expected format (lng instead of lon)
+                const observer = {
+                    lat: window.LOCATION.LAT,
+                    lng: window.LOCATION.LON
+                };
+                const planetPositions = window.PlanetPositions.calculatePlanetPositions(now, observer);
 
                 // Format positions for all planets
                 VISIBLE_PLANETS.forEach(planet => {

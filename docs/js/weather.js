@@ -2,7 +2,9 @@
 const DEBUG_WEATHER = false; // Set to true to enable debug logging
 
 // Store latest weather data for re-use when language changes
-let latestWeatherData = null;
+// Make this a global variable so forecast.js can access it
+window.latestWeatherData = null;
+let latestWeatherData = window.latestWeatherData;
 
 // Get weather elements function for dynamic access
 function getWeatherElements() {
@@ -28,9 +30,9 @@ async function fetchWeather() {
     }
 
     // No longer skipping for Safari - our new implementation should work on all browsers
-    
-    // Røtangen coordinates
-    const url = 'https://api.met.no/weatherapi/nowcast/2.0/complete?lat=59.532213&lon=10.418231';
+
+    // Use global location constants
+    const url = `https://api.met.no/weatherapi/nowcast/2.0/complete?lat=${window.LOCATION.LAT}&lon=${window.LOCATION.LON}`;
     const cacheTTL = 3 * 60 * 1000; // 3 minutes
     
     try {
@@ -128,11 +130,19 @@ async function fetchWeather() {
 
 // Update the UI with weather data
 function updateDisplay(data) {
-    // Store the latest data for language switching
+    // Store the latest data for language switching and sharing with forecast.js
     latestWeatherData = data;
-    
+    window.latestWeatherData = data;
+
     // Call the common function for updating the display
     updateWeatherDisplay();
+
+    // Update forecast tooltip if it's active and Forecast module is loaded
+    const metLink = document.getElementById('met-link');
+    if (metLink && metLink.hasAttribute('data-forecast-tooltip') &&
+        window.Forecast && typeof window.Forecast.attachForecastTooltip === 'function') {
+        window.Forecast.attachForecastTooltip();
+    }
 }
 
 // Separate function to update display that can be called when language changes
@@ -248,9 +258,11 @@ function updateWeatherDisplay() {
     });
     
 
-    // Set the tooltip data attribute
-    elements.metLink.setAttribute('data-tooltip-content', weatherTooltip);
-    elements.metLink.setAttribute('data-has-tooltip', 'true');
+    // Only set the tooltip data attribute if the forecast tooltip isn't active
+    if (!elements.metLink.hasAttribute('data-forecast-tooltip')) {
+        elements.metLink.setAttribute('data-tooltip-content', weatherTooltip);
+        elements.metLink.setAttribute('data-has-tooltip', 'true');
+    }
     
     // Update weather icon if available
     const symbolData = latestWeatherData.properties.timeseries[0].data.next_1_hours?.summary;

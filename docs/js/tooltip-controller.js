@@ -200,16 +200,26 @@ const TooltipController = (function() {
     function getTooltipContent(element) {
         // First try data-tooltip-content
         if (element.dataset.tooltipContent) {
+            // Check if this is a forecast tooltip
+            if (element.hasAttribute('data-forecast-tooltip')) {
+                return element.dataset.tooltipContent; // Already HTML
+            }
+
             // Try parsing as JSON
             try {
                 const contentObj = JSON.parse(element.dataset.tooltipContent);
                 return formatTooltipContent(contentObj);
             } catch (e) {
-                // If not valid JSON, use the string directly
+                // If not valid JSON, check if it begins with < for HTML
+                if (element.dataset.tooltipContent.trim().startsWith('<')) {
+                    return element.dataset.tooltipContent; // Already HTML
+                }
+
+                // Otherwise use the string directly
                 return element.dataset.tooltipContent;
             }
         }
-        
+
         // Fall back to data-original-title
         return element.dataset.originalTitle || '';
     }
