@@ -137,12 +137,14 @@ async function fetchTimeRangeData(config, startDateStr, endDateStr, results = DE
         // Fetch data for all series in parallel
         try {
             const seriesPromises = config.series.map(series => {
+                // Use extraResults if specified in the series config
+                const seriesResults = series.extraResults || results;
                 return fetchSingleSeries(
-                    series.channel, 
+                    series.channel,
                     series.field,
                     startDateStr,
                     endDateStr,
-                    results
+                    seriesResults
                 );
             });
             
@@ -150,18 +152,93 @@ async function fetchTimeRangeData(config, startDateStr, endDateStr, results = DE
             const seriesData = await Promise.all(seriesPromises);
             
             // Format into a single data structure with multiple series
+
+            // First, find the common time range across all series for better synchronization
+            let allTimestamps = [];
+
+            // Check if this chart has timestamp synchronization disabled
+            const disableSyncTimestamps = config.disableSyncTimestamps === true;
+
+            // For charts with disabled synchronization (like the light chart),
+            // we don't collect combined timestamps to preserve the original data points
+            if (!disableSyncTimestamps) {
+                // Collect all unique timestamps from all series
+                seriesData.forEach(data => {
+                    if (data.feeds && data.feeds.length > 0) {
+                        const timestamps = data.feeds.map(feed => feed.created_at);
+                        allTimestamps = allTimestamps.concat(timestamps);
+                    }
+                });
+
+                // Sort timestamps and remove duplicates
+                allTimestamps = [...new Set(allTimestamps)].sort();
+            } else {
+                // For disabled sync, just use the primary series timestamps
+                allTimestamps = seriesData[0].feeds.map(feed => feed.created_at);
+            }
+
+            // Create an object with timestamps as keys for quick lookup
+            const timestampMap = {};
+            allTimestamps.forEach(timestamp => {
+                timestampMap[timestamp] = { created_at: timestamp };
+            });
+
+            // For each series, find data for each timestamp or null if missing
+            const syncedSeries = seriesData.map((data, index) => {
+                const series = config.series[index];
+                const fieldName = `field${series.field}`;
+
+                // Create a map of timestamps to values for quick lookup
+                const valueMap = {};
+                if (data.feeds && data.feeds.length > 0) {
+                    data.feeds.forEach(feed => {
+                        valueMap[feed.created_at] = feed[fieldName];
+                    });
+                }
+
+                // Create optimized feeds for this series
+                let syncedFeeds;
+
+                // Check if this is a chart with disabled timestamp synchronization
+                const disableSyncTimestamps = config.disableSyncTimestamps === true;
+
+                if (disableSyncTimestamps) {
+                    // For charts with disabled synchronization (like light chart)
+                    // Use the original feeds directly without any transformation
+                    syncedFeeds = data.feeds.map(feed => ({
+                        created_at: feed.created_at,
+                        [fieldName]: feed[fieldName]
+                    }));
+                } else {
+                    // For normal charts, use common timestamps
+                    syncedFeeds = allTimestamps.map(timestamp => {
+                        return {
+                            created_at: timestamp,
+                            [fieldName]: valueMap[timestamp] || null
+                        };
+                    });
+                }
+
+                return {
+                    title: series.title,
+                    titleKey: series.titleKey,
+                    channel: series.channel,
+                    field: series.field,
+                    color: series.color,
+                    axis: series.axis,
+                    feeds: syncedFeeds
+                };
+            });
+
+            // Create combined feeds with all timestamps for reference
+            const combinedFeeds = allTimestamps.map(timestamp => {
+                return { created_at: timestamp };
+            });
+
             const combinedData = {
                 chart_id: config.id,
-                series: seriesData.map((data, index) => ({
-                    title: config.series[index].title,
-                    titleKey: config.series[index].titleKey, // Include titleKey for translation
-                    channel: config.series[index].channel,
-                    field: config.series[index].field,
-                    color: config.series[index].color,
-                    axis: config.series[index].axis, // Include axis information
-                    feeds: data.feeds
-                })),
-                feeds: seriesData[0].feeds, // Use first series for timestamps
+                series: syncedSeries,
+                feeds: combinedFeeds,
                 is_multi_series: true,
                 secondYAxis: config.secondYAxis // Pass along second y-axis config
             };

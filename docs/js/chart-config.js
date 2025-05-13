@@ -25,6 +25,8 @@
 //   Example: 'temperatures' for temperature category
 // - defaultRange: Default range value for this chart when the 'default' date range is selected
 //   Example: 13 for air pressure chart (shows 14 days by default)
+// - disableSyncTimestamps: When true, maintains independent timestamps for each series
+//   Useful for multi-series charts with data from different channels to prevent dotted lines
 //
 window.chartConfigs = [
     // Define chart groupings for linked tooltips
@@ -110,23 +112,27 @@ window.chartConfigs = [
     // Multi-series chart for light measurements with dual y-axes
     {
         id: 'chart-light',
-        titleKey: 'lightChart', 
+        titleKey: 'lightChart',
         // Default range for this chart when using the 'default' date range
         defaultRange: 1,
+        // Disable synchronization for this chart to preserve all data points
+        disableSyncTimestamps: true,
         series: [
             {
                 titleKey: 'ceiling',   // External/ceiling light
-                channel: 2568299, 
+                channel: 2568299,
                 field: 8,
                 color: '#e6a500',  // Yellow for light
                 axis: 'y'          // Primary y-axis
             },
             {
                 titleKey: 'internal',  // Internal light intensity
-                channel: 2584547, 
+                channel: 2584547,
                 field: 5,
                 color: '#8a5a00',  // Dark yellow for light intensity
-                axis: 'y1'         // Secondary y-axis
+                axis: 'y1',        // Secondary y-axis
+                // No need for extra results
+                extraResults: 10000
             }
         ],
         row: 1,

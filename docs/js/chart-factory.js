@@ -725,11 +725,15 @@ const ChartFactory = {
                         hasNegativeValues: false
                     };
                 }
-                
-                // Use timestamps from first series for consistency
-                const timestamps = data.series[0].feeds.map(feed => feed.created_at);
-                // Use Date objects for time scale
-                const labels = timestamps.map(timestamp => new Date(timestamp));
+
+                // Check if this is a chart with disabled timestamp synchronization
+                const disableSyncTimestamps = config.disableSyncTimestamps === true;
+                let timestamps = [];
+                let labels = [];
+
+                // Get timestamps from first series (already synchronized in data-components.js if needed)
+                timestamps = data.series[0].feeds.map(feed => feed.created_at);
+                labels = timestamps.map(timestamp => new Date(timestamp));
                 
                 let hasNegativeValues = false;
                 
@@ -765,13 +769,33 @@ const ChartFactory = {
                     
                     // Create dataset for this series with {x, y} format for time scale
                     const yAxisID = seriesConfig.axis || 'y';
-                    
-                    return {
-                        label: translatedTitle || series.title || `Series ${index + 1}`,
-                        data: labels.map((date, i) => ({
+
+                    // Check if this is a chart with disabled timestamp synchronization
+                    const disableSyncTimestamps = config.disableSyncTimestamps === true;
+                    let dataPoints = [];
+
+                    if (disableSyncTimestamps) {
+                        // For charts with disabled sync (like light chart), each series needs its own timestamps
+                        // Get timestamps and values directly from this series
+                        const seriesDates = series.feeds.map(feed => new Date(feed.created_at));
+                        const seriesValues = series.feeds.map(feed => parseFloat(feed[`field${series.field}`]));
+
+                        // Create data points for this series
+                        dataPoints = seriesDates.map((date, i) => ({
                             x: date,
                             y: seriesValues[i]
-                        })),
+                        }));
+                    } else {
+                        // For normal charts, use the common timestamps
+                        dataPoints = labels.map((date, i) => ({
+                            x: date,
+                            y: seriesValues[i]
+                        }));
+                    }
+
+                    return {
+                        label: translatedTitle || series.title || `Series ${index + 1}`,
+                        data: dataPoints,
                         borderColor: series.color || seriesConfig.color,
                         backgroundColor: `${series.color || seriesConfig.color}20`,
                         borderWidth: 2,
