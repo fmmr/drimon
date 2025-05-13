@@ -117,6 +117,10 @@ window.chartConfigs = [
         defaultRange: 1,
         // Disable synchronization for this chart to preserve all data points
         disableSyncTimestamps: true,
+        // Add special handling to show values in the legend
+        specialHandling: {
+            consistentLegendLabels: true
+        },
         series: [
             {
                 titleKey: 'ceiling',   // External/ceiling light
@@ -226,6 +230,10 @@ window.chartConfigs = [
         titleKey: 'plantsTempsChart',
         // Default range for this chart when using the 'default' date range
         defaultRange: 1,
+        // Add special handling to show values in the legend
+        specialHandling: {
+            consistentLegendLabels: true
+        },
         // Define multiple data series for a single chart
         series: [
             {
@@ -254,6 +262,10 @@ window.chartConfigs = [
         titleKey: 'sensorsTempsChart',
         // Default range for this chart when using the 'default' date range
         defaultRange: 1,
+        // Add special handling to show values in the legend
+        specialHandling: {
+            consistentLegendLabels: true
+        },
         // Define multiple data series for a single chart
         series: [
             {
