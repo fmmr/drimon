@@ -462,21 +462,37 @@ window.ChartLifecycleManager = {
         // Set up periodic garbage collection for stale charts
         const CLEANUP_INTERVAL = 300000; // 5 minutes
         const STALE_THRESHOLD = 1800000; // 30 minutes
-        
+        const REFRESH_INTERVAL = 600000; // 10 minutes
+
         // Create interval for periodic cleanup
         const cleanupInterval = setInterval(() => {
             // Only run cleanup if debug mode is not enabled (to avoid interfering with debugging)
             if (!window.DriMonDebug || !window.DriMonDebug.enabled) {
                 const cleanedCount = this.cleanupStaleCharts(STALE_THRESHOLD);
-                
+
                 if (cleanedCount > 0 && console && console.debug) {
                     console.debug(`Auto cleanup: removed ${cleanedCount} stale charts`);
                 }
             }
         }, CLEANUP_INTERVAL);
-        
-        // Store interval ID for potential cleanup
+
+        // Add automatic chart refresh interval to prevent charts from going blank
+        const refreshInterval = setInterval(() => {
+            // Check if any charts exist
+            const chartCount = Object.keys(this._resources.charts).length;
+            if (chartCount > 0) {
+                // Check if ChartFactory is available
+                if (window.ChartFactory && window.ChartFactory.resizeAll) {
+                    // Force a resize which will redraw the charts
+                    window.ChartFactory.resizeAll();
+                    console.debug(`Auto refresh: refreshed ${chartCount} charts`);
+                }
+            }
+        }, REFRESH_INTERVAL);
+
+        // Store interval IDs for potential cleanup
         this._cleanupIntervalId = cleanupInterval;
+        this._refreshIntervalId = refreshInterval;
     },
     
     /**

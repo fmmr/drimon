@@ -1,6 +1,9 @@
 // YR.no weather integration - minimal implementation
 const DEBUG_WEATHER = false; // Set to true to enable debug logging
 
+// Cache TTL - 3 minutes (in milliseconds)
+const WEATHER_CACHE_TTL = 3 * 60 * 1000;
+
 // Store latest weather data for re-use when language changes
 // Make this a global variable so forecast.js can access it
 window.latestWeatherData = null;
@@ -33,14 +36,24 @@ async function fetchWeather() {
 
     // Use global location constants
     const url = `https://api.met.no/weatherapi/nowcast/2.0/complete?lat=${window.LOCATION.LAT}&lon=${window.LOCATION.LON}`;
-    const cacheTTL = 3 * 60 * 1000; // 3 minutes
-    
+
     try {
         // Check cache first
         const lastFetchTime = localStorage.getItem('lastMetFetchTime');
         const currentTime = Date.now();
-        
-        if (lastFetchTime && (currentTime - parseInt(lastFetchTime) < cacheTTL)) {
+
+        // Get current hour to force cache refresh at specific times of day
+        const currentHour = new Date().getHours();
+
+        // Check if we should force a refresh based on time of day
+        // Force a refresh in the morning (6-8), midday (12-13), and evening (18-19)
+        const forceRefresh = (currentHour >= 6 && currentHour <= 8) ||
+                            (currentHour >= 12 && currentHour <= 13) ||
+                            (currentHour >= 18 && currentHour <= 19);
+
+        if (lastFetchTime &&
+            (currentTime - parseInt(lastFetchTime) < WEATHER_CACHE_TTL) &&
+            !forceRefresh) {
             const cachedData = localStorage.getItem('cachedMetData');
             if (cachedData) {
                 log('Using cached data');
@@ -281,5 +294,5 @@ function updateWeatherDisplay() {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     fetchWeather();
-    setInterval(fetchWeather, 3 * 60 * 1000); // Refresh every 3 minutes to match cache TTL
+    setInterval(fetchWeather, WEATHER_CACHE_TTL); // Refresh every 3 minutes to match cache TTL
 });

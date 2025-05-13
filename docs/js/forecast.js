@@ -1,6 +1,6 @@
 /**
  * Weather Forecast integration with MET Norway API
- * 
+ *
  * This module fetches and processes forecast data from the MET Norway API
  * and provides a tooltip-friendly format for display.
  */
@@ -8,7 +8,7 @@
 // Configurable constants
 const DEBUG_FORECAST = false; // Set to true to enable debug logging
 // Use the global location constants from constants.js
-const FORECAST_CACHE_TTL = 60 * 60 * 1000; // 1 hour cache
+const FORECAST_CACHE_TTL = 30 * 60 * 1000; // 30 minute cache (reduced from 1 hour)
 
 // Store latest forecast data for re-use
 let latestForecastData = null;
@@ -141,13 +141,24 @@ function processForecastData(data) {
  */
 async function fetchForecastData() {
     const url = `https://api.met.no/weatherapi/locationforecast/2.0/compact?lat=${window.LOCATION.LAT}&lon=${window.LOCATION.LON}`;
-    
+
     try {
         // Check cache first
         const lastFetchTime = localStorage.getItem('lastForecastFetchTime');
         const currentTime = Date.now();
-        
-        if (lastFetchTime && (currentTime - parseInt(lastFetchTime) < FORECAST_CACHE_TTL)) {
+
+        // Get current hour to force cache refresh at specific times of day
+        const currentHour = new Date().getHours();
+
+        // Check if we should force a refresh based on time of day
+        // Force a refresh in the morning (6-8), midday (12-13), and evening (18-19)
+        const forceRefresh = (currentHour >= 6 && currentHour <= 8) ||
+                            (currentHour >= 12 && currentHour <= 13) ||
+                            (currentHour >= 18 && currentHour <= 19);
+
+        if (lastFetchTime &&
+            (currentTime - parseInt(lastFetchTime) < FORECAST_CACHE_TTL) &&
+            !forceRefresh) {
             const cachedData = localStorage.getItem('cachedForecastData');
             if (cachedData) {
                 logForecast('Using cached forecast data');
@@ -464,19 +475,77 @@ async function initForecast() {
         await fetchForecastData();
         attachForecastTooltip();
         
-        // Set up periodic refresh every hour
+        // Set up periodic refresh using the cache TTL
         setInterval(async () => {
             await fetchForecastData();
             attachForecastTooltip();
         }, FORECAST_CACHE_TTL);
+
+        // Additional refresh on hour change to ensure proper time period display
+        const checkHourChange = () => {
+            const now = new Date();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+
+            // If we're at the top of the hour (00:00-00:59), refresh the forecast
+            if (minutes === 0 && seconds < 60) {
+                fetchForecastData().then(() => {
+                    attachForecastTooltip();
+                    logForecast('Refreshed forecast data at hour change');
+                });
+            }
+        };
+
+        // Check for hour changes every minute
+        setInterval(checkHourChange, 60 * 1000);
         
     } catch (error) {
         logForecast('Error initializing forecast', error);
     }
 }
 
+/**
+ * Clean up old forecast and astro cache entries
+ * This prevents accumulation of outdated entries in localStorage
+ */
+function cleanupOldCacheEntries() {
+    try {
+        // Get all localStorage keys
+        const keys = Object.keys(localStorage);
+
+        // Current date for comparison
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+
+        // Process each key
+        keys.forEach(key => {
+            // Check for forecast cache entries
+            if (key === 'cachedForecastData' || key === 'lastForecastFetchTime') {
+                // These are managed by the fetchForecastData function
+                return;
+            }
+
+            // Check for astro cache entries with date
+            if (key.startsWith('drimon_astro_')) {
+                const dateStr = key.substring('drimon_astro_'.length);
+
+                // If the date is not today, remove it
+                if (dateStr !== todayStr) {
+                    localStorage.removeItem(key);
+                    logForecast('Removed outdated astro cache entry', key);
+                }
+            }
+        });
+    } catch (error) {
+        logForecast('Error cleaning up old cache entries', error);
+    }
+}
+
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
+    // Clean up old cache entries
+    cleanupOldCacheEntries();
+
     // Delay initialization to let other components load first
     setTimeout(initForecast, 1000);
 });
@@ -489,5 +558,6 @@ window.Forecast = {
     fetchForecastData,
     getLatestForecastData,
     createForecastTooltipHTML,
-    attachForecastTooltip
+    attachForecastTooltip,
+    cleanupOldCacheEntries
 };

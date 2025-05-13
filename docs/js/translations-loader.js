@@ -140,6 +140,8 @@ window.DriMonTranslations = {
     "dayLengthDecrease": "Dag ↓",
     "hourSymbol": "t",
     "source": "Kilde",
+    "lastUpdated": "Sist oppdatert",
+    "status": "Status",
 
     // Position info
     "sunPosition": "Sol posisjon",
@@ -294,6 +296,8 @@ window.DriMonTranslations = {
     "dayLengthDecrease": "Day ↓",
     "hourSymbol": "h",
     "source": "Source",
+    "lastUpdated": "Last updated",
+    "status": "Status",
 
     // Position info
     "sunPosition": "Sun position",
@@ -448,6 +452,8 @@ window.DriMonTranslations = {
     "dayLengthDecrease": "Día ↓",
     "hourSymbol": "h",
     "source": "Fuente",
+    "lastUpdated": "Última actualización",
+    "status": "Estado",
 
     // Position info
     "sunPosition": "Posición del sol",
