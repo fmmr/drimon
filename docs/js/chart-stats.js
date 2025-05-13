@@ -10,20 +10,23 @@
  */
 window.ChartStats = window.ChartStats || {
     /**
-     * Get translated labels for statistics (Low, Avg, High, Now)
-     * @returns {Object} Object with translated labels
+     * Get symbols and labels for statistics (Low, Avg, High, Now)
+     * Using unicode symbols for better intuitive understanding
+     * @returns {Object} Object with symbols and translated labels
      */
     getStatLabels: function() {
         const lowTranslation = window.I18n.translate('low');
         const avgTranslation = window.I18n.translate('avg');
         const highTranslation = window.I18n.translate('high');
         const nowTranslation = window.I18n.translate('now');
-        
+
         return {
-            lowLabel: lowTranslation.length > 0 ? lowTranslation[0].toUpperCase() : 'L',
-            avgLabel: avgTranslation.length > 0 ? avgTranslation[0].toUpperCase() : 'A',
-            highLabel: highTranslation.length > 0 ? highTranslation[0].toUpperCase() : 'H',
-            nowLabel: nowTranslation.length > 0 ? nowTranslation[0].toUpperCase() : 'N',
+            // Unicode symbols: ▼ (down triangle), ● (circle), ▲ (up triangle), ◆ (diamond)
+            lowLabel: "▼",  // Min value - down arrow
+            avgLabel: "●",  // Average value - dot/circle
+            highLabel: "▲", // Max value - up arrow
+            nowLabel: "◆",  // Current value - diamond
+            // Store full translated labels for tooltips
             lowFullLabel: lowTranslation,
             avgFullLabel: avgTranslation,
             highFullLabel: highTranslation,
@@ -58,11 +61,9 @@ window.ChartStats = window.ChartStats || {
     createStatHtml: function(label, labelClass, fullLabel, value, unit, formatFunc, config, range, extraClass = '') {
         // Don't append unit here as formatStatValue already includes it
         return `
-        <div class="chart-stat ${extraClass}">
-            <span class="chart-stat-label">
-                <span class="chart-stat-label-short">${label}:</span>
-                <span class="chart-stat-label-${labelClass}" data-full-label="${fullLabel}:"></span>
-            </span>${value !== null ? this.formatStatValue(value, config, range) : '—'}
+        <div class="chart-stat ${extraClass}" title="${fullLabel}">
+            <span class="chart-stat-symbol chart-stat-symbol-${labelClass}">${label}</span>
+            <span class="chart-stat-value">${value !== null ? this.formatStatValue(value, config, range) : '—'}</span>
         </div>`;
     },
     

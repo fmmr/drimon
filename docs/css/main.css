@@ -153,15 +153,16 @@ li.chartjs-legend-item span,
   .chart-container.mobile-layout .chart .chart-stats {
     margin-bottom: 1px;
     padding-bottom: 1px;
-    font-size: 12px; /* Increased font size for mobile */
-    gap: 8px; /* More space between stats */
+    font-size: 13px; /* Adjusted font size for mobile */
+    gap: 8px; /* Space between stats */
+    min-height: 18px; /* Taller for larger text, but not too tall */
   }
-  
+
   .mobile-layout .chart-stat,
   .chart-container.mobile-layout .chart .chart-stat {
     padding: 1px 3px; /* Larger padding */
     font-weight: 500; /* Slightly bolder for better readability */
-    font-size: 12px !important; /* Force larger font size on mobile */
+    font-size: 13px !important; /* Force larger font size on mobile */
   }
   
   /* 
@@ -229,13 +230,13 @@ li.chartjs-legend-item span,
   display: flex;
   justify-content: center;
   gap: 4px; /* Tighter gap */
-  font-size: 8px; /* Smaller font */
+  font-size: 11px; /* Increased to match symbol size */
   color: #666;
   font-weight: normal;
   margin-bottom: 3px;
   padding-bottom: 2px;
   border-bottom: 1px dotted rgba(128, 128, 128, 0.25);
-  min-height: 14px; /* Slightly smaller min height */
+  min-height: 16px; /* Slightly taller to accommodate larger text */
   flex-wrap: nowrap; /* Prevent wrapping to avoid line breaks */
   overflow: hidden; /* Prevent overflow */
 }
@@ -245,27 +246,59 @@ li.chartjs-legend-item span,
   align-items: center;
   padding: 0px 2px;
   white-space: nowrap; /* Prevent wrapping of text */
-  font-size: 7.5px; /* Smaller text for desktop */
+  font-size: 11px; /* Match the symbol size */
   font-weight: 500; /* Make a bit bolder for better readability */
 }
 
-.chart-stat-label {
-  margin-right: 1px; /* Smaller margin */
+/* New stat symbol styles */
+.chart-stat-symbol {
+  margin-right: 2px;
+  font-size: 11px; /* Larger size for the symbols */
+  line-height: 1;
+}
+
+/* Symbol colors */
+.chart-stat-symbol-low {
+  color: #1e88e5; /* Blue for minimum */
+}
+
+.chart-stat-symbol-avg {
+  color: #888888; /* Gray for average */
+}
+
+.chart-stat-symbol-high {
+  color: #4caf50; /* Green for maximum */
+}
+
+.chart-stat-symbol-now {
+  color: #006000; /* Green for current */
+}
+
+.chart-stat-value {
   font-weight: 500;
-  opacity: 0.9;
 }
 
 /* Highlight the current value */
 .chart-stat-current {
   font-weight: 600;
-  color: #006000;
 }
 
 /* Additional emphasis for current value on mobile */
 .mobile-layout .chart-stat-current,
 .chart-container.mobile-layout .chart .chart-stat-current {
   font-weight: 700;
-  color: #006000;
+}
+
+/* Larger symbols on mobile but not too large */
+.mobile-layout .chart-stat-symbol,
+.chart-container.mobile-layout .chart .chart-stat-symbol {
+  font-size: 13px;
+}
+
+/* Larger text on mobile to match symbols */
+.mobile-layout .chart-stat,
+.chart-container.mobile-layout .chart .chart-stat {
+  font-size: 13px !important;
 }
 
 /* Dark mode adjustments */
@@ -276,6 +309,23 @@ li.chartjs-legend-item span,
 
 [data-theme="dark"] .chart-stat {
   border-bottom-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Dark mode symbol colors - slightly brighter */
+[data-theme="dark"] .chart-stat-symbol-low {
+  color: #42a5f5; /* Brighter blue for dark mode */
+}
+
+[data-theme="dark"] .chart-stat-symbol-avg {
+  color: #aaaaaa; /* Brighter gray for dark mode */
+}
+
+[data-theme="dark"] .chart-stat-symbol-high {
+  color: #66bb6a; /* Brighter green for dark mode */
+}
+
+[data-theme="dark"] .chart-stat-symbol-now {
+  color: #4caf50; /* Green for current in dark mode too */
 }
 
 /* Moved to dark-mode.css for better organization */
