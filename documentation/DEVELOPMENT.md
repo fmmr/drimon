@@ -332,6 +332,72 @@ npx serve
 4. **Clear Dependency Graph**: Avoid circular dependencies
 5. **Explicit Data Flow**: Data should flow through explicit channels, not globals
 
+## Data Refresh & Chart Update Mechanisms
+
+The application implements multiple complementary update mechanisms to ensure data freshness and chart rendering integrity, particularly during long browser sessions:
+
+### Regular Data Refresh (1-minute interval)
+- **Implementation**: Main interval in `app.js`
+- **Behavior**: Every minute, fetches new data for displayed charts when viewing current/recent data
+- **Conditions**: Only applies when range is 'default', 'today', or '1'
+- **Method**: Updates existing chart instances without full rebuilds
+- **Benefits**: Regular data updates without performance impact
+
+### Chart Canvas Auto-Refresh (10-minute interval)
+- **Implementation**: Interval in `chart-lifecycle-manager.js` via `_setupAutomaticCleanup`
+- **Behavior**: Forces all chart canvases to redraw themselves using Chart.js' resize mechanism
+- **Purpose**: Prevents rendering artifacts that can accumulate over time
+- **Type**: Visual refresh that doesn't fetch new data, just redraws existing data
+- **Code**: `ChartFactory.resizeAll()` forces Chart.js to redraw all canvases
+
+### Full Page Refresh (20-minute timer with conditions)
+- **Implementation**: Timer in `app.js` with scroll position preservation
+- **Behavior**: Reloads entire page after 20 minutes of display time with conditions
+- **Conditions**: Triggers only when:
+  - User has been inactive for at least 2 minutes (to avoid disrupting active usage)
+  - OR it's been 45+ minutes since last refresh regardless of activity
+- **Benefits**: Completely fresh state, eliminating any JS memory issues
+- **User experience**: Preserves scroll position for seamless transition
+
+### Time-Based Force Refresh (key times of day)
+- **Implementation**: Condition checks in `weather.js` and `forecast.js`
+- **Behavior**: Forces data refresh at specific times of day regardless of cache status
+- **Times**: Morning (6-8 AM), Midday (12-13 PM), Evening (18-19 PM)
+- **Purpose**: Ensures fresh data at times when weather conditions typically change
+- **Method**: Bypasses normal caching by setting `forceRefresh` flag
+
+### DOM Detachment Detection (1-minute check)
+- **Implementation**: `checkForDetachedCharts()` function in `app.js`
+- **Behavior**: Checks if chart canvas elements have become detached from DOM
+- **Action**: If detachment detected, triggers full page refresh on next cycle
+- **Purpose**: Prevents "white chart" issue by forcing refresh before it's visible
+- **Details**: Verifies both element existence and parent-child relationships
+
+### Hour Change Detection (forecast-specific)
+- **Implementation**: `checkHourChange()` function in `forecast.js`
+- **Behavior**: On each minute, checks if we've just passed the top of an hour
+- **Action**: Forces forecast data refresh when hour changes (at 00:00-00:59 of each hour)
+- **Purpose**: Ensures timely updates of forecast time periods which change by hour
+
+### Cache TTL Mechanisms
+- **Implementation**: Cache checks in `weather.js` and `forecast.js`
+- **Weather data**: 3-minute cache with automatic expiration (WEATHER_CACHE_TTL)
+- **Forecast data**: 30-minute cache with automatic expiration (FORECAST_CACHE_TTL)
+- **Override**: Both caches are bypassed at key times of day (see Time-Based Force Refresh)
+
+### Error-Triggered Refresh
+- **Implementation**: Try/catch blocks around chart updates in `app.js`
+- **Behavior**: If chart update results in error, schedules full page refresh
+- **Method**: Sets `lastFullRefreshTime = 0` to trigger refresh on next cycle
+- **Purpose**: Self-healing when chart corruption or DOM issues are detected
+
+### Session Heartbeat (5-minute intervals)
+- **Implementation**: Interval in `app.js`
+- **Server mode**: Sends tiny HEAD request to site.webmanifest every 5 minutes
+- **Local file mode**: Uses console activity to keep JS engine active
+- **Purpose**: Prevents browser from hibernating background tabs
+- **Benefits**: Ensures continuous operation of other refresh mechanisms
+
 ## Current Module Structure
 
 ```
