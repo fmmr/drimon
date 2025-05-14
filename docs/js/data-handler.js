@@ -339,19 +339,18 @@ function updateUIWithLatestData() {
     if (window.latestWeatherData && window.latestWeatherData.properties) {
         const weatherData = window.latestWeatherData.properties;
         
-        // When the nowcast data was updated at met.no
-        if (weatherData.meta?.updated_at) {
-            // Just use the new nowcast label
-            timeTooltipData[window.I18n.translate('nowcastUpdated')] = moment(weatherData.meta.updated_at).format('L LTS');
-        }
-        
-        // The forecast time (current conditions)
+        // 1. First add the forecast time (the actual time the data is for)
         if (weatherData.timeseries && weatherData.timeseries.length > 0) {
             timeTooltipData[window.I18n.translate('forecastTime')] = moment(weatherData.timeseries[0].time).format('L LTS');
         }
+        
+        // 2. Then add the nowcast data update time (when met.no updated their data)
+        if (weatherData.meta?.updated_at) {
+            timeTooltipData[window.I18n.translate('nowcastUpdated')] = moment(weatherData.meta.updated_at).format('L LTS');
+        }
     }
     
-    // Add forecast data update time if available
+    // 3. Finally add the forecast data update time
     if (window.latestForecastData && window.latestForecastData._lastUpdated) {
         timeTooltipData[window.I18n.translate('forecastUpdated')] = moment(window.latestForecastData._lastUpdated).format('L LTS');
     } 
