@@ -71,9 +71,9 @@ async function fetchData() {
         }
         
         const responses = await Promise.all([
-            fetch(`https://api.thingspeak.com/channels/2568299/feeds/last.json?timezone=${timezone}&status=true`),
-            fetch(`https://api.thingspeak.com/channels/2584548/status/last.json?timezone=${timezone}`),
-	        fetch(`https://api.thingspeak.com/channels/2584547/status/last.json?timezone=${timezone}`),
+            fetch(`https://api.thingspeak.com/channels/${window.THINGSPEAK.DRIMON_CHANNEL}/feeds/last.json?timezone=${timezone}&status=true`),
+            fetch(`https://api.thingspeak.com/channels/${window.THINGSPEAK.DETAILS_CHANNEL}/status/last.json?timezone=${timezone}`),
+	        fetch(`https://api.thingspeak.com/channels/${window.THINGSPEAK.TECH_CHANNEL}/status/last.json?timezone=${timezone}`),
         ]);
 
         const [data1, data2, data3] = await Promise.all(responses.map(response => response.json()));
@@ -90,6 +90,21 @@ async function fetchData() {
         latestData.createdAt = moment(lastStatus.date);
         latestData.lastUpdated = latestData.createdAt.format('L LTS');
         latestData.timeSince = latestData.createdAt.fromNow();
+        
+        // Store information from all channels for the expanded tooltip
+        window.latestData = latestData;
+        
+        // Create latestData2 for channel 2584548 (plants monitoring)
+        window.latestData2 = {
+            createdAt: moment(data2.created_at),
+            lastUpdated: moment(data2.created_at).format('L LTS')
+        };
+        
+        // Create latestData3 for channel 2584547 (system monitoring)
+        window.latestData3 = {
+            createdAt: moment(data3.created_at),
+            lastUpdated: moment(data3.created_at).format('L LTS')
+        };
 
         // Call the updateUIWithLatestData function to update the UI
         updateUIWithLatestData();
@@ -298,14 +313,50 @@ function updateUIWithLatestData() {
     // Use data-tooltip-content instead of title
     const timeIndicator = elements.timeSince.parentElement;
 
-    const timeTooltipData = {
-        [window.I18n.translate('lastUpdated')]: latestData.lastUpdated
-    };
+    const timeTooltipData = {};
+    
+    // Define all the labels upfront to avoid undefined references
+    const drimonLabel = `${window.I18n.translate('drimonChannel')} (${window.THINGSPEAK.DRIMON_CHANNEL})`;
+    const detailsLabel = `${window.I18n.translate('detailsChannel')} (${window.THINGSPEAK.DETAILS_CHANNEL})`;
+    const techLabel = `${window.I18n.translate('techChannel')} (${window.THINGSPEAK.TECH_CHANNEL})`;
+    
+    // Add data from different channels with translated labels
+    timeTooltipData[drimonLabel] = latestData.lastUpdated;
+    
+    // Get data from other channels if available
+    if (window.latestData2) {
+        timeTooltipData[detailsLabel] = window.latestData2.lastUpdated;
+    }
+    
+    if (window.latestData3) {
+        timeTooltipData[techLabel] = window.latestData3.lastUpdated;
+    }
+    
+    // Add local time
+    timeTooltipData[window.I18n.translate('localTime')] = moment().format('L LTS');
+    
+    // Add weather data timestamps if available
+    if (window.latestWeatherData && window.latestWeatherData.properties) {
+        const weatherData = window.latestWeatherData.properties;
+        
+        // When the API data was updated at met.no
+        if (weatherData.meta?.updated_at) {
+            timeTooltipData[window.I18n.translate('weatherUpdated')] = moment(weatherData.meta.updated_at).format('L LTS');
+        }
+        
+        // The forecast time (current conditions)
+        if (weatherData.timeseries && weatherData.timeseries.length > 0) {
+            timeTooltipData[window.I18n.translate('forecastTime')] = moment(weatherData.timeseries[0].time).format('L LTS');
+        }
+    }
 
-    // Format time tooltip using HTML tabular formatter if available
+    // Format time tooltip using HTML tabular formatter with section divider
     const timeTooltip = window.Utils && typeof window.Utils.formatTabularTooltip === 'function'
-        ? window.Utils.formatTabularTooltip(timeTooltipData, { useHTML: true })
-        : latestData.lastUpdated;
+        ? window.Utils.formatTabularTooltip(timeTooltipData, { 
+            useHTML: true, 
+            dividerAfter: techLabel // Variable we defined above for the Tech label
+          })
+        : JSON.stringify(timeTooltipData);
 
     timeIndicator.setAttribute('data-tooltip-content', timeTooltip);
     timeIndicator.setAttribute('data-has-tooltip', 'true');

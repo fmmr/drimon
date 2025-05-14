@@ -142,6 +142,11 @@ window.DriMonTranslations = {
     "source": "Kilde",
     "lastUpdated": "Sist oppdatert",
     "status": "Status",
+    "localTime": "Lokal tid",
+    "weatherUpdated": "Vær oppdatert",
+    "drimonChannel": "Drimon",
+    "detailsChannel": "Detaljer",
+    "techChannel": "Tech",
 
     // Position info
     "sunPosition": "Sol posisjon",
@@ -298,6 +303,11 @@ window.DriMonTranslations = {
     "source": "Source",
     "lastUpdated": "Last updated",
     "status": "Status",
+    "localTime": "Local time",
+    "weatherUpdated": "Weather updated",
+    "drimonChannel": "Drimon",
+    "detailsChannel": "Details",
+    "techChannel": "Tech",
 
     // Position info
     "sunPosition": "Sun position",
@@ -454,6 +464,11 @@ window.DriMonTranslations = {
     "source": "Fuente",
     "lastUpdated": "Última actualización",
     "status": "Estado",
+    "localTime": "Hora local",
+    "weatherUpdated": "Clima actualizado",
+    "drimonChannel": "Drimon",
+    "detailsChannel": "Detalles",
+    "techChannel": "Tech",
 
     // Position info
     "sunPosition": "Posición del sol",
