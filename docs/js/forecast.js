@@ -10,8 +10,9 @@ const DEBUG_FORECAST = false; // Set to true to enable debug logging
 // Use the global location constants from constants.js
 const FORECAST_CACHE_TTL = 30 * 60 * 1000; // 30 minute cache (reduced from 1 hour)
 
-// Store latest forecast data for re-use
+// Store latest forecast data for re-use - make it globally available
 let latestForecastData = null;
+window.latestForecastData = null;
 
 // Logger function - no-op if debugging is disabled
 const logForecast = (msg, data) => DEBUG_FORECAST && console.log(`[Forecast] ${msg}`, data || '');
@@ -164,6 +165,7 @@ async function fetchForecastData() {
                 logForecast('Using cached forecast data');
                 const parsedData = JSON.parse(cachedData);
                 latestForecastData = parsedData;
+                window.latestForecastData = parsedData; // Make cached data globally available
                 return parsedData;
             }
         }
@@ -242,8 +244,9 @@ async function fetchForecastData() {
         localStorage.setItem('cachedForecastData', JSON.stringify(processedData));
         localStorage.setItem('lastForecastFetchTime', currentTime.toString());
         
-        // Store latest data
+        // Store latest data (locally and globally)
         latestForecastData = processedData;
+        window.latestForecastData = processedData;
         
         logForecast('Fetched new forecast data', processedData);
         return processedData;
@@ -371,6 +374,19 @@ function createForecastTooltipHTML() {
     html += `<th>${window.I18n.translate('highLow')}</th>`;
     html += '</tr></thead><tbody>';
 
+    // Add data update times in a small info section above the forecast
+    if (currentWeatherData && currentWeatherData.properties?.meta?.updated_at) {
+        html += '<div class="forecast-update-info">';
+        html += `<div>${window.I18n.translate('nowcastUpdated')}: ${moment(currentWeatherData.properties.meta.updated_at).format('HH:mm')}</div>`;
+        
+        if (latestForecastData._lastUpdated) {
+            html += `<div>${window.I18n.translate('forecastUpdated')}: ${moment(latestForecastData._lastUpdated).format('HH:mm')}</div>`;
+        }
+        
+        html += '</div>';
+        html += '<div class="forecast-divider"></div>';
+    }
+    
     // Get forecast days, sorted by date
     const days = Object.values(latestForecastData)
         .filter(day => typeof day === 'object' && day.date)
@@ -541,14 +557,20 @@ function cleanupOldCacheEntries() {
     }
 }
 
-// Initialize when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
+// Initialize immediately to ensure forecast data is available early
+(function init() {
     // Clean up old cache entries
     cleanupOldCacheEntries();
-
-    // Delay initialization to let other components load first
-    setTimeout(initForecast, 1000);
-});
+    
+    // Load forecast data immediately to ensure it's available for tooltips
+    fetchForecastData().then(data => {
+        // Store globally for immediate access
+        window.latestForecastData = data;
+        
+        // Initialize forecast tooltip with slight delay
+        setTimeout(initForecast, 1000);
+    });
+})();
 
 // Update when language changes
 document.addEventListener('languageChanged', attachForecastTooltip);

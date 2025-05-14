@@ -226,13 +226,12 @@ function updateWeatherDisplay() {
         return cardinals[index];
     }
 
-    // Create tooltip data object for tabular formatting
-    const tooltipData = {
-        // First section: measurement data
-        [outTempTitle]: `${temperature} °C`
-    };
-
-    // Add other details if available
+    // Create a completely restructured tooltip with the correct order
+    const tooltipData = {};
+    
+    // FIRST SECTION: Weather measurements
+    tooltipData[outTempTitle] = `${temperature} °C`;
+    
     if (humidity !== null) {
         tooltipData[humidityText] = `${humidity}%`;
     }
@@ -249,18 +248,25 @@ function updateWeatherDisplay() {
     if (precipitation !== null) {
         tooltipData[precipitationText] = `${precipitation} mm`;
     }
-
-    // Add timestamp and source section as a continuation of the data
-    // but mark precipitation as the last element of the first section
-    const dividerAfter = precipitation !== null ? precipitationText :
-                        windGust !== null && windGust > windSpeed ? gustText :
-                        windSpeed !== null ? windSpeedText :
-                        humidity !== null ? humidityText : outTempTitle;
-
+    
+    // SECOND SECTION: Timestamp information (right after measurements, no divider)
+    // Add nowcast update time
     if (metaUpdated) {
-        tooltipData[updatedText] = metaUpdated;
+        tooltipData[window.I18n.translate('nowcastUpdated')] = metaUpdated;
     }
+    
+    // Add forecast update time if available
+    if (window.latestForecastData && window.latestForecastData._lastUpdated) {
+        tooltipData[window.I18n.translate('forecastUpdated')] = moment(window.latestForecastData._lastUpdated).format('HH:mm:ss');
+    }
+    
+    // Add forecast time (current conditions)
     tooltipData[forecastTimeText] = forecastTime;
+    
+    // THIRD SECTION: After divider - metadata 
+    const dividerAfter = forecastTimeText; // Always place divider after all weather data and timestamps
+    
+    // Add fetched time and source after the divider
     tooltipData[fetchedTimeText] = fetchedTime;
     tooltipData[sourceText] = source;
 

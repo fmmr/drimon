@@ -339,15 +339,31 @@ function updateUIWithLatestData() {
     if (window.latestWeatherData && window.latestWeatherData.properties) {
         const weatherData = window.latestWeatherData.properties;
         
-        // When the API data was updated at met.no
+        // When the nowcast data was updated at met.no
         if (weatherData.meta?.updated_at) {
-            timeTooltipData[window.I18n.translate('weatherUpdated')] = moment(weatherData.meta.updated_at).format('L LTS');
+            // Just use the new nowcast label
+            timeTooltipData[window.I18n.translate('nowcastUpdated')] = moment(weatherData.meta.updated_at).format('L LTS');
         }
         
         // The forecast time (current conditions)
         if (weatherData.timeseries && weatherData.timeseries.length > 0) {
             timeTooltipData[window.I18n.translate('forecastTime')] = moment(weatherData.timeseries[0].time).format('L LTS');
         }
+    }
+    
+    // Add forecast data update time if available
+    if (window.latestForecastData && window.latestForecastData._lastUpdated) {
+        timeTooltipData[window.I18n.translate('forecastUpdated')] = moment(window.latestForecastData._lastUpdated).format('L LTS');
+    } 
+    // If we don't have forecast data yet but we have the Forecast module, try to get it
+    else if (window.Forecast && typeof window.Forecast.fetchForecastData === 'function') {
+        // Try to fetch forecast data on demand
+        window.Forecast.fetchForecastData().then(data => {
+            if (data && data._lastUpdated) {
+                // We'll update this in the next refresh
+                console.log('Loaded forecast data on demand for tooltip');
+            }
+        }).catch(() => {});
     }
 
     // Format time tooltip using HTML tabular formatter with section divider
