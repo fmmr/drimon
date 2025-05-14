@@ -226,10 +226,10 @@ function updateWeatherDisplay() {
         return cardinals[index];
     }
 
-    // Create a completely restructured tooltip with the correct order
+    // Create a two-section tooltip with timestamps in the main section
     const tooltipData = {};
     
-    // FIRST SECTION: Weather measurements
+    // SECTION 1: Weather measurements with timestamps directly below precipitation
     tooltipData[outTempTitle] = `${temperature} °C`;
     
     if (humidity !== null) {
@@ -249,24 +249,25 @@ function updateWeatherDisplay() {
         tooltipData[precipitationText] = `${precipitation} mm`;
     }
     
-    // SECOND SECTION: Timestamp information (right after measurements, no divider)
-    // Add nowcast update time
+    // Add timestamp information directly after weather measurements in consistent order
+    // 1. Forecast time (the actual time the weather data is for)
+    tooltipData[forecastTimeText] = forecastTime;
+    
+    // 2. Nowcast updated time
     if (metaUpdated) {
         tooltipData[window.I18n.translate('nowcastUpdated')] = metaUpdated;
     }
     
-    // Add forecast update time if available
+    // 3. Forecast updated time
     if (window.latestForecastData && window.latestForecastData._lastUpdated) {
         tooltipData[window.I18n.translate('forecastUpdated')] = moment(window.latestForecastData._lastUpdated).format('HH:mm:ss');
     }
     
-    // Add forecast time (current conditions)
-    tooltipData[forecastTimeText] = forecastTime;
-    
-    // THIRD SECTION: After divider - metadata 
-    const dividerAfter = forecastTimeText; // Always place divider after all weather data and timestamps
-    
-    // Add fetched time and source after the divider
+    // SECTION 2: After divider - metadata
+    const dividerAfter = window.latestForecastData && window.latestForecastData._lastUpdated ? 
+        window.I18n.translate('forecastUpdated') : 
+        metaUpdated ? window.I18n.translate('nowcastUpdated') : 
+        forecastTimeText; // Place divider after the last timestamp
     tooltipData[fetchedTimeText] = fetchedTime;
     tooltipData[sourceText] = source;
 

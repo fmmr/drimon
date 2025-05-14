@@ -346,10 +346,13 @@ function createForecastTooltipHTML() {
             html += '</tr>';
         }
 
+        // Timestamp information is added here via string replacement in the code above
+        // This ensures the timestamps appear directly after the weather measurements
+
         html += '</table>';
         html += '</div>';
 
-        // Add divider
+        // Add divider after all weather data including timestamps
         html += '<div class="forecast-divider"></div>';
     }
 
@@ -374,17 +377,36 @@ function createForecastTooltipHTML() {
     html += `<th>${window.I18n.translate('highLow')}</th>`;
     html += '</tr></thead><tbody>';
 
-    // Add data update times in a small info section above the forecast
-    if (currentWeatherData && currentWeatherData.properties?.meta?.updated_at) {
-        html += '<div class="forecast-update-info">';
-        html += `<div>${window.I18n.translate('nowcastUpdated')}: ${moment(currentWeatherData.properties.meta.updated_at).format('HH:mm')}</div>`;
+    // Move time update info right after the current weather table
+    if (currentWeatherData) {
+        // 1. First add forecast time (the actual time the weather data is for)
+        const forecastTime = moment(currentWeatherData.properties.timeseries[0].time).format('HH:mm:ss');
+        html = html.replace('</table>', `
+            <tr>
+                <td>${window.I18n.translate('forecastTime')}</td>
+                <td>${forecastTime}</td>
+            </tr>
+        </table>`);
         
-        if (latestForecastData._lastUpdated) {
-            html += `<div>${window.I18n.translate('forecastUpdated')}: ${moment(latestForecastData._lastUpdated).format('HH:mm')}</div>`;
+        // 2. Then add nowcast updated time if available
+        if (currentWeatherData.properties?.meta?.updated_at) {
+            html = html.replace('</table>', `
+                <tr>
+                    <td>${window.I18n.translate('nowcastUpdated')}</td>
+                    <td>${moment(currentWeatherData.properties.meta.updated_at).format('HH:mm:ss')}</td>
+                </tr>
+            </table>`);
         }
         
-        html += '</div>';
-        html += '<div class="forecast-divider"></div>';
+        // 3. Finally add forecast updated time if available
+        if (latestForecastData._lastUpdated) {
+            html = html.replace('</table>', `
+                <tr>
+                    <td>${window.I18n.translate('forecastUpdated')}</td>
+                    <td>${moment(latestForecastData._lastUpdated).format('HH:mm:ss')}</td>
+                </tr>
+            </table>`);
+        }
     }
     
     // Get forecast days, sorted by date
