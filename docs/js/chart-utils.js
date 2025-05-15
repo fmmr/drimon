@@ -254,10 +254,9 @@ window.ChartUtils = window.ChartUtils || {
      * Determines the best time format for displaying time-based charts
      * 
      * @param {Array<string>} timestamps - Array of timestamp strings
-     * @param {string} [range] - Optional range parameter for additional context
      * @returns {string} Moment.js format string for time formatting
      */
-    determineSmartTimeFormat: function(timestamps, range) {
+    determineSmartTimeFormat: function(timestamps) {
         // Default to time only format if we can't determine range
         if (!timestamps || timestamps.length < 2) return 'HH:mm';
         
@@ -454,7 +453,7 @@ window.ChartUtils = window.ChartUtils || {
             backgroundColor: 'rgba(0, 0, 0, 0.7)',
             enabled: true, // Ensure tooltips are enabled
             events: ['mousemove', 'mouseout', 'touchstart', 'touchmove'],
-            onShow: function(tooltipModel) {
+            onShow: function() {
                 // Clear any existing timeout
                 if (tooltipHideTimeout) {
                     clearTimeout(tooltipHideTimeout);

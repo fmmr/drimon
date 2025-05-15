@@ -414,7 +414,7 @@ const ChartFactory = {
                 const chartData = this._processLineChartData(config, data);
                 
                 // Create chart options
-                const chartOptions = this._createLineChartOptions(config, chartData);
+                const chartOptions = this._createLineChartOptions(config);
                 
                 // Create Chart.js instance
                 return new Chart(canvas, {
@@ -528,10 +528,9 @@ const ChartFactory = {
              * Create chart options for line chart
              * @private
              * @param {Object} config - Chart configuration
-             * @param {Object} chartData - Processed chart data
              * @returns {Object} Chart.js options
              */
-            _createLineChartOptions: function(config, chartData) {
+            _createLineChartOptions: function(config) {
                 // Get theme
                 const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
                 
@@ -656,7 +655,7 @@ const ChartFactory = {
                 const chartData = this._processMultiSeriesChartData(config, data);
                 
                 // Create chart options
-                const chartOptions = this._createMultiSeriesChartOptions(config, chartData);
+                const chartOptions = this._createMultiSeriesChartOptions(config);
                 
                 // Create Chart.js instance
                 return new Chart(canvas, {
@@ -831,10 +830,9 @@ const ChartFactory = {
              * Create chart options for multi-series chart
              * @private
              * @param {Object} config - Chart configuration
-             * @param {Object} chartData - Processed chart data
              * @returns {Object} Chart.js options
              */
-            _createMultiSeriesChartOptions: function(config, chartData) {
+            _createMultiSeriesChartOptions: function(config) {
                 // Get theme
                 const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
                 
