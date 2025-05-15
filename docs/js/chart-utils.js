@@ -266,16 +266,12 @@ window.ChartUtils = window.ChartUtils || {
         const lastTime = new Date(timestamps[timestamps.length - 1]);
         const timespan = lastTime.getTime() - firstTime.getTime();
         const dayInMs = 24 * 60 * 60 * 1000;
-        const hourInMs = 60 * 60 * 1000;
         
         // Use different formats based on the timespan
-        if (timespan < 2 * hourInMs) {
-            // Less than 2 hours - show minutes
-            return 'HH:mm';
-        } else if (timespan < 2 * dayInMs) {
+        if (timespan < 1 * dayInMs) {
             // Less than 1 day - show hours
             return 'HH:mm';
-        } else if (timespan < 3 * dayInMs) {
+        } else if (timespan < 2 * dayInMs) {
             // 1-2 days - show day of week + time
             return 'ddd HH:mm';
         } else if (timespan < 7 * dayInMs) {
@@ -531,19 +527,19 @@ window.ChartUtils = window.ChartUtils || {
                         // For very short timeformats, add additional context
                         if (timeFormat === 'HH:mm') {
                             // For time-only formats, add the date for context in tooltip
-                            return moment(timestamp).format('HH:mm') + ' (' + moment(timestamp).format('D MMM') + ')';
+                            return moment(timestamp).format('ddd HH:mm');
                         } else if (timeFormat === 'ddd HH:mm') {
                             // For day+time formats, add the full date for context
-                            return moment(timestamp).format('ddd HH:mm') + ' (' + moment(timestamp).format('D MMM YYYY') + ')';
+                            return moment(timestamp).format('ddd HH:mm');
                         } else if (timeFormat === 'dddd') {
                             // For day name formats, add the date for context
-                            return moment(timestamp).format('dddd') + ' (' + moment(timestamp).format('D MMM') + ')';
+                            return moment(timestamp).format('ddd HH:mm');
                         } else if (timeFormat === 'D/M') {
                             // For day/month format, add the year and time
-                            return moment(timestamp).format('D/M') + ' (' + moment(timestamp).format('YYYY, HH:mm') + ')';
+                            return moment(timestamp).format('ddd D/M HH:mm');
                         } else if (timeFormat === 'MMMM') {
                             // For month only format, add the year
-                            return moment(timestamp).format('MMMM YYYY');
+                            return moment(timestamp).format('D/M HH:mm');
                         }
                     } else {
                         // Fallback to smart detection

@@ -144,12 +144,8 @@ function prepareChartData(config, data) {
     // Get appropriate time format
     const rangeParam = window.Utils ? window.Utils.getURLParameter('range') : 
                        (new URLSearchParams(window.location.search).get('range')) || '1';
-    // If range is 'default', use the chart's defaultRange or fallback to 1
-    const effectiveRange = rangeParam === 'default' 
-        ? (config.defaultRange || 1).toString()
-        : rangeParam;
     
-    const timeFormat = window.ChartUtils.determineSmartTimeFormat(timestamps, effectiveRange);
+    const timeFormat = window.ChartUtils.determineSmartTimeFormat(timestamps);
     
     // Store time format for reference
     window.chartTimeFormats = window.chartTimeFormats || {};
