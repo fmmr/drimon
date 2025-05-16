@@ -1,8 +1,9 @@
 // YR.no weather integration - minimal implementation
 const DEBUG_WEATHER = false; // Set to true to enable debug logging
+const DEBUG_CACHE = true; // Special debug just for cache operations
 
-// Cache TTL - 3 minutes (in milliseconds)
-const WEATHER_CACHE_TTL = 3 * 60 * 1000;
+// Cache TTL - 2 minutes (in milliseconds) - reduced to ensure more frequent updates
+const WEATHER_CACHE_TTL = 2 * 60 * 1000;
 
 // Store latest weather data for re-use when language changes
 // Make this a global variable so forecast.js can access it
@@ -18,8 +19,9 @@ function getWeatherElements() {
     };
 }
 
-// Logger function - no-op if debugging is disabled
+// Logger functions - no-op if debugging is disabled
 const log = (msg, data) => DEBUG_WEATHER && console.log(`[Weather] ${msg}`, data || '');
+const logCache = (msg, data) => DEBUG_CACHE && console.log(`[Weather-Cache] ${msg}`, data || '');
 
 // Weather data fetching function
 async function fetchWeather() {
@@ -45,20 +47,41 @@ async function fetchWeather() {
         // Get current hour to force cache refresh at specific times of day
         const currentHour = new Date().getHours();
 
-        // Check if we should force a refresh based on time of day
+        // Check if we should force a refresh based on time of day or cache age
         // Force a refresh in the morning (6-8), midday (12-13), and evening (18-19)
+        // Also force refresh if the cache is older than 10 minutes, regardless of other conditions
+        const cacheAgeInMinutes = lastFetchTime ? (currentTime - parseInt(lastFetchTime)) / 60000 : 999;
         const forceRefresh = (currentHour >= 6 && currentHour <= 8) ||
                             (currentHour >= 12 && currentHour <= 13) ||
-                            (currentHour >= 18 && currentHour <= 19);
+                            (currentHour >= 18 && currentHour <= 19) ||
+                            (cacheAgeInMinutes > 10); // Force refresh if cache is older than 10 minutes
 
         if (lastFetchTime &&
             (currentTime - parseInt(lastFetchTime) < WEATHER_CACHE_TTL) &&
             !forceRefresh) {
             const cachedData = localStorage.getItem('cachedMetData');
             if (cachedData) {
-                log('Using cached data');
+                // Calculate and log cache age for debugging
+                const cacheAge = currentTime - parseInt(lastFetchTime);
+                const cacheAgeMinutes = Math.floor(cacheAge / 60000);
+                const cacheAgeSeconds = Math.floor((cacheAge % 60000) / 1000);
+                
+                logCache(`Using cached data (age: ${cacheAgeMinutes}m ${cacheAgeSeconds}s)`);
                 updateDisplay(JSON.parse(cachedData));
                 return;
+            }
+        }
+        
+        // Log cache invalidation reason
+        if (forceRefresh) {
+            if (cacheAgeInMinutes > 10) {
+                logCache(`Cache invalidated - too old (${Math.floor(cacheAgeInMinutes)}m)`);
+            } else if (currentHour >= 6 && currentHour <= 8) {
+                logCache('Cache invalidated - morning refresh window');
+            } else if (currentHour >= 12 && currentHour <= 13) {
+                logCache('Cache invalidated - midday refresh window');
+            } else if (currentHour >= 18 && currentHour <= 19) {
+                logCache('Cache invalidated - evening refresh window');
             }
         }
         
@@ -76,7 +99,9 @@ async function fetchWeather() {
             }
 
             // Try direct API call for non-Safari browsers
-            const response = await fetch(url, {
+            // Add cache busting parameter to prevent browser cache
+            const urlWithCacheBust = `${url}&_cb=${Date.now()}`;
+            const response = await fetch(urlWithCacheBust, {
                 headers: {
                     'Accept': 'application/json',
                     'User-Agent': 'DriMon/1.0 (https://drimon.rodland.no; contact@drimon.rodland.no)'
@@ -126,8 +151,11 @@ async function fetchWeather() {
         
         // Add source info and cache the data
         data._source = source;
+        data._fetchedAt = new Date().toISOString(); // Add fetch timestamp
         localStorage.setItem('cachedMetData', JSON.stringify(data));
         localStorage.setItem('lastMetFetchTime', currentTime.toString());
+        
+        logCache('Fetched and cached new weather data');
         
         updateDisplay(data);
         
@@ -301,5 +329,45 @@ function updateWeatherDisplay() {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     fetchWeather();
-    setInterval(fetchWeather, WEATHER_CACHE_TTL); // Refresh every 3 minutes to match cache TTL
+    
+    // Check timestamp of cached data on initialization
+    const validateCacheOnLoad = () => {
+        const lastFetchTime = localStorage.getItem('lastMetFetchTime');
+        if (lastFetchTime) {
+            const cacheAge = Date.now() - parseInt(lastFetchTime);
+            // If cache is older than 5 minutes on page load, force refresh
+            if (cacheAge > 5 * 60 * 1000) {
+                log('Cache too old on page load, forcing refresh');
+                localStorage.removeItem('lastMetFetchTime'); // Clear cache timestamp
+                setTimeout(fetchWeather, 500); // Fetch fresh data
+            }
+        }
+    };
+    
+    validateCacheOnLoad();
+    
+    // Page visibility change detection to refresh when page becomes visible again
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            // When page becomes visible again, check if cache is older than 5 minutes
+            const lastFetchTime = localStorage.getItem('lastMetFetchTime');
+            if (lastFetchTime && (Date.now() - parseInt(lastFetchTime) > 5 * 60 * 1000)) {
+                log('Page visible again with old cache, refreshing');
+                fetchWeather();
+            }
+        }
+    });
+    
+    // Refresh timer - slightly more frequent than the cache TTL
+    setInterval(fetchWeather, WEATHER_CACHE_TTL);
+    
+    // Additional safety check every minute to ensure data freshness
+    setInterval(() => {
+        const lastFetchTime = localStorage.getItem('lastMetFetchTime');
+        // If no fetch in the last 4 minutes, something might be wrong - force refresh
+        if (!lastFetchTime || (Date.now() - parseInt(lastFetchTime) > 4 * 60 * 1000)) {
+            log('No recent weather updates, forcing refresh');
+            fetchWeather();
+        }
+    }, 60 * 1000); // Check every minute
 });

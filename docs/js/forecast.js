@@ -7,15 +7,17 @@
 
 // Configurable constants
 const DEBUG_FORECAST = false; // Set to true to enable debug logging
+const DEBUG_FORECAST_CACHE = true; // Special debug just for cache operations
 // Use the global location constants from constants.js
-const FORECAST_CACHE_TTL = 30 * 60 * 1000; // 30 minute cache (reduced from 1 hour)
+const FORECAST_CACHE_TTL = 20 * 60 * 1000; // 20 minute cache (reduced from 30 minutes)
 
 // Store latest forecast data for re-use - make it globally available
 let latestForecastData = null;
 window.latestForecastData = null;
 
-// Logger function - no-op if debugging is disabled
+// Logger functions - no-op if debugging is disabled
 const logForecast = (msg, data) => DEBUG_FORECAST && console.log(`[Forecast] ${msg}`, data || '');
+const logForecastCache = (msg, data) => DEBUG_FORECAST_CACHE && console.log(`[Forecast-Cache] ${msg}`, data || '');
 
 /**
  * Groups forecast data by day and time period
@@ -151,22 +153,43 @@ async function fetchForecastData() {
         // Get current hour to force cache refresh at specific times of day
         const currentHour = new Date().getHours();
 
-        // Check if we should force a refresh based on time of day
+        // Check if we should force a refresh based on time of day or cache age
         // Force a refresh in the morning (6-8), midday (12-13), and evening (18-19)
+        // Also force refresh if the cache is older than 40 minutes, regardless of other conditions
+        const cacheAgeInMinutes = lastFetchTime ? (currentTime - parseInt(lastFetchTime)) / 60000 : 999;
         const forceRefresh = (currentHour >= 6 && currentHour <= 8) ||
                             (currentHour >= 12 && currentHour <= 13) ||
-                            (currentHour >= 18 && currentHour <= 19);
+                            (currentHour >= 18 && currentHour <= 19) ||
+                            (cacheAgeInMinutes > 40); // Force refresh if cache is older than 40 minutes
 
         if (lastFetchTime &&
             (currentTime - parseInt(lastFetchTime) < FORECAST_CACHE_TTL) &&
             !forceRefresh) {
             const cachedData = localStorage.getItem('cachedForecastData');
             if (cachedData) {
-                logForecast('Using cached forecast data');
+                // Calculate and log cache age for debugging
+                const cacheAge = currentTime - parseInt(lastFetchTime);
+                const cacheAgeMinutes = Math.floor(cacheAge / 60000);
+                const cacheAgeSeconds = Math.floor((cacheAge % 60000) / 1000);
+                
+                logForecastCache(`Using cached forecast data (age: ${cacheAgeMinutes}m ${cacheAgeSeconds}s)`);
                 const parsedData = JSON.parse(cachedData);
                 latestForecastData = parsedData;
                 window.latestForecastData = parsedData; // Make cached data globally available
                 return parsedData;
+            }
+        }
+        
+        // Log cache invalidation reason
+        if (forceRefresh) {
+            if (cacheAgeInMinutes > 40) {
+                logForecastCache(`Forecast cache invalidated - too old (${Math.floor(cacheAgeInMinutes)}m)`);
+            } else if (currentHour >= 6 && currentHour <= 8) {
+                logForecastCache('Forecast cache invalidated - morning refresh window');
+            } else if (currentHour >= 12 && currentHour <= 13) {
+                logForecastCache('Forecast cache invalidated - midday refresh window');
+            } else if (currentHour >= 18 && currentHour <= 19) {
+                logForecastCache('Forecast cache invalidated - evening refresh window');
             }
         }
         
@@ -184,7 +207,9 @@ async function fetchForecastData() {
             }
 
             // Try direct API call for non-Safari browsers
-            const response = await fetch(url, {
+            // Add cache busting parameter to prevent browser cache
+            const urlWithCacheBust = `${url}&_cb=${Date.now()}`;
+            const response = await fetch(urlWithCacheBust, {
                 headers: {
                     'Accept': 'application/json',
                     'User-Agent': 'DriMon/1.0 (https://drimon.rodland.no; contact@drimon.rodland.no)'
@@ -249,6 +274,7 @@ async function fetchForecastData() {
         window.latestForecastData = processedData;
         
         logForecast('Fetched new forecast data', processedData);
+        logForecastCache('Fetched and cached new forecast data');
         return processedData;
         
     } catch (error) {
@@ -537,6 +563,16 @@ async function initForecast() {
         // Check for hour changes every minute
         setInterval(checkHourChange, 60 * 1000);
         
+        // Additional safety check every 10 minutes to ensure data freshness
+        setInterval(() => {
+            const lastFetchTime = localStorage.getItem('lastForecastFetchTime');
+            // If no fetch in the last 35 minutes, something might be wrong - force refresh
+            if (!lastFetchTime || (Date.now() - parseInt(lastFetchTime) > 35 * 60 * 1000)) {
+                logForecast('No recent forecast updates, forcing refresh');
+                fetchForecastData().then(() => attachForecastTooltip());
+            }
+        }, 10 * 60 * 1000); // Check every 10 minutes
+        
     } catch (error) {
         logForecast('Error initializing forecast', error);
     }
@@ -584,6 +620,21 @@ function cleanupOldCacheEntries() {
     // Clean up old cache entries
     cleanupOldCacheEntries();
     
+    // Check for stale cache on load
+    const validateCacheOnLoad = () => {
+        const lastFetchTime = localStorage.getItem('lastForecastFetchTime');
+        if (lastFetchTime) {
+            const cacheAge = Date.now() - parseInt(lastFetchTime);
+            // If cache is older than 1 hour on page load, force refresh
+            if (cacheAge > 60 * 60 * 1000) {
+                logForecast('Forecast cache too old on page load, forcing refresh');
+                localStorage.removeItem('lastForecastFetchTime'); // Clear cache timestamp
+            }
+        }
+    };
+    
+    validateCacheOnLoad();
+    
     // Load forecast data immediately to ensure it's available for tooltips
     fetchForecastData().then(data => {
         // Store globally for immediate access
@@ -591,6 +642,18 @@ function cleanupOldCacheEntries() {
         
         // Initialize forecast tooltip with slight delay
         setTimeout(initForecast, 1000);
+    });
+    
+    // Page visibility change detection to refresh when page becomes visible again
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            // When page becomes visible again, check if cache is older than 30 minutes
+            const lastFetchTime = localStorage.getItem('lastForecastFetchTime');
+            if (lastFetchTime && (Date.now() - parseInt(lastFetchTime) > 30 * 60 * 1000)) {
+                logForecast('Page visible again with old forecast cache, refreshing');
+                fetchForecastData().then(() => attachForecastTooltip());
+            }
+        }
     });
 })();
 
