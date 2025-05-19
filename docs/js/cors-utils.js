@@ -8,6 +8,8 @@ const CORS_PROXIES = [
     'https://api.allorigins.win/raw?url='
 ];
 
+const USER_AGENT = 'DriMon/1.0 (https://drimon.rodland.no; contact@drimon.rodland.no)';
+	
 /**
  * Fetch data from MET API with browser-specific handling
  * @param {string} url - The API URL to fetch
@@ -31,7 +33,7 @@ async function fetchWithCORS(url, options = {}) {
         const response = await fetch(urlWithCacheBust, {
             headers: {
                 'Accept': 'application/json',
-                'User-Agent': 'DriMon/1.0 (https://drimon.rodland.no; contact@drimon.rodland.no)'
+                'User-Agent': USER_AGENT
             },
             mode: 'cors',
             credentials: 'omit'
