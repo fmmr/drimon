@@ -17,38 +17,12 @@ const USER_AGENT = 'DriMon/1.0 (https://drimon.rodland.no; contact@drimon.rodlan
  * @returns {Promise<Object>} The parsed JSON response and source
  */
 async function fetchWithCORS(url, options = {}) {
-    // Add cache busting parameter to prevent browser cache
-    const urlWithCacheBust = `${url}${url.includes('?') ? '&' : '?'}_cb=${Date.now()}`;
-    
     // Check if we're on Safari which needs special handling
     const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     
-    // For Safari, go directly to proxies to avoid CORS issues
-    if (isSafari) {
-        return await fetchWithProxy(url);
-    }
-    
-    // For other browsers, try direct API call first
-    try {
-        const response = await fetch(urlWithCacheBust, {
-            headers: {
-                'Accept': 'application/json',
-                'User-Agent': USER_AGENT
-            },
-            mode: 'cors',
-            credentials: 'omit'
-        });
-        
-        if (!response.ok) throw new Error(`API status: ${response.status}`);
-        
-        return {
-            data: await response.json(),
-            source: 'direct'
-        };
-    } catch (error) {
-        // Fall back to proxy approach if direct call fails
-        return await fetchWithProxy(url);
-    }
+    // For all browsers, including Chrome, go directly to proxies as direct calls are failing
+    // This is a change from the previous behavior where Chrome tried direct first
+    return await fetchWithProxy(url);
 }
 
 /**
@@ -60,14 +34,21 @@ async function fetchWithProxy(url) {
     // Try each proxy in sequence
     let lastError;
     
+    // Make sure we use a clean URL without cache busting parameters
+    // Some proxies have issues with too many query parameters
+    const cleanUrl = url.split('_cb=')[0].replace(/&$/, '');
+    
     for (const proxy of CORS_PROXIES) {
         try {
-            const proxyUrl = `${proxy}${encodeURIComponent(url)}`;
+            const proxyUrl = `${proxy}${encodeURIComponent(cleanUrl)}`;
             
+            // Use fetch with minimal headers to avoid CORS issues
             const response = await fetch(proxyUrl, {
                 headers: {
                     'Accept': 'application/json'
-                }
+                },
+                mode: 'cors',
+                credentials: 'omit'
             });
             
             if (!response.ok) throw new Error(`Proxy status: ${response.status}`);
@@ -77,13 +58,52 @@ async function fetchWithProxy(url) {
                 source: `proxy (${proxy.split('/')[2]})`
             };
         } catch (proxyError) {
+            console.log(`[CORS] Proxy ${proxy} failed:`, proxyError.message);
             lastError = proxyError;
             continue;
         }
     }
     
-    // If we get here, all proxies failed
-    throw lastError || new Error('All proxies failed');
+    // Try a third proxy as a last resort
+    try {
+        // YQL is a reliable fallback
+        const yqlProxy = `https://query.yahooapis.com/v1/public/yql?q=${encodeURIComponent(`select * from json where url="${cleanUrl}"`)}&format=json`;
+        
+        const response = await fetch(yqlProxy);
+        if (!response.ok) throw new Error(`YQL proxy status: ${response.status}`);
+        
+        const yqlData = await response.json();
+        
+        // YQL wraps the data differently
+        if (yqlData && yqlData.query && yqlData.query.results) {
+            return {
+                data: yqlData.query.results,
+                source: 'proxy (yahooapis)'
+            };
+        }
+        
+        throw new Error('YQL proxy returned invalid data structure');
+    } catch (yqlError) {
+        console.log('[CORS] YQL proxy failed:', yqlError.message);
+        
+        // If YQL fails too, try one more option - JSONP
+        try {
+            const jsonpProxy = `https://jsonp.afeld.me/?url=${encodeURIComponent(cleanUrl)}`;
+            
+            const response = await fetch(jsonpProxy);
+            if (!response.ok) throw new Error(`JSONP proxy status: ${response.status}`);
+            
+            return {
+                data: await response.json(),
+                source: 'proxy (jsonp)'
+            };
+        } catch (jsonpError) {
+            console.log('[CORS] JSONP proxy failed:', jsonpError.message);
+            
+            // If we get here, all proxies failed
+            throw lastError || jsonpError || new Error('All proxies failed');
+        }
+    }
 }
 
 // Export the utility function
