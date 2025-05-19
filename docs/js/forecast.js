@@ -9,7 +9,7 @@
 const DEBUG_FORECAST = false; // Set to true to enable debug logging
 const DEBUG_FORECAST_CACHE = true; // Special debug just for cache operations
 // Use the global location constants from constants.js
-const FORECAST_CACHE_TTL = 20 * 60 * 1000; // 20 minute cache (reduced from 30 minutes)
+const FORECAST_CACHE_TTL = 1 * 60 * 1000; // 20 minute cache (reduced from 30 minutes)
 
 // Store latest forecast data for re-use - make it globally available
 let latestForecastData = null;
@@ -193,68 +193,25 @@ async function fetchForecastData() {
             }
         }
         
-        // Fetch fresh data
+        // Fetch fresh data using our centralized CORS utility
+        // First ensure that the CORSUtils script has loaded
+        if (!window.CORSUtils || typeof window.CORSUtils.fetchWithCORS !== 'function') {
+            throw new Error('CORSUtils not loaded - check script order in HTML');
+        }
+        
         let data;
         let source = 'yr.no';
         
         try {
-            // Check if we're on Safari
-            const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-
-            // For Safari, go directly to proxy to avoid CORS issues
-            if (isSafari) {
-                throw new Error('Safari detected, skipping direct API call');
-            }
-
-            // Try direct API call for non-Safari browsers
-            // Add cache busting parameter to prevent browser cache
-            const urlWithCacheBust = `${url}&_cb=${Date.now()}`;
-            const response = await fetch(urlWithCacheBust, {
-                headers: {
-                    'Accept': 'application/json',
-                    'User-Agent': 'DriMon/1.0 (https://drimon.rodland.no; contact@drimon.rodland.no)'
-                },
-                mode: 'cors',
-                credentials: 'omit'
-            });
-
-            if (!response.ok) throw new Error(`API status: ${response.status}`);
-            data = await response.json();
-
+            // Use the centralized CORS utility to handle fetching with fallbacks
+            const result = await window.CORSUtils.fetchWithCORS(url);
+            data = result.data;
+            source = result.source === 'direct' ? 'yr.no' : `yr.no (${result.source})`;
+            logForecast('Successfully fetched forecast data via: ' + result.source);
         } catch (err) {
-            // Fall back to proxy
-            logForecast('Direct API failed, trying proxy', err);
-
-            // Use a more reliable proxy that works with Safari
-            const proxyUrl = 'https://corsproxy.io/?';
-
-            try {
-                const response = await fetch(proxyUrl + encodeURIComponent(url), {
-                    headers: {
-                        'Accept': 'application/json',
-                        'User-Agent': 'DriMon/1.0 (https://drimon.rodland.no; contact@drimon.rodland.no)',
-                        'Origin': 'https://drimon.rodland.no'
-                    }
-                });
-
-                if (!response.ok) throw new Error(`Proxy status: ${response.status}`);
-                data = await response.json();
-                source = 'yr.no (proxy)';
-            } catch (proxyErr) {
-                logForecast('Proxy failed too, trying another proxy', proxyErr);
-
-                // Try one more proxy as a last resort
-                const backupProxyUrl = 'https://api.allorigins.win/raw?url=';
-                const backupResponse = await fetch(backupProxyUrl + encodeURIComponent(url), {
-                    headers: {
-                        'Accept': 'application/json'
-                    }
-                });
-
-                if (!backupResponse.ok) throw proxyErr; // Re-throw if backup also fails
-                data = await backupResponse.json();
-                source = 'yr.no (backup proxy)';
-            }
+            // If all methods fail, propagate the error
+            logForecast('All forecast fetch attempts failed', err);
+            throw err;
         }
         
         // Process data
