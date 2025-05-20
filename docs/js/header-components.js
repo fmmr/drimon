@@ -639,6 +639,7 @@ const ComponentRegistry = {
     _factories: {
         'logoContainer': createLogoContainer,
         'dataContainer': createDataContainer,
+        'thingSpeakLinks': createThingSpeakLinks,
         'dateRanges': createDateRanges,
         'searchContainer': createSearchContainer,
         'weatherPill': createWeatherPill,
@@ -720,6 +721,10 @@ const HeaderConfig = {
                 ]
             }
         },
+        thingspeak: {
+            type: 'thingSpeakLinks',
+            config: {}
+        },
         dateRanges: {
             type: 'dateRanges',
             config: {
@@ -754,7 +759,7 @@ const HeaderConfig = {
     },
     
     // Layout order
-    layout: ['logo', 'data', 'dateRanges', 'search'],
+    layout: ['logo', 'data', 'thingspeak', 'dateRanges', 'search'],
     
     // Header theme (can be custom CSS classes)
     theme: 'modern-header',
@@ -768,6 +773,28 @@ const HeaderConfig = {
         onStatsToggle: null
     }
 };
+
+/**
+ * Creates ThingSpeak links container with links styled like date chips
+ * @returns {HTMLElement} The ThingSpeak links container
+ */
+function createThingSpeakLinks() {
+    const container = document.createElement('div');
+    container.className = 'thingspeak-links';
+    
+    // Loop through the CHANNELS object from window.THINGSPEAK
+    Object.values(window.THINGSPEAK.CHANNELS).forEach(channel => {
+        const link = document.createElement('a');
+        link.href = `https://thingspeak.mathworks.com/channels/${channel.id}`;
+        link.textContent = channel.label;
+        link.className = 'thingspeak-chip';
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        container.appendChild(link);
+    });
+    
+    return container;
+}
 
 /**
  * Creates the complete header element with all components

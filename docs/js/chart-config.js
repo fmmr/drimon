@@ -35,7 +35,7 @@ window.chartConfigs = [
     { 
         id: 'chart-temp',
         titleKey: 'temperatureChart', 
-        channel: 2568299, 
+        channel: window.THINGSPEAK.DRIMON_CHANNEL, 
         field: 1, 
         color: '#c62828', // Red for temperature
         row: 1,
@@ -74,7 +74,7 @@ window.chartConfigs = [
     { 
         id: 'chart-window',
         titleKey: 'windowChart', 
-        channel: 2568299, 
+        channel: window.THINGSPEAK.DRIMON_CHANNEL, 
         field: 4, 
         color: '#8a5a44',
         row: 1,
@@ -124,14 +124,14 @@ window.chartConfigs = [
         series: [
             {
                 titleKey: 'ceiling',   // External/ceiling light
-                channel: 2568299,
+                channel: window.THINGSPEAK.DRIMON_CHANNEL,
                 field: 8,
                 color: '#e6a500',  // Yellow for light
                 axis: 'y'          // Primary y-axis
             },
             {
                 titleKey: 'internal',  // Internal light intensity
-                channel: 2584547,
+                channel: window.THINGSPEAK.TECH_CHANNEL,
                 field: 5,
                 color: '#8a5a00',  // Dark yellow for light intensity
                 axis: 'y1',        // Secondary y-axis
@@ -162,7 +162,7 @@ window.chartConfigs = [
     { 
         id: 'chart-battery',
         titleKey: 'batteryPercentChart', 
-        channel: 2584547, 
+        channel: window.THINGSPEAK.TECH_CHANNEL, 
         field: 3, 
         color: '#4a6741', // Dark green for system
         row: 1,
@@ -183,7 +183,7 @@ window.chartConfigs = [
     { 
         id: 'chart-out-temp',
         titleKey: 'outTempChart', 
-        channel: 2626867, 
+        channel: window.THINGSPEAK.EXT_CHANNEL, 
         field: 1, 
         color: '#c62828',
         row: 2,
@@ -205,7 +205,7 @@ window.chartConfigs = [
     { 
         id: 'chart-temp-diff',
         titleKey: 'tempDiffChart', 
-        channel: 2626867, 
+        channel: window.THINGSPEAK.EXT_CHANNEL, 
         field: 3, 
         color: '#c62828',
         row: 2,
@@ -238,13 +238,13 @@ window.chartConfigs = [
         series: [
             {
                 titleKey: 'cucumber',
-                channel: 2584548,
+                channel: window.THINGSPEAK.TEMP_CHANNEL,
                 field: 3,
                 color: '#e67e22'  // Orange-red for cucumber
             },
             {
                 titleKey: 'padron',
-                channel: 2584548,
+                channel: window.THINGSPEAK.TEMP_CHANNEL,
                 field: 5,
                 color: '#9b59b6'  // Purple-red for padron
             }
@@ -271,20 +271,20 @@ window.chartConfigs = [
             {
                 titleKey: 'BME',  // Technical sensor name as the key itself
                 title: 'BME',     // Same as key for readability
-                channel: 2584548,
+                channel: window.THINGSPEAK.TEMP_CHANNEL,
                 field: 1,
                 color: '#e67e22'  // Orange-red - reused from plant temp chart
             },
             {
                 titleKey: 'AHT',  // Technical sensor name as the key itself
                 title: 'AHT',     // Same as key for readability
-                channel: 2584548,
+                channel: window.THINGSPEAK.TEMP_CHANNEL,
                 field: 2,
                 color: '#9b59b6'  // Purple-red - reused from plant temp chart
             },
             {
                 titleKey: 'floor',
-                channel: 2584548,
+                channel: window.THINGSPEAK.TEMP_CHANNEL,
                 field: 4,
                 color: '#2980b9'  // Blue for floor temperature - more contrast
             }
@@ -301,7 +301,7 @@ window.chartConfigs = [
     { 
         id: 'chart-humidity',
         titleKey: 'humidityChart', 
-        channel: 2568299, 
+        channel: window.THINGSPEAK.DRIMON_CHANNEL, 
         field: 2, 
         color: '#5c6bc0',
         row: 3,
@@ -321,7 +321,7 @@ window.chartConfigs = [
     { 
         id: 'chart-temperature',
         titleKey: 'pressureChart', 
-        channel: 2568299, 
+        channel: window.THINGSPEAK.DRIMON_CHANNEL, 
         field: 7, 
         color: '#5c6bc0',
         row: 3,
@@ -346,7 +346,7 @@ window.chartConfigs = [
     { 
         id: 'chart-wind',
         titleKey: 'windChart', 
-        channel: 2626867, 
+        channel: window.THINGSPEAK.EXT_CHANNEL, 
         field: 5, 
         color: '#5c6bc0',
         row: 3,
@@ -360,7 +360,7 @@ window.chartConfigs = [
     { 
         id: 'chart-rain',
         titleKey: 'rainChart', 
-        channel: 2626867, 
+        channel: window.THINGSPEAK.EXT_CHANNEL, 
         field: 6, 
         color: '#5c6bc0',
         row: 3,
@@ -382,19 +382,19 @@ window.chartConfigs = [
         series: [
             {
                 titleKey: 'cucumber1',
-                channel: 2584548, 
+                channel: window.THINGSPEAK.TEMP_CHANNEL, 
                 field: 6,
                 color: '#1976d2'  // Blue-green
             },
             {
                 titleKey: 'cucumber2',
-                channel: 2584548, 
+                channel: window.THINGSPEAK.TEMP_CHANNEL, 
                 field: 7,
                 color: '#388e3c'  // Medium green
             },
             {
                 titleKey: 'padron',
-                channel: 2584548, 
+                channel: window.THINGSPEAK.TEMP_CHANNEL, 
                 field: 8,
                 color: '#f9a825'  // Yellow-green
             }
@@ -413,7 +413,7 @@ window.chartConfigs = [
     { 
         id: 'chart-battery-voltage',
         titleKey: 'batteryVoltageChart', 
-        channel: 2584547, 
+        channel: window.THINGSPEAK.TECH_CHANNEL, 
         field: 2, 
         color: '#4a6741',
         row: 4,
@@ -431,7 +431,7 @@ window.chartConfigs = [
     { 
         id: 'chart-wifi',
         titleKey: 'wifiChart', 
-        channel: 2584547, 
+        channel: window.THINGSPEAK.TECH_CHANNEL, 
         field: 1, 
         color: '#4a6741',
         row: 4,
@@ -452,7 +452,7 @@ window.chartConfigs = [
     { 
         id: 'chart-time-used',
         titleKey: 'timeUsedChart', 
-        channel: 2584547, 
+        channel: window.THINGSPEAK.TECH_CHANNEL, 
         field: 4, 
         color: '#4a6741',
         row: 4,

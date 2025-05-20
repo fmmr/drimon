@@ -70,10 +70,11 @@ async function fetchData() {
             return;
         }
         
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         const responses = await Promise.all([
             fetch(`https://api.thingspeak.com/channels/${window.THINGSPEAK.DRIMON_CHANNEL}/feeds/last.json?timezone=${timezone}&status=true`),
-            fetch(`https://api.thingspeak.com/channels/${window.THINGSPEAK.DETAILS_CHANNEL}/status/last.json?timezone=${timezone}`),
-	        fetch(`https://api.thingspeak.com/channels/${window.THINGSPEAK.TECH_CHANNEL}/status/last.json?timezone=${timezone}`),
+            fetch(`https://api.thingspeak.com/channels/${window.THINGSPEAK.TEMP_CHANNEL}/status/last.json?timezone=${timezone}`),
+            fetch(`https://api.thingspeak.com/channels/${window.THINGSPEAK.TECH_CHANNEL}/status/last.json?timezone=${timezone}`),
         ]);
 
         const [data1, data2, data3] = await Promise.all(responses.map(response => response.json()));
@@ -94,13 +95,13 @@ async function fetchData() {
         // Store information from all channels for the expanded tooltip
         window.latestData = latestData;
         
-        // Create latestData2 for channel 2584548 (plants monitoring)
+        // Create latestData2 for details channel (plants monitoring)
         window.latestData2 = {
             createdAt: moment(data2.created_at),
             lastUpdated: moment(data2.created_at).format('L LTS')
         };
         
-        // Create latestData3 for channel 2584547 (system monitoring)
+        // Create latestData3 for tech channel (system monitoring)
         window.latestData3 = {
             createdAt: moment(data3.created_at),
             lastUpdated: moment(data3.created_at).format('L LTS')
@@ -315,17 +316,17 @@ function updateUIWithLatestData() {
 
     const timeTooltipData = {};
     
-    // Define all the labels upfront to avoid undefined references
-    const drimonLabel = `${window.I18n.translate('drimonChannel')} (${window.THINGSPEAK.DRIMON_CHANNEL})`;
-    const detailsLabel = `${window.I18n.translate('detailsChannel')} (${window.THINGSPEAK.DETAILS_CHANNEL})`;
-    const techLabel = `${window.I18n.translate('techChannel')} (${window.THINGSPEAK.TECH_CHANNEL})`;
-    
+    // Create labels using channel info from THINGSPEAK.CHANNELS
+    const drimonLabel = `${window.I18n.translate(window.THINGSPEAK.CHANNELS.DRIMON_CHANNEL.translationKey)} (${window.THINGSPEAK.CHANNELS.DRIMON_CHANNEL.id})`;
+    const tempLabel = `${window.I18n.translate(window.THINGSPEAK.CHANNELS.TEMP_CHANNEL.translationKey)} (${window.THINGSPEAK.CHANNELS.TEMP_CHANNEL.id})`;
+    const techLabel = `${window.I18n.translate(window.THINGSPEAK.CHANNELS.TECH_CHANNEL.translationKey)} (${window.THINGSPEAK.CHANNELS.TECH_CHANNEL.id})`;
+
     // Add data from different channels with translated labels
     timeTooltipData[drimonLabel] = latestData.lastUpdated;
     
     // Get data from other channels if available
     if (window.latestData2) {
-        timeTooltipData[detailsLabel] = window.latestData2.lastUpdated;
+        timeTooltipData[tempLabel] = window.latestData2.lastUpdated;
     }
     
     if (window.latestData3) {
@@ -369,7 +370,7 @@ function updateUIWithLatestData() {
     const timeTooltip = window.Utils && typeof window.Utils.formatTabularTooltip === 'function'
         ? window.Utils.formatTabularTooltip(timeTooltipData, { 
             useHTML: true, 
-            dividerAfter: techLabel // Variable we defined above for the Tech label
+            dividerAfter: techLabel // Using the tech channel label
           })
         : JSON.stringify(timeTooltipData);
 
