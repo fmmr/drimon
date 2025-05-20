@@ -5,17 +5,22 @@
 const USER_AGENT = 'DriMon/1.1 (https://drimon.rodland.no; contact@rodland.no)';
 
 /**
- * Fetch data from MET API directly - no fallbacks, no proxies
+ * Fetch data from MET API with browser-specific handling
  * @param {string} url - The API URL to fetch
  * @param {Object} options - Additional fetch options
  * @returns {Promise<Object>} The parsed JSON response and source
  */
 async function fetchWithCORS(url, options = {}) {
-    // Add cache busting parameter to prevent browser cache
-    const urlWithCacheBust = `${url}${url.includes('?') ? '&' : '?'}_cb=${Date.now()}`;
+    // Check if we're on Safari which needs special handling
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
     
-    // Make a direct request to the API
-    const response = await fetch(urlWithCacheBust, {
+    // For Safari, go directly to proxy to avoid CORS issues
+    if (isSafari) {
+        return await fetchWithProxy(url);
+    }
+    
+    // For Chrome and other browsers, make direct request to the API
+    const response = await fetch(url, {
         headers: {
             'Accept': 'application/json',
             'User-Agent': USER_AGENT
@@ -34,6 +39,46 @@ async function fetchWithCORS(url, options = {}) {
     return {
         data: data,
         source: 'direct'
+    };
+}
+
+/**
+ * Proxy fetch for Safari browser
+ * @param {string} url - The API URL to fetch
+ * @returns {Promise<Object>} The parsed JSON response and source
+ */
+async function fetchWithProxy(url) {
+    // Use a reliable proxy service
+    const proxyUrl = 'https://corsproxy.io/?';
+    
+    const response = await fetch(proxyUrl + encodeURIComponent(url), {
+        headers: {
+            'Accept': 'application/json'
+        }
+    });
+    
+    if (!response.ok) {
+        // If first proxy fails, try backup proxy
+        const backupProxyUrl = 'https://api.allorigins.win/raw?url=';
+        const backupResponse = await fetch(backupProxyUrl + encodeURIComponent(url), {
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (!backupResponse.ok) {
+            throw new Error(`All proxies failed`);
+        }
+        
+        return {
+            data: await backupResponse.json(),
+            source: 'proxy (backup)'
+        };
+    }
+    
+    return {
+        data: await response.json(),
+        source: 'proxy'
     };
 }
 
