@@ -2,7 +2,7 @@
  * CORS utilities for API calls
  */
 
-const USER_AGENT = 'DriMon/1.0 (https://drimon.rodland.no; contact@drimon.rodland.no)';
+const USER_AGENT = 'DriMon/1.1 (https://drimon.rodland.no; contact@rodland.no)';
 
 /**
  * Fetch data from MET API directly - no fallbacks, no proxies
