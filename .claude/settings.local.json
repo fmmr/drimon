@@ -36,7 +36,8 @@
       "WebFetch(domain:www.npmjs.com)",
       "Bash(git commit:*)",
       "Bash(node:*)",
-      "Bash(rg:*)"
+      "Bash(rg:*)",
+      "Bash(git mv:*)"
     ],
     "deny": []
   },

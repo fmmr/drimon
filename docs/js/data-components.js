@@ -77,9 +77,9 @@ const dataCache = {
  * @returns {Promise<Object>} - Chart data object
  */
 async function fetchChartData(config, range = 1, results = DEFAULT_RESULTS) {
-    // Handle 'default' range by using the chart's defaultRange or falling back to 1
+    // Handle 'default' range by using the chart's defaultRange
     if (range === 'default') {
-        range = config.defaultRange || 1;
+        range = config.defaultRange;
     }
     
     // Check if we have cached data
@@ -153,29 +153,19 @@ async function fetchTimeRangeData(config, startDateStr, endDateStr, results = DE
             
             // Format into a single data structure with multiple series
 
-            // First, find the common time range across all series for better synchronization
+            // Find the common time range across all series for synchronization
             let allTimestamps = [];
 
-            // Check if this chart has timestamp synchronization disabled
-            const disableSyncTimestamps = config.disableSyncTimestamps === true;
+            // Collect all unique timestamps from all series
+            seriesData.forEach(data => {
+                if (data.feeds && data.feeds.length > 0) {
+                    const timestamps = data.feeds.map(feed => feed.created_at);
+                    allTimestamps = allTimestamps.concat(timestamps);
+                }
+            });
 
-            // For charts with disabled synchronization (like the light chart),
-            // we don't collect combined timestamps to preserve the original data points
-            if (!disableSyncTimestamps) {
-                // Collect all unique timestamps from all series
-                seriesData.forEach(data => {
-                    if (data.feeds && data.feeds.length > 0) {
-                        const timestamps = data.feeds.map(feed => feed.created_at);
-                        allTimestamps = allTimestamps.concat(timestamps);
-                    }
-                });
-
-                // Sort timestamps and remove duplicates
-                allTimestamps = [...new Set(allTimestamps)].sort();
-            } else {
-                // For disabled sync, just use the primary series timestamps
-                allTimestamps = seriesData[0].feeds.map(feed => feed.created_at);
-            }
+            // Sort timestamps and remove duplicates
+            allTimestamps = [...new Set(allTimestamps)].sort();
 
             // Create an object with timestamps as keys for quick lookup
             const timestampMap = {};
@@ -199,25 +189,13 @@ async function fetchTimeRangeData(config, startDateStr, endDateStr, results = DE
                 // Create optimized feeds for this series
                 let syncedFeeds;
 
-                // Check if this is a chart with disabled timestamp synchronization
-                const disableSyncTimestamps = config.disableSyncTimestamps === true;
-
-                if (disableSyncTimestamps) {
-                    // For charts with disabled synchronization (like light chart)
-                    // Use the original feeds directly without any transformation
-                    syncedFeeds = data.feeds.map(feed => ({
-                        created_at: feed.created_at,
-                        [fieldName]: feed[fieldName]
-                    }));
-                } else {
-                    // For normal charts, use common timestamps
-                    syncedFeeds = allTimestamps.map(timestamp => {
-                        return {
-                            created_at: timestamp,
-                            [fieldName]: valueMap[timestamp] || null
-                        };
-                    });
-                }
+                // Use common timestamps for synchronization
+                syncedFeeds = allTimestamps.map(timestamp => {
+                    return {
+                        created_at: timestamp,
+                        [fieldName]: valueMap[timestamp] || null
+                    };
+                });
 
                 return {
                     title: series.title,
@@ -562,62 +540,6 @@ function processChartData(config, data) {
     };
 }
 
-/**
- * Determines whether a chart should use integer values
- * @param {Object} config - Chart configuration
- * @returns {boolean} - True if chart should use only integers
- */
-function shouldUseIntegerValues(config) {
-    // First check for formatting configuration (preferred)
-    if (config && config.formatting && config.formatting.useIntegerFormat !== undefined) {
-        return config.formatting.useIntegerFormat;
-    }
-    
-    // Check for direct property configuration
-    if (config && config.useIntegerFormat !== undefined) {
-        return config.useIntegerFormat;
-    }
-    
-    // Missing formatting configuration - use default
-    
-    // Default to false - decimal formatting
-    return false;
-}
-
-/**
- * Formats a number for display, selecting appropriate precision
- * @param {number} value - Number to format
- * @param {Object} config - Chart configuration
- * @param {number} range - Range of values in the chart
- * @returns {string} - Formatted number string
- */
-function formatChartNumber(value, config, range) {
-    // Check for NaN or null values
-    if (value === null || value === undefined || isNaN(value)) {
-        return '—';
-    }
-    
-    // First check for explicit decimal places configuration (preferred approach)
-    if (config && config.formatting && config.formatting.decimalPlaces !== undefined) {
-        return parseFloat(value.toFixed(3)).toFixed(config.formatting.decimalPlaces);
-    }
-    
-    // Check if we should use integer format based on configuration
-    if (shouldUseIntegerValues(config)) {
-        return Math.round(value).toString();
-    }
-    
-    // If no explicit formatting config, use sensible defaults
-    
-    // Default formatting based on value range
-    if (range >= 10) {
-        return Math.round(value).toString(); // Integer for large ranges
-    } else if (range < 1 || Math.abs(value) < 1) {
-        return parseFloat(value.toFixed(3)).toFixed(2); // 2 decimal places for very small ranges/values
-    } else {
-        return parseFloat(value.toFixed(3)).toFixed(1); // 1 decimal place for medium values
-    }
-}
 
 // Export functions
 if (typeof window !== 'undefined') {
@@ -627,7 +549,6 @@ if (typeof window !== 'undefined') {
         fetchTimeRangeData,
         fetchSingleSeries,
         processChartData,
-        shouldUseIntegerValues,
-        formatChartNumber
+        clearCache: () => dataCache.clear()
     };
 }

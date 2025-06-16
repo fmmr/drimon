@@ -361,7 +361,6 @@ function updateUIWithLatestData() {
         window.Forecast.fetchForecastData().then(data => {
             if (data && data._lastUpdated) {
                 // We'll update this in the next refresh
-                console.log('Loaded forecast data on demand for tooltip');
             }
         }).catch(() => {});
     }

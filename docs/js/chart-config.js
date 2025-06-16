@@ -1,201 +1,208 @@
-// Configuration for all charts with row-based layout
-// Make available globally for script.js
-//
-// Chart Configuration Properties:
-// - id: Unique chart identifier
-// - titleKey: Translation key for chart title
-// - channel: ThingSpeak channel ID
-// - field: ThingSpeak field number
-// - color: Chart line color in hex format
-// - row: Grid row position (1-4)
-// - category: Chart category for filtering/grouping
-// - unit: Display unit (°C, mm, lux, etc.)
-// - useIntegerFormat: Whether to format values as integers
-// - minValue: Minimum Y-axis value
-// - formatting: Structured formatting options
-//   - useIntegerFormat: Whether to format as integers
-//   - decimalPlaces: Number of decimal places to display
-// - statsLabelsStyle: Style for statistics labels (e.g., 'LAHN' for Low/Avg/High/Now)
-// - indicators: Configuration for min/max/avg indicators
-// - yAxis: Y-axis configuration options
-// - dataTransform: Data transformation options:
-//   - shiftBy: Shifts all values by specified amount (negative to shift down)
-//   Example: { shiftBy: -63 }
-// - categoryHeaderKey: Translation key for category headers in tooltips
-//   Example: 'temperatures' for temperature category
-// - defaultRange: Default range value for this chart when the 'default' date range is selected
-//   Example: 13 for air pressure chart (shows 14 days by default)
-// - disableSyncTimestamps: When true, maintains independent timestamps for each series
-//   Useful for multi-series charts with data from different channels to prevent dotted lines
-//
-window.chartConfigs = [
-    // Define chart groupings for linked tooltips
-    // Groups: temperature, humidity, weather, system, light, soil
-    // Row 1
+// Default configuration values - single source of truth
+const DEFAULT_CHART_CONFIG = {
+    defaultRange: 1,
+    unit: '',
+    category: 'uncategorized',
+    categoryHeaderKey: null,
+    startDate: null,
+    disableFill: false,
+    hideLegendUnit: false,
+    dataTransform: null,
+    formatting: {
+        useIntegerFormat: true,
+        decimalPlaces: 0
+    },
+    yAxis: {
+        position: 'right',
+        beginAtZero: false,
+        gridColor: 'rgba(0, 0, 0, 0.05)',
+        roundToNearest: 10,
+        maxTicks: 5,
+        formatLargeNumbers: false,
+        secondYAxis: false
+    },
+    indicators: {
+        showMin: true,
+        showMax: true,
+        showAvg: true,
+        colors: {
+            min: '#1e88e5',
+            max: '#4caf50',  
+            avg: '#888888'
+        }
+    }
+};
+
+
+// Deep merge function for config objects with complete normalization
+function mergeChartConfig(userConfig) {
+    const merged = { ...DEFAULT_CHART_CONFIG, ...userConfig };
+    
+    // Deep merge nested objects
+    if (userConfig.formatting) {
+        merged.formatting = { ...DEFAULT_CHART_CONFIG.formatting, ...userConfig.formatting };
+    }
+    if (userConfig.yAxis) {
+        merged.yAxis = { ...DEFAULT_CHART_CONFIG.yAxis, ...userConfig.yAxis };
+    }
+    if (userConfig.indicators) {
+        merged.indicators = { ...DEFAULT_CHART_CONFIG.indicators, ...userConfig.indicators };
+        // Deep merge colors if they exist
+        if (userConfig.indicators.colors) {
+            merged.indicators.colors = { ...DEFAULT_CHART_CONFIG.indicators.colors, ...userConfig.indicators.colors };
+        }
+    }
+    if (userConfig.dataTransform) {
+        merged.dataTransform = { ...DEFAULT_CHART_CONFIG.dataTransform, ...userConfig.dataTransform };
+    }
+    
+    // Calculate all derived/normalized values here instead of in chart-renderer
+    merged.hasSecondYAxis = !!(merged.yAxis && merged.yAxis.secondYAxis);
+    merged.hasDataTransform = !!(merged.dataTransform && merged.dataTransform.shiftBy);
+    merged.shiftByValue = merged.dataTransform?.shiftBy || 0;
+    merged.isMultiSeries = merged.series.length > 1;
+    
+    // Calculate unique channels from series
+    const uniqueChannels = new Set(merged.series.map(s => s.channel));
+    merged.isMultiChannel = uniqueChannels.size > 1;
+    
+    // Calculate derived display properties
+    merged.hasFill = !merged.isMultiSeries && !merged.disableFill;
+    merged.tooltipMode = merged.isMultiChannel ? 'nearest' : 'index';
+    merged.showIndicators = !merged.isMultiSeries;
+    
+    // Ensure all series have colors (set defaults for missing ones)
+    const defaultColors = ['#666', '#e6a500', '#8a5a00', '#0066cc', '#cc6600'];
+    merged.series.forEach((series, index) => {
+        if (!series.color) {
+            series.color = defaultColors[index % defaultColors.length];
+        }
+    });
+    
+    merged.displayUnit = merged.hideLegendUnit ? '' : merged.unit;
+    
+    return merged;
+}
+
+const RAW_CHART_CONFIGS = [
     { 
         id: 'chart-temp',
-        titleKey: 'temperatureChart', 
-        channel: window.THINGSPEAK.DRIMON_CHANNEL, 
-        field: 1, 
-        color: '#c62828', // Red for temperature
+        titleKey: 'temperatureChart',
+        series: [
+            {
+                titleKey: 'temperatureChart',
+                channel: window.THINGSPEAK.DRIMON_CHANNEL,
+                field: 1,
+                color: '#c62828'
+            }
+        ],
         row: 1,
         category: 'temperature',
-        categoryHeaderKey: 'temperatures', // Translation key for category headers in tooltips
+        categoryHeaderKey: 'temperatures',
         unit: '°C',
-        // For backward compatibility
-        useIntegerFormat: false,
-        // Structured formatting configuration
         formatting: {
             useIntegerFormat: false,
-            decimalPlaces: 1 // Show 1 decimal place for most temperature values
+            decimalPlaces: 1
         },
-        // Default range for this chart when using the 'default' date range
-        defaultRange: 1,
-        // Use LAHN (Low/Avg/High/Now) style for statistics labels
-        statsLabelsStyle: 'LAHN',
-        // Structured indicator configuration
-        indicators: {
-            showMin: true,
-            showMax: true,
-            showAvg: true,
-            colors: {
-                min: '#1e88e5', // Blue downward triangle
-                max: '#4caf50', // Green upward triangle
-                avg: '#888888'  // Gray for average line
-            }
-        },
-        // Structured y-axis configuration
         yAxis: {
-            position: 'right',
-            beginAtZero: false, // Don't force zero for temperature
-            gridColor: 'rgba(0, 0, 0, 0.05)'
+            roundToNearest: 5,
+            maxTicks: 6
         }
     },
     { 
         id: 'chart-window',
-        titleKey: 'windowChart', 
-        channel: window.THINGSPEAK.DRIMON_CHANNEL, 
-        field: 4, 
-        color: '#8a5a44',
+        titleKey: 'windowChart',
+        series: [
+            {
+                titleKey: 'windowChart',
+                channel: window.THINGSPEAK.DRIMON_CHANNEL,
+                field: 4,
+                color: '#8a5a44'
+            }
+        ],
         row: 1,
         startDate: '2024-07-25 18:00:00',
         category: 'structure',
-        categoryHeaderKey: 'structure', // Translation key for category headers in tooltips
+        categoryHeaderKey: 'structure',
         unit: 'mm',
-        useIntegerFormat: true,
-        // Use both options to ensure consistent integer formatting
-        formatting: {
-            useIntegerFormat: true,
-            decimalPlaces: 0  // Force exactly 0 decimal places
-        },
-        // Default range for this chart when using the 'default' date range
-        defaultRange: 1,
-        minValue: 0,  // Changed from 50 to 0 since values will be normalized
-        relatedCategories: ['temperature'],  // Show temperature values in tooltip
-        // Structured indicator configuration
-        indicators: {
-            showMin: true,
-            showMax: true,
-            showAvg: true
-        },
-        // Add data transformation configuration
         dataTransform: {
-            shiftBy: -63  // Shift all values down by 63mm (actually seen 57 in winter)
+            shiftBy: -63
         },
-        // Structured y-axis configuration
         yAxis: {
-            beginAtZero: true,    // Always start at 0
-            min: 0,               // Force minimum to be 0
-            gridColor: 'rgba(0, 0, 0, 0.05)'
+            beginAtZero: true,
+            min: 0
         }
     },
     // Multi-series chart for light measurements with dual y-axes
     {
         id: 'chart-light',
         titleKey: 'lightChart',
-        // Default range for this chart when using the 'default' date range
-        defaultRange: 1,
-        // Disable synchronization for this chart to preserve all data points
-        disableSyncTimestamps: true,
-        // Add special handling to show values in the legend
-        specialHandling: {
-            consistentLegendLabels: true
-        },
         series: [
             {
-                titleKey: 'ceiling',   // External/ceiling light
+                titleKey: 'ceiling',
                 channel: window.THINGSPEAK.DRIMON_CHANNEL,
                 field: 8,
-                color: '#e6a500',  // Yellow for light
-                axis: 'y'          // Primary y-axis
+                color: '#e6a500'
             },
             {
-                titleKey: 'internal',  // Internal light intensity
+                titleKey: 'internal',
                 channel: window.THINGSPEAK.TECH_CHANNEL,
                 field: 5,
-                color: '#8a5a00',  // Dark yellow for light intensity
-                axis: 'y1',        // Secondary y-axis
-                // No need for extra results
-                extraResults: 10000
+                color: '#5e4419',
+                axis: 'y1'
             }
         ],
         row: 1,
         startDate: '2024-08-06 17:00:00',
         category: 'light',
-        categoryHeaderKey: 'light', // Translation key for category headers in tooltips
+        categoryHeaderKey: 'light',
         unit: 'lux',
-        // For backward compatibility
-        useIntegerFormat: true,
-        // Structured formatting configuration
-        formatting: {
-            useIntegerFormat: true // Always use integer format for light values
-        },
-        secondYAxis: true,          // Enable second y-axis
-        // Structured y-axis configuration
+        hideLegendUnit: true,
         yAxis: {
-            gridColor: 'rgba(0, 0, 0, 0.05)',
-            gridLineWidth: 1,
-            drawBorder: false,
-            beginAtZero: true       // Always start at 0 for light measurements
+            beginAtZero: true,
+            formatLargeNumbers: true,
+            secondYAxis: true
         }
     },
     { 
         id: 'chart-battery',
-        titleKey: 'batteryPercentChart', 
-        channel: window.THINGSPEAK.TECH_CHANNEL, 
-        field: 3, 
-        color: '#4a6741', // Dark green for system
+        titleKey: 'batteryPercentChart',
+        series: [
+            {
+                titleKey: 'batteryPercentChart',
+                channel: window.THINGSPEAK.TECH_CHANNEL,
+                field: 3,
+                color: '#56784b'
+            }
+        ],
         row: 1,
         category: 'system',
-        categoryHeaderKey: 'system', // Translation key for category headers in tooltips
+        categoryHeaderKey: 'system',
         unit: '%',
-        useIntegerFormat: true,
-        // Structured indicator configuration
         indicators: {
             showMin: true,
+            showMax: false,
             showAvg: true
         },
-        // Default range for this chart when using the 'default' date range
         defaultRange: 6
     },
 
     // Row 2
     { 
         id: 'chart-out-temp',
-        titleKey: 'outTempChart', 
-        channel: window.THINGSPEAK.EXT_CHANNEL, 
-        field: 1, 
-        color: '#c62828',
+        titleKey: 'outTempChart',
+        series: [
+            {
+                titleKey: 'outTempChart',
+                channel: window.THINGSPEAK.EXT_CHANNEL,
+                field: 1,
+                color: '#c62828'
+            }
+        ],
         row: 2,
         category: 'temperature',
-        categoryHeaderKey: 'temperatures', // Translation key for category headers in tooltips
+        categoryHeaderKey: 'temperatures',
         unit: '°C',
-        useIntegerFormat: false,
-        // Default range for this chart when using the 'default' date range
-        defaultRange: 1,
-        // Use LAHN (Low/Avg/High/Now) style for statistics labels
-        statsLabelsStyle: 'LAHN',
-        // Structured indicator configuration
         indicators: {
             showMin: true,
             showMax: true,
@@ -204,114 +211,96 @@ window.chartConfigs = [
     },
     { 
         id: 'chart-temp-diff',
-        titleKey: 'tempDiffChart', 
-        channel: window.THINGSPEAK.EXT_CHANNEL, 
-        field: 3, 
-        color: '#c62828',
+        titleKey: 'tempDiffChart',
+        series: [
+            {
+                titleKey: 'tempDiffChart',
+                channel: window.THINGSPEAK.EXT_CHANNEL,
+                field: 3,
+                color: '#c62828'
+            }
+        ],
         row: 2,
         category: 'temperature',
-        categoryHeaderKey: 'temperatures', // Translation key for category headers in tooltips
+        categoryHeaderKey: 'temperatures',
         unit: '°C',
-        useIntegerFormat: false,
-        // Default range for this chart when using the 'default' date range
-        defaultRange: 1,
-        // Use LAHN (Low/Avg/High/Now) style for statistics labels
-        statsLabelsStyle: 'LAHN',
-        // Structured indicator configuration
-        indicators: {
-            showMin: true,
-            showMax: true,
-            showAvg: true
-        }
+        yAxis: {
+            roundToNearest: 2
+        },
     },
     // Multi-series chart combining cucumber and padron temperatures (positioned as 2nd chart in row 2)
     {
         id: 'chart-plants-temp',
         titleKey: 'plantsTempsChart',
-        // Default range for this chart when using the 'default' date range
-        defaultRange: 1,
-        // Add special handling to show values in the legend
-        specialHandling: {
-            consistentLegendLabels: true
-        },
         // Define multiple data series for a single chart
         series: [
             {
                 titleKey: 'cucumber',
                 channel: window.THINGSPEAK.TEMP_CHANNEL,
                 field: 3,
-                color: '#e67e22'  // Orange-red for cucumber
+                color: '#e67e22'
             },
             {
                 titleKey: 'padron',
                 channel: window.THINGSPEAK.TEMP_CHANNEL,
                 field: 5,
-                color: '#9b59b6'  // Purple-red for padron
+                color: '#9b59b6'
             }
         ],
         row: 2,
         startDate: '2024-07-25 15:00:00',
         category: 'plant-temperature',  // Custom category to separate from other temperature charts
         categoryHeaderKey: 'temperatures', // Use standard temperatures key for translation
-        unit: '°C',
-        useIntegerFormat: false
+        unit: '°C'
     },
     // Multi-series chart combining BME, AHT, and Floor temperature sensors
     {
         id: 'chart-sensors-temp',
         titleKey: 'sensorsTempsChart',
-        // Default range for this chart when using the 'default' date range
-        defaultRange: 1,
-        // Add special handling to show values in the legend
-        specialHandling: {
-            consistentLegendLabels: true
-        },
         // Define multiple data series for a single chart
         series: [
             {
-                titleKey: 'BME',  // Technical sensor name as the key itself
-                title: 'BME',     // Same as key for readability
+                titleKey: 'BME',
                 channel: window.THINGSPEAK.TEMP_CHANNEL,
                 field: 1,
-                color: '#e67e22'  // Orange-red - reused from plant temp chart
+                color: '#e67e22'
             },
             {
-                titleKey: 'AHT',  // Technical sensor name as the key itself
-                title: 'AHT',     // Same as key for readability
+                titleKey: 'AHT',
                 channel: window.THINGSPEAK.TEMP_CHANNEL,
                 field: 2,
-                color: '#9b59b6'  // Purple-red - reused from plant temp chart
+                color: '#9b59b6'
             },
             {
                 titleKey: 'floor',
                 channel: window.THINGSPEAK.TEMP_CHANNEL,
                 field: 4,
-                color: '#2980b9'  // Blue for floor temperature - more contrast
+                color: '#2980b9'
             }
         ],
         row: 2,
         startDate: '2024-07-25 15:00:00',
         category: 'detail-temperature',  // Custom category to separate from other temperature charts
         categoryHeaderKey: 'temperatures', // Use standard temperatures key for translation
-        unit: '°C',
-        useIntegerFormat: false
+        unit: '°C'
     },
 
     // Row 3
     { 
         id: 'chart-humidity',
-        titleKey: 'humidityChart', 
-        channel: window.THINGSPEAK.DRIMON_CHANNEL, 
-        field: 2, 
-        color: '#5c6bc0',
+        titleKey: 'humidityChart',
+        series: [
+            {
+                titleKey: 'humidityChart',
+                channel: window.THINGSPEAK.DRIMON_CHANNEL,
+                field: 2,
+                color: '#5c6bc0'
+            }
+        ],
         row: 3,
         category: 'weather',
-        categoryHeaderKey: 'weather', // Translation key for category headers in tooltips
+        categoryHeaderKey: 'weather',
         unit: '%',
-        useIntegerFormat: true,
-        // Default range for this chart when using the 'default' date range
-        defaultRange: 1,
-        // Structured indicator configuration
         indicators: {
             showMin: true,
             showMax: true,
@@ -320,55 +309,56 @@ window.chartConfigs = [
     },
     { 
         id: 'chart-temperature',
-        titleKey: 'pressureChart', 
-        channel: window.THINGSPEAK.DRIMON_CHANNEL, 
-        field: 7, 
-        color: '#5c6bc0',
+        titleKey: 'pressureChart',
+        series: [
+            {
+                titleKey: 'pressureChart',
+                channel: window.THINGSPEAK.DRIMON_CHANNEL,
+                field: 7,
+                color: '#5c6bc0'
+            }
+        ],
         row: 3,
         category: 'weather',
-        categoryHeaderKey: 'weather', // Translation key for category headers in tooltips
+        categoryHeaderKey: 'weather',
         unit: 'hPa',
-        // For backward compatibility
-        useIntegerFormat: true,
-        // Structured formatting configuration
-        formatting: {
-            useIntegerFormat: true // Always use integer format for temperature values
-        },
-        // Structured indicator configuration
-        indicators: {
-            showMin: true,
-            showMax: true,
-            showAvg: true
-        },
-        // Default range for this chart when using the 'default' date range
-        defaultRange: 13
+        defaultRange: 13,
+        yAxis: {
+            roundToNearest: 2,
+            maxTicks: 6
+        }
     },
     { 
         id: 'chart-wind',
-        titleKey: 'windChart', 
-        channel: window.THINGSPEAK.EXT_CHANNEL, 
-        field: 5, 
-        color: '#5c6bc0',
+        titleKey: 'windChart',
+        series: [
+            {
+                titleKey: 'windChart',
+                channel: window.THINGSPEAK.EXT_CHANNEL,
+                field: 5,
+                color: '#5c6bc0'
+            }
+        ],
         row: 3,
         category: 'weather',
-        categoryHeaderKey: 'weather', // Translation key for category headers in tooltips
-        unit: 'm/s',
-        useIntegerFormat: false,
-        // Default range for this chart when using the 'default' date range
-        defaultRange: 1
+        categoryHeaderKey: 'weather',
+        unit: 'm/s'
     },
     { 
         id: 'chart-rain',
-        titleKey: 'rainChart', 
-        channel: window.THINGSPEAK.EXT_CHANNEL, 
-        field: 6, 
-        color: '#5c6bc0',
+        titleKey: 'rainChart',
+        series: [
+            {
+                titleKey: 'rainChart',
+                channel: window.THINGSPEAK.EXT_CHANNEL,
+                field: 6,
+                color: '#5c6bc0'
+            }
+        ],
         row: 3,
         category: 'weather',
-        categoryHeaderKey: 'weather', // Translation key for category headers in tooltips
+        categoryHeaderKey: 'weather',
         unit: 'mm',
-        useIntegerFormat: false,
-        // Default range for this chart when using the 'default' date range
         defaultRange: 13
     },
 
@@ -377,90 +367,89 @@ window.chartConfigs = [
     {
         id: 'chart-soil-moisture',
         titleKey: 'soilMoistureChart', 
-        // Default range for this chart when using the 'default' date range
-        defaultRange: 1,
         series: [
             {
                 titleKey: 'cucumber1',
                 channel: window.THINGSPEAK.TEMP_CHANNEL, 
                 field: 6,
-                color: '#1976d2'  // Blue-green
+                color: '#1976d2'
             },
             {
                 titleKey: 'cucumber2',
                 channel: window.THINGSPEAK.TEMP_CHANNEL, 
                 field: 7,
-                color: '#388e3c'  // Medium green
+                color: '#388e3c'
             },
             {
                 titleKey: 'padron',
                 channel: window.THINGSPEAK.TEMP_CHANNEL, 
                 field: 8,
-                color: '#f9a825'  // Yellow-green
+                color: '#f9a825'
             }
         ],
         row: 4,
         startDate: '2024-07-25 00:00:00',
         category: 'soil-moisture',  // Custom category to separate from other soil charts
-        categoryHeaderKey: 'soil', // Translation key for category headers in tooltips
-        unit: '%',
-        useIntegerFormat: true,
-        // Add special handling flag for soil moisture chart to avoid ID checks in code
-        specialHandling: {
-          consistentLegendLabels: true  // Ensures dataset.label and legend text are consistent
-        }
+        categoryHeaderKey: 'soil',
+        unit: '%'
     },
     { 
         id: 'chart-battery-voltage',
-        titleKey: 'batteryVoltageChart', 
-        channel: window.THINGSPEAK.TECH_CHANNEL, 
-        field: 2, 
-        color: '#4a6741',
+        titleKey: 'batteryVoltageChart',
+        series: [
+            {
+                titleKey: 'batteryVoltageChart',
+                channel: window.THINGSPEAK.TECH_CHANNEL,
+                field: 2,
+                color: '#4a6741'
+            }
+        ],
         row: 4,
         category: 'system',
-        categoryHeaderKey: 'system', // Translation key for category headers in tooltips
+        categoryHeaderKey: 'system',
         unit: 'V',
-        // Use structured formatting config instead of special case in code
         formatting: {
-            decimalPlaces: 1, // Always show 1 decimal place for battery voltage
-            useIntegerFormat: false
+            useIntegerFormat: false,
+            decimalPlaces: 2 // Always show 1 decimal place for battery voltage
         },
-        // Default range for this chart when using the 'default' date range
         defaultRange: 6
     },
     { 
         id: 'chart-wifi',
-        titleKey: 'wifiChart', 
-        channel: window.THINGSPEAK.TECH_CHANNEL, 
-        field: 1, 
-        color: '#4a6741',
+        titleKey: 'wifiChart',
+        series: [
+            {
+                titleKey: 'wifiChart',
+                channel: window.THINGSPEAK.TECH_CHANNEL,
+                field: 1,
+                color: '#4a6741'
+            }
+        ],
         row: 4,
         startDate: '2024-07-25 15:00:00',
         category: 'system',
-        categoryHeaderKey: 'system', // Translation key for category headers in tooltips
+        categoryHeaderKey: 'system',
         unit: 'dBm',
-        useIntegerFormat: true,
-        // Structured indicator configuration
-        indicators: {
-            showMin: true,
-            showMax: true,
-            showAvg: true
-        },
-        // Default range for this chart when using the 'default' date range
+        disableFill: true,  // Negative values look bad with fill
         defaultRange: 30
     },
     { 
         id: 'chart-time-used',
-        titleKey: 'timeUsedChart', 
-        channel: window.THINGSPEAK.TECH_CHANNEL, 
-        field: 4, 
-        color: '#4a6741',
+        titleKey: 'timeUsedChart',
+        series: [
+            {
+                titleKey: 'timeUsedChart',
+                channel: window.THINGSPEAK.TECH_CHANNEL,
+                field: 4,
+                color: '#4a6741'
+            }
+        ],
         row: 4,
         category: 'system',
-        categoryHeaderKey: 'system', // Translation key for category headers in tooltips
-        unit: 'ms',  // Adding missing unit
-        useIntegerFormat: true,
-        // Default range for this chart when using the 'default' date range
-        defaultRange: 1
+        categoryHeaderKey: 'system',
+        unit: 'ms'
     },
 ];
+
+// Process configurations through default merger and export
+window.chartConfigs = RAW_CHART_CONFIGS.map(config => mergeChartConfig(config));

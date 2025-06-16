@@ -42,6 +42,159 @@ document.addEventListener('DOMContentLoaded', () => {
         window.DateController.initialize();
     }
     
+    // Initialize charts
+    // Get URL parameters helper
+    function getURLParameter(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name) || '';
+    }
+    
+    // Get range and results from URL parameters or use defaults
+    // Default to 'default' range (house icon) if no range parameter is provided
+    const range = getURLParameter('range') || 'default';
+    const results = parseInt(getURLParameter('results')) || 8000;
+    
+    // Ensure only one date chip is active on load
+    setTimeout(() => {
+        const allDateChips = document.querySelectorAll('.date-chip');
+        
+        // First remove active class from all chips
+        allDateChips.forEach(chip => {
+            chip.classList.remove('active');
+        });
+        
+        // Then find and activate the current range chip
+        const activeChip = document.querySelector(`.date-chip[data-range="${range}"]`);
+        if (activeChip) {
+            activeChip.classList.add('active');
+        }
+    }, 100);
+    
+    // Initialize chart loading with a short delay to avoid blocking the initial render
+    setTimeout(() => {
+        // Initialize charts
+        loadAllCharts(range, results).then(() => {
+            // Start auto-refresh after initial load
+            window.startChartAutoRefresh(90);
+        });
+    }, 100); // Short delay to allow UI to render first
+    
+    // Add a failsafe for charts disappearing, but with reduced frequency to avoid performance issues
+    setInterval(() => {
+        const chartContainer = document.getElementById('chartContainer');
+        if (chartContainer && chartContainer.children.length === 0) {
+            
+            // Make sure Utils is defined before using it
+            if (!window.Utils) {
+                console.error('Utils is not defined in failsafe interval. Critical dependency missing.');
+                return;
+            }
+            
+            // Get current range and results
+            const currentRange = window.Utils.getURLParameter('range') || '1';
+            const currentResults = parseInt(window.Utils.getURLParameter('results')) || 8000;
+            
+            // Reload all charts
+            loadAllCharts(currentRange, currentResults);
+        }
+    }, 60000); // Check every 60 seconds (reduced from 30s)
+    
+    // Initialize sorting functionality
+    /**
+     * Initializes chart sorting functionality with desktop and mobile select elements
+     * This function can be called later when we're sure the dropdown exists
+     */
+    window.initializeSorting = function() {
+        const sortSelect = document.getElementById('sortSelect');
+        const mobileSortSelect = document.getElementById('mobileSortSelect');
+        
+        if (!sortSelect) {
+            // If sort select isn't found, try again after a delay
+            setTimeout(window.initializeSorting, 500);
+            return;
+        }
+        
+        // Try to restore last used sort preference
+        const lastSort = localStorage.getItem('chartSortPreference');
+        
+        // Initialize both selects with the saved preference
+        if (lastSort) {
+            sortSelect.value = lastSort;
+            if (mobileSortSelect) {
+                mobileSortSelect.value = lastSort;
+            }
+        }
+        
+        /**
+         * Handles sort selection changes from any dropdown
+         * @param {string} category - The category to sort by
+         * @param {HTMLElement} sourceElement - The select element that triggered the change
+         */
+        const handleSortChange = (category, sourceElement) => {
+            // Save preference to localStorage
+            localStorage.setItem('chartSortPreference', category);
+            
+            // Update the other dropdown if this change came from one of them
+            if (sourceElement === sortSelect && mobileSortSelect) {
+                mobileSortSelect.value = category;
+            } else if (sourceElement === mobileSortSelect && sortSelect) {
+                sortSelect.value = category;
+            }
+            
+            // Perform the actual sorting
+            window.sortChartsByCategory(category);
+        };
+        
+        // Set up event listeners for both dropdowns
+        sortSelect.addEventListener('change', (event) => {
+            handleSortChange(event.target.value, sortSelect);
+        });
+        
+        if (mobileSortSelect) {
+            mobileSortSelect.addEventListener('change', (event) => {
+                handleSortChange(event.target.value, mobileSortSelect);
+            });
+        }
+        
+        // Apply the initial sort if we're in mobile mode and a preference exists
+        if (window.innerWidth <= 768 && lastSort) {
+            setTimeout(() => window.sortChartsByCategory(lastSort), 500);
+        }
+    };
+    
+    /**
+     * Sets up a MutationObserver to initialize sorting when elements are ready
+     * This ensures sorting is initialized even when elements are added dynamically
+     */
+    function setupSortingInitialization() {
+        // Try to initialize sorting immediately first
+        window.initializeSorting();
+        
+        // Set up a MutationObserver to detect when the sort select elements are added to the DOM
+        const bodyObserver = new MutationObserver((mutations) => {
+            for (const mutation of mutations) {
+                if (mutation.type === 'childList' && mutation.addedNodes.length) {
+                    // Check if sortSelect was added
+                    if (document.getElementById('sortSelect')) {
+                        window.initializeSorting();
+                        // No need to keep observing once we've found it
+                        bodyObserver.disconnect();
+                        break;
+                    }
+                }
+            }
+        });
+        
+        // Start observing DOM changes
+        bodyObserver.observe(document.body, { childList: true, subtree: true });
+        
+        // Safety cleanup - disconnect after 10 seconds if it hasn't found the element
+        setTimeout(() => bodyObserver.disconnect(), 10000);
+    }
+    
+    // Initialize sorting system
+    setupSortingInitialization();
+    
     // Add click event to the logo for GitHub link
     const logo = document.getElementById('main-title');
     if (logo) {
@@ -113,8 +266,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (timeSinceLastRefresh > FULL_REFRESH_INTERVAL &&
             (timeSinceLastActivity > 2 * 60 * 1000 || timeSinceLastRefresh > 45 * 60 * 1000)) {
 
-            // Log refresh event for debugging
-            console.log('Performing full page refresh to prevent UI blanking');
 
             // Store current scroll position
             const scrollPosition = window.scrollY || document.documentElement.scrollTop;
@@ -142,11 +293,9 @@ document.addEventListener('DOMContentLoaded', () => {
                         // Check if either canvas is missing or chart is otherwise detached
                         if (!element || !element.parentElement ||
                             !instance.canvas || !instance.canvas.parentElement) {
-                            console.log(`Chart ${chartId} appears to be detached, forcing refresh`);
                             return true; // Found a detached chart
                         }
                     } catch (err) {
-                        console.log(`Error checking chart ${chartId}, assuming detached: ${err.message}`);
                         return true; // Error indicates likely detachment
                     }
                 }
@@ -159,135 +308,7 @@ document.addEventListener('DOMContentLoaded', () => {
             lastFullRefreshTime = 0;
         }
 
-        const currentRange = getParam('range') || 'default';
-        if (currentRange === '1' || currentRange === 'today' || currentRange === 'default') {
-            const currentResults = parseInt(getParam('results')) || 8000;
-            
-            // Use a gentle refresh approach that won't destroy the charts
-            // but will update them with new data
-            if (window.chartConfigs && Array.isArray(window.chartConfigs)) {
-                window.chartConfigs.forEach(async (config) => {
-                    try {
-                        // Get the effective range - if currentRange is 'default', use the chart's defaultRange or fallback to 1
-                        const effectiveRange = currentRange === 'default' 
-                            ? (config.defaultRange || 1)
-                            : currentRange;
-                        
-                        const newData = await fetchChartData(config, effectiveRange, currentResults);
-                        if (window.chartInstances[config.id] && newData) {
-                            // Check if it's a multi-series chart
-                            if (newData.is_multi_series && newData.series && newData.series.length > 0) {
-                                // Update each series
-                                for (let i = 0; i < newData.series.length; i++) {
-                                    const series = newData.series[i];
-                                    if (series && series.feeds && series.feeds.length > 0) {
-                                        const values = series.feeds.map(feed => parseFloat(feed[`field${series.field}`]));
-                                        
-                                        // Update dataset if it exists
-                                        if (window.chartInstances[config.id].data.datasets[i]) {
-                                            window.chartInstances[config.id].data.datasets[i].data = values;
-                                        }
-                                    }
-                                }
-                                
-                                // Update labels from first series
-                                if (newData.series[0] && newData.series[0].feeds && newData.series[0].feeds.length > 0) {
-                                    // Format dates consistently with auto-detected format
-                                    let timeFormat = 'HH:mm'; // Default format
-                                    
-                                    // Try to get the existing format the chart is using
-                                    if (window.chartTimeFormats && window.chartTimeFormats[config.id]) {
-                                        timeFormat = window.chartTimeFormats[config.id];
-                                    } else if (window.determineSmartTimeFormat) {
-                                        // Calculate smart format based on timestamps
-                                        const timestamps = newData.series[0].feeds.map(feed => feed.created_at);
-                                        timeFormat = window.determineSmartTimeFormat(timestamps);
-                                    }
-                                    
-                                    const labels = newData.series[0].feeds.map(feed => moment(feed.created_at).format(timeFormat));
-                                    window.chartInstances[config.id].data.labels = labels;
-                                }
-                                
-                                try {
-                                    // First check if the chart canvas still exists in the DOM
-                                    const canvas = document.getElementById(config.id);
-                                    const chartInstance = window.chartInstances[config.id];
-
-                                    // Handle detached canvas - we need to rebuild the chart
-                                    if (!canvas || !canvas.parentElement || !chartInstance.canvas || !chartInstance.canvas.parentElement) {
-                                        // The chart is detached, create a new chart instance
-                                        console.log(`Chart ${config.id} is detached, triggering full page refresh`);
-                                        // Force a full page refresh on next interval
-                                        lastFullRefreshTime = 0;
-                                        return;
-                                    }
-
-                                    // Update the chart - this will refresh the legend with current values
-                                    window.chartInstances[config.id].update('none');
-
-                                    // Recalculate stats after update
-                                    if (window.recalculateChartStats) {
-                                        window.recalculateChartStats(window.chartInstances[config.id]);
-                                    }
-                                } catch (err) {
-                                    // If we get an error, force refresh on next interval
-                                    console.log(`Error updating chart ${config.id}, preparing for refresh: ${err.message}`);
-                                    lastFullRefreshTime = 0;
-                                }
-                            } 
-                            // Single series chart
-                            else if (newData.feeds && newData.feeds.length > 0) {
-                                const values = newData.feeds.map(feed => parseFloat(feed[`field${config.field}`]));
-                                // Format dates consistently with auto-detected format
-                                let timeFormat = 'HH:mm'; // Default format
-                                
-                                // Try to get the existing format the chart is using
-                                if (window.chartTimeFormats && window.chartTimeFormats[config.id]) {
-                                    timeFormat = window.chartTimeFormats[config.id];
-                                } else if (window.determineSmartTimeFormat) {
-                                    // Calculate smart format based on timestamps
-                                    const timestamps = newData.feeds.map(feed => feed.created_at);
-                                    timeFormat = window.determineSmartTimeFormat(timestamps);
-                                }
-                                
-                                const labels = newData.feeds.map(feed => moment(feed.created_at).format(timeFormat));
-                                
-                                try {
-                                    // First check if the chart canvas still exists in the DOM
-                                    const canvas = document.getElementById(config.id);
-                                    const chartInstance = window.chartInstances[config.id];
-
-                                    // Handle detached canvas - we need to rebuild the chart
-                                    if (!canvas || !canvas.parentElement || !chartInstance.canvas || !chartInstance.canvas.parentElement) {
-                                        // The chart is detached, create a new chart instance
-                                        console.log(`Chart ${config.id} is detached, triggering full page refresh`);
-                                        // Force a full page refresh on next interval
-                                        lastFullRefreshTime = 0;
-                                        return;
-                                    }
-
-                                    // Update the chart data
-                                    window.chartInstances[config.id].data.labels = labels;
-                                    window.chartInstances[config.id].data.datasets[0].data = values;
-                                    window.chartInstances[config.id].update('none'); // Update without animation
-
-                                    // Recalculate stats after update
-                                    if (window.recalculateChartStats) {
-                                        window.recalculateChartStats(window.chartInstances[config.id]);
-                                    }
-                                } catch (err) {
-                                    // If we get an error, force refresh on next interval
-                                    console.log(`Error updating chart ${config.id}, preparing for refresh: ${err.message}`);
-                                    lastFullRefreshTime = 0;
-                                }
-                            }
-                        }
-                    } catch (e) {
-                        console.error(`Error updating chart ${config.id}:`, e);
-                    }
-                });
-            }
-        }
+        // Chart auto-refresh is now handled in chart-renderer.js
     }, 60000);
     
     // Add window resize handler with debounce

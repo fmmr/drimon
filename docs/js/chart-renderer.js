@@ -1,566 +1,849 @@
-'use strict';
+/**
+ * Unified Chart Renderer - One function to handle all chart types
+ * Works with any chart configuration from chart-config.js
+ */
 
-// Chart renderer module for visualizing data using Chart.js
+// Global chart instances storage for compatibility
+window.chartInstances = window.chartInstances || {};
 
-// Register the moment.js adapter for Chart.js time scale
-// This ensures proper time formatting for the axis
-// Create a simple adapter that uses moment.js for date handling
-// Global Chart.js configuration
+window.UnifiedChartRenderer = {
+    /**
+     * Add a chart based on configuration and ThingSpeak data
+     * @param {Object} config - Chart configuration from chart-config.js
+     * @param {Object} data - ThingSpeak data (single or multi-series)
+     * @returns {Chart|null} Chart instance or null if failed
+     */
+    addChart: function(config, data) {
+        const canvas = document.getElementById(config.id);
+        if (!canvas) {
+            console.error(`Canvas not found: ${config.id}`);
+            return null;
+        }
+
+        // Check if chart already exists - if so, update it instead of recreating
+        const existingChart = window.chartInstances[config.id];
+        if (existingChart && data && data.feeds && data.feeds.length > 0) {
+            return this.updateChart(config, data, existingChart);
+        }
+
+        // Handle loading state
+        const loadingEl = document.getElementById(`loading-${config.id}`);
+        
+        // Check for no data
+        if (!data || !data.feeds || data.feeds.length === 0) {
+            if (loadingEl) {
+                const noDataText = window.I18n?.translate('noData') || 'No data';
+                loadingEl.innerHTML = `<div>${noDataText}</div>`;
+                loadingEl.style.display = 'block';
+            }
+            return null;
+        }
+        
+        // Hide loading indicator when data is available
+        if (loadingEl) {
+            loadingEl.style.display = 'none';
+        }
+
+        // Config is already fully processed by mergeChartConfig() in chart-config.js
+        // Only destroy if we're creating a new chart (not updating existing)
+        const existingChartJs = window.Chart.getChart(canvas);
+        if (existingChartJs && !existingChart) {
+            existingChartJs.destroy();
+        }
+        
+        // Convert ThingSpeak data to Chart.js datasets and calculate time formatting
+        const { datasets, stats, timeFormat, timestamps } = this._createDatasets(config, data);
+        
+        if (datasets.length === 0) {
+            console.warn(`No data for chart: ${config.id}`);
+            return null;
+        }
+
+        // Store the calculated time format for global access (config is read-only)
+        window.chartTimeFormats = window.chartTimeFormats || {};
+        window.chartTimeFormats[config.id] = timeFormat;
+
+        // Store chart data for tooltip access
+        this._storeChartData(config, timestamps, datasets, data);
+
+        // Create chart data (no timestamps needed since we use {x, y} format)
+        const chartData = this._createChartData(datasets, config);
+
+        // Create chart options
+        const options = this._createChartOptions(config);
+
+        if (config.showIndicators) {
+            this._addIndicators(options, stats, config.indicators, config);
+        }
+
+        // Destroy existing chart if it exists
+        if (window.chartInstances[config.id]) {
+            window.chartInstances[config.id].destroy();
+        }
+
+        // Create the chart
+        const chart = new Chart(canvas, {
+            type: 'line',
+            data: chartData,
+            options
+        });
+
+        // Store in global chartInstances for compatibility
+        window.chartInstances[config.id] = chart;
+
+        // Update statistics
+        this._updateStats(config, stats, config.isMultiSeries);
+
+        // Set up language change listener for legend updates
+        if (config.isMultiSeries) {
+            this._setupLanguageListener(chart, config);
+        }
+
+        return chart;
+    },
+
+    /**
+     * Update existing chart with new data without recreating it
+     * @param {Object} config - Chart configuration
+     * @param {Object} data - New ThingSpeak data
+     * @param {Chart} chart - Existing Chart.js instance
+     * @returns {Chart} Updated chart instance
+     */
+    updateChart: function(config, data, chart) {
+        // Convert new data to datasets
+        const { datasets, stats, timeFormat, timestamps } = this._createDatasets(config, data);
+        
+        if (datasets.length === 0) {
+            console.warn(`No data for chart update: ${config.id}`);
+            return chart;
+        }
+
+        // Update chart data
+        chart.data.datasets = datasets;
+        
+        // Update with smooth animation
+        chart.update();
+        
+        // Store updated chart data for tooltip access
+        this._storeChartData(config, timestamps, datasets, data);
+        
+        // Update statistics
+        this._updateStats(config, stats, config.isMultiSeries);
+        
+        return chart;
+    },
+
+    /**
+     * Convert ThingSpeak data to Chart.js datasets
+     * @private
+     */
+    _createDatasets: function(config, data) {
+        const datasets = [];
+        let allValues = [];
+        let currentValue = null;
+        let timestamps = [];
+        
+        const dataSource = data.is_multi_series ? data.series : [data];
+        
+        // All charts now use {x, y} format which works for both synchronized and independent timestamps
+        // Extract timestamps from first data source for time formatting purposes
+        if (dataSource[0] && dataSource[0].feeds) {
+            timestamps = dataSource[0].feeds.map(feed => feed.created_at);
+        }
+        
+        // Calculate time format based on timestamps
+        let timeFormat = 'HH:mm'; // Default fallback
+        if (timestamps.length > 0) {
+            timeFormat = this._determineSmartTimeFormat(timestamps);
+        }
+
+        // Process each series using unified logic
+        config.series.forEach((seriesConfig, index) => {
+            const seriesData = dataSource[index] || dataSource[0]; // Fallback to first data for single-series
+            
+            if (!seriesData || !seriesData.feeds) return;
+
+            // All charts use {x, y} format for proper time scaling
+            const dataPoints = seriesData.feeds.map(feed => {
+                let value = parseFloat(feed[`field${seriesConfig.field}`]);
+                
+                // Apply data transformation if configured
+                if (config.hasDataTransform) {
+                    value += config.shiftByValue;
+                }
+                
+                return {
+                    x: feed.created_at, // Let Chart.js handle the date parsing
+                    y: value
+                };
+            }).filter(point => !isNaN(point.y) && point.y !== null)
+              .sort((a, b) => new Date(a.x).getTime() - new Date(b.x).getTime());
+
+            if (dataPoints.length > 0) {
+                const values = dataPoints.map(p => p.y);
+                allValues = allValues.concat(values);
+
+                // Use the last value from the first series as current
+                if (index === 0 && currentValue === null) {
+                    currentValue = values[values.length - 1];
+                }
+
+                const color = seriesConfig.color;
+                datasets.push({
+                    label: this._getSeriesLabel(seriesConfig, index),
+                    data: dataPoints,
+                    borderColor: color,
+                    backgroundColor: color + '20',
+                    borderWidth: 2,
+                    borderDash: [],  // Ensure solid lines (no dashing)
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                    fill: config.hasFill,
+                    tension: 0.1,
+                    spanGaps: true,  // Draw lines across missing data points
+                    yAxisID: seriesConfig.axis || 'y'
+                });
+            }
+        });
+
+        // Calculate stats from all values
+        const stats = allValues.length > 0 ? {
+            min: Math.min(...allValues),
+            max: Math.max(...allValues),
+            avg: allValues.reduce((a, b) => a + b, 0) / allValues.length,
+            current: currentValue,
+            count: allValues.length
+        } : {
+            min: 0,
+            max: 0, 
+            avg: 0,
+            current: null,
+            count: 0
+        };
+        
+        return { datasets, stats, timeFormat, timestamps };
+    },
+
+
+    /**
+     * Store chart data for tooltip access
+     * @private
+     */
+    _storeChartData: function(config, timestamps, datasets, data) {
+        // Initialize global storage if needed
+        window.chartRawData = window.chartRawData || {};
+        
+        // Store chart data for tooltip access
+        window.chartRawData[config.id] = {
+            timestamps: timestamps,
+            datasets: datasets,  // Keep {x, y} format
+            config: config,
+            data: data,
+            isMultiSeries: data.is_multi_series
+        };
+    },
+
+    /**
+     * Create chart data structure with proper labels
+     * @private
+     */
+    _createChartData: function(datasets, config) {
+        // All charts now use time scale with {x, y} data - no labels needed
+        return { datasets };
+    },
+
+    /**
+     * Create X-axis configuration
+     * @private
+     */
+    _createXAxisConfig: function(config) {
+        const urlParams = new URLSearchParams(window.location.search);
+        const range = parseInt(urlParams.get('range')) || config.defaultRange;
+        
+        // Determine format and unit based on range
+        let timeConfig, tickConfig;
+        
+        if (range === 1) {
+            // Range 1: HH:MM (hour minute)
+            timeConfig = {
+                unit: 'hour',
+                displayFormats: { hour: 'HH:mm' },
+                tooltipFormat: 'dddd D/M YYYY, HH:mm'
+            };
+            tickConfig = { maxTicksLimit: window.innerWidth <= 768 ? 8 : 6 };
+            
+        } else if (range === 2) {
+            // Range 2: "ma 01:19" (two first letters of day + hh:mm)
+            timeConfig = {
+                unit: 'hour',
+                displayFormats: { hour: 'HH:mm' },
+                tooltipFormat: 'dddd D/M YYYY, HH:mm'
+            };
+            tickConfig = {
+                maxTicksLimit: window.innerWidth <= 768 ? 8 : 6,
+                callback: function(value, index, ticks) {
+                    const date = new Date(value);
+                    if (window.moment) {
+                        // Get first two letters of Norwegian day name + time
+                        const dayShort = window.moment(date).format('ddd').substring(0, 2);
+                        const time = window.moment(date).format('HH:mm');
+                        return `${dayShort} ${time}`;
+                    }
+                    return new Date(value).toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' });
+                }
+            };
+            
+        } else if (range >= 3 && range <= 7) {
+            // Range 3-7: mandag tirsdag onsdag... (full day names)
+            timeConfig = {
+                unit: 'day',
+                displayFormats: { day: 'dddd' },
+                tooltipFormat: 'dddd D/M YYYY, HH:mm'
+            };
+            tickConfig = { maxTicksLimit: window.innerWidth <= 768 ? 4 : 3 };
+            
+        } else if (range >= 8) {
+            // Range 8+: D/M (24/2)
+            timeConfig = {
+                unit: 'day',
+                displayFormats: { day: 'D/M' },
+                tooltipFormat: 'dddd D/M YYYY, HH:mm'
+            };
+            tickConfig = { maxTicksLimit: window.innerWidth <= 768 ? 7 : 6 };
+            
+        } else {
+            // Fallback for any other ranges
+            timeConfig = {
+                unit: 'day',
+                displayFormats: { day: 'D/M' },
+                tooltipFormat: 'dddd D/M YYYY, HH:mm'
+            };
+            tickConfig = { maxTicksLimit: window.innerWidth <= 768 ? 7 : 6 };
+        }
+
+        return {
+            type: 'time',
+            time: timeConfig,
+            grid: { display: false },
+            ticks: {
+                maxRotation: 0,
+                autoSkip: true,
+                font: { size: 9 },
+                ...tickConfig
+            },
+            border: { display: false }
+        };
+    },
+
+    /**
+     * Create Chart.js options
+     * @private
+     */
+    _createChartOptions: function(config) {
+
+        return {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: false,
+            scales: {
+                x: this._createXAxisConfig(config),
+                y: this._createYAxisConfig(config),
+                // Add second Y axis if configured
+                ...(config.hasSecondYAxis && {
+                    y1: {
+                        position: 'left',
+                        grid: { display: false },
+                        ticks: { 
+                            font: { size: 9 },
+                            maxTicksLimit: 5,
+                            callback: function(value) {
+                                if (value >= 1000) {
+                                    return (value / 1000) + 'k';
+                                }
+                                return value;
+                            }
+                        }
+                    }
+                })
+            },
+            plugins: {
+                legend: {
+                    display: config.isMultiSeries,
+                    position: 'top',
+                    labels: {
+                        boxWidth: 15,
+                        boxHeight: 0,
+                        lineWidth: 2,
+                        font: { size: 9, weight: 'normal' },
+                        usePointStyle: false,
+                        padding: 8,
+                        generateLabels: (chart) => {
+                            return this._generateLegendLabelsWithValues(chart, config);
+                        }
+                    }
+                },
+                tooltip: this._createTooltipConfig(config)
+            }
+        };
+    },
+
+    /**
+     * Create tooltip configuration
+     * @private
+     */
+    _createTooltipConfig: function(config) {
+        return {
+            mode: config.tooltipMode,
+            intersect: false,
+            callbacks: {
+                title: (context) => {
+                    if (context && context[0] && context[0].parsed && context[0].parsed.x) {
+                        return this._formatTooltipTime(context[0].parsed.x, config.id);
+                    }
+                    return 'Invalid date';
+                },
+                label: (context) => {
+                    const seriesName = context.dataset.label || 'Unknown';
+                    const value = context.parsed.y;
+                    const unit = config.unit || '';
+                    const formattedValue = this._formatValue(value, config);
+                    if (value !== null && !isNaN(value)) {
+                        return `${seriesName}: ${formattedValue} ${unit}`;
+                    }
+                    return `${seriesName}: No data`;
+                },
+                afterBody: (context) => {
+                    // Add linked tooltip showing related category data
+                    if (config.category && config.categoryHeaderKey) {
+                        return this._getLinkedTooltipData(context[0], config);
+                    }
+                    return [];
+                }
+            }
+        };
+    },
+
+
+    /**
+     * Get linked tooltip data for charts in the same category
+     * @private
+     */
+    _getLinkedTooltipData: function(context, currentConfig) {
+        if (!context || !context.parsed || !currentConfig.category) {
+            return [];
+        }
+
+        const timestamp = context.parsed.x;
+        const result = [];
+        
+        // Find all charts with the same category (all charts now use unified renderer)
+        const relatedCharts = window.chartConfigs?.filter(chart => 
+            chart.category === currentConfig.category && 
+            chart.id !== currentConfig.id
+        ) || [];
+
+        // Only add category header if there are actually related charts
+        if (relatedCharts.length > 0 && currentConfig.categoryHeaderKey && window.I18n) {
+            const categoryHeader = window.I18n.translate(currentConfig.categoryHeaderKey);
+            if (categoryHeader !== currentConfig.categoryHeaderKey) {
+                result.push(''); // Empty line for spacing
+                result.push(`— ${categoryHeader} —`);
+            }
+        }
+
+        // Get values from related charts at the same timestamp
+        relatedCharts.forEach(chartConfig => {
+            const chartData = window.chartRawData?.[chartConfig.id];
+            
+            if (!chartData || !chartData.timestamps || !chartData.datasets) {
+                return;
+            }
+
+            // Find closest timestamp index
+            const closestIndex = this._findClosestTimestampIndex(chartData.timestamps, timestamp);
+            
+            if (closestIndex === -1) {
+                return;
+            }
+
+            // Get chart title (translated if possible)
+            let chartTitle = chartConfig.title || chartConfig.id;
+            if (chartConfig.titleKey && window.I18n) {
+                const translated = window.I18n.translate(chartConfig.titleKey);
+                if (translated !== chartConfig.titleKey) {
+                    chartTitle = translated;
+                }
+            }
+
+            // Get value from unified format datasets
+            if (chartData.datasets[0] && chartData.datasets[0].data) {
+                const dataPoint = chartData.datasets[0].data[closestIndex];
+                const value = dataPoint && typeof dataPoint === 'object' ? dataPoint.y : dataPoint;
+                
+                if (value !== null && value !== undefined && !isNaN(value)) {
+                    const formattedValue = this._formatValue(value, chartConfig);
+                    const unit = chartConfig.unit || '';
+                    const line = `${chartTitle}: ${formattedValue} ${unit}`;
+                    result.push(line);
+                }
+            }
+        });
+
+        return result;
+    },
+
+    /**
+     * Find the closest timestamp index for tooltip linking
+     * @private
+     */
+    _findClosestTimestampIndex: function(timestamps, targetTimestamp) {
+        if (!timestamps || timestamps.length === 0) {
+            return -1;
+        }
+
+        let closestIndex = 0;
+        let minDiff = Math.abs(new Date(timestamps[0]).getTime() - targetTimestamp);
+
+        for (let i = 1; i < timestamps.length; i++) {
+            const diff = Math.abs(new Date(timestamps[i]).getTime() - targetTimestamp);
+            if (diff < minDiff) {
+                minDiff = diff;
+                closestIndex = i;
+            }
+        }
+
+        return closestIndex;
+    },
+
+
+    /**
+     * Format tooltip time with context enhancement (same logic as legacy system)
+     * @private
+     */
+    _formatTooltipTime: function(timestamp, chartId) {
+        if (!window.moment) {
+            return new Date(timestamp).toLocaleString();
+        }
+
+        // Get the chart's time format from global storage
+        let timeFormat = 'ddd DD MMM YYYY, HH:mm'; // Default full format
+
+        if (window.chartTimeFormats && window.chartTimeFormats[chartId]) {
+            // Use the same format as the chart's x-axis
+            timeFormat = window.chartTimeFormats[chartId];
+            
+            // For very short timeformats, add additional context
+            if (timeFormat === 'HH:mm') {
+                // For time-only formats, add the date for context in tooltip
+                return window.moment(timestamp).format('ddd HH:mm');
+            } else if (timeFormat === 'ddd HH:mm') {
+                // For day+time formats, add the full date for context
+                return window.moment(timestamp).format('ddd HH:mm');
+            } else if (timeFormat === 'dddd') {
+                // For day name formats, add the date for context
+                return window.moment(timestamp).format('ddd HH:mm');
+            } else if (timeFormat === 'D/M') {
+                // For day/month format, add the year and time
+                return window.moment(timestamp).format('ddd D/M HH:mm');
+            } else if (timeFormat === 'MMMM') {
+                // For month only format, add the year
+                return window.moment(timestamp).format('D/M HH:mm');
+            }
+        }
+
+        // Default to full format
+        return window.moment(timestamp).format('ddd DD MMM YYYY, HH:mm');
+    },
+
+    /**
+     * Get series label with translation support
+     * @private
+     */
+    _getSeriesLabel: function(seriesConfig, index) {
+        if (seriesConfig.titleKey && window.I18n) {
+            const translated = window.I18n.translate(seriesConfig.titleKey);
+            if (translated !== seriesConfig.titleKey) {
+                return translated;
+            }
+        }
+        return seriesConfig.title || `Series ${index + 1}`;
+    },
+
+
+    /**
+     * Create Y-axis configuration with rounding support
+     * @private
+     */
+    _createYAxisConfig: function(config) {
+        const yAxisConfig = {
+            position: 'right',
+            grid: {
+                color: 'rgba(0, 0, 0, 0.05)',
+                lineWidth: 1,
+                drawBorder: false
+            },
+            ticks: { font: { size: 9 } }
+        };
+
+        // Apply yAxis configuration from config if available
+        if (config.yAxis) {
+            Object.assign(yAxisConfig, {
+                position: config.yAxis.position || yAxisConfig.position,
+                beginAtZero: config.yAxis.beginAtZero,
+                grid: {
+                    ...yAxisConfig.grid,
+                    color: config.yAxis.gridColor || yAxisConfig.grid.color
+                }
+            });
+
+            yAxisConfig.afterDataLimits = (scale) => {
+                const roundToNearest = config.yAxis.roundToNearest;
+                const roundedMin = Math.floor(scale.min / roundToNearest) * roundToNearest;
+                const roundedMax = Math.ceil(scale.max / roundToNearest) * roundToNearest;
+                scale.min = roundedMin;
+                scale.max = roundedMax;
+            };
+            
+            if (config.yAxis.formatLargeNumbers) {
+                yAxisConfig.ticks.callback = function(value) {
+                    if (value >= 1000) {
+                        return (value / 1000) + 'k';
+                    }
+                    return value;
+                };
+                yAxisConfig.ticks.maxTicksLimit = 5;
+            } else {
+                yAxisConfig.ticks.maxTicksLimit = config.yAxis.maxTicks;
+            }
+        }
+
+        return yAxisConfig;
+    },
+
+    /**
+     * Format value according to chart configuration
+     * @private
+     */
+    _formatValue: function(value, config) {
+        if (value === null || value === undefined || isNaN(value)) {
+            return 'No data';
+        }
+
+        const formatting = config.formatting || {};
+        
+        if (formatting.useIntegerFormat) {
+            return Math.round(value).toString();
+        } else {
+            const decimals = formatting.decimalPlaces !== undefined ? formatting.decimalPlaces : 0;
+            return value.toFixed(decimals);
+        }
+    },
+
+    /**
+     * Add min/max/avg indicators to chart options
+     * @private
+     */
+    _addIndicators: function(options, stats, indicators, config) {
+        if (stats.count === 0) return;
+
+        const { min, max, avg } = stats;
+
+        // Initialize annotations plugin if not exists
+        if (!options.plugins.annotation) {
+            options.plugins.annotation = { annotations: {} };
+        }
+
+        // Add min line
+        if (indicators.showMin) {
+            options.plugins.annotation.annotations.minLine = {
+                type: 'line',
+                yMin: min,
+                yMax: min,
+                borderColor: indicators.colors.min,
+                borderWidth: 1,
+                borderDash: [5, 5]
+            };
+        }
+
+        // Add max line
+        if (indicators.showMax) {
+            options.plugins.annotation.annotations.maxLine = {
+                type: 'line',
+                yMin: max,
+                yMax: max,
+                borderColor: indicators.colors.max,
+                borderWidth: 1,
+                borderDash: [5, 5]
+            };
+        }
+
+        // Add avg line
+        if (indicators.showAvg) {
+            options.plugins.annotation.annotations.avgLine = {
+                type: 'line',
+                yMin: avg,
+                yMax: avg,
+                borderColor: indicators.colors.avg,
+                borderWidth: 1,
+                borderDash: [2, 2],
+                label: {
+                    content: `Avg: ${this._formatValue(avg, config)}`,
+                    enabled: true,
+                    position: 'end'
+                }
+            };
+        }
+    },
+
+    /**
+     * Update chart statistics display
+     * @private
+     */
+    _updateStats: function(config, stats, isMultiSeries) {
+        const statsContainer = document.getElementById(`stats-${config.id}`);
+        if (!statsContainer || stats.count === 0) return;
+
+        const { min, max, avg, current } = stats;
+        const unit = config.unit || '';
+
+        // Build stats HTML with current value for single-series charts
+        let statsHTML = `
+            <div class="chart-stat">
+                <span class="chart-stat-symbol chart-stat-symbol-low">▼</span>
+                <span class="chart-stat-value">${this._formatValue(min, config)} ${unit}</span>
+            </div>
+            <div class="chart-stat">
+                <span class="chart-stat-symbol chart-stat-symbol-avg">●</span>
+                <span class="chart-stat-value">${this._formatValue(avg, config)} ${unit}</span>
+            </div>
+            <div class="chart-stat">
+                <span class="chart-stat-symbol chart-stat-symbol-high">▲</span>
+                <span class="chart-stat-value">${this._formatValue(max, config)} ${unit}</span>
+            </div>`;
+
+        // Add current value for single-series charts
+        if (!isMultiSeries && current !== null) {
+            statsHTML += `
+            <div class="chart-stat">
+                <span class="chart-stat-symbol chart-stat-symbol-now">▶</span>
+                <span class="chart-stat-value">${this._formatValue(current, config)} ${unit}</span>
+            </div>`;
+        }
+
+        statsContainer.innerHTML = statsHTML;
+    },
+
+    /**
+     * Generate legend labels with current values
+     * @private
+     */
+    _generateLegendLabelsWithValues: function(chart, config) {
+        const labels = [];
+        
+        chart.data.datasets.forEach((dataset, index) => {
+            if (dataset.data && dataset.data.length > 0) {
+                // Get the last (current) value
+                const lastPoint = dataset.data[dataset.data.length - 1];
+                const currentValue = lastPoint ? lastPoint.y : null;
+                
+                // Get translated label
+                let label = dataset.label || `Series ${index + 1}`;
+                if (config.series && config.series[index] && config.series[index].titleKey && window.I18n) {
+                    const translated = window.I18n.translate(config.series[index].titleKey);
+                    if (translated !== config.series[index].titleKey) {
+                        label = translated;
+                    }
+                }
+                
+                // Format current value
+                if (currentValue !== null && !isNaN(currentValue)) {
+                    const formattedValue = this._formatValue(currentValue, config);
+                    label = `${label}: ${formattedValue}${(config.displayUnit)}`;
+                }
+                
+                labels.push({
+                    text: label,
+                    fillStyle: dataset.borderColor,
+                    strokeStyle: dataset.borderColor,
+                    lineWidth: dataset.borderWidth,
+                    hidden: !chart.isDatasetVisible(index),
+                    datasetIndex: index
+                });
+            }
+        });
+        
+        return labels;
+    },
+
+    /**
+     * Determine smart time format based on data timespan
+     * @private
+     */
+    _determineSmartTimeFormat: function(timestamps) {
+        if (!timestamps || timestamps.length < 2) return 'HH:mm';
+        
+        const firstTime = new Date(timestamps[0]);
+        const lastTime = new Date(timestamps[timestamps.length - 1]);
+        const timespan = lastTime.getTime() - firstTime.getTime();
+        const dayInMs = 24 * 60 * 60 * 1000;
+        
+        if (timespan < 1 * dayInMs) {
+            return 'HH:mm';
+        } else if (timespan < 2 * dayInMs) {
+            return 'ddd HH:mm';
+        } else if (timespan < 7 * dayInMs) {
+            return 'dddd';
+        } else if (timespan < 120 * dayInMs) {
+            return 'D/M';
+        } else {
+            return 'MMMM';
+        }
+    },
+
+    /**
+     * Set up language change listener for dynamic legend updates
+     * @private
+     */
+    _setupLanguageListener: function(chart, config) {
+        // Remove any existing listener for this chart
+        const chartId = config.id;
+        if (window.chartLanguageListeners && window.chartLanguageListeners[chartId]) {
+            document.removeEventListener('languageChanged', window.chartLanguageListeners[chartId]);
+        }
+
+        // Create new listener
+        const languageListener = () => {
+            // Update legend labels with new translations
+            chart.update('none');
+        };
+
+        // Store listener for cleanup
+        window.chartLanguageListeners = window.chartLanguageListeners || {};
+        window.chartLanguageListeners[chartId] = languageListener;
+
+        // Add listener
+        document.addEventListener('languageChanged', languageListener);
+    }
+};
+
+// Essential functions for compatibility with rest of system
+
+// Chart.js global configuration (moved from chart-renderer.js)
 Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
 Chart.defaults.font.size = 12;
 Chart.defaults.color = '#666';
 Chart.defaults.responsive = true;
 Chart.defaults.maintainAspectRatio = false;
 
-// Export ChartUtils.determineSmartTimeFormat function globally for direct access
-window.determineSmartTimeFormat = window.ChartUtils.determineSmartTimeFormat;
 
-// Store all created charts to allow updates
-// Export as a global variable for access by script.js
-window.chartInstances = {};
-const chartInstances = window.chartInstances;
-
-/**
- * Prepares chart data from the raw data source
- * Processes raw API data into a format suitable for Chart.js, handling both
- * single and multi-series charts.
- * 
- * @param {Object} config - The chart configuration
- * @param {Object} data - The raw data from the API
- * @returns {Object} Processed data including datasets, stats, and formatting options
- */
-function prepareChartData(config, data) {
-    let datasets = [];
-    let allValues = [];
-    let timestamps = [];
-    let hasNegativeValues = false;
-    
-    // 1. Validate and extract basic data
-    if (data.is_multi_series) {
-        // Handle multi-series data
-        if (!data.series || data.series.length === 0 || data.series[0].feeds.length === 0) {
-            return { 
-                isValid: false,
-                errorType: 'no-valid-series-data'
-            };
-        }
-        
-        // For multi-series time scale charts, each series gets its own {x, y} data
-        if (config.disableSyncTimestamps) {
-            // Process each series independently - Stack Overflow solution
-            data.series.forEach((series, index) => {
-                // Create {x, y} data points directly
-                const dataPoints = series.feeds.map(feed => ({
-                    x: new Date(feed.created_at),
-                    y: parseFloat(feed[`field${series.field}`])
-                })).filter(point => !isNaN(point.y));
-                
-                
-                if (dataPoints.length === 0) return;
-                
-                // Get values for stats
-                const seriesValues = dataPoints.map(point => point.y);
-                if (seriesValues.some(v => v < 0)) hasNegativeValues = true;
-                allValues = allValues.concat(seriesValues);
-                
-                // Create dataset with {x, y} data
-                const dataset = {
-                    label: series.titleKey ? (window.I18n?.translate(series.titleKey) || series.titleKey) : series.title || `Series ${index + 1}`,
-                    data: dataPoints,
-                    borderColor: series.color,
-                    backgroundColor: series.color + '20',
-                    borderWidth: 2,
-                    pointRadius: 0,
-                    pointHoverRadius: 4,
-                    fill: false,
-                    tension: 0.1,
-                    yAxisID: series.axis || 'y'
-                };
-                
-                datasets.push(dataset);
-            });
-            
-            timestamps = []; // No common timestamps needed
-        } else {
-            // Use existing logic for synchronized charts
-            timestamps = data.series[0].feeds.map(feed => feed.created_at);
-            
-            data.series.forEach((series, index) => {
-                let rawValues = series.feeds.map(feed => parseFloat(feed[`field${series.field}`]));
-                const seriesValues = window.ChartUtils.transformValues(rawValues, config.dataTransform);
-                const seriesFiltered = seriesValues.filter(v => !isNaN(v));
-                
-                if (seriesFiltered.length === 0) return;
-                
-                if (seriesFiltered.some(v => v < 0)) hasNegativeValues = true;
-                allValues = allValues.concat(seriesFiltered);
-                
-                const seriesConfig = { ...series, index, title: series.title, titleKey: series.titleKey, color: series.color, axis: series.axis };
-                const dataset = window.ChartUtils.createDatasetConfig(seriesConfig, seriesValues, true);
-                datasets.push(dataset);
-            });
-        }
-    } else {
-        // Handle single series data
-        let rawValues = data.feeds.map(feed => parseFloat(feed[`field${config.field}`]));
-        const values = window.ChartUtils.transformValues(rawValues, config.dataTransform);
-        const filteredValues = values.filter(v => !isNaN(v));
-        
-        // Validate data
-        if (filteredValues.length === 0) {
-            return { 
-                isValid: false,
-                errorType: 'no-valid-numeric-values'
-            };
-        }
-        
-        // Track values and stats
-        allValues = filteredValues;
-        timestamps = data.feeds.map(feed => feed.created_at);
-        hasNegativeValues = values.some(v => v < 0);
-        
-        // Create dataset for single series
-        const dataset = window.ChartUtils.createDatasetConfig(config, values, false);
-        datasets.push(dataset);
-    }
-    
-    // 3. Calculate data statistics
-    const stats = window.Utils.calculateStatistics({
-        values: allValues,
-        includePadding: true
-    });
-    
-    // 4. Prepare chart storage for tooltips and syncing
-    window.ChartUtils.storeChartData(config.id, config, timestamps, datasets, data.is_multi_series, data);
-    
-    // 5. Set up locale and time formatting
-    const lang = window.I18n.getCurrentLanguage();
-    const momentLocale = lang === 'no' ? 'nb' : lang;
-    window.moment.locale(momentLocale);
-    
-    // Get appropriate time format
-    const rangeParam = window.Utils ? window.Utils.getURLParameter('range') : 
-                       (new URLSearchParams(window.location.search).get('range')) || '1';
-    
-    const timeFormat = window.ChartUtils.determineSmartTimeFormat(timestamps);
-    
-    // Store time format for reference
-    window.chartTimeFormats = window.chartTimeFormats || {};
-    window.chartTimeFormats[config.id] = timeFormat;
-    
-    // 6. Format timestamps and prepare final chart data
-    const chartData = {
-        labels: timestamps.map(timestamp => moment(timestamp).format(timeFormat)),
-        datasets: datasets,
-        _timeFormat: timeFormat
-    };
-    
-    // 7. Return complete chart data with stats and metadata
-    return {
-        isValid: true,
-        chartData: chartData,
-        stats: {
-            minValue: stats.minValue,
-            maxValue: stats.maxValue,
-            avgValue: stats.avgValue,
-            currentValue: stats.currentValue
-        },
-        meta: {
-            range: stats.range,
-            hasNegativeValues: stats.hasNegativeValues,
-            paddedMinValue: stats.paddedMinValue,
-            paddedMaxValue: stats.paddedMaxValue,
-            isMultiSeries: data.is_multi_series
-        }
-    };
-}
-
-/**
- * Creates chart options configuration
- * @param {Object} config - The chart configuration
- * @param {Object} chartData - The processed chart data
- * @param {Object} meta - Metadata about the chart data from prepareChartData
- * @returns {Object} Configuration options for Chart.js
- */
-function createChartOptions(config, chartData, meta) {
-    // Extract necessary meta information
-    const { paddedMinValue, paddedMaxValue, hasNegativeValues } = meta;
-    
-    // Check if this chart has a minimum value configuration
-    const hasMinValue = config.minValue !== undefined;
-    
-    // Prepare chart options
-    const chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        animation: false, // Disable animation for immediate rendering
-        
-        layout: {
-            padding: {
-                left: 0,
-                right: config.secondYAxis ? 20 : 2, // Add more padding if using second y-axis
-                top: 2,
-                bottom: 0
-            }
-        },
-        
-        // Only show legend for multi-series charts or when explicitly enabled
-        plugins: {
-            ...(!meta.isMultiSeries && {
-                legend: {
-                    display: false // Don't show legend for single-series charts, including stat datasets
-                }
-            }),
-            ...(meta.isMultiSeries && {
-                legend: {
-                    display: true,
-                    position: 'top',
-                    align: 'center', // Center the legend in the chart
-                    labels: {
-                        boxWidth: 15, // Width for line representation
-                        boxHeight: 0, // No explicit height for proper line rendering
-                        lineWidth: 2, // Thickness of the line in the legend
-                        font: {
-                            size: 9, // Smaller font size
-                            weight: '600' // Semi-bold weight (between normal 400 and bold 700)
-                        },
-                        usePointStyle: false, // Use standard line style
-                        padding: 8 // Add padding for better spacing
-                    }
-                }
-            }),
-        },
-        
-        scales: {
-            x: config.disableSyncTimestamps ? {
-                // Use time scale for charts with independent timestamps
-                type: 'time',
-                time: {
-                    displayFormats: {
-                        hour: 'HH:mm',
-                        day: 'MMM D'
-                    },
-                    unit: 'day',
-                    tooltipFormat: 'MMM D, YYYY, HH:mm'
-                },
-                grid: {
-                    display: false // No X grid lines
-                },
-                ticks: {
-                    maxRotation: 0,
-                    autoSkip: true,
-                    maxTicksLimit: window.innerWidth <= 768 ? 6 : ((config.columnSpan && config.columnSpan >= 2) ? 6 : 4),
-                    font: {
-                        size: 9
-                    }
-                },
-                border: {
-                    display: false
-                }
-            } : {
-                // For simplicity and maximum compatibility, we'll use a category scale
-                // with automatic formatting based on the timespan
-                grid: {
-                    display: false // No X grid lines
-                },
-                ticks: {
-                    maxRotation: 0,
-                    autoSkip: true,
-                    // Mobile: always use 6 ticks since all charts are full width
-                    // Desktop: Use columnSpan to determine tick count
-                    // - Small charts (span 1): 4 ticks
-                    // - Larger charts (span 2+): 6 ticks
-                    maxTicksLimit: window.innerWidth <= 768 ? 6 : ((config.columnSpan && config.columnSpan >= 2) ? 6 : 4),
-                    font: {
-                        size: 9
-                    },
-                    color: '#666',
-                    autoSkipPadding: 10,
-                    align: 'center'
-                },
-                border: {
-                    display: false
-                }
-            },
-            y: {
-                // Use yAxis configuration if available, or default values
-                position: config.yAxis && config.yAxis.position ? config.yAxis.position : 
-                         (window.innerWidth <= 768 ? 'left' : 'right'), // Position scale on left for mobile, right for desktop
-                grid: {
-                    color: config.yAxis && config.yAxis.gridColor ? config.yAxis.gridColor : 'rgba(0, 0, 0, 0.05)',
-                    lineWidth: config.yAxis && config.yAxis.gridLineWidth ? config.yAxis.gridLineWidth : 1,
-                    drawBorder: config.yAxis && config.yAxis.drawBorder ? config.yAxis.drawBorder : false
-                },
-                // Dynamic scale based on config or data range with padding
-                min: config.yAxis && config.yAxis.min !== undefined ? config.yAxis.min : 
-                    (hasMinValue ? config.minValue : undefined), // Use explicit min if configured
-                suggestedMin: (config.yAxis && config.yAxis.min !== undefined) || hasMinValue ? 
-                    undefined : paddedMinValue, // Only use suggestedMin if no min configured
-                suggestedMax: config.yAxis && config.yAxis.max !== undefined ? config.yAxis.max : paddedMaxValue,
-                beginAtZero: config.yAxis && config.yAxis.beginAtZero !== undefined ? 
-                    config.yAxis.beginAtZero : false, // Use config or default to false
-                ticks: {
-                    font: {
-                        size: window.innerWidth <= 768 ? 8 : 9
-                    },
-                    maxTicksLimit: window.innerWidth <= 768 ? 4 : 5,
-                    color: '#666',
-                    padding: 0,
-                    callback: function(value) {
-                        // Handle null or undefined values
-                        if (value === null || value === undefined) {
-                            return '';
-                        }
-                        
-                        // Get chart ID to apply specific formatting for certain charts
-                        const chartId = this.chart.canvas.id;
-                        const config = window.chartConfigs.find(c => c.id === chartId);
-                        
-                        // Abbreviate large numbers
-                        if (value >= 1000) {
-                            return (value / 1000) + 'k';
-                        }
-                        
-                        // Fix floating point precision issues
-                        // First round to avoid JavaScript floating point arithmetic problems
-                        const valueWithFixedPrecision = parseFloat(value.toFixed(3));
-                        
-                        // Integer values should always be displayed as integers without decimal places
-                        if (Number.isInteger(valueWithFixedPrecision)) {
-                            return valueWithFixedPrecision.toString();
-                        }
-                        
-                        // Use formatting configuration from chart config
-                        if (config && config.formatting && config.formatting.decimalPlaces !== undefined) {
-                            // Force integers (decimal places = 0)
-                            if (config.formatting.decimalPlaces === 0) {
-                                return Math.round(valueWithFixedPrecision).toString();
-                            }
-                            
-                            // Use specified decimal places for non-zero values
-                            return parseFloat(valueWithFixedPrecision.toFixed(config.formatting.decimalPlaces)).toString();
-                        }
-                        
-                        // For small values (like voltage, temperature differences)
-                        if (Math.abs(valueWithFixedPrecision) < 10) {
-                            // For very small values, use 2 decimal places
-                            if (Math.abs(valueWithFixedPrecision) < 1) {
-                                return parseFloat(valueWithFixedPrecision.toFixed(2)).toString();
-                            }
-                            // For moderately small values, use 1 decimal place
-                            return parseFloat(valueWithFixedPrecision.toFixed(1)).toString();
-                        }
-                        
-                        // For larger values, use integers
-                        return Math.round(valueWithFixedPrecision).toString();
-                    }
-                },
-                border: {
-                    display: false
-                }
-            }
-        }
-    };
-    
-    // Add secondary Y axis if enabled in config
-    if (config.secondYAxis) {
-        chartOptions.scales.y1 = {
-            position: 'left', // Put second axis on the opposite side
-            grid: {
-                display: false, // Don't show grid lines for second axis
-                drawOnChartArea: false
-            },
-            // Calculate y1 range based on second series values
-            suggestedMin: function() {
-                // Find the dataset with y1 axis
-                const y1Dataset = chartData.datasets.find(d => d.yAxisID === 'y1');
-                if (y1Dataset && y1Dataset.data.length > 0) {
-                    const values = y1Dataset.data.filter(v => !isNaN(v));
-                    if (values.length) {
-                        const min = Math.min(...values);
-                        // Add 5% padding
-                        return Math.max(0, min - (min * 0.05));
-                    }
-                }
-                return 0;
-            }(),
-            suggestedMax: function() {
-                // Find the dataset with y1 axis
-                const y1Dataset = chartData.datasets.find(d => d.yAxisID === 'y1');
-                if (y1Dataset && y1Dataset.data.length > 0) {
-                    const values = y1Dataset.data.filter(v => !isNaN(v));
-                    if (values.length) {
-                        const max = Math.max(...values);
-                        // Add 5% padding
-                        return max + (max * 0.05);
-                    }
-                }
-                return 100;
-            }(),
-            ticks: {
-                font: {
-                    size: window.innerWidth <= 768 ? 8 : 9
-                },
-                maxTicksLimit: window.innerWidth <= 768 ? 4 : 5,
-                color: '#8a5a00', // Match the color of the second series
-                padding: 0,
-                callback: function(value) {
-                    // Handle null or undefined values
-                    if (value === null || value === undefined) {
-                        return '';
-                    }
-                    
-                    // Get chart ID to apply specific formatting for certain charts
-                    const chartId = this.chart.canvas.id;
-                    const config = window.chartConfigs.find(c => c.id === chartId);
-                    
-                    // Abbreviate large numbers
-                    if (value >= 1000) {
-                        return (value / 1000) + 'k';
-                    }
-                    
-                    // Fix floating point precision issues
-                    // First round to avoid JavaScript floating point arithmetic problems
-                    const valueWithFixedPrecision = parseFloat(value.toFixed(3));
-                    
-                    // Integer values should always be displayed as integers without decimal places
-                    if (Number.isInteger(valueWithFixedPrecision)) {
-                        return valueWithFixedPrecision.toString();
-                    }
-                    
-                    // Use formatting configuration from chart config
-                    if (config && config.formatting && config.formatting.decimalPlaces !== undefined) {
-                        // Force integers (decimal places = 0)
-                        if (config.formatting.decimalPlaces === 0) {
-                            return Math.round(valueWithFixedPrecision).toString();
-                        }
-                        
-                        // Use specified decimal places for non-zero values
-                        return parseFloat(valueWithFixedPrecision.toFixed(config.formatting.decimalPlaces)).toString();
-                    }
-                    
-                    // For small values (like voltage, temperature differences)
-                    if (Math.abs(valueWithFixedPrecision) < 10) {
-                        // For very small values, use 2 decimal places
-                        if (Math.abs(valueWithFixedPrecision) < 1) {
-                            return parseFloat(valueWithFixedPrecision.toFixed(2)).toString();
-                        }
-                        // For moderately small values, use 1 decimal place
-                        return parseFloat(valueWithFixedPrecision.toFixed(1)).toString();
-                    }
-                    
-                    // For larger values, use integers
-                    return Math.round(valueWithFixedPrecision).toString();
-                }
-            },
-            border: {
-                display: false
-            }
-        };
-    }
-    
-    // Add tooltip configuration
-    if (config.disableSyncTimestamps) {
-        // For time scale charts, use simple tooltip that works with {x, y} data
-        chartOptions.plugins.tooltip = {
-            mode: 'index',
-            intersect: false,
-            callbacks: {
-                title: function(context) {
-                    if (context && context[0] && context[0].parsed && context[0].parsed.x) {
-                        return moment(context[0].parsed.x).format('MMM D, YYYY, HH:mm');
-                    }
-                    return 'Invalid date';
-                },
-                label: function(context) {
-                    const seriesName = context.dataset.label || 'Unknown';
-                    const value = context.parsed.y;
-                    if (value !== null && value !== undefined && !isNaN(value)) {
-                        return `${seriesName}: ${Math.round(value)} lux`;
-                    }
-                    return `${seriesName}: No data`;
-                }
-            }
-        };
-    } else {
-        // Use the existing tooltip system for category-based charts
-        const rawTimestamps = window.chartRawData[config.id]?.timestamps || [];
-        chartOptions.plugins.tooltip = window.ChartUtils.createTooltipConfig(config, chartData, rawTimestamps);
-    }
-    
-    // Handle hover events for tooltip synchronization
-    chartOptions.onHover = (event, elements, chart) => {
-        if (!elements || !elements.length) return;
-        
-        const dataIndex = elements[0].index;
-        window.ChartUtils.syncTooltips(chart, dataIndex);
-    };
-    
-    return chartOptions;
-}
-
-/**
- * Chart renderer imports utility functions from chart-utils.js
- * Uses configuration-driven approach where all chart properties
- * must be explicitly defined in the configuration. No implicit behavior based on chart IDs.
- */
-
-// getRelatedChartData function has been moved to chart-utils.js
-
-// Export recalculation function for access from script.js
-window.recalculateChartStats = recalculateChartStats;
-
-// Use data component functions for fetching data
 // Create a reference to the fetchChartData function from data_components.js
 window.fetchChartData = window.DataComponents.fetchChartData;
 
-/**
- * Recalculates statistics for a chart from its data
- * Delegates to ChartStats module
- * @param {Chart} chart - The Chart.js instance to recalculate stats for
- * @returns {void}
- */
-function recalculateChartStats(chart) {
-    window.ChartStats.recalculateChartStats(chart);
-}
+window.recalculateChartStats = function(chart) {
+};
 
-/**
- * Updates the chart statistics display with calculated values
- * Delegates to ChartStats module
- * @param {string} chartId - The ID of the chart
- * @param {number} minValue - Minimum value in the dataset
- * @param {number} maxValue - Maximum value in the dataset
- * @param {number} avgValue - Average value of the dataset
- * @param {number} currentValue - Current/latest value in the dataset
- * @param {boolean} isMultiSeries - Whether this is a multi-series chart
- * @returns {void}
- */
-function updateChartStats(chartId, minValue, maxValue, avgValue, currentValue, isMultiSeries) {
-    const stats = { minValue, maxValue, avgValue, currentValue };
-    window.ChartStats.updateChartStats(chartId, stats, isMultiSeries);
-}
-
-/**
- * Translates all chart labels and updates stats with localized values
- * Delegates to ChartI18n module for translation logic
- * @param {Chart} chart - The Chart.js instance to translate
- * @returns {void}
- */
 window.translateChartLabels = function(chart) {
-    if (!chart || !chart.data || !chart.data.datasets || !window.ChartI18n) {
-        return;
-    }
-
-    try {
-        // Use ChartI18n module to handle translations
-        window.ChartI18n.translateChart(chart);
-
-        // Recalculate stats after translation
-        recalculateChartStats(chart);
-    } catch (e) {
-        console.error("Error updating chart labels:", e);
-    }
-}
+};
 
 // Listen for language changes to update all chart elements
 document.addEventListener('languageChanged', (event) => {
@@ -576,596 +859,160 @@ document.addEventListener('languageChanged', (event) => {
         }
     });
     
-    // 2. Let ChartI18n handle updating all chart translations
-    if (window.ChartI18n && typeof window.ChartI18n.updateAllChartTranslations === 'function') {
-        window.ChartI18n.updateAllChartTranslations();
-    }
     
-    // 3. Update all chart stats to ensure consistent labels and formatting
-    // Add a slight delay to ensure other chart updates have completed
-    setTimeout(() => {
-        window.ChartStats.updateAllChartStats();
-    }, 50);
 });
 
-/**
- * Creates or updates a chart with the provided configuration and data
- * @param {Object} config - The chart configuration
- * @param {Object} data - The chart data from the API
- */
-function createOrUpdateChart(config, data) {
-    // Get the loading element
-    const loadingEl = document.getElementById(`loading-${config.id}`);
-    
-    // Get translated loading text
-    const loadingText = window.I18n.translate('loading');
-    const noDataText = window.I18n.translate('noData');
-    
-    // Reset loading element to its initial state
-    if (loadingEl) {
-        loadingEl.innerHTML = `
-            <div class="loading-spinner"></div>
-            <div>${loadingText}</div>
-        `;
-        loadingEl.style.display = 'block';
-    }
-    
-    if (!data || !data.feeds || data.feeds.length === 0) {
-        // No data available
-        if (loadingEl) {
-            loadingEl.innerHTML = `<div>${noDataText}</div>`;
-        }
-        return;
-    }
-    
-    // Hide loading indicator when data is available
-    if (loadingEl) {
-        loadingEl.style.display = 'none';
-    }
-    
-    // Process chart data using the extracted utility function
-    const processedData = prepareChartData(config, data);
-    
-    // Handle any data processing errors
-    if (!processedData.isValid) {
-        if (loadingEl) {
-            // Get appropriate translation key based on error type
-            let translationKey = 'noData';
-            if (processedData.errorType === 'no-valid-series-data') {
-                translationKey = 'noValidSeriesData';
-            } else if (processedData.errorType === 'no-valid-numeric-values') {
-                translationKey = 'noValidNumericValues';
-            }
-            
-            // Get translated error message
-            const errorMsg = window.I18n.translate(translationKey);
-            
-            loadingEl.innerHTML = `<div>${errorMsg}</div>`;
-        }
-        return;
-    }
-    
-    // Extract data from processed result
-    const { chartData, stats, meta } = processedData;
-    const { minValue, maxValue, avgValue, currentValue } = stats;
-    const { hasNegativeValues, paddedMinValue, paddedMaxValue, isMultiSeries } = meta;
-    
-    // Update stats display
-    updateChartStats(config.id, minValue, maxValue, avgValue, currentValue, isMultiSeries);
-    
-    // Create chart options using the extracted utility function
-    const chartOptions = createChartOptions(config, chartData, meta);
-    
-    // Add statistical annotations if needed
-    if (!meta.isMultiSeries && chartData.datasets.length === 1) {
-        // Use the utility function to create statistical annotations
-        const annotations = window.ChartUtils.createStatisticalAnnotations(config, stats, chartData);
-        
-        // Add annotations to chart options
-        if (Object.keys(annotations).length > 0) {
-            if (!chartOptions.plugins) {
-                chartOptions.plugins = {};
-            }
-            chartOptions.plugins.annotation = {
-                annotations: annotations
-            };
-        }
-    }
-    
-    // Use syncTooltips from ChartUtils module
-    window.syncTooltips = window.ChartUtils.syncTooltips;
-    
-    // Create or update chart
-    const canvas = document.getElementById(config.id);
-    if (!canvas) return;
-    
-    if (chartInstances[config.id]) {
-        // Update existing chart
-        
-        // If ResourcePool is available, handle dataset reuse
-        if (window.ResourcePool && chartInstances[config.id].data && chartInstances[config.id].data.datasets) {
-            const datasetPool = window.ResourcePool.getPool('datasetConfig');
-            if (datasetPool) {
-                // Get current datasets
-                const currentDatasets = chartInstances[config.id].data.datasets;
-                
-                // If the number of datasets is changing, we need to handle addition/removal
-                if (currentDatasets.length !== chartData.datasets.length) {
-                    // If the new chart has fewer datasets, release excess datasets back to the pool
-                    if (currentDatasets.length > chartData.datasets.length) {
-                        // Release excess datasets to the pool
-                        for (let i = chartData.datasets.length; i < currentDatasets.length; i++) {
-                            datasetPool.release(currentDatasets[i]);
-                        }
-                    }
-                }
-            }
-        }
-        
-        // Update chart data and options
-        chartInstances[config.id].data = chartData;
-        chartInstances[config.id].options = chartOptions;
-        chartInstances[config.id].update('none');
-        
-        // Always recalculate stats to ensure they're correct
-        recalculateChartStats(chartInstances[config.id]);
-        
-        // Record update in lifecycle manager
-        if (window.ChartLifecycleManager) {
-            window.ChartLifecycleManager.recordUpdate(config.id);
-        }
-    } else {
-        // Create new chart
-        chartInstances[config.id] = new Chart(canvas, {
-            type: 'line',
-            data: chartData,
-            options: chartOptions
-        });
-        
-        // Emit chart rendered event
-        document.dispatchEvent(new CustomEvent('chart:rendered', {
-            detail: {
-                chartId: config.id,
-                chartType: 'line',
-                isMultiSeries: config.series && Array.isArray(config.series) && config.series.length > 1
-            }
-        }));
-        
-        // Calculate initial stats for new chart
-        recalculateChartStats(chartInstances[config.id]);
-        
-        // Force emit a chart stats update event to ensure tooltips get updated
-        if (config.id === 'chart-temp' && window.latestData && window.latestData.temperature !== null) {
-            // Get the most current stats
-            const currentStats = {
-                minValue: window.latestData.temperature,
-                maxValue: window.latestData.temperature,
-                avgValue: window.latestData.temperature,
-                currentValue: window.latestData.temperature
-            };
-            
-            // Emit chart stats updated event with current data
-            document.dispatchEvent(new CustomEvent('chart:stats:updated', {
-                detail: {
-                    chartId: 'chart-temp',
-                    stats: currentStats,
-                    isMultiSeries: false,
-                    unit: '°C'
-                }
-            }));
-        }
-        
-        // Register with lifecycle manager
-        if (window.ChartLifecycleManager) {
-            const container = canvas.closest('.chart');
-            const statsElement = document.getElementById(`stats-${config.id}`);
-            const loadingElement = document.getElementById(`loading-${config.id}`);
-            
-            window.ChartLifecycleManager.registerChart(config.id, chartInstances[config.id], {
-                container,
-                statsElement,
-                loadingElement,
-                config
-            });
-        }
-    }
-    
-    // Apply translations to all chart elements (labels, legend, stats)
-    // This ensures that the chart is properly translated on initial creation
-    if (typeof window.translateChartLabels === 'function') {
-        window.translateChartLabels(chartInstances[config.id]);
-    }
-    
-    // If this is a multi-series chart, we'll update the legend with current values
-    // (This is now handled by the generateLabels function in the legend options)
-    // Just update the chart to refresh the legend
-    if (meta.isMultiSeries && chartInstances[config.id]) {
-        chartInstances[config.id].update('none');
-    }
-    
-    // Apply special stats labels formatting if configured
-    // For example, temperature charts use LAHN (Low/Avg/High/Now) style
-    if (config.statsLabelsStyle === 'LAHN') {
-        // Update chart stats with a small delay to ensure the chart is fully rendered
-        setTimeout(() => {
-            if (window.ChartStats && typeof window.ChartStats.updateAllChartStats === 'function') {
-                window.ChartStats.updateAllChartStats();
-            }
-        }, 100);
-    }
-}
-
-// Call this when window is resized to properly adjust all charts
-// Expose globally for script.js
 window.resizeAllCharts = function() {
-    // Check if layout mode (mobile/desktop) has changed
-    const wasMobile = document.getElementById('chartContainer').classList.contains('mobile-layout');
-    const isMobile = window.innerWidth <= 768;
-    
-    // If layout has changed, reinitialize the entire chart layout
-    if (wasMobile !== isMobile) {
-        // Properly destroy all existing chart instances using lifecycle manager if available
-        Object.keys(chartInstances).forEach(id => {
-            if (chartInstances[id]) {
-                if (window.ChartLifecycleManager) {
-                    window.ChartLifecycleManager.cleanupChart(id);
-                } else {
-                    chartInstances[id].destroy();
-                }
-                chartInstances[id] = null;
-            }
-        });
-        
-        // Clear chart instances
-        Object.keys(chartInstances).forEach(key => delete chartInstances[key]);
-        
-        // Get URL parameters
-        function getURLParam(name) {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get(name) || '';
-        }
-        
-        // Reinitialize layout
-        const currentRange = getURLParam('range') || '1';
-        const currentResults = parseInt(getURLParam('results')) || 8000;
-        loadAllCharts(currentRange, currentResults);
-        return;
-    }
-    
-    // For each chart instance, resize and update without animation
-    Object.keys(chartInstances).forEach(id => {
-        if (chartInstances[id]) {
-            const chart = chartInstances[id];
-            
-            // Disable animation
-            chart.options.animation = false;
-            
-            // Force resize and update
+    Object.keys(window.chartInstances).forEach(id => {
+        const chart = window.chartInstances[id];
+        if (chart) {
             chart.resize();
             chart.update('none');
-            
-            // Recalculate stats after resize to ensure they're correct
-            recalculateChartStats(chart);
-            
-            // Fix special stats labels if needed (e.g., temperature charts)
-            const chartConfig = window.chartConfigs.find(c => c.id === chart.canvas.id);
-            if (chartConfig && chartConfig.statsLabelsStyle === 'LAHN') {
-                setTimeout(() => {
-                    window.ChartStats.updateAllChartStats();
-                }, 100);
-            }
         }
     });
-}
+};
 
-// Load data for all charts with progressive rendering
-async function loadAllCharts(range = 1, results = 8000) {
-    const startTime = performance.now();
-    
-    // Initialize chart layout
-    window.ChartLayout.initializeChartLayout();
-    
-    // Start a counter to track when all charts are loaded
-    let chartsLoaded = 0;
-    const totalCharts = window.chartConfigs.length;
-    
-    // Use Promise.allSettled to handle individual chart loading without waiting for all
-    const fetchPromises = window.chartConfigs.map((config, index) => {
-        // For default range, use the chart's defaultRange property or fallback to 1
-        const effectiveRange = range === 'default' ? (config.defaultRange || 1) : range;
-        
-        // Start fetching data for this chart
-        return fetchChartData(config, effectiveRange, results)
-            .then(data => {
-                // When data arrives, immediately render the chart
-                createOrUpdateChart(config, data);
-                
-                // Increment counter
-                chartsLoaded++;
-                
-                // If this is the last chart, log completion time
-                if (chartsLoaded === totalCharts) {
-                    const totalTime = Math.round(performance.now() - startTime);
-                    console.log(`Charts loaded in ${totalTime}ms`);
-                }
-                
-                // Return the data for Promise tracking
-                return data;
-            })
-            .catch(error => {
-                console.error(`Error loading chart ${config.id}:`, error);
-                
-                // Even on error, increment counter
-                chartsLoaded++;
-                
-                // If this is the last chart, log completion time
-                if (chartsLoaded === totalCharts) {
-                    const totalTime = Math.round(performance.now() - startTime);
-                    console.log(`Charts loaded in ${totalTime}ms (with errors)`);
-                }
-                
-                // Return null data for failed charts
-                return null;
-            });
+window.refreshCharts = function(range, results) {
+    // Destroy all existing charts
+    Object.keys(window.chartInstances).forEach(id => {
+        if (window.chartInstances[id]) {
+            window.chartInstances[id].destroy();
+            delete window.chartInstances[id];
+        }
     });
     
-    // The following is just for tracking completion, charts will render progressively
+    // Reload all charts
+    loadAllCharts(range, results);
+};
+
+// Non-destructive chart update for auto-refresh
+window.updateAllCharts = async function(range, results) {
+    if (!window.chartConfigs) return;
+    
+    // Update each chart individually without destroying
+    const updatePromises = window.chartConfigs.map(async (config) => {
+        const effectiveRange = range === 'default' ? config.defaultRange : range;
+        
+        if (window.DataComponents && window.DataComponents.fetchChartData) {
+            try {
+                const newData = await window.DataComponents.fetchChartData(config, effectiveRange, results);
+                // This will use updateChart() if chart exists, or create new if not
+                window.UnifiedChartRenderer.addChart(config, newData);
+                return newData;
+            } catch (error) {
+                console.error(`Error updating chart ${config.id}:`, error);
+                return null;
+            }
+        }
+        return Promise.resolve(null);
+    });
+    
+    await Promise.allSettled(updatePromises);
+};
+
+// Update only charts with recent data (effectiveRange <= 3)
+window.updateRecentCharts = async function(range, results) {
+    if (!window.chartConfigs) return;
+    
+    // Filter to only recent data charts
+    const recentCharts = window.chartConfigs.filter(config => {
+        const effectiveRange = range === 'default' ? config.defaultRange : range;
+        return parseInt(effectiveRange) <= 3;
+    });
+    
+    if (recentCharts.length === 0) return;
+    
+    // Update each recent chart individually
+    const updatePromises = recentCharts.map(async (config) => {
+        const effectiveRange = range === 'default' ? config.defaultRange : range;
+        
+        if (window.DataComponents && window.DataComponents.fetchChartData) {
+            try {
+                const newData = await window.DataComponents.fetchChartData(config, effectiveRange, results);
+                window.UnifiedChartRenderer.addChart(config, newData);
+                return newData;
+            } catch (error) {
+                console.error(`Error updating recent chart ${config.id}:`, error);
+                return null;
+            }
+        }
+        return Promise.resolve(null);
+    });
+    
+    await Promise.allSettled(updatePromises);
+};
+
+// Smart auto-refresh for charts
+let autoRefreshInterval = null;
+let lastFullRefresh = 0;
+const FULL_REFRESH_INTERVAL = 15 * 60 * 1000; // 15 minutes
+
+window.startChartAutoRefresh = function(intervalSeconds = 300) {
+    // Don't start if already running
+    if (autoRefreshInterval) return;
+    
+    lastFullRefresh = Date.now();
+    
+    autoRefreshInterval = setInterval(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const currentRange = urlParams.get('range') || 'default';
+        const currentResults = parseInt(urlParams.get('results')) || 8000;
+        const now = Date.now();
+        
+        // Check if it's time for a full refresh (15 minutes)
+        if (now - lastFullRefresh >= FULL_REFRESH_INTERVAL) {
+            window.updateAllCharts(currentRange, currentResults);
+            lastFullRefresh = now;
+        } else {
+            // Partial refresh: only update charts with recent data (effectiveRange <= 3)
+            window.updateRecentCharts(currentRange, currentResults);
+        }
+    }, intervalSeconds * 1000);
+};
+
+window.stopChartAutoRefresh = function() {
+    if (autoRefreshInterval) {
+        clearInterval(autoRefreshInterval);
+        autoRefreshInterval = null;
+    }
+};
+
+// Chart loading function - moved from chart-renderer.js
+async function loadAllCharts(range = 1, results = 8000) {
+    // Initialize chart layout
+    if (window.ChartLayout && window.ChartLayout.initializeChartLayout) {
+        window.ChartLayout.initializeChartLayout();
+    }
+    
+    if (!window.chartConfigs) {
+        console.error('Chart configs not loaded');
+        return;
+    }
+    
+    // Load charts progressively
+    const fetchPromises = window.chartConfigs.map((config) => {
+        const effectiveRange = range === 'default' ? config.defaultRange : range;
+        
+        if (window.DataComponents && window.DataComponents.fetchChartData) {
+            return window.DataComponents.fetchChartData(config, effectiveRange, results)
+                .then(data => {
+                    window.UnifiedChartRenderer.addChart(config, data);
+                    return data;
+                })
+                .catch(error => {
+                    console.error(`Error loading chart ${config.id}:`, error);
+                    return null;
+                });
+        }
+        return Promise.resolve(null);
+    });
+    
     await Promise.allSettled(fetchPromises);
 }
 
-// Refresh all charts - expose globally for script.js
-window.refreshCharts = function(range, results) {
-    const startTime = performance.now();
-    
-    // Properly destroy all existing chart instances first, using lifecycle manager if available
-    Object.keys(chartInstances).forEach(id => {
-        if (chartInstances[id]) {
-            if (window.ChartLifecycleManager) {
-                window.ChartLifecycleManager.cleanupChart(id);
-            } else {
-                chartInstances[id].destroy();
-            }
-            chartInstances[id] = null;
-        }
-    });
-    
-    // Clear chart instances object
-    Object.keys(chartInstances).forEach(key => delete chartInstances[key]);
-    
-    // Now load all charts with new parameters using the progressive loading approach
-    loadAllCharts(range, results);
-    
-    // Setup a completion check for temperature chart stats
-    // We'll use MutationObserver to detect when all charts are rendered
-    const chartContainer = document.getElementById('chartContainer');
-    
-    if (chartContainer) {
-        // Flag to track if stats have been fixed already
-        let statsFixed = false;
-        
-        // Create a mutation observer to watch for chart container changes
-        const observer = new MutationObserver((mutations) => {
-            // Skip if stats were already fixed
-            if (statsFixed) return;
-            
-            // Check if all charts are loaded by counting canvas elements
-            const canvasElements = chartContainer.querySelectorAll('canvas');
-            
-            // If we have canvas elements for all charts, run the stats fix
-            if (canvasElements.length >= window.chartConfigs.length) {
-                window.ChartStats.updateAllChartStats();
-                
-                // Log completion time
-                const totalTime = Math.round(performance.now() - startTime);
-                console.log(`Charts refreshed in ${totalTime}ms`);
-                
-                // Mark stats as fixed
-                statsFixed = true;
-                
-                // Disconnect the observer once we're done
-                observer.disconnect();
-            }
-        });
-        
-        // Observe changes to the chart container
-        observer.observe(chartContainer, { childList: true, subtree: true });
-        
-        // Add a timeout fallback in case something goes wrong
-        setTimeout(() => {
-            // Only run if stats haven't been fixed yet
-            if (!statsFixed) {
-                // Disconnect the observer
-                observer.disconnect();
-                
-                window.ChartStats.updateAllChartStats();
-                
-                // Log completion time with fallback note
-                const totalTime = Math.round(performance.now() - startTime);
-                console.log(`Charts refreshed in ${totalTime}ms (fallback method)`);
-                
-                // Mark stats as fixed
-                statsFixed = true;
-            }
-        }, 5000); // 5-second timeout as a fallback
+// Expose chart sorting function (implementation is in chart-layout.js)
+window.sortChartsByCategory = function(category) {
+    if (window.ChartLayout && window.ChartLayout.sortChartsByCategory) {
+        window.ChartLayout.sortChartsByCategory(category);
     }
-}
-
-// Note: Date range selection functionality has been moved to date-controller.js
-
-/**
- * Sort charts by category - only on mobile devices
- * Delegated to the ChartLayout module
- * @param {string} category - The category to sort by, or 'row' for row-based sorting
- */
-function sortChartsByCategory(category) {
-    window.ChartLayout.sortChartsByCategory(category);
-}
-
-// Export sort function to global scope for access from event handlers
-window.sortChartsByCategory = sortChartsByCategory;
-
-// Initialize chart system when the DOM is ready
-document.addEventListener('DOMContentLoaded', () => {
-    // We'll skip setupDateRangeHandlers() here since it's now called in index.html
-    // after the header is created dynamically
-    
-    // Get URL parameters helper
-    function getURLParameter(name) {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get(name) || '';
-    }
-    
-    // Get range and results from URL parameters or use defaults
-    // Default to 'default' range (house icon) if no range parameter is provided
-    const range = getURLParameter('range') || 'default';
-    const results = parseInt(getURLParameter('results')) || 8000;
-    
-    // Ensure only one date chip is active on load
-    setTimeout(() => {
-        const allDateChips = document.querySelectorAll('.date-chip');
-        
-        // First remove active class from all chips
-        allDateChips.forEach(chip => {
-            chip.classList.remove('active');
-        });
-        
-        // Then find and activate the current range chip
-        const activeChip = document.querySelector(`.date-chip[data-range="${range}"]`);
-        if (activeChip) {
-            activeChip.classList.add('active');
-        }
-    }, 100);
-    
-    // Initialize chart loading with a short delay to avoid blocking the initial render
-    setTimeout(() => {
-        // Ensure translations are loaded before creating charts
-        if (window.I18n && typeof window.I18n.updatePageLanguage === 'function') {
-            // Translations already loaded, initialize charts
-            loadAllCharts(range, results);
-        } else {
-            // Wait for translations to be ready
-            const checkTranslations = setInterval(() => {
-                if (window.I18n && typeof window.I18n.updatePageLanguage === 'function') {
-                    clearInterval(checkTranslations);
-                    loadAllCharts(range, results);
-                }
-            }, 50);
-        }
-    }, 100); // Short delay to allow UI to render first
-    
-    // Add a failsafe for charts disappearing, but with reduced frequency to avoid performance issues
-    setInterval(() => {
-        const chartContainer = document.getElementById('chartContainer');
-        if (chartContainer && chartContainer.children.length === 0) {
-            console.log('Charts disappeared, reloading...');
-            
-            // Make sure Utils is defined before using it
-            if (!window.Utils) {
-                console.error('Utils is not defined in failsafe interval. Critical dependency missing.');
-                return;
-            }
-            
-            // Get current range and results
-            const currentRange = window.Utils.getURLParameter('range') || '1';
-            const currentResults = parseInt(window.Utils.getURLParameter('results')) || 8000;
-            
-            // Reload all charts
-            loadAllCharts(currentRange, currentResults);
-        }
-    }, 60000); // Check every 60 seconds (reduced from 30s)
-    
-    /**
-     * Initializes chart sorting functionality with desktop and mobile select elements
-     * This function can be called later when we're sure the dropdown exists
-     */
-    window.initializeSorting = function() {
-        const sortSelect = document.getElementById('sortSelect');
-        const mobileSortSelect = document.getElementById('mobileSortSelect');
-        
-        if (!sortSelect) {
-            // If sort select isn't found, try again after a delay
-            setTimeout(window.initializeSorting, 500);
-            return;
-        }
-        
-        // Try to restore last used sort preference
-        const lastSort = localStorage.getItem('chartSortPreference');
-        
-        // Initialize both selects with the saved preference
-        if (lastSort) {
-            sortSelect.value = lastSort;
-            if (mobileSortSelect) {
-                mobileSortSelect.value = lastSort;
-            }
-        }
-        
-        /**
-         * Handles sort selection changes from any dropdown
-         * @param {string} category - The category to sort by
-         * @param {HTMLElement} sourceElement - The select element that triggered the change
-         */
-        const handleSortChange = (category, sourceElement) => {
-            // Save preference to localStorage
-            localStorage.setItem('chartSortPreference', category);
-            
-            // Update the other dropdown if this change came from one of them
-            if (sourceElement === sortSelect && mobileSortSelect) {
-                mobileSortSelect.value = category;
-            } else if (sourceElement === mobileSortSelect && sortSelect) {
-                sortSelect.value = category;
-            }
-            
-            // Perform the actual sorting
-            window.sortChartsByCategory(category);
-        };
-        
-        // Set up event listeners for both dropdowns
-        sortSelect.addEventListener('change', (event) => {
-            handleSortChange(event.target.value, sortSelect);
-        });
-        
-        if (mobileSortSelect) {
-            mobileSortSelect.addEventListener('change', (event) => {
-                handleSortChange(event.target.value, mobileSortSelect);
-            });
-        }
-        
-        // Apply the initial sort if we're in mobile mode and a preference exists
-        if (window.innerWidth <= 768 && lastSort) {
-            setTimeout(() => window.sortChartsByCategory(lastSort), 500);
-        }
-    };
-    
-    /**
-     * Sets up a MutationObserver to initialize sorting when elements are ready
-     * This ensures sorting is initialized even when elements are added dynamically
-     */
-    function setupSortingInitialization() {
-        // Try to initialize sorting immediately first
-        window.initializeSorting();
-        
-        // Set up a MutationObserver to detect when the sort select elements are added to the DOM
-        const bodyObserver = new MutationObserver((mutations) => {
-            for (const mutation of mutations) {
-                if (mutation.type === 'childList' && mutation.addedNodes.length) {
-                    // Check if sortSelect was added
-                    if (document.getElementById('sortSelect')) {
-                        window.initializeSorting();
-                        // No need to keep observing once we've found it
-                        bodyObserver.disconnect();
-                        break;
-                    }
-                }
-            }
-        });
-        
-        // Start observing DOM changes
-        bodyObserver.observe(document.body, { childList: true, subtree: true });
-        
-        // Safety cleanup - disconnect after 10 seconds if it hasn't found the element
-        setTimeout(() => bodyObserver.disconnect(), 10000);
-    }
-    
-    // Initialize sorting system
-    setupSortingInitialization();
-});
+};
