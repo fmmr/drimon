@@ -5,30 +5,6 @@
 // Register the moment.js adapter for Chart.js time scale
 // This ensures proper time formatting for the axis
 // Create a simple adapter that uses moment.js for date handling
-Chart.register({
-    id: 'moment',
-    _date: {
-        parse: function(value) {
-            return moment(value).toDate();
-        },
-        format: function(time, format) {
-            return moment(time).format(format);
-        },
-        add: function(time, amount, unit) {
-            return moment(time).add(amount, unit).toDate();
-        },
-        diff: function(max, min, unit) {
-            return moment(max).diff(moment(min), unit);
-        },
-        startOf: function(time, unit, weekday) {
-            return moment(time).startOf(unit).toDate();
-        },
-        endOf: function(time, unit) {
-            return moment(time).endOf(unit).toDate();
-        }
-    }
-});
-
 // Global Chart.js configuration
 Chart.defaults.font.family = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif";
 Chart.defaults.font.size = 12;
@@ -69,40 +45,61 @@ function prepareChartData(config, data) {
             };
         }
         
-        // Use timestamps from first series for consistency
-        timestamps = data.series[0].feeds.map(feed => feed.created_at);
-        
-        // 2. Process each series
-        data.series.forEach((series, index) => {
-            // Get and transform values
-            let rawValues = series.feeds.map(feed => parseFloat(feed[`field${series.field}`]));
-            const seriesValues = window.ChartUtils.transformValues(rawValues, config.dataTransform);
-            const seriesFiltered = seriesValues.filter(v => !isNaN(v));
+        // For multi-series time scale charts, each series gets its own {x, y} data
+        if (config.disableSyncTimestamps) {
+            // Process each series independently - Stack Overflow solution
+            data.series.forEach((series, index) => {
+                // Create {x, y} data points directly
+                const dataPoints = series.feeds.map(feed => ({
+                    x: new Date(feed.created_at),
+                    y: parseFloat(feed[`field${series.field}`])
+                })).filter(point => !isNaN(point.y));
+                
+                
+                if (dataPoints.length === 0) return;
+                
+                // Get values for stats
+                const seriesValues = dataPoints.map(point => point.y);
+                if (seriesValues.some(v => v < 0)) hasNegativeValues = true;
+                allValues = allValues.concat(seriesValues);
+                
+                // Create dataset with {x, y} data
+                const dataset = {
+                    label: series.titleKey ? (window.I18n?.translate(series.titleKey) || series.titleKey) : series.title || `Series ${index + 1}`,
+                    data: dataPoints,
+                    borderColor: series.color,
+                    backgroundColor: series.color + '20',
+                    borderWidth: 2,
+                    pointRadius: 0,
+                    pointHoverRadius: 4,
+                    fill: false,
+                    tension: 0.1,
+                    yAxisID: series.axis || 'y'
+                };
+                
+                datasets.push(dataset);
+            });
             
-            // Skip empty series
-            if (seriesFiltered.length === 0) return;
+            timestamps = []; // No common timestamps needed
+        } else {
+            // Use existing logic for synchronized charts
+            timestamps = data.series[0].feeds.map(feed => feed.created_at);
             
-            // Track negative values
-            if (seriesFiltered.some(v => v < 0)) {
-                hasNegativeValues = true;
-            }
-            
-            // Combine with other values for stats
-            allValues = allValues.concat(seriesFiltered);
-            
-            // Create dataset configuration
-            const seriesConfig = {
-                ...series,
-                index,
-                title: series.title,
-                titleKey: series.titleKey,
-                color: series.color,
-                axis: series.axis
-            };
-            
-            const dataset = window.ChartUtils.createDatasetConfig(seriesConfig, seriesValues, true);
-            datasets.push(dataset);
-        });
+            data.series.forEach((series, index) => {
+                let rawValues = series.feeds.map(feed => parseFloat(feed[`field${series.field}`]));
+                const seriesValues = window.ChartUtils.transformValues(rawValues, config.dataTransform);
+                const seriesFiltered = seriesValues.filter(v => !isNaN(v));
+                
+                if (seriesFiltered.length === 0) return;
+                
+                if (seriesFiltered.some(v => v < 0)) hasNegativeValues = true;
+                allValues = allValues.concat(seriesFiltered);
+                
+                const seriesConfig = { ...series, index, title: series.title, titleKey: series.titleKey, color: series.color, axis: series.axis };
+                const dataset = window.ChartUtils.createDatasetConfig(seriesConfig, seriesValues, true);
+                datasets.push(dataset);
+            });
+        }
     } else {
         // Handle single series data
         let rawValues = data.feeds.map(feed => parseFloat(feed[`field${config.field}`]));
@@ -235,7 +232,32 @@ function createChartOptions(config, chartData, meta) {
         },
         
         scales: {
-            x: {
+            x: config.disableSyncTimestamps ? {
+                // Use time scale for charts with independent timestamps
+                type: 'time',
+                time: {
+                    displayFormats: {
+                        hour: 'HH:mm',
+                        day: 'MMM D'
+                    },
+                    unit: 'day',
+                    tooltipFormat: 'MMM D, YYYY, HH:mm'
+                },
+                grid: {
+                    display: false // No X grid lines
+                },
+                ticks: {
+                    maxRotation: 0,
+                    autoSkip: true,
+                    maxTicksLimit: window.innerWidth <= 768 ? 6 : ((config.columnSpan && config.columnSpan >= 2) ? 6 : 4),
+                    font: {
+                        size: 9
+                    }
+                },
+                border: {
+                    display: false
+                }
+            } : {
                 // For simplicity and maximum compatibility, we'll use a category scale
                 // with automatic formatting based on the timespan
                 grid: {
@@ -437,10 +459,34 @@ function createChartOptions(config, chartData, meta) {
         };
     }
     
-    // Add tooltip configuration - use the raw timestamps instead of formatted labels
-    // This ensures that tooltip functions can access the actual date objects
-    const rawTimestamps = window.chartRawData[config.id]?.timestamps || [];
-    chartOptions.plugins.tooltip = window.ChartUtils.createTooltipConfig(config, chartData, rawTimestamps);
+    // Add tooltip configuration
+    if (config.disableSyncTimestamps) {
+        // For time scale charts, use simple tooltip that works with {x, y} data
+        chartOptions.plugins.tooltip = {
+            mode: 'index',
+            intersect: false,
+            callbacks: {
+                title: function(context) {
+                    if (context && context[0] && context[0].parsed && context[0].parsed.x) {
+                        return moment(context[0].parsed.x).format('MMM D, YYYY, HH:mm');
+                    }
+                    return 'Invalid date';
+                },
+                label: function(context) {
+                    const seriesName = context.dataset.label || 'Unknown';
+                    const value = context.parsed.y;
+                    if (value !== null && value !== undefined && !isNaN(value)) {
+                        return `${seriesName}: ${Math.round(value)} lux`;
+                    }
+                    return `${seriesName}: No data`;
+                }
+            }
+        };
+    } else {
+        // Use the existing tooltip system for category-based charts
+        const rawTimestamps = window.chartRawData[config.id]?.timestamps || [];
+        chartOptions.plugins.tooltip = window.ChartUtils.createTooltipConfig(config, chartData, rawTimestamps);
+    }
     
     // Handle hover events for tooltip synchronization
     chartOptions.onHover = (event, elements, chart) => {
