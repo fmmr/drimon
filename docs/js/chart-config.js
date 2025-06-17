@@ -16,7 +16,7 @@ const DEFAULT_CHART_CONFIG = {
         position: 'right',
         beginAtZero: false,
         gridColor: 'rgba(0, 0, 0, 0.05)',
-        roundToNearest: 10,
+        roundToNearest: 5,
         maxTicks: 5,
         formatLargeNumbers: false,
         secondYAxis: false
@@ -411,6 +411,9 @@ const RAW_CHART_CONFIGS = [
         formatting: {
             useIntegerFormat: false,
             decimalPlaces: 2 // Always show 1 decimal place for battery voltage
+        },
+        yAxis: {
+            roundToNearest: 0.1 // Round to nearest 0.1V for voltage charts
         },
         defaultRange: 6
     },
