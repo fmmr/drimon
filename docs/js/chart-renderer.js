@@ -512,7 +512,9 @@ window.UnifiedChartRenderer = {
             }
         }
 
-        return closestIndex;
+        // Only return match if within 6 hours (6 * 60 * 60 * 1000 ms)
+        const maxDiffMs = 6 * 60 * 60 * 1000;
+        return minDiff <= maxDiffMs ? closestIndex : -1;
     },
 
 
