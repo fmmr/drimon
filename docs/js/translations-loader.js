@@ -149,6 +149,7 @@ window.DriMonTranslations = {
     "drimonChannel": "Drimon",
     "detailsChannel": "Detaljer",
     "techChannel": "Tech",
+    "extChannel": "Ext",
 
     // Position info
     "sunPosition": "Sol posisjon",
@@ -312,6 +313,7 @@ window.DriMonTranslations = {
     "drimonChannel": "Drimon",
     "detailsChannel": "Details",
     "techChannel": "Tech",
+    "extChannel": "Ext",
 
     // Position info
     "sunPosition": "Sun position",
@@ -475,6 +477,7 @@ window.DriMonTranslations = {
     "drimonChannel": "Drimon",
     "detailsChannel": "Detalles",
     "techChannel": "Tech",
+    "extChannel": "Ext",
 
     // Position info
     "sunPosition": "Posición del sol",

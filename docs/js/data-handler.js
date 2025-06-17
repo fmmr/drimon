@@ -75,10 +75,11 @@ async function fetchData() {
             fetch(`https://api.thingspeak.com/channels/${window.THINGSPEAK.DRIMON_CHANNEL}/feeds/last.json?timezone=${timezone}&status=true`),
             fetch(`https://api.thingspeak.com/channels/${window.THINGSPEAK.TEMP_CHANNEL}/status/last.json?timezone=${timezone}`),
             fetch(`https://api.thingspeak.com/channels/${window.THINGSPEAK.TECH_CHANNEL}/status/last.json?timezone=${timezone}`),
+            fetch(`https://api.thingspeak.com/channels/${window.THINGSPEAK.EXT_CHANNEL}/status/last.json?timezone=${timezone}`),
         ]);
 
-        const [data1, data2, data3] = await Promise.all(responses.map(response => response.json()));
-        const statuses = [status(data1), status(data2), status(data3)];
+        const [data1, data2, data3, data4] = await Promise.all(responses.map(response => response.json()));
+        const statuses = [status(data1), status(data2), status(data3), status(data4)];
         const lastStatus = statuses.sort((a, b) => moment(b.date).diff(moment(a.date)))[0];
 
         latestData.temperature = Math.round(data1.field1 * 10) / 10;
@@ -94,17 +95,29 @@ async function fetchData() {
         
         // Store information from all channels for the expanded tooltip
         window.latestData = latestData;
-        
+
+        window.latestData1 = {
+            createdAt: moment(data1.created_at),
+            lastUpdated: moment(data1.created_at).format('L LTS')
+        };
+
         // Create latestData2 for details channel (plants monitoring)
         window.latestData2 = {
             createdAt: moment(data2.created_at),
             lastUpdated: moment(data2.created_at).format('L LTS')
         };
-        
+
+
         // Create latestData3 for tech channel (system monitoring)
         window.latestData3 = {
             createdAt: moment(data3.created_at),
             lastUpdated: moment(data3.created_at).format('L LTS')
+        };
+
+        // Create latestData34 for ext channel (system monitoring)
+        window.latestData4 = {
+            createdAt: moment(data4.created_at),
+            lastUpdated: moment(data4.created_at).format('L LTS')
         };
 
         // Call the updateUIWithLatestData function to update the UI
@@ -320,17 +333,25 @@ function updateUIWithLatestData() {
     const drimonLabel = `${window.I18n.translate(window.THINGSPEAK.CHANNELS.DRIMON_CHANNEL.translationKey)} (${window.THINGSPEAK.CHANNELS.DRIMON_CHANNEL.id})`;
     const tempLabel = `${window.I18n.translate(window.THINGSPEAK.CHANNELS.TEMP_CHANNEL.translationKey)} (${window.THINGSPEAK.CHANNELS.TEMP_CHANNEL.id})`;
     const techLabel = `${window.I18n.translate(window.THINGSPEAK.CHANNELS.TECH_CHANNEL.translationKey)} (${window.THINGSPEAK.CHANNELS.TECH_CHANNEL.id})`;
+    const extLabel = `${window.I18n.translate(window.THINGSPEAK.CHANNELS.EXT_CHANNEL.translationKey)} (${window.THINGSPEAK.CHANNELS.EXT_CHANNEL.id})`;
 
     // Add data from different channels with translated labels
-    timeTooltipData[drimonLabel] = latestData.lastUpdated;
+    // timeTooltipData[drimonLabel] = latestData.lastUpdated;
     
     // Get data from other channels if available
+    if (window.latestData1) {
+        timeTooltipData[drimonLabel] = window.latestData1.lastUpdated;
+    }
+
     if (window.latestData2) {
         timeTooltipData[tempLabel] = window.latestData2.lastUpdated;
     }
     
     if (window.latestData3) {
         timeTooltipData[techLabel] = window.latestData3.lastUpdated;
+    }
+    if (window.latestData4) {
+        timeTooltipData[extLabel] = window.latestData4.lastUpdated;
     }
     
     // Add local time
@@ -369,7 +390,7 @@ function updateUIWithLatestData() {
     const timeTooltip = window.Utils && typeof window.Utils.formatTabularTooltip === 'function'
         ? window.Utils.formatTabularTooltip(timeTooltipData, { 
             useHTML: true, 
-            dividerAfter: techLabel // Using the tech channel label
+            dividerAfter: extLabel // Using the tech channel label
           })
         : JSON.stringify(timeTooltipData);
 
