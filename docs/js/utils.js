@@ -574,8 +574,6 @@ const Utils = {
      * @param {Object} [options] - Formatting options
      * @param {boolean} [options.skipEmptyValues=true] - Whether to skip null/undefined values
      * @param {boolean} [options.useHTML=false] - Whether to generate HTML instead of text
-     * @param {string} [options.dividerAfter] - Key after which to add a divider (only for HTML)
-     * @param {string} [options.secondDividerAfter] - Key after which to add a second divider (only for HTML)
      * @returns {string} Formatted tooltip text with aligned labels or HTML
      */
     formatTabularTooltip: function(dataRows, options = {}) {
@@ -608,11 +606,6 @@ const Utils = {
                 html += `<div class="tooltip-value">${value}</div>`;
                 html += '</div>';
 
-                // Add divider if specified and not the last row
-                if ((options.dividerAfter === label || options.secondDividerAfter === label) &&
-                    index < filteredRows.length - 1) {
-                    html += '<div class="tooltip-divider"></div>';
-                }
             });
 
             html += '</div>';

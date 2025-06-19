@@ -188,24 +188,27 @@ window.TempTooltipUpdater = (function() {
             }
         }
 
-        // Add separator after main temperature stats
-        if (tempChartStats.main.minValue !== null || (window.latestData?.temperature)) {
-            tooltipData['---1'] = '';
-        }
-
-        // Add other temperature chart current values with separators
-        const otherKeys = Object.keys(tempChartStats.other).sort();
-        otherKeys.forEach((key, index) => {
+        // Add other temperature chart current values in specific order
+        const otherKeys = Object.keys(tempChartStats.other);
+        
+        // Define the desired order based on chart IDs (more reliable than translated titles)
+        const chartOrder = ['chart-out-temp', 'chart-temp-diff', 'chart-plants-temp-0', 'chart-plants-temp-1', 'chart-sensors-temp-0', 'chart-sensors-temp-1', 'chart-sensors-temp-2'];
+        
+        // Sort keys based on chart order
+        const orderedKeys = [];
+        chartOrder.forEach(chartPattern => {
+            const key = otherKeys.find(k => k.startsWith(chartPattern) || k === chartPattern);
+            if (key) orderedKeys.push(key);
+        });
+        // Add any remaining keys not in the desired order
+        otherKeys.forEach(key => {
+            if (!orderedKeys.includes(key)) orderedKeys.push(key);
+        });
+        
+        orderedKeys.forEach((key, index) => {
             const data = tempChartStats.other[key];
             if (data.current !== null) {
                 tooltipData[data.title] = `${formatValue(data.current)} °C`;
-                
-                // Add separators after specific entries
-                if (data.title === 'Temp diff') {
-                    tooltipData['---2'] = '';
-                } else if (data.title === 'Padron') {
-                    tooltipData['---3'] = '';
-                }
             }
         });
 
