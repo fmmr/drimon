@@ -15,10 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return urlParams.get(name) || '';
     }
     
-    // Check for dashboard mode (URL parameter or Pi detection)
-    const isPi = (window.screen.width === 800 && window.screen.height === 480) || 
-                 (/CrOS.*x86_64/.test(navigator.userAgent) && window.screen.width <= 800);
-    const isDashboardMode = getURLParameter('dashboard') === 'true' || isPi;
+    // Check for dashboard mode
+    const isDashboardMode = window.Utils.isDashboardMode();
     
     // Restore scroll position if coming from auto-refresh
     const savedScrollPosition = localStorage.getItem('scrollPosition');

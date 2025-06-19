@@ -1,0 +1,245 @@
+/* Dynamic grid mode styles for any chart count */
+
+/* Large icon styling for date chips */
+.large-icons i {
+    font-size: 1.2em; /* Make all icons larger */
+}
+
+.large-icons .number-text {
+    font-size: 1.2em; /* Make number text larger too */
+}
+
+/* Double icon styling for date chips */
+.icon-double {
+    display: inline-flex;
+    gap: 0.2em; /* Space between icons */
+    align-items: center;
+}
+
+.icon-double i {
+    font-size: 1.1em; /* Larger for double icons */
+}
+
+/* Text styling for number chips */
+.number-text {
+    font-size: 1.2em;
+    font-weight: bold;
+}
+
+.text-double {
+    display: inline-flex;
+    gap: 0.1em;
+    align-items: center;
+}
+
+.text-double .number-text {
+    font-size: 1.1em;
+}
+
+/* Dashboard mode (3x2 grid) */
+.dashboard-mode {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 5px;
+    padding: 5px;
+    height: calc(100vh - 50px);
+    max-height: calc(100vh - 50px);
+}
+
+/* Chart wrapper styling for dashboard mode */
+.dashboard-chart-wrapper {
+    background: var(--chart-bg); /* Use CSS variable for theme support */
+    border-radius: 8px;
+    box-shadow: var(--chart-shadow); /* Use CSS variable for theme support */
+    padding: 8px 8px 12px 8px; /* Reduced bottom padding */
+    position: relative;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Smooth theme transitions */
+}
+
+.dashboard-mode .chart-wrapper {
+    flex: 1;
+    position: relative;
+    min-height: 140px; /* Increased minimum height for better chart visibility */
+    overflow: hidden; /* Prevent content from bleeding outside */
+}
+
+.dashboard-mode .chart-wrapper canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.dashboard-mode .loading-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+    color: #666;
+}
+
+/* Hide regular chart container styles in dashboard mode */
+.dashboard-mode .chart-row {
+    display: none;
+}
+
+.dashboard-mode .chart-sort-container {
+    display: none;
+}
+
+/* Simplified header for dashboard */
+.dashboard-header {
+    padding: 5px 10px !important;
+    min-height: 40px !important;
+}
+
+.dashboard-header .data-container {
+    gap: 5px;
+}
+
+.dashboard-header .data-chip {
+    font-size: 11px;
+    padding: 2px 6px;
+}
+
+.dashboard-header .date-ranges {
+    gap: 5px;
+}
+
+.dashboard-header .date-chip {
+    font-size: 14px; /* Larger font for visibility */
+    padding: 4px 8px;
+}
+
+/* Ensure number text is visible in dashboard */
+.dashboard-header .number-text {
+    font-size: 14px !important;
+    font-weight: bold;
+}
+
+.dashboard-header .text-double .number-text {
+    font-size: 13px !important;
+}
+
+/* Tighter spacing for dashboard header */
+.dashboard-header .logo-container {
+    margin-right: 0; /* Remove right margin */
+}
+
+.dashboard-header .date-ranges {
+    margin: 0; /* Remove all margins */
+}
+
+.dashboard-header .search-container {
+    display: none; /* Hide search container completely */
+}
+
+.dashboard-header .data-container .data-chip {
+    margin-right: 3px; /* Tighter spacing between pills */
+}
+
+.dashboard-header .time-pill {
+    font-size: 11px;
+    padding: 2px 6px;
+    margin-left: 0; /* Remove left margin */
+}
+
+/* Settings dropdown styling for dashboard */
+.dashboard-header .date-dropdown-content {
+    right: 0 !important; /* Align to right edge instead of left */
+    left: auto !important;
+    width: 160px; /* Narrower width */
+    max-height: 400px; /* Increase height to fit all items */
+    overflow-y: auto; /* Scroll if needed */
+    font-size: 12px; /* Readable font size */
+}
+
+.dashboard-header .date-dropdown-item {
+    padding: 2px 6px !important; /* Much smaller padding */
+    font-size: 12px !important; /* Readable font size */
+    line-height: 1.1; /* Very tight line height */
+    min-height: 20px; /* Minimum height for touch targets */
+}
+
+/* Ensure number text is visible in dashboard dropdown */
+.dashboard-header .date-dropdown-item .number-text {
+    font-size: 12px !important;
+    font-weight: bold !important;
+    display: inline !important;
+}
+
+.dashboard-header .date-dropdown-item .text-double {
+    display: inline-flex !important;
+    gap: 0.1em;
+}
+
+.dashboard-header .date-dropdown-item .text-double .number-text {
+    font-size: 11px !important;
+    font-weight: bold !important;
+}
+
+.dashboard-header .dropdown-divider {
+    height: 1px;
+    background-color: #e0e0e0;
+    margin: 2px 0; /* Minimal margin */
+}
+
+.dashboard-header .settings-item {
+    width: 100%;
+    padding: 2px 6px !important; /* Same padding as other dropdown items */
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 12px !important; /* Same font size as other dropdown items */
+    display: flex;
+    align-items: center;
+    gap: 0.2em; /* Same gap as icon-double */
+    min-height: 20px;
+    line-height: 1.1; /* Same line height as other dropdown items */
+}
+
+.dashboard-header .settings-item:hover {
+    background-color: var(--pill-bg);
+    color: var(--pill-active-color);
+    border-color: var(--pill-border);
+}
+
+.dashboard-header .settings-item i {
+    width: 14px; /* Same width as other icons */
+    text-align: left; /* Left align like other icons */
+    font-size: 12px;
+}
+
+.dashboard-mode .chart-title {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 4px;
+    text-align: center;
+    color: var(--text-color); /* Use CSS variable for theme support */
+    transition: color 0.3s ease; /* Smooth theme transitions */
+}
+
+/* Responsive adjustments for very small screens */
+@media (max-width: 800px) and (max-height: 480px) {
+    .dashboard-mode {
+        gap: 5px;
+        padding: 5px;
+        height: calc(100vh - 40px);
+    }
+    
+    .dashboard-chart-wrapper {
+        padding: 4px 4px 8px 4px; /* Reduced bottom padding for small screens */
+    }
+    
+    .dashboard-mode .chart-title {
+        font-size: 12px;
+    }
+    
+    .dashboard-mode .chart-wrapper {
+        min-height: 120px; /* Increased for small screens too */
+    }
+}

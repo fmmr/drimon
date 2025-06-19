@@ -9,29 +9,6 @@
  * @description Utility functions for chart layout and DOM management
  */
 window.ChartLayout = window.ChartLayout || {
-    /**
-     * Calculate optimal grid layout based on chart count
-     * @param {number} chartCount - Number of charts to display
-     * @returns {Object} Grid layout with cols and rows
-     */
-    calculateOptimalGrid: function(chartCount) {
-        const layouts = {
-            1: { cols: 1, rows: 1 },
-            2: { cols: 2, rows: 1 },
-            3: { cols: 3, rows: 1 },
-            4: { cols: 2, rows: 2 },
-            5: { cols: 3, rows: 2 },
-            6: { cols: 3, rows: 2 },
-            7: { cols: 4, rows: 2 },
-            8: { cols: 4, rows: 2 },
-            9: { cols: 3, rows: 3 },
-            12: { cols: 4, rows: 3 },
-            16: { cols: 4, rows: 4 },
-            20: { cols: 5, rows: 4 }
-        };
-        
-        return layouts[chartCount] || { cols: 4, rows: 4 }; // fallback to 4x4
-    },
 
     /**
      * Calculate grid positions for each chart based on config

@@ -758,9 +758,8 @@ window.UnifiedChartRenderer = {
                 let label = dataset.label || `Series ${index + 1}`;
                 if (config.series && config.series[index] && config.series[index].titleKey && window.I18n) {
                     const translated = window.I18n.translate(config.series[index].titleKey);
-                    if (translated !== config.series[index].titleKey) {
-                        label = translated;
-                    }
+                    // Always use the translated value, even if it's the same as the key
+                    label = translated;
                 }
                 
                 // Format current value

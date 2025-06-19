@@ -184,10 +184,7 @@ function updateUIWithLatestData() {
     elements.temperature.innerHTML = `${latestData.temperature} °C`;
     elements.temperature.parentElement.className = `data-chip ${getClassName(latestData.temperature, 16, 35)}`;
     
-    // Set tooltip content for temperature
-    const tempTooltip = `${window.I18n.translate('temperature')}: ${latestData.temperature} °C`;
-    elements.temperature.parentElement.setAttribute('data-tooltip-content', tempTooltip);
-    elements.temperature.parentElement.setAttribute('data-has-tooltip', 'true');
+    // Tooltip is handled by temp-tooltip-updater.js
     
     // Update temperature icon based on value
     const tempIcon = elements.temperature.parentElement.querySelector('i');

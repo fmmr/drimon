@@ -172,6 +172,17 @@ const Utils = {
     },
     
     /**
+     * Check if we're in dashboard mode (URL parameter or Pi detection)
+     * @returns {boolean} True if in dashboard mode
+     */
+    isDashboardMode: function() {
+        const urlDashboardMode = this.getURLParameter('dashboard') === 'true';
+        const isPi = (window.screen.width === 800 && window.screen.height === 480) || 
+                     (/CrOS.*x86_64/.test(navigator.userAgent) && window.screen.width <= 800);
+        return urlDashboardMode || isPi;
+    },
+    
+    /**
      * Create DOM element with attributes and children
      * @param {string} tagName - HTML tag name
      * @param {Object} [attributes={}] - HTML attributes

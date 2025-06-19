@@ -80,10 +80,7 @@ const DateController = {
         this._state.currentResults = results;
         
         // Refresh charts with new parameters (check dashboard mode again)
-        const urlDashboardMode = url.searchParams.get('dashboard') === 'true';
-        const isPi = (window.screen.width === 800 && window.screen.height === 480) || 
-                     (/CrOS.*x86_64/.test(navigator.userAgent) && window.screen.width <= 800);
-        const dashboardMode = urlDashboardMode || isPi;
+        const dashboardMode = window.Utils.isDashboardMode();
         
         // Destroy existing charts and reload (same as regular view)
         Object.keys(window.chartInstances || {}).forEach(id => {

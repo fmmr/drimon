@@ -8,10 +8,13 @@
 window.TempTooltipUpdater = (function() {
     // Store temperature chart statistics for tooltip use
     let tempChartStats = {
-        minValue: null,
-        maxValue: null,
-        avgValue: null,
-        currentValue: null,
+        main: {
+            minValue: null,
+            maxValue: null,
+            avgValue: null,
+            currentValue: null
+        },
+        other: {}, // Will store current values from other temp charts
         lastUpdated: null
     };
     
@@ -24,12 +27,12 @@ window.TempTooltipUpdater = (function() {
      * @returns {void}
      */
     function updateTempTooltipWithStats(stats) {
-        // Store the stats
-        tempChartStats = {
-            ...tempChartStats,
-            ...stats,
-            lastUpdated: new Date()
+        // Store the main temp chart stats
+        tempChartStats.main = {
+            ...tempChartStats.main,
+            ...stats
         };
+        tempChartStats.lastUpdated = new Date();
         
         // Update tooltip content
         updateTooltipContent();
@@ -39,10 +42,111 @@ window.TempTooltipUpdater = (function() {
     }
     
     /**
+     * Calculate stats from main temperature chart if available
+     */
+    function updateMainTempStats() {
+        const chart = window.chartInstances?.['chart-temp'];
+        if (chart && chart.data?.datasets?.[0]?.data) {
+            const data = chart.data.datasets[0].data;
+            const values = data
+                .map(d => typeof d === 'object' ? d.y : d)
+                .filter(v => v !== null && v !== undefined && !isNaN(v));
+                
+            if (values.length > 0) {
+                tempChartStats.main.minValue = Math.min(...values);
+                tempChartStats.main.maxValue = Math.max(...values);
+                tempChartStats.main.avgValue = values.reduce((sum, v) => sum + v, 0) / values.length;
+                tempChartStats.main.currentValue = values[values.length - 1];
+            }
+        }
+        
+        // Also use window.latestData if available
+        if (window.latestData?.temperature) {
+            tempChartStats.main.currentValue = window.latestData.temperature;
+        }
+    }
+
+    /**
+     * Collect current values from other temperature charts
+     */
+    function collectOtherTempValues() {
+        const otherTempCharts = ['chart-out-temp', 'chart-temp-diff', 'chart-plants-temp', 'chart-sensors-temp'];
+        
+        tempChartStats.other = {};
+        
+        otherTempCharts.forEach(chartId => {
+            const chart = window.chartInstances?.[chartId];
+            if (!chart || !chart.data?.datasets) return;
+            
+            const config = window.chartConfigs?.find(c => c.id === chartId);
+            if (!config) return;
+            
+            // Get chart title
+            let title = config.title || chartId;
+            if (config.titleKey && window.I18n) {
+                const translated = window.I18n.translate(config.titleKey);
+                if (translated !== config.titleKey) {
+                    title = translated;
+                }
+            }
+            
+            // Handle multi-series charts (plants and sensors)
+            if (config.isMultiSeries && chart.data.datasets.length > 1) {
+                chart.data.datasets.forEach((dataset, index) => {
+                    if (dataset.data && dataset.data.length > 0) {
+                        const lastPoint = dataset.data[dataset.data.length - 1];
+                        const value = typeof lastPoint === 'object' ? lastPoint.y : lastPoint;
+                        if (value !== null && !isNaN(value)) {
+                            const seriesKey = `${chartId}-${index}`;
+                            
+                            // Always use the series name from config
+                            let seriesTitle = `Series ${index + 1}`; // fallback if no config
+                            if (config.series && config.series[index]) {
+                                const seriesConfig = config.series[index];
+                                if (seriesConfig.titleKey) {
+                                    // Try translation first, but always use the titleKey
+                                    const translated = window.I18n ? window.I18n.translate(seriesConfig.titleKey) : seriesConfig.titleKey;
+                                    seriesTitle = translated;
+                                } else if (seriesConfig.title) {
+                                    seriesTitle = seriesConfig.title;
+                                }
+                            }
+                            
+                            tempChartStats.other[seriesKey] = {
+                                current: value,
+                                title: seriesTitle || `${title} ${index + 1}`
+                            };
+                        }
+                    }
+                });
+            } else {
+                // Single series chart
+                const dataset = chart.data.datasets[0];
+                if (dataset?.data && dataset.data.length > 0) {
+                    const lastPoint = dataset.data[dataset.data.length - 1];
+                    const value = typeof lastPoint === 'object' ? lastPoint.y : lastPoint;
+                    if (value !== null && !isNaN(value)) {
+                        tempChartStats.other[chartId] = {
+                            current: value,
+                            title: title
+                        };
+                    }
+                }
+            }
+        });
+    }
+
+    /**
      * Update the tooltip content with current statistics
      * @returns {void}
      */
     function updateTooltipContent() {
+        // Update main temperature stats
+        updateMainTempStats();
+        
+        // Collect data from other temperature charts
+        collectOtherTempValues();
+        
         // Get temp data chip
         const tempChip = document.querySelector('#temperature');
         if (!tempChip || !tempChip.parentElement) return;
@@ -55,10 +159,10 @@ window.TempTooltipUpdater = (function() {
             return typeof value === 'number' ? Math.round(value * 10) / 10 : value;
         };
         
-        const currentTemp = formatValue(tempChartStats.currentValue);
-        const minTemp = formatValue(tempChartStats.minValue);
-        const maxTemp = formatValue(tempChartStats.maxValue);
-        const avgTemp = formatValue(tempChartStats.avgValue);
+        const currentTemp = formatValue(tempChartStats.main.currentValue);
+        const minTemp = formatValue(tempChartStats.main.minValue);
+        const maxTemp = formatValue(tempChartStats.main.maxValue);
+        const avgTemp = formatValue(tempChartStats.main.avgValue);
         
         // Get translations for tooltip
         const tempLabel = window.I18n.translate('temperature');
@@ -70,30 +174,40 @@ window.TempTooltipUpdater = (function() {
         // Create tooltip content with stats
         let tooltipData = {};
 
-        // Add statistics if available
-        if (tempChartStats.minValue !== null) {
-            tooltipData = {
-                [tempLabel]: `${currentTemp} °C`,
-                [minLabel]: `${minTemp} °C`,
-                [avgLabel]: `${avgTemp} °C`,
-                [maxLabel]: `${maxTemp} °C`
-            };
-        } else if (window.latestData && window.latestData.temperature !== null) {
-            // Use current temperature as fallback for all stats until real stats arrive
-            const current = window.latestData.temperature;
-            tooltipData = {
-                [tempLabel]: `${currentTemp} °C`,
-                [minLabel]: `${formatValue(current)} °C`,
-                [avgLabel]: `${formatValue(current)} °C`,
-                [maxLabel]: `${formatValue(current)} °C`
-            };
+        // Add main temperature statistics if available
+        if (tempChartStats.main.minValue !== null) {
+            tooltipData[nowLabel] = `${currentTemp} °C`;
+            tooltipData[minLabel] = `${minTemp} °C`;
+            tooltipData[avgLabel] = `${avgTemp} °C`;
+            tooltipData[maxLabel] = `${maxTemp} °C`;
         } else {
-            // Show simple statistics info if chart data isn't loaded yet
-            tooltipData = {
-                [tempLabel]: `${currentTemp} °C`,
-                '': window.I18n.translate('statsLoading') || 'Loading stats...'
-            };
+            // Just show current if stats aren't available yet
+            const current = window.latestData?.temperature || tempChartStats.main.currentValue;
+            if (current !== null) {
+                tooltipData[nowLabel] = `${formatValue(current)} °C`;
+            }
         }
+
+        // Add separator after main temperature stats
+        if (tempChartStats.main.minValue !== null || (window.latestData?.temperature)) {
+            tooltipData['---1'] = '';
+        }
+
+        // Add other temperature chart current values with separators
+        const otherKeys = Object.keys(tempChartStats.other).sort();
+        otherKeys.forEach((key, index) => {
+            const data = tempChartStats.other[key];
+            if (data.current !== null) {
+                tooltipData[data.title] = `${formatValue(data.current)} °C`;
+                
+                // Add separators after specific entries
+                if (data.title === 'Temp diff') {
+                    tooltipData['---2'] = '';
+                } else if (data.title === 'Padron') {
+                    tooltipData['---3'] = '';
+                }
+            }
+        });
 
         // Format the tooltip content using the HTML tabular formatter
         let tooltipContent = window.Utils.formatTabularTooltip(tooltipData, {
@@ -122,35 +236,17 @@ window.TempTooltipUpdater = (function() {
                 
                 // Get current temperature from data handler if available
                 if (window.latestData && window.latestData.temperature) {
-                    tempChartStats.currentValue = window.latestData.temperature;
+                    tempChartStats.main.currentValue = window.latestData.temperature;
                 }
                 
                 // Use recalculateChartStats to get statistics
                 if (window.ChartStats && typeof window.ChartStats.recalculateChartStats === 'function') {
                     // This will trigger the event we listen for below
                     window.ChartStats.recalculateChartStats(chartInstance);
-                    
-                    // Attempt to get stats directly as a backup
-                    setTimeout(() => {
-                        // If we didn't get stats update yet, try again
-                        if (tempChartStats.minValue === null) {
-                            // Calculate basic stats manually
-                            const datasets = chartInstance.data.datasets;
-                            if (datasets && datasets.length > 0) {
-                                const values = datasets[0].data
-                                    .map(d => typeof d === 'object' ? d.y : d)
-                                    .filter(v => !isNaN(v));
-                                    
-                                if (values.length > 0) {
-                                    tempChartStats.minValue = Math.min(...values);
-                                    tempChartStats.maxValue = Math.max(...values);
-                                    tempChartStats.avgValue = values.reduce((sum, v) => sum + v, 0) / values.length;
-                                    updateTooltipContent();
-                                }
-                            }
-                        }
-                    }, 1000); // Wait a second before trying manual calculation
                 }
+                
+                // Force update tooltip content
+                updateTooltipContent();
             }
         });
         

@@ -56,7 +56,9 @@ function createLanguageSwitcher() {
                 // Update all chart stats with proper translations
                 // Give time for chart translations to complete first
                 setTimeout(() => {
-                    window.ChartStats.updateAllChartStats();
+                    if (window.ChartStats && window.ChartStats.updateAllChartStats) {
+                        window.ChartStats.updateAllChartStats();
+                    }
                 }, 200);
                 
                 // Use the direct DOM manipulation utility after a delay

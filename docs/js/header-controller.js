@@ -10,15 +10,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const headerMountPoint = document.getElementById('header-mount-point');
     
     // Check for dashboard mode
-    function getURLParameter(name) {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get(name) || '';
-    }
-    
-    const urlDashboardMode = getURLParameter('dashboard') === 'true';
-    const isPi = (window.screen.width === 800 && window.screen.height === 480) || 
-                 (/CrOS.*x86_64/.test(navigator.userAgent) && window.screen.width <= 800);
-    const isDashboardMode = urlDashboardMode || isPi;
+    const isDashboardMode = window.Utils.isDashboardMode();
     
     // Create the header using appropriate config
     const header = isDashboardMode ? createHeader(DashboardHeaderConfig) : createHeader();
