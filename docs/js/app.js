@@ -9,12 +9,29 @@ const timezone = "Europe/Oslo";
 
 // Initialize app when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+    // Get URL parameters helper
+    function getURLParameter(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name) || '';
+    }
+    
+    // Check for dashboard mode (URL parameter or Pi detection)
+    const isPi = (window.screen.width === 800 && window.screen.height === 480) || 
+                 (/CrOS.*x86_64/.test(navigator.userAgent) && window.screen.width <= 800);
+    const isDashboardMode = getURLParameter('dashboard') === 'true' || isPi;
+    
     // Restore scroll position if coming from auto-refresh
     const savedScrollPosition = localStorage.getItem('scrollPosition');
     if (savedScrollPosition) {
         window.scrollTo(0, parseInt(savedScrollPosition));
         localStorage.removeItem('scrollPosition');
     }
+    
+    // Set language for dashboard mode (force Norwegian) or use user preference
+    if (isDashboardMode && window.i18n && typeof window.i18n.setLanguage === 'function') {
+        window.i18n.setLanguage('no');
+    }
+    
     // Initialize moment.js locale based on the current language
     if (window.moment && window.i18n && typeof window.i18n.getCurrentLanguage === 'function') {
         const lang = window.i18n.getCurrentLanguage() || 'no';
@@ -42,13 +59,6 @@ document.addEventListener('DOMContentLoaded', () => {
         window.DateController.initialize();
     }
     
-    // Initialize charts
-    // Get URL parameters helper
-    function getURLParameter(name) {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get(name) || '';
-    }
-    
     // Get range and results from URL parameters or use defaults
     // Default to 'default' range (house icon) if no range parameter is provided
     const range = getURLParameter('range') || 'default';
@@ -72,8 +82,8 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Initialize chart loading with a short delay to avoid blocking the initial render
     setTimeout(() => {
-        // Initialize charts
-        loadAllCharts(range, results).then(() => {
+        // Initialize charts (dashboard mode affects chart loading)
+        loadAllCharts(range, results, isDashboardMode).then(() => {
             // Start auto-refresh after initial load
             window.startChartAutoRefresh(90);
         });

@@ -321,11 +321,19 @@ function updateUIWithLatestData() {
     elements.light.parentElement.setAttribute('data-tooltip-content', lightTooltip);
     elements.light.parentElement.setAttribute('data-has-tooltip', 'true');
 
-    elements.timeSince.textContent = latestData.timeSince;
-    elements.timeSince.setAttribute('data-timestamp', latestData.createdAt.toISOString());
+    if (elements.timeSince) {
+        // Show HH:MM in the pill instead of "X minutes ago"
+        const createdDate = new Date(latestData.createdAt);
+        const timeFormatted = createdDate.toLocaleTimeString('no-NO', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+        });
+        elements.timeSince.textContent = timeFormatted;
+        elements.timeSince.setAttribute('data-timestamp', createdDate.toISOString());
+    }
     
     // Use data-tooltip-content instead of title
-    const timeIndicator = elements.timeSince.parentElement;
+    const timeIndicator = elements.timeSince?.parentElement;
 
     const timeTooltipData = {};
     
@@ -386,16 +394,26 @@ function updateUIWithLatestData() {
         }).catch(() => {});
     }
 
+    // Add the "X minutes ago" text as the first item in the tooltip
+    const updateTimeData = {
+        [window.I18n.translate('time')]: latestData.timeSince
+    };
+    
+    // Combine update time with other channel data
+    const combinedTooltipData = { ...updateTimeData, ...timeTooltipData };
+    
     // Format time tooltip using HTML tabular formatter with section divider
     const timeTooltip = window.Utils && typeof window.Utils.formatTabularTooltip === 'function'
-        ? window.Utils.formatTabularTooltip(timeTooltipData, { 
+        ? window.Utils.formatTabularTooltip(combinedTooltipData, { 
             useHTML: true, 
-            dividerAfter: extLabel // Using the tech channel label
+            dividerAfter: window.I18n.translate('time') // Divider after the time update info
           })
-        : JSON.stringify(timeTooltipData);
+        : JSON.stringify(combinedTooltipData);
 
-    timeIndicator.setAttribute('data-tooltip-content', timeTooltip);
-    timeIndicator.setAttribute('data-has-tooltip', 'true');
+    if (timeIndicator) {
+        timeIndicator.setAttribute('data-tooltip-content', timeTooltip);
+        timeIndicator.setAttribute('data-has-tooltip', 'true');
+    }
     
     if (elements.title) {
         elements.title.title = latestData.status;

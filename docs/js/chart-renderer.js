@@ -14,6 +14,12 @@ window.UnifiedChartRenderer = {
      * @returns {Chart|null} Chart instance or null if failed
      */
     addChart: function(config, data) {
+        // Check if Chart.js loaded
+        if (!window.Chart) {
+            console.error('Chart.js not loaded - charts unavailable');
+            return null;
+        }
+        
         const canvas = document.getElementById(config.id);
         if (!canvas) {
             console.error(`Canvas not found: ${config.id}`);
@@ -979,20 +985,28 @@ window.stopChartAutoRefresh = function() {
     }
 };
 
-// Chart loading function - moved from chart-renderer.js
-async function loadAllCharts(range = 1, results = 8000) {
-    // Initialize chart layout
-    if (window.ChartLayout && window.ChartLayout.initializeChartLayout) {
-        window.ChartLayout.initializeChartLayout();
-    }
-    
+// Chart loading function - handles both regular and dashboard modes
+async function loadAllCharts(range = 1, results = 8000, isDashboard = false) {
     if (!window.chartConfigs) {
         console.error('Chart configs not loaded');
         return;
     }
     
+    // Filter configs for dashboard mode
+    const configs = isDashboard 
+        ? window.chartConfigs.filter(config => config.show_dashboard === true).slice(0, 6)
+        : window.chartConfigs;
+    
+    // Only initialize chart layout if container is empty (initial load)
+    const chartContainer = document.getElementById('chartContainer');
+    if (chartContainer && chartContainer.children.length === 0) {
+        if (window.ChartLayout && window.ChartLayout.initializeChartLayout) {
+            window.ChartLayout.initializeChartLayout(configs);
+        }
+    }
+    
     // Load charts progressively
-    const fetchPromises = window.chartConfigs.map((config) => {
+    const fetchPromises = configs.map((config) => {
         const effectiveRange = range === 'default' ? config.defaultRange : range;
         
         if (window.DataComponents && window.DataComponents.fetchChartData) {
@@ -1011,6 +1025,8 @@ async function loadAllCharts(range = 1, results = 8000) {
     
     await Promise.allSettled(fetchPromises);
 }
+
+
 
 // Expose chart sorting function (implementation is in chart-layout.js)
 window.sortChartsByCategory = function(category) {

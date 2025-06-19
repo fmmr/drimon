@@ -8,6 +8,7 @@ const DEFAULT_CHART_CONFIG = {
     disableFill: false,
     hideLegendUnit: false,
     dataTransform: null,
+    show_dashboard: false,
     formatting: {
         useIntegerFormat: true,
         decimalPlaces: 0
@@ -100,6 +101,7 @@ const RAW_CHART_CONFIGS = [
         category: 'temperature',
         categoryHeaderKey: 'temperatures',
         unit: '°C',
+        show_dashboard: true,
         formatting: {
             useIntegerFormat: false,
             decimalPlaces: 1
@@ -125,6 +127,7 @@ const RAW_CHART_CONFIGS = [
         category: 'structure',
         categoryHeaderKey: 'structure',
         unit: 'mm',
+        show_dashboard: true,
         dataTransform: {
             shiftBy: -63
         },
@@ -157,6 +160,7 @@ const RAW_CHART_CONFIGS = [
         category: 'light',
         categoryHeaderKey: 'light',
         unit: 'lux',
+        show_dashboard: true,
         hideLegendUnit: true,
         yAxis: {
             beginAtZero: true,
@@ -179,6 +183,7 @@ const RAW_CHART_CONFIGS = [
         category: 'system',
         categoryHeaderKey: 'system',
         unit: '%',
+        show_dashboard: true,
         indicators: {
             showMin: true,
             showMax: false,
@@ -203,6 +208,7 @@ const RAW_CHART_CONFIGS = [
         category: 'temperature',
         categoryHeaderKey: 'temperatures',
         unit: '°C',
+        show_dashboard: true,
         indicators: {
             showMin: true,
             showMax: true,
@@ -224,6 +230,7 @@ const RAW_CHART_CONFIGS = [
         category: 'temperature',
         categoryHeaderKey: 'temperatures',
         unit: '°C',
+        show_dashboard: true,
         yAxis: {
             roundToNearest: 2
         },

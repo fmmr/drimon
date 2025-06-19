@@ -66,6 +66,12 @@ const DateController = {
             url.searchParams.delete('results');
         }
         
+        // Preserve dashboard parameter if it exists
+        const isDashboard = url.searchParams.get('dashboard');
+        if (isDashboard) {
+            url.searchParams.set('dashboard', isDashboard);
+        }
+        
         // Update browser history without reloading
         window.history.replaceState({}, '', url);
         
@@ -73,8 +79,22 @@ const DateController = {
         this._state.currentRange = range;
         this._state.currentResults = results;
         
-        // Refresh charts with new parameters
-        window.refreshCharts(range, results);
+        // Refresh charts with new parameters (check dashboard mode again)
+        const urlDashboardMode = url.searchParams.get('dashboard') === 'true';
+        const isPi = (window.screen.width === 800 && window.screen.height === 480) || 
+                     (/CrOS.*x86_64/.test(navigator.userAgent) && window.screen.width <= 800);
+        const dashboardMode = urlDashboardMode || isPi;
+        
+        // Destroy existing charts and reload (same as regular view)
+        Object.keys(window.chartInstances || {}).forEach(id => {
+            if (window.chartInstances[id]) {
+                window.chartInstances[id].destroy();
+                delete window.chartInstances[id];
+            }
+        });
+        
+        // Reload charts without recreating layout
+        loadAllCharts(range, results, dashboardMode);
     },
     
     /**

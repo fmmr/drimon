@@ -9,8 +9,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Get the header mount point
     const headerMountPoint = document.getElementById('header-mount-point');
     
-    // Create the header using the component
-    const header = createHeader();
+    // Check for dashboard mode
+    function getURLParameter(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name) || '';
+    }
+    
+    const urlDashboardMode = getURLParameter('dashboard') === 'true';
+    const isPi = (window.screen.width === 800 && window.screen.height === 480) || 
+                 (/CrOS.*x86_64/.test(navigator.userAgent) && window.screen.width <= 800);
+    const isDashboardMode = urlDashboardMode || isPi;
+    
+    // Create the header using appropriate config
+    const header = isDashboardMode ? createHeader(DashboardHeaderConfig) : createHeader();
     
     // Mount the header to the DOM
     headerMountPoint.appendChild(header);

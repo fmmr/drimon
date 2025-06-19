@@ -10,6 +10,30 @@
  */
 window.ChartLayout = window.ChartLayout || {
     /**
+     * Calculate optimal grid layout based on chart count
+     * @param {number} chartCount - Number of charts to display
+     * @returns {Object} Grid layout with cols and rows
+     */
+    calculateOptimalGrid: function(chartCount) {
+        const layouts = {
+            1: { cols: 1, rows: 1 },
+            2: { cols: 2, rows: 1 },
+            3: { cols: 3, rows: 1 },
+            4: { cols: 2, rows: 2 },
+            5: { cols: 3, rows: 2 },
+            6: { cols: 3, rows: 2 },
+            7: { cols: 4, rows: 2 },
+            8: { cols: 4, rows: 2 },
+            9: { cols: 3, rows: 3 },
+            12: { cols: 4, rows: 3 },
+            16: { cols: 4, rows: 4 },
+            20: { cols: 5, rows: 4 }
+        };
+        
+        return layouts[chartCount] || { cols: 4, rows: 4 }; // fallback to 4x4
+    },
+
+    /**
      * Calculate grid positions for each chart based on config
      * @param {Object} rowGroups - Charts grouped by row
      * @returns {void} - Modifies the chart objects directly
@@ -145,30 +169,46 @@ window.ChartLayout = window.ChartLayout || {
     },
     
     /**
-     * Initializes the chart layout and creates DOM elements for all charts
+     * Initializes the chart layout and creates DOM elements for charts
+     * @param {Array} [configs] - Optional chart configs to use (defaults to window.chartConfigs)
      * @returns {void}
      */
-    initializeChartLayout: function() {
+    initializeChartLayout: function(configs = null) {
         const chartContainer = document.getElementById('chartContainer');
         chartContainer.innerHTML = '';
         
-        // Group charts by row (1-4) for organization for desktop view
-        const rowGroups = {};
-        window.chartConfigs.forEach(config => {
-            if (!rowGroups[config.row]) {
-                rowGroups[config.row] = [];
-            }
-            rowGroups[config.row].push(config);
-        });
+        // Use provided configs or fall back to all configs
+        const chartsToUse = configs || window.chartConfigs;
         
-        // Calculate grid positions for each chart (for desktop view)
-        this.calculateGridPositions(rowGroups);
+        // Add appropriate CSS class based on chart count
+        if (chartsToUse.length === 6) {
+            chartContainer.classList.add('dashboard-mode');
+            chartContainer.classList.remove('regular-mode');
+            
+            // For 6 charts, skip the complex grid positioning and just use CSS grid
+            // Charts will be placed in order: 3 charts per row, 2 rows
+        } else {
+            chartContainer.classList.add('regular-mode');
+            chartContainer.classList.remove('dashboard-mode');
+            
+            // Group charts by row (1-4) for organization for desktop view
+            const rowGroups = {};
+            chartsToUse.forEach(config => {
+                if (!rowGroups[config.row]) {
+                    rowGroups[config.row] = [];
+                }
+                rowGroups[config.row].push(config);
+            });
+            
+            // Calculate grid positions for each chart (for desktop view)
+            this.calculateGridPositions(rowGroups);
+        }
         
         // Determine if we're in mobile mode (for class distinction)
         const isMobile = window.innerWidth <= 768;
         
         // For mobile sort by rows, then by column position to ensure a logical order
-        let orderedConfigs = [...window.chartConfigs];
+        let orderedConfigs = [...chartsToUse];
         
         if (isMobile) {
             // Sort by row and then by column position
@@ -200,8 +240,8 @@ window.ChartLayout = window.ChartLayout || {
                 chartDiv.classList.add('multi-series');
             }
             
-            // Only set grid positions if not mobile (CSS will override these in mobile mode)
-            if (!isMobile) {
+            // Only set grid positions if not mobile and not dashboard mode (CSS will override these)
+            if (!isMobile && !chartContainer.classList.contains('dashboard-mode')) {
                 chartDiv.style.gridRow = config.gridRow;
                 chartDiv.style.gridColumn = config.gridColumn;
             }

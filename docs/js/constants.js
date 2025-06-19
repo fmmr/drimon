@@ -18,25 +18,25 @@ window.THINGSPEAK = {
         DRIMON_CHANNEL: {
             // Main channel with temperature, humidity, window, battery, pressure, light
             id: 2568299,
-            label: 'MAIN',
+            label: 'M',
             translationKey: 'drimonChannel'
         },
         EXT_CHANNEL: {
             // Channel with external weather data
             id: 2626867,
-            label: 'EXT',
+            label: 'E',
             translationKey: 'extChannel'
         },
         TECH_CHANNEL: {
             // Channel with system monitoring data
             id: 2584547,
-            label: 'TECH',
+            label: 'TX',
             translationKey: 'techChannel'
         },
         TEMP_CHANNEL: {
             // Channel with temperature monitoring data
             id: 2584548,
-            label: 'TEMP',
+            label: 'TP',
             translationKey: 'detailsChannel'
         }
     },

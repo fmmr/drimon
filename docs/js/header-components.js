@@ -28,19 +28,22 @@ function createLogoContainer(config = null) {
     const logoContainer = document.createElement('div');
     logoContainer.className = `logo-container ${options.customClasses}`.trim();
     
-    // Create logo link and image
-    const logoLink = document.createElement('a');
-    logoLink.href = options.logoUrl;
-    
+    // Create logo image (with or without link)
     const logoImg = document.createElement('img');
     logoImg.src = options.logoImage;
     logoImg.className = options.logoClassName;
     logoImg.id = options.logoId;
     logoImg.alt = options.logoAlt;
     
-    // Add logo to container
-    logoLink.appendChild(logoImg);
-    logoContainer.appendChild(logoLink);
+    // Add logo to container (wrap in link if URL provided)
+    if (options.logoUrl) {
+        const logoLink = document.createElement('a');
+        logoLink.href = options.logoUrl;
+        logoLink.appendChild(logoImg);
+        logoContainer.appendChild(logoLink);
+    } else {
+        logoContainer.appendChild(logoImg);
+    }
     
     // Container for sort and flag elements on mobile
     // Will be moved by CSS on mobile view
@@ -48,24 +51,24 @@ function createLogoContainer(config = null) {
     controlsContainer.className = 'mobile-header-controls';
     logoContainer.appendChild(controlsContainer);
     
-    // Add time indicator if configured
+    // Add time indicator pill if configured
     if (options.showTimeIndicator) {
-        const timeIndicator = document.createElement('div');
-        timeIndicator.className = 'time-indicator';
-        // Use data-tooltip-content instead of title
-        timeIndicator.setAttribute('data-tooltip-content', window.I18n.translate(options.timeKey));
-        timeIndicator.setAttribute('data-has-tooltip', 'true');
-        timeIndicator.setAttribute('data-i18n-title', options.timeKey);
+        const timePill = document.createElement('div');
+        timePill.className = 'data-chip time-pill';
+        timePill.setAttribute('data-has-tooltip', 'true');
         
+        // Add clock icon
+        const timeIcon = document.createElement('i');
+        timeIcon.className = 'fas fa-clock mr-1';
+        timePill.appendChild(timeIcon);
+        
+        // Add time display (will show HH:MM instead of "X minutes ago")
         const timeSpan = document.createElement('span');
         timeSpan.id = 'time-since';
+        timeSpan.textContent = '--:--';
         
-        const loadingText = window.I18n.translate('loading');
-        timeSpan.textContent = loadingText;
-        timeSpan.setAttribute('data-i18n', 'loading');
-        
-        timeIndicator.appendChild(timeSpan);
-        logoContainer.appendChild(timeIndicator);
+        timePill.appendChild(timeSpan);
+        logoContainer.appendChild(timePill);
     }
     
     return logoContainer;
@@ -123,12 +126,24 @@ function createDataChip(id, iconClass, title, initialText = 'loading') {
  * @returns {HTMLElement} The weather data chip element
  */
 function createWeatherPill() {
-    // Use div for mobile and anchor for desktop
+    // Check for dashboard mode
+    function getURLParameter(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name) || '';
+    }
+    
+    const urlDashboardMode = getURLParameter('dashboard') === 'true';
+    const isPi = (window.screen.width === 800 && window.screen.height === 480) || 
+                 (/CrOS.*x86_64/.test(navigator.userAgent) && window.screen.width <= 800);
+    const isDashboardMode = urlDashboardMode || isPi;
+    
+    // Use div for mobile, dashboard, or anchor for desktop
     const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    const useDiv = isMobile || isDashboardMode;
 
     // Create a single data-chip as the main container (like sun-events-chip)
-    const chip = document.createElement(isMobile ? 'div' : 'a');
-    if (!isMobile) {
+    const chip = document.createElement(useDiv ? 'div' : 'a');
+    if (!useDiv) {
         chip.href = 'https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/1-60206/Norge/Akershus/Asker/R%C3%B8dtangen';
     }
     chip.className = 'data-chip weather-data-chip';
@@ -277,21 +292,65 @@ function createDataContainer(config = null) {
 }
 
 /**
- * Creates a date chip element
+ * Creates a date chip element with Font Awesome icons or text
  * @param {string} range - The date range value
  * @param {string} key - The translation key for the text
+ * @param {string} [icon] - Optional Font Awesome icon class
+ * @param {Array} [iconDouble] - Optional array of two Font Awesome icon classes
+ * @param {string} [text] - Optional text to display
+ * @param {Array} [textDouble] - Optional array of two text strings
  * @returns {HTMLElement} The date chip element
  */
-function createDateChip(range, key) {
+function createDateChip(range, key, icon = null, iconDouble = null, text = null, textDouble = null) {
     const chip = document.createElement('a');
     chip.href = '#';
-    chip.className = 'date-chip';
+    chip.className = 'date-chip large-icons';
     chip.dataset.range = range;
     
-    chip.textContent = window.I18n.translate(key);
+    // Add double text if provided
+    if (textDouble && Array.isArray(textDouble) && textDouble.length === 2) {
+        const textContainer = document.createElement('span');
+        textContainer.className = 'text-double';
+        
+        textDouble.forEach(textStr => {
+            const textElement = document.createElement('span');
+            textElement.className = 'number-text';
+            textElement.textContent = textStr;
+            textContainer.appendChild(textElement);
+        });
+        
+        chip.appendChild(textContainer);
+    }
+    // Add single text if provided
+    else if (text) {
+        const textElement = document.createElement('span');
+        textElement.className = 'number-text';
+        textElement.textContent = text;
+        chip.appendChild(textElement);
+    }
+    // Add double icons if provided
+    else if (iconDouble && Array.isArray(iconDouble) && iconDouble.length === 2) {
+        const iconContainer = document.createElement('span');
+        iconContainer.className = 'icon-double';
+        
+        iconDouble.forEach(iconClass => {
+            const iconElement = document.createElement('i');
+            iconElement.className = iconClass;
+            iconContainer.appendChild(iconElement);
+        });
+        
+        chip.appendChild(iconContainer);
+    }
+    // Add single icon if provided
+    else if (icon) {
+        const iconElement = document.createElement('i');
+        iconElement.className = icon;
+        chip.appendChild(iconElement);
+    }
     
-    // Add data-i18n attribute for later translation updates
-    chip.setAttribute('data-i18n', key);
+    // Store the translation key for tooltips but don't add visible text
+    chip.setAttribute('data-i18n-title', key);
+    chip.title = window.I18n.translate(key);
     
     return chip;
 }
@@ -306,15 +365,17 @@ function createDateRanges(config = null) {
     dateRanges.className = 'date-ranges';
     
     // If no config is provided, use default date ranges
-    const allRanges = config && config.ranges
+    const allRanges = config && config.ranges || []
+    const configSecondaryRanges = config && config.secondaryRanges || []
     
     // Split into primary (visible as chips) and secondary (in dropdown) ranges
     const primaryRanges = allRanges.slice(0, 6); // First 6 ranges as visible chips
-    const secondaryRanges = allRanges.slice(6);  // Remaining ranges go to dropdown
+    const secondaryRanges = [...allRanges.slice(6), ...configSecondaryRanges];  // Remaining ranges + explicit secondary
     
     // Add primary date chips directly to the container
     primaryRanges.forEach(chip => {
-        dateRanges.appendChild(createDateChip(chip.range, chip.key));
+        const dateChip = createDateChip(chip.range, chip.key, chip.icon, chip.iconDouble, chip.text, chip.textDouble);
+        dateRanges.appendChild(dateChip);
     });
     
     // Create a dropdown for additional date ranges
@@ -325,8 +386,14 @@ function createDateRanges(config = null) {
         // Create dropdown button
         const dropdownButton = document.createElement('button');
         dropdownButton.className = 'date-dropdown-button';
-        dropdownButton.innerHTML = '<i class="fas fa-ellipsis-h"></i>';
-        dropdownButton.title = 'More date ranges';
+        // Show different icon if no primary ranges (dashboard mode - settings dropdown)
+        if (primaryRanges.length === 0) {
+            dropdownButton.innerHTML = '<i class="fas fa-cog"></i>';
+            dropdownButton.title = 'Settings';
+        } else {
+            dropdownButton.innerHTML = '<i class="fas fa-ellipsis-h"></i>';
+            dropdownButton.title = 'More date ranges';
+        }
         
         // Create dropdown content
         const dropdownContent = document.createElement('div');
@@ -334,10 +401,32 @@ function createDateRanges(config = null) {
         
         // Add secondary ranges to dropdown
         secondaryRanges.forEach(chip => {
-            const link = createDateChip(chip.range, chip.key);
-            link.className = 'date-dropdown-item date-chip'; // Keep date-chip class for event handling
-            dropdownContent.appendChild(link);
+            const dateChip = createDateChip(chip.range, chip.key, chip.icon, chip.iconDouble, chip.text, chip.textDouble);
+            dateChip.className = 'date-dropdown-item date-chip'; // Keep date-chip class for event handling
+            dropdownContent.appendChild(dateChip);
         });
+        
+        // Add settings buttons if no primary ranges (dashboard mode)
+        if (primaryRanges.length === 0) {
+            // Add divider
+            const divider = document.createElement('div');
+            divider.className = 'dropdown-divider';
+            dropdownContent.appendChild(divider);
+            
+            // Add dark mode toggle
+            const darkModeItem = document.createElement('button');
+            darkModeItem.className = 'date-dropdown-item settings-item';
+            darkModeItem.innerHTML = '<i class="fas fa-moon"></i> <span>Dark Mode</span>';
+            darkModeItem.id = 'darkModeToggle';
+            dropdownContent.appendChild(darkModeItem);
+            
+            // Add stats toggle
+            const statsItem = document.createElement('button');
+            statsItem.className = 'date-dropdown-item settings-item';
+            statsItem.innerHTML = '<i class="fas fa-chart-line"></i> <span>Show Stats</span>';
+            statsItem.id = 'statsToggle';
+            dropdownContent.appendChild(statsItem);
+        }
         
         // Add dropdown elements to container
         dropdownContainer.appendChild(dropdownButton);
@@ -692,6 +781,23 @@ const ComponentRegistry = {
     }
 };
 
+// All available date ranges used by both regular and dashboard headers
+const AllDateRanges = [
+    { range: 'default', key: 'defaultDate', icon: 'fas fa-home' },
+    { range: '1', key: 'twoDay', icon: 'fas fa-2' },
+    { range: '2', key: 'threeDay', icon: 'fas fa-3' },
+    { range: '6', key: 'sevenDay', icon: 'fas fa-7' },
+    { range: '13', key: 'fourteenDay', iconDouble: ['fas fa-1', 'fas fa-4'] },
+    { range: '30', key: 'thirtyDay', iconDouble: ['fas fa-3', 'fas fa-0'] },
+    { range: 'today', key: 'today', icon: 'fas fa-calendar-day' },
+    { range: 'yesterday', key: 'yesterday', iconDouble: ['fas fa-step-backward', 'fas fa-calendar-day'] },
+    { range: 'this-week', key: 'week', icon: 'fas fa-calendar-week' },
+    { range: 'last-week', key: 'lastWeek', iconDouble: ['fas fa-step-backward', 'fas fa-calendar-week'] },
+    { range: 'this-month', key: 'month', icon: 'fas fa-calendar-alt' },
+    { range: 'last-month', key: 'lastMonth', iconDouble: ['fas fa-step-backward', 'fas fa-calendar-alt'] },
+    { range: 'start', key: 'start', icon: 'fas fa-hourglass-start' }
+];
+
 /**
  * Header Component Configuration
  * Declarative configuration for the header layout and components
@@ -728,21 +834,7 @@ const HeaderConfig = {
         dateRanges: {
             type: 'dateRanges',
             config: {
-                ranges: [
-                    { range: 'default', key: 'defaultDate' },
-                    { range: '1', key: 'twoDay' },
-                    { range: '2', key: 'threeDay' },
-                    { range: '6', key: 'sevenDay' },
-                    { range: '13', key: 'fourteenDay' },
-                    { range: '30', key: 'thirtyDay' },
-                    { range: 'today', key: 'today' },
-                    { range: 'yesterday', key: 'yesterday' },
-                    { range: 'this-week', key: 'week' },
-                    { range: 'last-week', key: 'lastWeek' },
-                    { range: 'this-month', key: 'month' },
-                    { range: 'last-month', key: 'lastMonth' },
-                    { range: 'start', key: 'start' }
-                ]
+                ranges: AllDateRanges // First 6 will be shown as pills, rest in dropdown
             }
         },
         search: {
@@ -763,6 +855,71 @@ const HeaderConfig = {
     
     // Header theme (can be custom CSS classes)
     theme: 'modern-header',
+    
+    // Event callbacks
+    events: {
+        onLanguageChange: null,
+        onDateRangeChange: null,
+        onCategoryChange: null,
+        onDarkModeToggle: null,
+        onStatsToggle: null
+    }
+};
+
+// Dashboard-specific header config (simplified for Pi display)
+const DashboardHeaderConfig = {
+    // Component definitions
+    components: {
+        logo: {
+            type: 'logoContainer',
+            config: {
+                logoUrl: null, // No link for dashboard
+                logoImage: 'logos/1_100x55.webp',
+                logoAlt: 'DriMon',
+                showTimeIndicator: true,
+                timeKey: 'time'
+            }
+        },
+        data: {
+            type: 'dataContainer',
+            config: {
+                chips: [
+                    { id: 'temperature', icon: 'fas fa-thermometer-half', titleKey: 'temperature' },
+                    { id: 'weather', type: 'weatherPill' },
+                    { id: 'sunEvents', type: 'sunEventChip' },
+                    { id: 'light', icon: 'fas fa-sun', titleKey: 'light', initialText: '' },
+                    { id: 'battery', icon: 'fas fa-battery-half', titleKey: 'battery' },
+                    { id: 'pressure', icon: 'fas fa-compress-alt', titleKey: 'pressure' },
+                    { id: 'window', icon: 'fas fa-window-maximize', titleKey: 'window', initialText: '' }
+                ]
+            }
+        },
+        dateRanges: {
+            type: 'dateRanges',
+            config: {
+                ranges: [], // No primary ranges - all go to dropdown for dashboard
+                secondaryRanges: AllDateRanges // All ranges go to dropdown for dashboard
+            }
+        },
+        search: {
+            type: 'searchContainer',
+            config: {
+                resultsPlaceholder: 'results',
+                updateButtonKey: 'update',
+                includeCategories: false,
+                includeResults: false,
+                includeDarkMode: false, // Moved to settings dropdown
+                includeStatsToggle: false, // Moved to settings dropdown
+                includeLanguageSwitcher: false
+            }
+        }
+    },
+    
+    // Layout order (logo back, no thingspeak links, no language switcher)
+    layout: ['logo', 'data', 'dateRanges', 'search'],
+    
+    // Header theme
+    theme: 'modern-header dashboard-header',
     
     // Event callbacks
     events: {

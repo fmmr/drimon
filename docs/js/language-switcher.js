@@ -131,12 +131,26 @@ function addLanguageSwitcherToHeader() {
     }
 }
 
-// Add the language switcher when the DOM is loaded
+// Add the language switcher when the DOM is loaded (unless in dashboard mode)
 document.addEventListener('DOMContentLoaded', () => {
-    // Wait a short time to ensure header is loaded (if it's being dynamically created)
-    setTimeout(() => {
-        addLanguageSwitcherToHeader();
-    }, 100);
+    // Check for dashboard mode
+    function getURLParameter(name) {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get(name) || '';
+    }
+    
+    const urlDashboardMode = getURLParameter('dashboard') === 'true';
+    const isPi = (window.screen.width === 800 && window.screen.height === 480) || 
+                 (/CrOS.*x86_64/.test(navigator.userAgent) && window.screen.width <= 800);
+    const isDashboardMode = urlDashboardMode || isPi;
+    
+    // Only add language switcher if not in dashboard mode
+    if (!isDashboardMode) {
+        // Wait a short time to ensure header is loaded (if it's being dynamically created)
+        setTimeout(() => {
+            addLanguageSwitcherToHeader();
+        }, 100);
+    }
 });
 
 // Listen for the new i18n system to be ready
