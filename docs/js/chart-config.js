@@ -1,14 +1,30 @@
+// Default series configuration - single source of truth for series options
+const DEFAULT_SERIES_CONFIG = {
+    titleKey: undefined,
+    channel: undefined,
+    field: undefined,
+    color: undefined,
+    axis: 'y',
+    extraResults: undefined,
+    dataFilter: {
+        min: undefined,
+        max: undefined,
+        exclude: []
+    }
+};
+
 // Default configuration values - single source of truth
 const DEFAULT_CHART_CONFIG = {
     defaultRange: 1,
     unit: '',
     category: 'uncategorized',
-    categoryHeaderKey: null,
-    startDate: null,
+    categoryHeaderKey: undefined,
+    startDate: undefined,
     disableFill: false,
     hideLegendUnit: false,
-    dataTransform: null,
+    dataTransform: {},
     show_dashboard: false,
+    series: [DEFAULT_SERIES_CONFIG],
     formatting: {
         useIntegerFormat: true,
         decimalPlaces: 0
@@ -39,28 +55,17 @@ const DEFAULT_CHART_CONFIG = {
 function mergeChartConfig(userConfig) {
     const merged = { ...DEFAULT_CHART_CONFIG, ...userConfig };
     
-    // Deep merge nested objects
-    if (userConfig.formatting) {
-        merged.formatting = { ...DEFAULT_CHART_CONFIG.formatting, ...userConfig.formatting };
-    }
-    if (userConfig.yAxis) {
-        merged.yAxis = { ...DEFAULT_CHART_CONFIG.yAxis, ...userConfig.yAxis };
-    }
-    if (userConfig.indicators) {
-        merged.indicators = { ...DEFAULT_CHART_CONFIG.indicators, ...userConfig.indicators };
-        // Deep merge colors if they exist
-        if (userConfig.indicators.colors) {
-            merged.indicators.colors = { ...DEFAULT_CHART_CONFIG.indicators.colors, ...userConfig.indicators.colors };
-        }
-    }
-    if (userConfig.dataTransform) {
-        merged.dataTransform = { ...DEFAULT_CHART_CONFIG.dataTransform, ...userConfig.dataTransform };
-    }
+    // Deep merge nested objects - always merge to ensure complete structure
+    merged.formatting = { ...DEFAULT_CHART_CONFIG.formatting, ...(userConfig.formatting || {}) };
+    merged.yAxis = { ...DEFAULT_CHART_CONFIG.yAxis, ...(userConfig.yAxis || {}) };
+    merged.indicators = { ...DEFAULT_CHART_CONFIG.indicators, ...(userConfig.indicators || {}) };
+    merged.indicators.colors = { ...DEFAULT_CHART_CONFIG.indicators.colors, ...(userConfig.indicators?.colors || {}) };
+    merged.dataTransform = { ...DEFAULT_CHART_CONFIG.dataTransform, ...(userConfig.dataTransform || {}) };
     
     // Calculate all derived/normalized values here instead of in chart-renderer
     merged.hasSecondYAxis = !!(merged.yAxis && merged.yAxis.secondYAxis);
-    merged.hasDataTransform = !!(merged.dataTransform && merged.dataTransform.shiftBy);
-    merged.shiftByValue = merged.dataTransform?.shiftBy || 0;
+    merged.hasDataTransform = merged.dataTransform.shiftBy !== undefined;
+    merged.shiftByValue = merged.dataTransform.shiftBy || 0;
     merged.isMultiSeries = merged.series.length > 1;
     
     // Calculate unique channels from series
@@ -72,12 +77,20 @@ function mergeChartConfig(userConfig) {
     merged.tooltipMode = merged.isMultiChannel ? 'nearest' : 'index';
     merged.showIndicators = !merged.isMultiSeries;
     
-    // Ensure all series have colors (set defaults for missing ones)
+    // Merge each series with DEFAULT_SERIES_CONFIG
     const defaultColors = ['#666', '#e6a500', '#8a5a00', '#0066cc', '#cc6600'];
-    merged.series.forEach((series, index) => {
-        if (!series.color) {
-            series.color = defaultColors[index % defaultColors.length];
+    merged.series = merged.series.map((series, index) => {
+        const mergedSeries = { ...DEFAULT_SERIES_CONFIG, ...series };
+        
+        // Deep merge dataFilter - always merge to ensure complete structure
+        mergedSeries.dataFilter = { ...DEFAULT_SERIES_CONFIG.dataFilter, ...(series.dataFilter || {}) };
+        
+        // Set default color if not provided
+        if (!mergedSeries.color) {
+            mergedSeries.color = defaultColors[index % defaultColors.length];
         }
+        
+        return mergedSeries;
     });
     
     merged.displayUnit = merged.hideLegendUnit ? '' : merged.unit;
