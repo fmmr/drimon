@@ -72,6 +72,25 @@ window.UnifiedChartRenderer = {
         // Store chart data for tooltip access
         this._storeChartData(config, timestamps, datasets, data);
 
+        // Handle minimal minimum: set min to nearest integer below actual minimum
+        if (config.yAxis && config.yAxis.useMinimalMinimum && config.yAxis.min === undefined) {
+            // Find the actual minimum value across all datasets
+            let actualMin = Infinity;
+            datasets.forEach(dataset => {
+                dataset.data.forEach(point => {
+                    if (point.y < actualMin) {
+                        actualMin = point.y;
+                    }
+                });
+            });
+            
+            if (actualMin < 0) {
+                // Set min to the nearest integer below the actual minimum
+                const minimalMin = Math.floor(actualMin);
+                config = { ...config, yAxis: { ...config.yAxis, min: minimalMin } };
+            }
+        }
+
         // Create chart data (no timestamps needed since we use {x, y} format)
         const chartData = this._createChartData(datasets, config);
 

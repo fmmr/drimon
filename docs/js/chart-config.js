@@ -37,7 +37,7 @@ const DEFAULT_CHART_CONFIG = {
         maxTicks: 5,
         formatLargeNumbers: false,
         secondYAxis: false,
-        negativeMin: undefined
+        useMinimalMinimum: false
     },
     indicators: {
         showMin: true,
@@ -246,7 +246,7 @@ const RAW_CHART_CONFIGS = [
         show_dashboard: true,
         yAxis: {
             roundToNearest: 2,
-            negativeMin: -2
+            useMinimalMinimum: true
         },
     },
     // Multi-series chart combining cucumber and padron temperatures (positioned as 2nd chart in row 2)
