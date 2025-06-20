@@ -259,72 +259,127 @@ window.UnifiedChartRenderer = {
     },
 
     /**
-     * Create X-axis configuration
+     * Create X-axis configuration using range-driven logic
      * @private
      */
     _createXAxisConfig: function(config) {
+        // Get range from URL params directly (same as _determineSmartTimeFormat)
         const urlParams = new URLSearchParams(window.location.search);
-        const range = parseInt(urlParams.get('range')) || config.defaultRange;
+        const range = urlParams.get('range');
         
-        // Determine format and unit based on range
+        // Determine time configuration based on range intent first
         let timeConfig, tickConfig;
         
-        if (range === 1) {
-            // Range 1: HH:MM (hour minute)
+        if (range) {
+            switch (range) {
+                case 'today':
+                case 'yesterday':
+                    timeConfig = {
+                        unit: 'hour',
+                        displayFormats: { hour: 'HH:mm' }
+                    };
+                    tickConfig = { maxTicksLimit: window.innerWidth <= 768 ? 8 : 6 };
+                    break;
+                
+                case 'this-week':
+                    timeConfig = {
+                        unit: 'hour',
+                        displayFormats: { hour: 'HH:mm' }
+                    };
+                    tickConfig = {
+                        maxTicksLimit: window.innerWidth <= 768 ? 8 : 6,
+                        callback: function(value, index, ticks) {
+                            const date = new Date(value);
+                            if (window.moment) {
+                                const dayShort = window.moment(date).format('ddd').substring(0, 2);
+                                const time = window.moment(date).format('HH:mm');
+                                return `${dayShort} ${time}`;
+                            }
+                            return new Date(value).toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' });
+                        }
+                    };
+                    break;
+                    
+                case 'last-week':
+                case 'this-month':
+                case 'last-month':
+                    timeConfig = {
+                        unit: 'day',
+                        displayFormats: { day: 'D/M' }
+                    };
+                    tickConfig = { maxTicksLimit: window.innerWidth <= 768 ? 7 : 6 };
+                    break;
+                    
+                case 'start':
+                    timeConfig = {
+                        unit: 'month',
+                        displayFormats: { month: 'MMMM' }
+                    };
+                    tickConfig = { maxTicksLimit: window.innerWidth <= 768 ? 4 : 6 };
+                    break;
+                    
+                default:
+                    // Handle numeric ranges (days)
+                    const numericRange = parseInt(range);
+                    if (!isNaN(numericRange)) {
+                        if (numericRange <= 1) {
+                            timeConfig = {
+                                unit: 'hour',
+                                displayFormats: { hour: 'HH:mm' }
+                            };
+                            tickConfig = { maxTicksLimit: window.innerWidth <= 768 ? 8 : 6 };
+                        } else if (numericRange <= 2) {
+                            timeConfig = {
+                                unit: 'hour',
+                                displayFormats: { hour: 'HH:mm' }
+                            };
+                            tickConfig = {
+                                maxTicksLimit: window.innerWidth <= 768 ? 8 : 6,
+                                callback: function(value, index, ticks) {
+                                    const date = new Date(value);
+                                    if (window.moment) {
+                                        const dayShort = window.moment(date).format('ddd').substring(0, 2);
+                                        const time = window.moment(date).format('HH:mm');
+                                        return `${dayShort} ${time}`;
+                                    }
+                                    return new Date(value).toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' });
+                                }
+                            };
+                        } else if (numericRange <= 7) {
+                            timeConfig = {
+                                unit: 'day',
+                                displayFormats: { day: 'dddd' }
+                            };
+                            tickConfig = { maxTicksLimit: window.innerWidth <= 768 ? 4 : 3 };
+                        } else if (numericRange <= 120) {
+                            timeConfig = {
+                                unit: 'day',
+                                displayFormats: { day: 'D/M' }
+                            };
+                            tickConfig = { maxTicksLimit: window.innerWidth <= 768 ? 7 : 6 };
+                        } else {
+                            timeConfig = {
+                                unit: 'month',
+                                displayFormats: { month: 'MMMM' }
+                            };
+                            tickConfig = { maxTicksLimit: window.innerWidth <= 768 ? 4 : 6 };
+                        }
+                    } else {
+                        // Fallback for unknown string ranges
+                        timeConfig = {
+                            unit: 'day',
+                            displayFormats: { day: 'D/M' }
+                        };
+                        tickConfig = { maxTicksLimit: window.innerWidth <= 768 ? 7 : 6 };
+                    }
+            }
+        } else {
+            // No range parameter - use fallback
             timeConfig = {
                 unit: 'hour',
-                displayFormats: { hour: 'HH:mm' },
-                tooltipFormat: 'dddd D/M YYYY, HH:mm'
+                displayFormats: { hour: 'HH:mm' }
             };
             tickConfig = { maxTicksLimit: window.innerWidth <= 768 ? 8 : 6 };
-            
-        } else if (range === 2) {
-            // Range 2: "ma 01:19" (two first letters of day + hh:mm)
-            timeConfig = {
-                unit: 'hour',
-                displayFormats: { hour: 'HH:mm' },
-                tooltipFormat: 'dddd D/M YYYY, HH:mm'
-            };
-            tickConfig = {
-                maxTicksLimit: window.innerWidth <= 768 ? 8 : 6,
-                callback: function(value, index, ticks) {
-                    const date = new Date(value);
-                    if (window.moment) {
-                        // Get first two letters of Norwegian day name + time
-                        const dayShort = window.moment(date).format('ddd').substring(0, 2);
-                        const time = window.moment(date).format('HH:mm');
-                        return `${dayShort} ${time}`;
-                    }
-                    return new Date(value).toLocaleTimeString('nb-NO', { hour: '2-digit', minute: '2-digit' });
-                }
-            };
-            
-        } else if (range >= 3 && range <= 7) {
-            // Range 3-7: mandag tirsdag onsdag... (full day names)
-            timeConfig = {
-                unit: 'day',
-                displayFormats: { day: 'dddd' },
-                tooltipFormat: 'dddd D/M YYYY, HH:mm'
-            };
-            tickConfig = { maxTicksLimit: window.innerWidth <= 768 ? 4 : 3 };
-            
-        } else if (range >= 8) {
-            // Range 8+: D/M (24/2)
-            timeConfig = {
-                unit: 'day',
-                displayFormats: { day: 'D/M' },
-                tooltipFormat: 'dddd D/M YYYY, HH:mm'
-            };
-            tickConfig = { maxTicksLimit: window.innerWidth <= 768 ? 7 : 6 };
-            
-        } else {
-            // Fallback for any other ranges
-            timeConfig = {
-                unit: 'day',
-                displayFormats: { day: 'D/M' },
-                tooltipFormat: 'dddd D/M YYYY, HH:mm'
-            };
-            tickConfig = { maxTicksLimit: window.innerWidth <= 768 ? 7 : 6 };
         }
 
         return {
@@ -525,7 +580,22 @@ window.UnifiedChartRenderer = {
 
 
     /**
-     * Format tooltip time with context enhancement (same logic as legacy system)
+     * Enhance axis time format for tooltip with additional context
+     * @private
+     */
+    _enhanceTimeFormatForTooltip: function(axisFormat) {
+        switch (axisFormat) {
+            case 'HH:mm': return 'ddd HH:mm';
+            case 'ddd HH:mm': return 'ddd HH:mm';
+            case 'dddd': return 'ddd HH:mm';
+            case 'D/M': return 'ddd D/M HH:mm';
+            case 'MMMM': return 'D/M HH:mm';
+            default: return 'ddd DD MMM YYYY, HH:mm';
+        }
+    },
+
+    /**
+     * Format tooltip time with context enhancement
      * @private
      */
     _formatTooltipTime: function(timestamp, chartId) {
@@ -533,34 +603,13 @@ window.UnifiedChartRenderer = {
             return new Date(timestamp).toLocaleString();
         }
 
-        // Get the chart's time format from global storage
-        let timeFormat = 'ddd DD MMM YYYY, HH:mm'; // Default full format
-
-        if (window.chartTimeFormats && window.chartTimeFormats[chartId]) {
-            // Use the same format as the chart's x-axis
-            timeFormat = window.chartTimeFormats[chartId];
+        // Get the chart's time format and enhance it for tooltip
+        const axisFormat = (window.chartTimeFormats && window.chartTimeFormats[chartId]) 
+            ? window.chartTimeFormats[chartId] 
+            : 'ddd DD MMM YYYY, HH:mm';
             
-            // For very short timeformats, add additional context
-            if (timeFormat === 'HH:mm') {
-                // For time-only formats, add the date for context in tooltip
-                return window.moment(timestamp).format('ddd HH:mm');
-            } else if (timeFormat === 'ddd HH:mm') {
-                // For day+time formats, add the full date for context
-                return window.moment(timestamp).format('ddd HH:mm');
-            } else if (timeFormat === 'dddd') {
-                // For day name formats, add the date for context
-                return window.moment(timestamp).format('ddd HH:mm');
-            } else if (timeFormat === 'D/M') {
-                // For day/month format, add the year and time
-                return window.moment(timestamp).format('ddd D/M HH:mm');
-            } else if (timeFormat === 'MMMM') {
-                // For month only format, add the year
-                return window.moment(timestamp).format('D/M HH:mm');
-            }
-        }
-
-        // Default to full format
-        return window.moment(timestamp).format('ddd DD MMM YYYY, HH:mm');
+        const tooltipFormat = this._enhanceTimeFormatForTooltip(axisFormat);
+        return window.moment(timestamp).format(tooltipFormat);
     },
 
     /**
@@ -787,10 +836,45 @@ window.UnifiedChartRenderer = {
     },
 
     /**
-     * Determine smart time format based on data timespan
+     * Determine smart time format based on range intent and data timespan
      * @private
      */
     _determineSmartTimeFormat: function(timestamps) {
+        // Get range from URL params (same as _createXAxisConfig)
+        const urlParams = new URLSearchParams(window.location.search);
+        const range = urlParams.get('range');
+        
+        // Check range intent first - fixes bug with string ranges like "this-month"
+        if (range) {
+            switch (range) {
+                case 'today':
+                case 'yesterday':
+                    return 'HH:mm';
+                
+                case 'this-week':
+                    return 'ddd HH:mm';
+                    
+                case 'last-week':
+                case 'this-month':
+                case 'last-month':
+                    return 'D/M';  // Clear date format for longer ranges
+                    
+                case 'start':
+                    return 'MMMM';  // Month names for very long ranges
+            }
+            
+            // Handle numeric ranges (days)
+            const numericRange = parseInt(range);
+            if (!isNaN(numericRange)) {
+                if (numericRange <= 1) return 'HH:mm';
+                if (numericRange <= 2) return 'ddd HH:mm';
+                if (numericRange <= 7) return 'dddd';
+                if (numericRange <= 120) return 'D/M';
+                return 'MMMM';
+            }
+        }
+        
+        // Fallback: determine from actual data timespan
         if (!timestamps || timestamps.length < 2) return 'HH:mm';
         
         const firstTime = new Date(timestamps[0]);
