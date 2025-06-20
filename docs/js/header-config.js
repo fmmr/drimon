@@ -91,7 +91,7 @@ const DEFAULT_HEADER_CONFIG = {
     },
     
     // Layout order
-    layout: ['logo', 'data', 'thingspeak', 'dateRanges', 'actionButtons', 'settingsDropdown', 'search'],
+    layout: ['logo', 'data', 'thingspeak', 'dateRanges', 'settingsDropdown', 'actionButtons', 'search'],
     
     // Header theme
     theme: 'modern-header'

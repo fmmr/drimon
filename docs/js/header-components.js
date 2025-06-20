@@ -78,6 +78,173 @@ function createTimeChip() {
 }
 
 /**
+ * Creates action buttons container (dark mode, stats toggle)
+ * @param {Object} [config] - Configuration object for action buttons
+ * @returns {HTMLElement} The action buttons container element
+ */
+function createActionButtons(config = null) {
+    const actionContainer = document.createElement('div');
+    actionContainer.className = 'action-buttons';
+    
+    // Get configuration options with defaults
+    const options = {
+        darkMode: { enabled: true },
+        statsToggle: { enabled: true },
+        ...(config || {})
+    };
+    
+    // Add dark mode toggle if enabled
+    if (options.darkMode && options.darkMode.enabled) {
+        const darkModeToggle = document.createElement('button');
+        darkModeToggle.id = 'darkModeToggle';
+        
+        darkModeToggle.title = window.I18n.translate('darkModeTooltip');
+        darkModeToggle.setAttribute('data-i18n-title', 'darkModeTooltip');
+        
+        const darkModeIcon = document.createElement('span');
+        darkModeIcon.className = 'icon';
+        darkModeIcon.innerHTML = '<i class="fas fa-moon"></i>';
+        
+        darkModeToggle.appendChild(darkModeIcon);
+        actionContainer.appendChild(darkModeToggle);
+    }
+    
+    // Add stats toggle if enabled
+    if (options.statsToggle && options.statsToggle.enabled) {
+        const statsToggle = document.createElement('button');
+        statsToggle.id = 'statsToggle';
+        
+        statsToggle.title = window.I18n.translate('statsTooltip');
+        statsToggle.setAttribute('data-i18n-title', 'statsTooltip');
+        
+        const statsIcon = document.createElement('span');
+        statsIcon.className = 'icon';
+        statsIcon.innerHTML = '<i class="fas fa-chart-line"></i>';
+        
+        statsToggle.appendChild(statsIcon);
+        actionContainer.appendChild(statsToggle);
+    }
+    
+    return actionContainer;
+}
+
+/**
+ * Creates settings dropdown component (date ranges + actions)
+ * @param {Object} [config] - Configuration object for settings dropdown
+ * @returns {HTMLElement} The settings dropdown container element
+ */
+function createSettingsDropdown(config = null) {
+    const dropdownContainer = document.createElement('div');
+    dropdownContainer.className = 'settings-dropdown';
+    
+    // Get configuration options with defaults
+    const options = {
+        showDateRanges: true,
+        showDivider: false,
+        actions: {
+            darkMode: { enabled: false },
+            statsToggle: { enabled: false }
+        },
+        ...(config || {})
+    };
+    
+    // Get secondary date ranges from top-level config
+    const secondaryDateRanges = window.headerConfigs ? 
+        (window.Utils.isDashboardMode() ? 
+            window.headerConfigs.dashboard.secondaryDateRanges : 
+            window.headerConfigs.regular.secondaryDateRanges) : [];
+    
+    // Only create dropdown if we have content to show
+    if (!options.showDateRanges && !options.actions.darkMode.enabled && !options.actions.statsToggle.enabled) {
+        return dropdownContainer; // Return empty container
+    }
+    
+    // Create dropdown button
+    const dropdownButton = document.createElement('button');
+    dropdownButton.className = 'settings-dropdown-button';
+    
+    // Always show settings gear icon
+    dropdownButton.innerHTML = '<i class="fas fa-cog"></i>';
+    dropdownButton.title = 'Settings';
+    
+    // Create dropdown content
+    const dropdownContent = document.createElement('div');
+    dropdownContent.className = 'settings-dropdown-content';
+    
+    // Add secondary date ranges if enabled
+    if (options.showDateRanges && secondaryDateRanges.length > 0) {
+        secondaryDateRanges.forEach(chip => {
+            const dateChip = createDateChip(chip.range, chip.key, chip.icon, chip.iconDouble, chip.text, chip.textDouble);
+            dateChip.className = 'settings-dropdown-item date-chip';
+            dropdownContent.appendChild(dateChip);
+        });
+    }
+    
+    // Add divider if we have both date ranges and actions
+    if (options.showDivider && options.showDateRanges && secondaryDateRanges.length > 0 && 
+        (options.actions.darkMode.enabled || options.actions.statsToggle.enabled)) {
+        const divider = document.createElement('div');
+        divider.className = 'dropdown-divider';
+        dropdownContent.appendChild(divider);
+    }
+    
+    // Add action buttons if enabled
+    if (options.actions.darkMode.enabled) {
+        const darkModeItem = document.createElement('button');
+        darkModeItem.className = 'settings-dropdown-item settings-action-item';
+        darkModeItem.innerHTML = '<i class="fas fa-moon"></i> <span>Dark Mode</span>';
+        darkModeItem.id = 'darkModeToggle';
+        dropdownContent.appendChild(darkModeItem);
+    }
+    
+    if (options.actions.statsToggle.enabled) {
+        const statsItem = document.createElement('button');
+        statsItem.className = 'settings-dropdown-item settings-action-item';
+        statsItem.innerHTML = '<i class="fas fa-chart-line"></i> <span>Show Stats</span>';
+        statsItem.id = 'statsToggle';
+        dropdownContent.appendChild(statsItem);
+    }
+    
+    // Add dropdown elements to container
+    dropdownContainer.appendChild(dropdownButton);
+    dropdownContainer.appendChild(dropdownContent);
+    
+    // Add click handler for dropdown toggle
+    dropdownButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        // Position dropdown relative to button and append to body
+        const rect = dropdownButton.getBoundingClientRect();
+        dropdownContent.style.position = 'fixed';
+        dropdownContent.style.top = (rect.bottom + 4) + 'px';
+        dropdownContent.style.left = rect.left + 'px';
+        dropdownContent.style.right = 'auto';
+        
+        // Move to body to escape header stacking context
+        document.body.appendChild(dropdownContent);
+        dropdownContent.classList.add('show');
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function closeDropdown(event) {
+            if (!dropdownContainer.contains(event.target) && !dropdownContent.contains(event.target)) {
+                dropdownContent.classList.remove('show');
+                // Move back to original container
+                dropdownContainer.appendChild(dropdownContent);
+                // Reset positioning
+                dropdownContent.style.position = 'absolute';
+                dropdownContent.style.top = '100%';
+                dropdownContent.style.left = '0';
+                dropdownContent.style.right = 'auto';
+                document.removeEventListener('click', closeDropdown);
+            }
+        });
+    });
+    
+    return dropdownContainer;
+}
+
+/**
  * Creates a data chip element with icon and value
  * @param {string} id - The ID for the span element
  * @param {string} iconClass - The Font Awesome icon class
@@ -561,8 +728,8 @@ function createSearchContainer(config = null) {
         updateButtonKey: 'update',
         includeCategories: true,
         includeResults: true,
-        includeDarkMode: true,
-        includeStatsToggle: true,
+        includeDarkMode: false,
+        includeStatsToggle: false,
         // Override with provided config
         ...(config || {})
     };
@@ -676,38 +843,6 @@ function createSearchContainer(config = null) {
         resultsContainer.appendChild(updateButton);
     }
     
-    // Add dark mode toggle if configured
-    if (options.includeDarkMode) {
-        const darkModeToggle = document.createElement('button');
-        darkModeToggle.id = 'darkModeToggle';
-        
-        darkModeToggle.title = window.I18n.translate('darkModeTooltip');
-        darkModeToggle.setAttribute('data-i18n-title', 'darkModeTooltip');
-        
-        const darkModeIcon = document.createElement('span');
-        darkModeIcon.className = 'icon';
-        darkModeIcon.innerHTML = '<i class="fas fa-moon"></i>';
-        
-        darkModeToggle.appendChild(darkModeIcon);
-        resultsContainer.appendChild(darkModeToggle);
-    }
-    
-    // Add stats toggle if configured
-    if (options.includeStatsToggle) {
-        const statsToggle = document.createElement('button');
-        statsToggle.id = 'statsToggle';
-        
-        statsToggle.title = window.I18n.translate('statsTooltip');
-        statsToggle.setAttribute('data-i18n-title', 'statsTooltip');
-        
-        const statsIcon = document.createElement('span');
-        statsIcon.className = 'icon';
-        statsIcon.innerHTML = '<i class="fas fa-chart-line"></i>';
-        
-        statsToggle.appendChild(statsIcon);
-        resultsContainer.appendChild(statsToggle);
-    }
-    
     // Add any custom elements if provided
     if (options.customElements && Array.isArray(options.customElements)) {
         options.customElements.forEach(el => {
@@ -723,65 +858,16 @@ function createSearchContainer(config = null) {
 }
 
 /**
- * Component Registry for header components
- * This registry allows registration of custom component factories
+ * Component Registry - simple lookup table for component factories
  */
 const ComponentRegistry = {
-    // Store registered component factories
-    _factories: {
-        'logoContainer': createLogoContainer,
-        'dataContainer': createDataContainer,
-        'thingSpeakLinks': createThingSpeakLinks,
-        'dateRanges': createDateRanges,
-        'searchContainer': createSearchContainer,
-        'weatherPill': createWeatherPill,
-        'sunEventChip': createSunEventChip,
-        'dataChip': createDataChip,
-    },
-    
-    /**
-     * Register a new component factory
-     * @param {string} type - Component type identifier
-     * @param {Function} factory - Factory function that creates the component
-     */
-    register: function(type, factory) {
-        if (typeof factory !== 'function') {
-            return;
-        }
-        
-        this._factories[type] = factory;
-    },
-    
-    /**
-     * Create a component using the registered factory
-     * @param {string} type - Component type identifier
-     * @param {Object} config - Configuration for the component
-     * @returns {HTMLElement} The created component
-     */
-    create: function(type, config) {
-        if (!this._factories[type]) {
-            return null;
-        }
-        
-        return this._factories[type](config);
-    },
-    
-    /**
-     * Check if a component type is registered
-     * @param {string} type - Component type identifier
-     * @returns {boolean} True if the component type is registered
-     */
-    hasType: function(type) {
-        return !!this._factories[type];
-    },
-    
-    /**
-     * Get all registered component types
-     * @returns {string[]} Array of registered component types
-     */
-    getTypes: function() {
-        return Object.keys(this._factories);
-    }
+    'logoContainer': createLogoContainer,
+    'dataContainer': createDataContainer,
+    'thingSpeakLinks': createThingSpeakLinks,
+    'dateRanges': createDateRanges,
+    'actionButtons': createActionButtons,
+    'settingsDropdown': createSettingsDropdown,
+    'searchContainer': createSearchContainer
 };
 
 
@@ -1017,10 +1103,8 @@ const HeaderController = {
                 componentElement.remove();
                 
                 // Create the new component
-                const newComponent = ComponentRegistry.create(
-                    this._config.components[componentKey].type,
-                    this._config.components[componentKey].config
-                );
+                const createFunction = ComponentRegistry[this._config.components[componentKey].type];
+                const newComponent = createFunction ? createFunction(this._config.components[componentKey].config) : null;
                 
                 if (newComponent) {
                     // Add component key as a data attribute
@@ -1065,7 +1149,8 @@ const HeaderController = {
             if (!componentConfig) return;
             
             // Create the component using the registry
-            const component = ComponentRegistry.create(componentConfig.type, componentConfig.config);
+            const createFunction = ComponentRegistry[componentConfig.type];
+            const component = createFunction ? createFunction(componentConfig.config) : null;
             
             if (component) {
                 // Add component key as a data attribute for potential dynamic updates

@@ -217,6 +217,102 @@
     white-space: nowrap; /* Keep on one line */
 }
 
+/* Action buttons container styling */
+.action-buttons {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex: 0 0 auto; /* Don't grow or shrink */
+}
+
+/* Settings dropdown styling */
+.settings-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.settings-dropdown-button {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.settings-dropdown-button:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.settings-dropdown-content {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 100%;
+    background-color: white;
+    width: auto;
+    padding: 4px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    border: 1px solid #dee2e6;
+    z-index: 9999;
+    margin-top: 4px;
+}
+
+.settings-dropdown-content.show {
+    display: block;
+}
+
+.settings-dropdown-item {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 40px;
+    height: 40px;
+    margin: 4px;
+    border: none;
+    background: none !important;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    border-radius: 0 !important;
+    font-size: 16px;
+    color: #495057;
+    box-shadow: none !important;
+    outline: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+}
+
+.settings-dropdown-item:hover {
+    color: #007bff;
+    background: none !important;
+}
+
+.settings-dropdown-item.date-chip {
+    color: #495057;
+}
+
+.settings-dropdown-item.date-chip:hover {
+    color: #007bff;
+    background: none !important;
+}
+
+.settings-dropdown-item.date-chip.active {
+    color: #007bff;
+    font-weight: bold;
+}
+
+.settings-dropdown-item.date-chip.active:hover {
+    color: #0056b3;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background-color: #dee2e6;
+    margin: 4px 0;
+}
+
 /* Search container styling */
 .search-container {
     display: flex;
