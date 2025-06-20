@@ -307,6 +307,14 @@
     color: #0056b3;
 }
 
+.settings-dropdown-item.settings-action-item {
+    color: #495057 !important;
+}
+
+.settings-dropdown-item.settings-action-item:hover {
+    color: #007bff !important;
+}
+
 .dropdown-divider {
     height: 1px;
     background-color: #dee2e6;

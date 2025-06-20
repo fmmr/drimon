@@ -192,7 +192,7 @@ function createSettingsDropdown(config = null) {
     if (options.actions.darkMode.enabled) {
         const darkModeItem = document.createElement('button');
         darkModeItem.className = 'settings-dropdown-item settings-action-item';
-        darkModeItem.innerHTML = '<i class="fas fa-moon"></i> <span>Dark Mode</span>';
+        darkModeItem.innerHTML = '<i class="fas fa-moon"></i>';
         darkModeItem.id = 'darkModeToggle';
         dropdownContent.appendChild(darkModeItem);
     }
@@ -200,7 +200,7 @@ function createSettingsDropdown(config = null) {
     if (options.actions.statsToggle.enabled) {
         const statsItem = document.createElement('button');
         statsItem.className = 'settings-dropdown-item settings-action-item';
-        statsItem.innerHTML = '<i class="fas fa-chart-line"></i> <span>Show Stats</span>';
+        statsItem.innerHTML = '<i class="fas fa-chart-line"></i>';
         statsItem.id = 'statsToggle';
         dropdownContent.appendChild(statsItem);
     }
@@ -218,17 +218,30 @@ function createSettingsDropdown(config = null) {
         const rect = dropdownButton.getBoundingClientRect();
         dropdownContent.style.position = 'fixed';
         dropdownContent.style.top = (rect.bottom + 4) + 'px';
-        dropdownContent.style.left = rect.left + 'px';
-        dropdownContent.style.right = 'auto';
+        
+        // In dashboard mode, align to right edge of button
+        if (window.Utils && window.Utils.isDashboardMode()) {
+            dropdownContent.style.right = (window.innerWidth - rect.right) + 'px';
+            dropdownContent.style.left = 'auto';
+        } else {
+            dropdownContent.style.left = rect.left + 'px';
+            dropdownContent.style.right = 'auto';
+        }
         
         // Move to body to escape header stacking context
         document.body.appendChild(dropdownContent);
         dropdownContent.classList.add('show');
         
+        // Add dashboard class if we're in dashboard mode
+        if (window.Utils && window.Utils.isDashboardMode()) {
+            dropdownContent.classList.add('dashboard-dropdown');
+        }
+        
         // Close dropdown when clicking outside
         document.addEventListener('click', function closeDropdown(event) {
             if (!dropdownContainer.contains(event.target) && !dropdownContent.contains(event.target)) {
                 dropdownContent.classList.remove('show');
+                dropdownContent.classList.remove('dashboard-dropdown');
                 // Move back to original container
                 dropdownContainer.appendChild(dropdownContent);
                 // Reset positioning
