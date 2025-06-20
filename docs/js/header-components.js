@@ -547,180 +547,17 @@ function createDateRanges(config = null) {
     const dateRanges = document.createElement('div');
     dateRanges.className = 'date-ranges';
     
-    // If no config is provided, use default date ranges
-    const allRanges = config && config.ranges || []
-    const configSecondaryRanges = config && config.secondaryRanges || []
-    
-    // Split into primary (visible as chips) and secondary (in dropdown) ranges
-    const primaryRanges = allRanges.slice(0, 6); // First 6 ranges as visible chips
-    const secondaryRanges = [...allRanges.slice(6), ...configSecondaryRanges];  // Remaining ranges + explicit secondary
+    // Get primary date ranges from top-level config
+    const primaryRanges = window.headerConfigs ? 
+        (window.Utils.isDashboardMode() ? 
+            window.headerConfigs.dashboard.primaryDateRanges : 
+            window.headerConfigs.regular.primaryDateRanges) : [];
     
     // Add primary date chips directly to the container
     primaryRanges.forEach(chip => {
         const dateChip = createDateChip(chip.range, chip.key, chip.icon, chip.iconDouble, chip.text, chip.textDouble);
         dateRanges.appendChild(dateChip);
     });
-    
-    // Create a dropdown for additional date ranges
-    if (secondaryRanges.length > 0) {
-        const dropdownContainer = document.createElement('div');
-        dropdownContainer.className = 'date-dropdown';
-        
-        // Create dropdown button
-        const dropdownButton = document.createElement('button');
-        dropdownButton.className = 'date-dropdown-button';
-        // Show different icon if no primary ranges (dashboard mode - settings dropdown)
-        if (primaryRanges.length === 0) {
-            dropdownButton.innerHTML = '<i class="fas fa-cog"></i>';
-            dropdownButton.title = 'Settings';
-        } else {
-            dropdownButton.innerHTML = '<i class="fas fa-ellipsis-h"></i>';
-            dropdownButton.title = 'More date ranges';
-        }
-        
-        // Create dropdown content
-        const dropdownContent = document.createElement('div');
-        dropdownContent.className = 'date-dropdown-content';
-        
-        // Add secondary ranges to dropdown
-        secondaryRanges.forEach(chip => {
-            const dateChip = createDateChip(chip.range, chip.key, chip.icon, chip.iconDouble, chip.text, chip.textDouble);
-            dateChip.className = 'date-dropdown-item date-chip'; // Keep date-chip class for event handling
-            dropdownContent.appendChild(dateChip);
-        });
-        
-        // Add settings buttons if no primary ranges (dashboard mode)
-        if (primaryRanges.length === 0) {
-            // Add divider
-            const divider = document.createElement('div');
-            divider.className = 'dropdown-divider';
-            dropdownContent.appendChild(divider);
-            
-            // Add dark mode toggle
-            const darkModeItem = document.createElement('button');
-            darkModeItem.className = 'date-dropdown-item settings-item';
-            darkModeItem.innerHTML = '<i class="fas fa-moon"></i> <span>Dark Mode</span>';
-            darkModeItem.id = 'darkModeToggle';
-            dropdownContent.appendChild(darkModeItem);
-            
-            // Add stats toggle
-            const statsItem = document.createElement('button');
-            statsItem.className = 'date-dropdown-item settings-item';
-            statsItem.innerHTML = '<i class="fas fa-chart-line"></i> <span>Show Stats</span>';
-            statsItem.id = 'statsToggle';
-            dropdownContent.appendChild(statsItem);
-        }
-        
-        // Add dropdown elements to container
-        dropdownContainer.appendChild(dropdownButton);
-        dropdownContainer.appendChild(dropdownContent);
-        dateRanges.appendChild(dropdownContainer);
-        
-        // Function to handle dropdown positioning and display
-        const handleDropdownEvent = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Get button position
-            const buttonRect = dropdownButton.getBoundingClientRect();
-            
-            // Position dropdown - account for mobile specific adjustments
-            const isMobile = window.matchMedia('(max-width: 768px)').matches;
-            
-            // Set initial position
-            dropdownContent.style.top = (buttonRect.bottom + 5) + 'px';
-            dropdownContent.style.left = buttonRect.left + 'px';
-            
-            // Adjust for mobile
-            if (isMobile) {
-                // Get viewport dimensions
-                const viewportWidth = window.innerWidth;
-                const viewportHeight = window.innerHeight;
-                const dropdownWidth = 150; // Approximate width
-                const dropdownHeight = 200; // Approximate max height
-
-                // First, try to position to the right of the button
-                let leftPos = buttonRect.left;
-
-                // Check if dropdown would go off right edge
-                if (leftPos + dropdownWidth > viewportWidth) {
-                    // Align to right edge of viewport with padding
-                    leftPos = viewportWidth - dropdownWidth - 10;
-                }
-
-                // Ensure it's not off the left edge
-                leftPos = Math.max(10, leftPos);
-
-                // Determine if we should show dropdown above or below
-                let topPos = buttonRect.bottom + 5;
-                let useTop = true;
-
-                // If would extend below visible area, try to position above button
-                if (topPos + dropdownHeight > viewportHeight) {
-                    const abovePos = buttonRect.top - dropdownHeight - 5;
-                    // Only position above if there's enough room
-                    if (abovePos > 0) {
-                        topPos = abovePos;
-                        useTop = true;
-                    }
-                    // If there's not enough room above or below, position at top of screen
-                    // and let it scroll if needed
-                    else if (topPos + dropdownHeight > viewportHeight) {
-                        topPos = 60; // Position below header
-                        useTop = true;
-                    }
-                }
-
-                // Apply the calculated position
-                dropdownContent.style.left = leftPos + 'px';
-
-                if (useTop) {
-                    dropdownContent.style.top = topPos + 'px';
-                    dropdownContent.style.bottom = 'auto';
-                } else {
-                    dropdownContent.style.top = 'auto';
-                    dropdownContent.style.bottom = (viewportHeight - buttonRect.top + 5) + 'px';
-                }
-            }
-            
-            // Toggle dropdown
-            dropdownContent.classList.toggle('show');
-        };
-        
-        // Toggle dropdown on button click
-        dropdownButton.addEventListener('click', (e) => {
-            handleDropdownEvent(e);
-            
-            // Close dropdown when clicking outside
-            document.addEventListener('click', function closeDropdown(event) {
-                if (!dropdownContainer.contains(event.target)) {
-                    dropdownContent.classList.remove('show');
-                    document.removeEventListener('click', closeDropdown);
-                }
-            });
-        });
-        
-        // For better touch handling on mobile
-        if ('ontouchstart' in window) {
-            // Add touchstart event for faster response on mobile
-            dropdownButton.addEventListener('touchstart', (e) => {
-                // Prevent any parent elements from scrolling
-                e.preventDefault();
-                handleDropdownEvent(e);
-            });
-
-            // Add click event as a fallback
-            dropdownButton.addEventListener('click', (e) => {
-                e.preventDefault();
-                e.stopPropagation();
-
-                // Ensure dropdown is positioned above all content
-                dropdownContent.style.zIndex = '9999';
-
-                handleDropdownEvent(e);
-            });
-        }
-    }
     
     return dateRanges;
 }
@@ -739,7 +576,7 @@ function createSearchContainer(config = null) {
         // Default options
         resultsPlaceholder: 'results',
         updateButtonKey: 'update',
-        includeCategories: true,
+        includeSortDropdown: true,
         includeResults: true,
         includeDarkMode: false,
         includeStatsToggle: false,
@@ -748,7 +585,7 @@ function createSearchContainer(config = null) {
     };
 
     // Create categories/sort container for desktop and mobile view
-    if (options.includeCategories) {
+    if (options.includeSortDropdown) {
         // Create sort container
         const sortContainer = document.createElement('div');
         sortContainer.className = 'sort-container';
