@@ -147,6 +147,15 @@
     margin-left: 0; /* Remove left margin */
 }
 
+/* Smaller chart stats font in dashboard mode */
+.dashboard-mode .chart-stat {
+    font-size: 8px;
+}
+
+.dashboard-mode .chart-stat-symbol {
+    font-size: 8px;
+}
+
 /* Settings dropdown styling for dashboard */
 .dashboard-header .date-dropdown-content {
     right: 0 !important; /* Align to right edge instead of left */
