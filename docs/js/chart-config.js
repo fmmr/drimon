@@ -244,13 +244,20 @@ const RAW_CHART_CONFIGS = [
                 titleKey: 'cucumber',
                 channel: window.THINGSPEAK.TEMP_CHANNEL,
                 field: 3,
-                color: '#e67e22'
+                color: '#e67e22',
+                dataFilter: {
+                    max: 50,
+                    exclude: [-127]
+                }
             },
             {
                 titleKey: 'padron',
                 channel: window.THINGSPEAK.TEMP_CHANNEL,
                 field: 5,
-                color: '#9b59b6'
+                color: '#9b59b6',
+                dataFilter: {
+                    exclude: [-127]
+                }
             }
         ],
         row: 2,
@@ -281,7 +288,10 @@ const RAW_CHART_CONFIGS = [
                 titleKey: 'floor',
                 channel: window.THINGSPEAK.TEMP_CHANNEL,
                 field: 4,
-                color: '#2980b9'
+                color: '#2980b9',
+                dataFilter: {
+                    exclude: [-127]
+                }
             }
         ],
         row: 2,

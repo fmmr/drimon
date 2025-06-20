@@ -144,7 +144,9 @@ async function fetchTimeRangeData(config, startDateStr, endDateStr, results = DE
                     series.field,
                     startDateStr,
                     endDateStr,
-                    seriesResults
+                    seriesResults,
+                    series.title,
+                    series.dataFilter
                 );
             });
             
@@ -232,14 +234,16 @@ async function fetchTimeRangeData(config, startDateStr, endDateStr, results = DE
             };
         }
     } else {
-        // Single series - use original code
+        // Single series - use original code, pass dataFilter from first series if available
+        const dataFilter = (config.series && config.series[0] && config.series[0].dataFilter) || null;
         return fetchSingleSeries(
             config.channel, 
             config.field, 
             startDateStr, 
             endDateStr, 
             results,
-            config.title
+            config.title,
+            dataFilter
         );
     }
 }
@@ -252,13 +256,16 @@ async function fetchTimeRangeData(config, startDateStr, endDateStr, results = DE
  * @param {string} endDateStr - End date
  * @param {number} results - Maximum results
  * @param {string} title - Optional title
+ * @param {Object} dataFilter - Optional data filtering config
  * @returns {Promise<Object>} - ThingSpeak API response
  */
-async function fetchSingleSeries(channel, field, startDateStr, endDateStr, results, title = "") {
+async function fetchSingleSeries(channel, field, startDateStr, endDateStr, results, title = "", dataFilter = null) {
+    let data;
+    
     // Check if DataRequestManager is available (should be loaded in index.html)
     if (window.DataRequestManager) {
         // Use optimized request manager
-        return window.DataRequestManager.fetchData({
+        data = await window.DataRequestManager.fetchData({
             channel,
             field,
             start: startDateStr,
@@ -287,17 +294,54 @@ async function fetchSingleSeries(channel, field, startDateStr, endDateStr, resul
                 throw new Error(`API responded with status ${response.status}`);
             }
             
-            const data = await response.json();
-            return data;
+            data = await response.json();
         } catch (error) {
             // Failed to fetch data - return empty data structure rather than null to avoid further errors
-            return {
+            data = {
                 channel: channel,
                 field: field,
                 feeds: []
             };
         }
     }
+    
+    // Apply data filtering if configured
+    if (dataFilter && data && data.feeds && Array.isArray(data.feeds)) {
+        const fieldName = `field${field}`;
+        data.feeds = data.feeds.filter(feed => {
+            const rawValue = feed[fieldName];
+            if (rawValue === null || rawValue === undefined || rawValue === '') {
+                return false;
+            }
+            
+            const numValue = parseFloat(rawValue);
+            if (isNaN(numValue)) {
+                return false;
+            }
+            // Check exclude list - handle both exact matches and rounded values
+            if (dataFilter.exclude && dataFilter.exclude.length > 0) {
+                for (const excludeValue of dataFilter.exclude) {
+                    if (Math.abs(numValue - excludeValue) < 0.001) {
+                        return false;
+                    }
+                }
+            }
+            
+            // Check min threshold
+            if (dataFilter.min !== undefined && numValue < dataFilter.min) {
+                return false;
+            }
+            
+            // Check max threshold
+            if (dataFilter.max !== undefined && numValue > dataFilter.max) {
+                return false;
+            }
+            
+            return true;
+        });
+    }
+    
+    return data;
 }
 
 /**
@@ -306,249 +350,12 @@ async function fetchSingleSeries(channel, field, startDateStr, endDateStr, resul
  * @param {Object} data - Raw data from ThingSpeak API
  * @returns {Object} - Processed data ready for chart rendering
  */
-function processChartData(config, data) {
-    // Check if we have valid data
-    if (!data || !data.feeds || data.feeds.length === 0) {
-        return {
-            valid: false,
-            message: 'Ingen data tilgjengelig'
-        };
-    }
-    
-    let datasets = [];
-    let filteredValues = [];
-    let timestamps = [];
-    let minValue = Infinity;
-    let maxValue = -Infinity;
-    let avgValue = 0;
-    let hasNegativeValues = false;
-    let secondaryAxisValues = [];
-    
-    // Check if we need to apply data transformation
-    const dataTransform = config.dataTransform || null;
-    
-    // Process multi-series data
-    if (data.is_multi_series) {
-        if (!data.series || data.series.length === 0 || data.series[0].feeds.length === 0) {
-            return {
-                valid: false,
-                message: 'Ingen gyldige dataverdier'
-            };
-        }
-        
-        // Use timestamps from first series for consistency
-        timestamps = data.series[0].feeds.map(feed => feed.created_at);
-        
-        // Process each series data
-        data.series.forEach(series => {
-            // Get values for this series
-            let seriesValues = series.feeds.map(feed => parseFloat(feed[`field${series.field}`]));
-            
-            // Apply data transformation if configured
-            if (dataTransform) {
-                seriesValues = applyDataTransformation(seriesValues, dataTransform);
-            }
-            
-            const seriesFiltered = seriesValues.filter(v => !isNaN(v));
-            
-            // Skip empty series
-            if (seriesFiltered.length === 0) return;
-            
-            // Check for negative values
-            if (seriesFiltered.some(v => v < 0)) {
-                hasNegativeValues = true;
-            }
-            
-            // Track values for second axis if needed
-            if (series.axis === 'y1') {
-                secondaryAxisValues = secondaryAxisValues.concat(seriesFiltered);
-            }
-            
-            // Update min/max values
-            const seriesMin = Math.min(...seriesFiltered);
-            const seriesMax = Math.max(...seriesFiltered);
-            minValue = Math.min(minValue, seriesMin);
-            maxValue = Math.max(maxValue, seriesMax);
-            
-            // Add to filtered values for overall stats
-            filteredValues = filteredValues.concat(seriesFiltered);
-            
-            // Create dataset for this series
-            const yAxisID = series.axis || 'y';
-            
-            // Use titleKey for translation if available
-            let label = series.title;
-            if (series.titleKey && window.I18n && typeof window.I18n.translate === 'function') {
-                label = window.I18n.translate(series.titleKey);
-            }
-            
-            datasets.push({
-                label: label,
-                data: seriesValues,
-                borderColor: series.color,
-                backgroundColor: `${series.color}20`,
-                borderWidth: 2,
-                pointRadius: 0,
-                pointHoverRadius: 4,
-                fill: false,
-                tension: 0.1,
-                yAxisID: yAxisID, // Explicitly set the y-axis ID
-                titleKey: series.titleKey // Store titleKey for future translation updates
-            });
-        });
-    } else {
-        // Handle single series data
-        let values = data.feeds.map(feed => parseFloat(feed[`field${config.field}`]));
-        
-        // Apply data transformation if configured
-        if (dataTransform) {
-            values = applyDataTransformation(values, dataTransform);
-        }
-        
-        hasNegativeValues = values.some(v => v < 0);
-        
-        // Calculate data range for better scaling
-        filteredValues = values.filter(v => !isNaN(v));
-        
-        if (filteredValues.length === 0) {
-            return {
-                valid: false,
-                message: 'Ingen gyldige dataverdier'
-            };
-        }
-        
-        minValue = Math.min(...filteredValues);
-        maxValue = Math.max(...filteredValues);
-        
-        // Store timestamps for cross-chart syncing
-        timestamps = data.feeds.map(feed => feed.created_at);
-        
-        // Create dataset for single series
-        // Use titleKey for translation if available
-        let label = config.title;
-        if (config.titleKey && window.I18n && typeof window.I18n.translate === 'function') {
-            label = window.I18n.translate(config.titleKey);
-        }
-        
-        datasets.push({
-            label: label,
-            data: values,
-            borderColor: config.color,
-            backgroundColor: hasNegativeValues ? 'rgba(0,0,0,0)' : `${config.color}20`,
-            borderWidth: 2,
-            pointRadius: 0,
-            pointHoverRadius: 4,
-            fill: !hasNegativeValues,
-            tension: 0.1,
-            yAxisID: 'y', // Always use primary y-axis for single series
-            titleKey: config.titleKey // Store titleKey for future translation updates
-        });
-    }
-    
-    /**
-     * Applies data transformations to an array of values
-     * 
-     * Supported transformations:
-     * - shiftBy: Number - Shifts all data points by the specified amount
-     * 
-     * Example config:
-     * ```javascript
-     * dataTransform: {
-     *   shiftBy: -63  // Shift all values down by 63 units
-     * }
-     * ```
-     * 
-     * @param {number[]} values - Array of data values
-     * @param {Object} transform - Transformation configuration
-     * @returns {number[]} - Transformed values
-     */
-    function applyDataTransformation(values, transform) {
-        if (!values || !Array.isArray(values) || !transform) {
-            return values;
-        }
-        
-        return values.map(value => {
-            if (isNaN(value)) return value;
-            
-            // Apply shift transformation
-            if (transform.shiftBy !== undefined) {
-                return value + transform.shiftBy;
-            }
-            
-            // Can add more transformation types here in the future
-            
-            return value;
-        });
-    }
-    
-    // Calculate average across all series
-    const sum = filteredValues.reduce((acc, val) => acc + val, 0);
-    avgValue = filteredValues.length > 0 ? sum / filteredValues.length : 0;
-    
-    // Add 5% padding to min/max values to prevent data points from touching edges
-    const range = maxValue - minValue;
-    
-    // Handle case where min and max are identical or very small range
-    const paddingAmount = range < 0.1 ? (Math.abs(minValue) * 0.05 || 0.1) : range * 0.05;
-    
-    // Don't go below zero for non-negative data sets
-    const paddedMinValue = hasNegativeValues ? minValue - paddingAmount : Math.max(0, minValue - paddingAmount);
-    const paddedMaxValue = maxValue + paddingAmount;
-    
-    // Secondary axis ranges
-    let secondaryAxisMin, secondaryAxisMax;
-    if (secondaryAxisValues.length > 0) {
-        secondaryAxisMin = Math.min(...secondaryAxisValues);
-        secondaryAxisMax = Math.max(...secondaryAxisValues);
-        
-        // Add 5% padding
-        const secondaryPadding = (secondaryAxisMax - secondaryAxisMin) * 0.05;
-        secondaryAxisMin = Math.max(0, secondaryAxisMin - secondaryPadding);
-        secondaryAxisMax = secondaryAxisMax + secondaryPadding;
-    }
-    
-    // Apply chart config minimum value if provided
-    let adjustedMinValue = config.minValue !== undefined ? 
-                           Math.max(config.minValue, minValue) : 
-                           minValue;
-    
-    // Current value (for single series charts)
-    const currentValue = filteredValues.length > 0 ? 
-                         filteredValues[filteredValues.length - 1] : 
-                         null;
-    
-    return {
-        valid: true,
-        chartId: config.id,
-        timestamps: timestamps,
-        datasets: datasets,
-        filteredValues: filteredValues,
-        minValue: minValue,
-        maxValue: maxValue,
-        avgValue: avgValue,
-        adjustedMinValue: adjustedMinValue,
-        currentValue: currentValue,
-        paddedMinValue: paddedMinValue,
-        paddedMaxValue: paddedMaxValue,
-        hasNegativeValues: hasNegativeValues,
-        isMultiSeries: data.is_multi_series,
-        secondaryAxisMin: secondaryAxisMin,
-        secondaryAxisMax: secondaryAxisMax,
-        series: data.series, // Pass through series data for multi-series charts
-        category: config.category,
-        unit: config.unit || ''
-    };
-}
 
 
 // Export functions
 if (typeof window !== 'undefined') {
     // Browser environment
     window.DataComponents = {
-        fetchChartData,
-        fetchTimeRangeData,
-        fetchSingleSeries,
-        processChartData,
-        clearCache: () => dataCache.clear()
+        fetchChartData
     };
 }
