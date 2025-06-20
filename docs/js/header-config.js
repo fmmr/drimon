@@ -43,7 +43,7 @@ const DEFAULT_HEADER_CONFIG = {
             type: 'dataContainer',
             config: {
                 chips: [
-                    { id: 'time', type: 'timeChip' }, // MOVED from logo - first position
+                    { id: 'time-since', icon: 'fas fa-clock', titleKey: 'time' }, // MOVED from logo - first position
                     { id: 'temperature', icon: 'fas fa-thermometer-half', titleKey: 'temperature' },
                     { id: 'weather', type: 'weatherPill' },
                     { id: 'sunEvents', type: 'sunEventChip' },

@@ -13,7 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const isDashboardMode = window.Utils.isDashboardMode();
     
     // Create the header using appropriate config
-    const header = isDashboardMode ? createHeader(DashboardHeaderConfig) : createHeader();
+    const header = isDashboardMode ? createHeader(window.headerConfigs.dashboard) : createHeader(window.headerConfigs.regular);
     
     // Mount the header to the DOM
     headerMountPoint.appendChild(header);

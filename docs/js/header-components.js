@@ -18,8 +18,6 @@ function createLogoContainer(config = null) {
         logoAlt: 'DriMon',
         logoClassName: 'logo',
         logoId: 'main-title',
-        showTimeIndicator: true,
-        timeKey: 'time',
         customClasses: '',
         // Override with provided config
         ...(config || {})
@@ -51,27 +49,32 @@ function createLogoContainer(config = null) {
     controlsContainer.className = 'mobile-header-controls';
     logoContainer.appendChild(controlsContainer);
     
-    // Add time indicator pill if configured
-    if (options.showTimeIndicator) {
-        const timePill = document.createElement('div');
-        timePill.className = 'data-chip time-pill';
-        timePill.setAttribute('data-has-tooltip', 'true');
-        
-        // Add clock icon
-        const timeIcon = document.createElement('i');
-        timeIcon.className = 'fas fa-clock mr-1';
-        timePill.appendChild(timeIcon);
-        
-        // Add time display (will show HH:MM instead of "X minutes ago")
-        const timeSpan = document.createElement('span');
-        timeSpan.id = 'time-since';
-        timeSpan.textContent = '--:--';
-        
-        timePill.appendChild(timeSpan);
-        logoContainer.appendChild(timePill);
-    }
     
     return logoContainer;
+}
+
+/**
+ * Creates a time chip element for displaying current time
+ * @returns {HTMLElement} The time chip element  
+ */
+function createTimeChip() {
+    const timePill = document.createElement('div');
+    timePill.className = 'data-chip time-pill';
+    timePill.setAttribute('data-has-tooltip', 'true');
+    
+    // Add clock icon
+    const timeIcon = document.createElement('i');
+    timeIcon.className = 'fas fa-clock mr-1';
+    timePill.appendChild(timeIcon);
+    
+    // Add time display (will show HH:MM instead of "X minutes ago")
+    const timeSpan = document.createElement('span');
+    timeSpan.id = 'time-since';
+    timeSpan.textContent = '--:--';
+    
+    timePill.appendChild(timeSpan);
+    
+    return timePill;
 }
 
 /**
@@ -733,7 +736,7 @@ const ComponentRegistry = {
         'searchContainer': createSearchContainer,
         'weatherPill': createWeatherPill,
         'sunEventChip': createSunEventChip,
-        'dataChip': createDataChip
+        'dataChip': createDataChip,
     },
     
     /**
@@ -781,22 +784,6 @@ const ComponentRegistry = {
     }
 };
 
-// All available date ranges used by both regular and dashboard headers
-const AllDateRanges = [
-    { range: 'default', key: 'defaultDate', icon: 'fas fa-home' },
-    { range: '1', key: 'twoDay', icon: 'fas fa-2' },
-    { range: '2', key: 'threeDay', icon: 'fas fa-3' },
-    { range: '6', key: 'sevenDay', icon: 'fas fa-7' },
-    { range: '13', key: 'fourteenDay', iconDouble: ['fas fa-1', 'fas fa-4'] },
-    { range: '30', key: 'thirtyDay', iconDouble: ['fas fa-3', 'fas fa-0'] },
-    { range: 'today', key: 'today', icon: 'fas fa-calendar-day' },
-    { range: 'yesterday', key: 'yesterday', iconDouble: ['fas fa-step-backward', 'fas fa-calendar-day'] },
-    { range: 'this-week', key: 'week', icon: 'fas fa-calendar-week' },
-    { range: 'last-week', key: 'lastWeek', iconDouble: ['fas fa-step-backward', 'fas fa-calendar-week'] },
-    { range: 'this-month', key: 'month', icon: 'fas fa-calendar-alt' },
-    { range: 'last-month', key: 'lastMonth', iconDouble: ['fas fa-step-backward', 'fas fa-calendar-alt'] },
-    { range: 'start', key: 'start', icon: 'fas fa-hourglass-start' }
-];
 
 /**
  * Header Component Configuration
@@ -1188,3 +1175,6 @@ window.HeaderComponents = {
     // Configuration
     HeaderConfig
 };
+
+// Export createHeader globally for header-controller.js
+window.createHeader = createHeader;
