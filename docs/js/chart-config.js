@@ -15,7 +15,7 @@ const DEFAULT_CHART_CONFIG = {
     },
     yAxis: {
         position: 'right',
-        beginAtZero: false,
+        min: undefined,
         gridColor: 'rgba(0, 0, 0, 0.05)',
         roundToNearest: 5,
         maxTicks: 5,
@@ -132,7 +132,6 @@ const RAW_CHART_CONFIGS = [
             shiftBy: -63
         },
         yAxis: {
-            beginAtZero: true,
             min: 0
         }
     },
@@ -163,7 +162,7 @@ const RAW_CHART_CONFIGS = [
         show_dashboard: true,
         hideLegendUnit: true,
         yAxis: {
-            beginAtZero: true,
+            min: 0,
             formatLargeNumbers: true,
             secondYAxis: true
         }

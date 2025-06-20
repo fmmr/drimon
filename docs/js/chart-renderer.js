@@ -597,7 +597,7 @@ window.UnifiedChartRenderer = {
         if (config.yAxis) {
             Object.assign(yAxisConfig, {
                 position: config.yAxis.position || yAxisConfig.position,
-                beginAtZero: config.yAxis.beginAtZero,
+                min: config.yAxis.min,
                 grid: {
                     ...yAxisConfig.grid,
                     color: config.yAxis.gridColor || yAxisConfig.grid.color
@@ -606,10 +606,14 @@ window.UnifiedChartRenderer = {
 
             yAxisConfig.afterDataLimits = (scale) => {
                 const roundToNearest = config.yAxis.roundToNearest;
-                const roundedMin = Math.floor(scale.min / roundToNearest) * roundToNearest;
-                const roundedMax = Math.ceil(scale.max / roundToNearest) * roundToNearest;
-                scale.min = roundedMin;
-                scale.max = roundedMax;
+                
+                // Only apply rounding if min/max are not explicitly set
+                if (config.yAxis.min === undefined) {
+                    scale.min = Math.floor(scale.min / roundToNearest) * roundToNearest;
+                }
+                if (config.yAxis.max === undefined) {
+                    scale.max = Math.ceil(scale.max / roundToNearest) * roundToNearest;
+                }
             };
             
             if (config.yAxis.formatLargeNumbers) {

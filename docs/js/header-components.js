@@ -821,9 +821,9 @@ const HeaderConfig = {
                     { id: 'weather', type: 'weatherPill' },
                     { id: 'sunEvents', type: 'sunEventChip' },
                     { id: 'light', icon: 'fas fa-sun', titleKey: 'light', initialText: '' },
-                    { id: 'battery', icon: 'fas fa-battery-half', titleKey: 'battery' },
+                    { id: 'window', icon: 'fas fa-window-maximize', titleKey: 'window', initialText: '' },
                     { id: 'pressure', icon: 'fas fa-compress-alt', titleKey: 'pressure' },
-                    { id: 'window', icon: 'fas fa-window-maximize', titleKey: 'window', initialText: '' }
+                    { id: 'battery', icon: 'fas fa-battery-half', titleKey: 'battery' }
                 ]
             }
         },
