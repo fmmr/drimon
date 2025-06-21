@@ -721,138 +721,6 @@ const ComponentRegistry = {
 };
 
 
-/**
- * Header Component Configuration
- * Declarative configuration for the header layout and components
- */
-const HeaderConfig = {
-    // Component definitions
-    components: {
-        logo: {
-            type: 'logoContainer',
-            config: {
-                logoUrl: 'https://github.com/fmmr/drimon',
-                logoImage: 'logos/1_100x55.webp',
-                logoAlt: 'DriMon'
-            }
-        },
-        data: {
-            type: 'dataContainer',
-            config: {
-                chips: [
-                    { id: 'temperature', icon: 'fas fa-thermometer-half', titleKey: 'temperature' },
-                    { id: 'weather', type: 'weatherPill' },
-                    { id: 'sunEvents', type: 'sunEventChip' },
-                    { id: 'light', icon: 'fas fa-sun', titleKey: 'light', initialText: '' },
-                    { id: 'window', icon: 'fas fa-window-maximize', titleKey: 'window', initialText: '' },
-                    { id: 'pressure', icon: 'fas fa-compress-alt', titleKey: 'pressure' },
-                    { id: 'battery', icon: 'fas fa-battery-half', titleKey: 'battery' }
-                ]
-            }
-        },
-        thingspeak: {
-            type: 'thingSpeakLinks',
-            config: {}
-        },
-        dateRanges: {
-            type: 'dateRanges',
-            config: {
-                ranges: AllDateRanges // First 6 will be shown as pills, rest in dropdown
-            }
-        },
-        search: {
-            type: 'searchContainer',
-            config: {
-                resultsPlaceholder: 'results',
-                updateButtonKey: 'update',
-                includeCategories: true,
-                includeResults: true,
-                includeDarkMode: true,
-                includeStatsToggle: true
-            }
-        }
-    },
-    
-    // Layout order
-    layout: ['logo', 'data', 'thingspeak', 'dateRanges', 'search'],
-    
-    // Header theme (can be custom CSS classes)
-    theme: 'modern-header',
-    
-    // Event callbacks
-    events: {
-        onLanguageChange: null,
-        onDateRangeChange: null,
-        onCategoryChange: null,
-        onDarkModeToggle: null,
-        onStatsToggle: null
-    }
-};
-
-// Dashboard-specific header config (simplified for Pi display)
-const DashboardHeaderConfig = {
-    // Component definitions
-    components: {
-        logo: {
-            type: 'logoContainer',
-            config: {
-                logoUrl: null, // No link for dashboard
-                logoImage: 'logos/1_100x55.webp',
-                logoAlt: 'DriMon',
-                showTimeIndicator: true,
-                timeKey: 'time'
-            }
-        },
-        data: {
-            type: 'dataContainer',
-            config: {
-                chips: [
-                    { id: 'temperature', icon: 'fas fa-thermometer-half', titleKey: 'temperature' },
-                    { id: 'weather', type: 'weatherPill' },
-                    { id: 'sunEvents', type: 'sunEventChip' },
-                    { id: 'light', icon: 'fas fa-sun', titleKey: 'light', initialText: '' },
-                    { id: 'battery', icon: 'fas fa-battery-half', titleKey: 'battery' },
-                    { id: 'pressure', icon: 'fas fa-compress-alt', titleKey: 'pressure' },
-                    { id: 'window', icon: 'fas fa-window-maximize', titleKey: 'window', initialText: '' }
-                ]
-            }
-        },
-        dateRanges: {
-            type: 'dateRanges',
-            config: {
-                ranges: [], // No primary ranges - all go to dropdown for dashboard
-                secondaryRanges: AllDateRanges // All ranges go to dropdown for dashboard
-            }
-        },
-        search: {
-            type: 'searchContainer',
-            config: {
-                resultsPlaceholder: 'results',
-                updateButtonKey: 'update',
-                includeCategories: false,
-                includeResults: false,
-                includeDarkMode: false, // Moved to settings dropdown
-                includeStatsToggle: false, // Moved to settings dropdown
-                includeLanguageSwitcher: false
-            }
-        }
-    },
-    
-    // Layout order (logo back, no thingspeak links, no language switcher)
-    layout: ['logo', 'data', 'dateRanges', 'search'],
-    
-    // Header theme
-    theme: 'modern-header dashboard-header',
-    
-    // Event callbacks
-    events: {
-        onLanguageChange: null,
-        onDateRangeChange: null,
-        onCategoryChange: null,
-        onDarkModeToggle: null,
-        onStatsToggle: null
-    }
-};
 
 /**
  * Creates ThingSpeak links container with links styled like date chips
@@ -1083,7 +951,7 @@ const HeaderController = {
  * @param {Object} [config] - Optional custom configuration
  * @returns {HTMLElement} The complete header element
  */
-function createHeader(config = HeaderConfig) {
+function createHeader(config) {
     // Initialize the header controller
     const controller = HeaderController.initialize(config);
     
@@ -1093,22 +961,9 @@ function createHeader(config = HeaderConfig) {
 
 // Make components available globally
 window.HeaderComponents = {
-    // Core functions
     createHeader,
-    createLogoContainer,
-    createDataContainer,
-    createDataChip,
-    createWeatherPill,
-    createDateRanges,
-    createDateChip,
-    createSearchContainer,
-    
-    // Component system
     ComponentRegistry,
-    HeaderController,
-    
-    // Configuration
-    HeaderConfig
+    HeaderController
 };
 
 // Export createHeader globally for header-controller.js
