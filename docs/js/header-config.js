@@ -27,7 +27,10 @@ const DEFAULT_HEADER_CONFIG = {
             config: {
                 logoUrl: 'https://github.com/fmmr/drimon',
                 logoImage: 'logos/1_100x55.webp',
-                logoAlt: 'DriMon'
+                logoAlt: 'DriMon',
+                logoClassName: 'logo',
+                logoId: 'main-title',
+                customClasses: ''
             }
         },
         data: {
@@ -65,11 +68,11 @@ const DEFAULT_HEADER_CONFIG = {
                 layout: 'vertical'
             }
         },
-        search: {
-            type: 'searchContainer',
+        resultsInput: {
+            type: 'resultsInput',
             config: {
-                includeSortDropdown: true,   // chart sorting (mobile only)
-                includeResults: true         // results input + update button
+                placeholderKey: 'results',
+                buttonKey: 'update'
             }
         },
         darkModeToggle: {
@@ -108,7 +111,7 @@ const DEFAULT_HEADER_CONFIG = {
     },
     
     // Layout order (single row for regular mode)
-    layout: ['logo', 'data', 'thingspeak', 'dateRanges', 'settingsDropdown', 'darkModeToggle', 'statsToggle', 'search'],
+    layout: ['logo', 'data', 'thingspeak', 'dateRanges', 'settingsDropdown', 'languageSwitcher', 'darkModeToggle', 'statsToggle', 'resultsInput'],
     
     // Header theme
     theme: 'modern-header'
@@ -170,7 +173,6 @@ const HEADER_MODE_CONFIGS = [
         layout: ['logo', 'languageSwitcher', 'darkModeToggle', 'statsToggle', 'sortDropdown'],
         layout2: ['data'],
         layout3: ['dateRanges'], 
-        layout4: ['dateRangesRow2'],
         theme: 'modern-header mobile-header'
     },
     {
@@ -238,6 +240,5 @@ window.headerConfigs = {
 window.HeaderConfigData = {
     DEFAULT_HEADER_CONFIG,
     HEADER_MODE_CONFIGS,
-    AllDateRanges,
-    mergeHeaderConfig
+    AllDateRanges
 };

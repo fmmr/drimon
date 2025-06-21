@@ -7,36 +7,25 @@
 
 /**
  * Creates the logo container element
- * @param {Object} [config] - Configuration object for logo container
+ * @param {Object} config - Configuration object for logo container
  * @returns {HTMLElement} The logo container element
  */
-function createLogoContainer(config = null) {
-    // Default configuration
-    const options = {
-        logoUrl: 'https://github.com/fmmr/drimon',
-        logoImage: 'logos/1_100x55.webp',
-        logoAlt: 'DriMon',
-        logoClassName: 'logo',
-        logoId: 'main-title',
-        customClasses: '',
-        // Override with provided config
-        ...(config || {})
-    };
+function createLogoContainer(config) {
     
     const logoContainer = document.createElement('div');
-    logoContainer.className = `logo-container ${options.customClasses}`.trim();
+    logoContainer.className = `logo-container ${config.customClasses}`.trim();
     
     // Create logo image (with or without link)
     const logoImg = document.createElement('img');
-    logoImg.src = options.logoImage;
-    logoImg.className = options.logoClassName;
-    logoImg.id = options.logoId;
-    logoImg.alt = options.logoAlt;
+    logoImg.src = config.logoImage;
+    logoImg.className = config.logoClassName;
+    logoImg.id = config.logoId;
+    logoImg.alt = config.logoAlt;
     
     // Add logo to container (wrap in link if URL provided)
-    if (options.logoUrl) {
+    if (config.logoUrl) {
         const logoLink = document.createElement('a');
-        logoLink.href = options.logoUrl;
+        logoLink.href = config.logoUrl;
         logoLink.appendChild(logoImg);
         logoContainer.appendChild(logoLink);
     } else {
@@ -84,7 +73,7 @@ function createSettingsDropdown(config) {
     
     const dateRanges = config.dateRanges;
     const actions = config.actions;
-    const actionConfigs = config.actionConfigs || {};
+    const actionConfigs = config.actionConfigs;
     const showDivider = config.showDivider;
     const layout = config.layout;
     
@@ -145,29 +134,21 @@ function createSettingsDropdown(config) {
         dropdownContent.style.position = 'fixed';
         dropdownContent.style.top = (rect.bottom + 4) + 'px';
         
-        // In dashboard mode, align to right edge of button
-        if (window.Utils && window.Utils.isDashboardMode()) {
-            dropdownContent.style.right = (window.innerWidth - rect.right) + 'px';
-            dropdownContent.style.left = 'auto';
-        } else {
-            dropdownContent.style.left = rect.left + 'px';
-            dropdownContent.style.right = 'auto';
-        }
+        // Always align to left edge of button
+        dropdownContent.style.left = rect.left + 'px';
+        dropdownContent.style.right = 'auto';
         
         // Move to body to escape header stacking context
         document.body.appendChild(dropdownContent);
         dropdownContent.classList.add('show');
         
-        // Add dashboard class if we're in dashboard mode
-        if (window.Utils && window.Utils.isDashboardMode()) {
-            dropdownContent.classList.add('dashboard-dropdown');
-        }
+        // No mode-specific classes
         
         // Close dropdown when clicking outside
         document.addEventListener('click', function closeDropdown(event) {
             if (!dropdownContainer.contains(event.target) && !dropdownContent.contains(event.target)) {
                 dropdownContent.classList.remove('show');
-                dropdownContent.classList.remove('dashboard-dropdown');
+                // No mode-specific classes to remove
                 // Move back to original container
                 dropdownContainer.appendChild(dropdownContent);
                 // Reset positioning
@@ -236,23 +217,12 @@ function createDataChip(id, iconClass, title, initialText = 'loading') {
 
 /**
  * Creates the weather data chip, restructured to match the sun-events-chip pattern
+ * @param {Object} [config] - Configuration object for weather pill
  * @returns {HTMLElement} The weather data chip element
  */
-function createWeatherPill() {
-    // Check for dashboard mode
-    function getURLParameter(name) {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get(name) || '';
-    }
-    
-    const urlDashboardMode = getURLParameter('dashboard') === 'true';
-    const isPi = (window.screen.width === 800 && window.screen.height === 480) || 
-                 (/CrOS.*x86_64/.test(navigator.userAgent) && window.screen.width <= 800);
-    const isDashboardMode = urlDashboardMode || isPi;
-    
-    // Use div for mobile, dashboard, or anchor for desktop
-    const isMobile = window.matchMedia('(max-width: 768px)').matches;
-    const useDiv = isMobile || isDashboardMode;
+function createWeatherPill(config = {}) {
+    // Always use div - no mode detection
+    const useDiv = true;
 
     // Create a single data-chip as the main container (like sun-events-chip)
     const chip = document.createElement(useDiv ? 'div' : 'a');
@@ -477,7 +447,7 @@ function createDateRanges(config = null) {
     const dateRanges = document.createElement('div');
     dateRanges.className = 'date-ranges';
     
-    const ranges = config?.ranges || [];
+    const ranges = config.ranges;
     
     ranges.forEach(chip => {
         const dateChip = createDateChip(chip.range, chip.key, chip.icon, chip.iconDouble, chip.text, chip.textDouble);
@@ -488,148 +458,33 @@ function createDateRanges(config = null) {
 }
 
 /**
- * Creates the search container with sorting and results options
- * @param {Object} [config] - Configuration object for search container
- * @returns {HTMLElement} The search container element
+ * Creates results input component with input field and update button
+ * @param {Object} config - Configuration object for results input
+ * @returns {HTMLElement} The results input element
  */
-function createSearchContainer(config = null) {
-    const searchContainer = document.createElement('div');
-    searchContainer.className = 'search-container';
+function createResultsInput(config) {
+    const container = document.createElement('div');
+    container.className = 'results-container';
     
-    // Get configuration options with defaults
-    const options = {
-        // Default options
-        resultsPlaceholder: 'results',
-        updateButtonKey: 'update',
-        includeSortDropdown: true,
-        includeResults: true,
-        includeDarkMode: false,
-        includeStatsToggle: false,
-        // Override with provided config
-        ...(config || {})
-    };
-
-    // Create categories/sort container for desktop and mobile view
-    if (options.includeSortDropdown) {
-        // Create sort container
-        const sortContainer = document.createElement('div');
-        sortContainer.className = 'sort-container';
-        
-        const sortSelect = document.createElement('select');
-        sortSelect.id = 'sortSelect';
-        
-        sortSelect.title = window.I18n.translate('sortBy');
-        sortSelect.setAttribute('data-i18n-title', 'sortBy');
-        
-        // Always include the default sort option (by row)
-        const defaultOption = document.createElement('option');
-        defaultOption.value = 'row';
-        defaultOption.textContent = window.I18n.translate('default');
-        defaultOption.setAttribute('data-i18n', 'default');
-        sortSelect.appendChild(defaultOption);
-        
-        // Dynamically generate options based on actually used categories in chart configs
-        if (window.chartConfigs && Array.isArray(window.chartConfigs)) {
-            // Get unique categories from chart configs
-            const categories = [...new Set(window.chartConfigs.map(chartConfig => chartConfig.category))];
-            
-            // Map of category values to their translation keys
-            const categoryTranslationMap = {
-                'temperature': 'temperatureSort',
-                'plant-temperature': 'temperatureSort', // Map plant-temperature to temperatureSort
-                'detail-temperature': 'temperatureSort', // Map detail-temperature to temperatureSort
-                'humidity': 'humiditySort',
-                'weather': 'weatherSort',
-                'system': 'systemSort',
-                'soil': 'soilSort',
-                'soil-moisture': 'soilSort', // Map soil-moisture to soilSort
-                'light': 'lightSort',
-                'structure': 'structureSort'
-            };
-            
-            // Sort categories alphabetically by translated name
-            categories.sort((a, b) => {
-                const keyA = categoryTranslationMap[a] || a;
-                const keyB = categoryTranslationMap[b] || b;
-                const textA = window.I18n.translate(keyA);
-                const textB = window.I18n.translate(keyB);
-                return textA.localeCompare(textB);
-            });
-            
-            // Add option for each category
-            categories.forEach(category => {
-                // Skip categories that don't have a translation mapping
-                if (!categoryTranslationMap[category]) return;
-                
-                const translationKey = categoryTranslationMap[category];
-                
-                // Only add main categories, not subcategories
-                if (category.includes('-') && !['soil-moisture'].includes(category)) return;
-                
-                const optionEl = document.createElement('option');
-                optionEl.value = category;
-                optionEl.textContent = window.I18n.translate(translationKey);
-                optionEl.setAttribute('data-i18n', translationKey);
-                sortSelect.appendChild(optionEl);
-            });
-        }
-        
-        sortContainer.appendChild(sortSelect);
-        
-        // For desktop view, append to searchContainer directly
-        // For mobile view, it will be moved to mobile-header-controls via JS
-        searchContainer.appendChild(sortContainer);
-        
-        // Add a hidden duplicate to be used on mobile (will be positioned via CSS)
-        const mobileSortContainer = sortContainer.cloneNode(true);
-        mobileSortContainer.className = 'sort-container mobile-sort-container';
-        mobileSortContainer.id = 'mobileSortContainer';
-        
-        // Need to re-add event listeners for the cloned dropdown
-        const mobileSelect = mobileSortContainer.querySelector('select');
-        mobileSelect.id = 'mobileSortSelect';
-        
-        searchContainer.appendChild(mobileSortContainer);
-    }
+    // Create results input
+    const resultsInput = document.createElement('input');
+    resultsInput.type = 'number';
+    resultsInput.id = 'resultsInput';
+    resultsInput.min = '1';
     
-    // Create results container
-    const resultsContainer = document.createElement('div');
-    resultsContainer.className = 'results-container';
+    resultsInput.placeholder = window.I18n.translate(config.placeholderKey);
+    resultsInput.setAttribute('data-i18n-placeholder', config.placeholderKey);
     
-    // Add results input and update button if configured
-    if (options.includeResults) {
-        // Create results input
-        const resultsInput = document.createElement('input');
-        resultsInput.type = 'number';
-        resultsInput.id = 'resultsInput';
-        
-        resultsInput.placeholder = window.I18n.translate(options.resultsPlaceholder);
-        resultsInput.setAttribute('data-i18n-placeholder', options.resultsPlaceholder);
-        resultsInput.min = '1';
-        
-        // Create update button
-        const updateButton = document.createElement('button');
-        updateButton.id = 'updateButton';
-        
-        updateButton.textContent = window.I18n.translate(options.updateButtonKey);
-        updateButton.setAttribute('data-i18n', options.updateButtonKey);
-        
-        resultsContainer.appendChild(resultsInput);
-        resultsContainer.appendChild(updateButton);
-    }
+    // Create update button
+    const updateButton = document.createElement('button');
+    updateButton.id = 'updateButton';
+    updateButton.textContent = window.I18n.translate(config.buttonKey);
+    updateButton.setAttribute('data-i18n', config.buttonKey);
     
-    // Add any custom elements if provided
-    if (options.customElements && Array.isArray(options.customElements)) {
-        options.customElements.forEach(el => {
-            if (el instanceof HTMLElement) {
-                resultsContainer.appendChild(el);
-            }
-        });
-    }
+    container.appendChild(resultsInput);
+    container.appendChild(updateButton);
     
-    searchContainer.appendChild(resultsContainer);
-    
-    return searchContainer;
+    return container;
 }
 
 /**
@@ -825,7 +680,7 @@ const ComponentRegistry = {
     'thingSpeakLinks': createThingSpeakLinks,
     'dateRanges': createDateRanges,
     'settingsDropdown': createSettingsDropdown,
-    'searchContainer': createSearchContainer,
+    'resultsInput': createResultsInput,
     'languageSwitcher': createLanguageSwitcher,
     'darkModeToggle': createDarkModeToggle,
     'statsToggle': createStatsToggle,
@@ -971,7 +826,7 @@ const HeaderController = {
      */
     _createHeaderElement: function() {
         const header = document.createElement('header');
-        header.className = `header ${this._config.theme || 'modern-header'}`;
+        header.className = `header ${this._config.theme}`;
         
         // Create rows for multi-layout system
         const layouts = ['layout', 'layout2', 'layout3', 'layout4'];
