@@ -118,6 +118,7 @@ const HEADER_MODE_CONFIGS = [
                         logoImage: 'logos/1_100x55.webp',
                         logoAlt: 'DriMon'
                     },
+                    languageSwitcher: { enabled: true },
                     actionButtons: {
                         darkMode: { enabled: true },
                         statsToggle: { enabled: true }

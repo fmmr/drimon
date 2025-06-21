@@ -270,6 +270,12 @@ function createLogoRow(config = null) {
     const logoContainer = createLogoContainer(config?.logo);
     logoRow.appendChild(logoContainer);
     
+    // Create language switcher if enabled
+    if (config?.languageSwitcher?.enabled) {
+        const languageSwitcher = createLanguageSwitcher();
+        logoRow.appendChild(languageSwitcher);
+    }
+    
     // Create action buttons (dark mode + stats)
     const actionButtons = createActionButtons(config?.actionButtons);
     logoRow.appendChild(actionButtons);
@@ -887,6 +893,89 @@ function createSearchContainer(config = null) {
 }
 
 /**
+ * Creates a language switcher component with flags
+ * @returns {HTMLElement} - The language switcher component
+ */
+function createLanguageSwitcher() {
+    const container = document.createElement('div');
+    container.className = 'language-switcher';
+    
+    const languages = [
+        { code: 'no', name: 'Norsk', emoji: '🇳🇴' },
+        { code: 'en', name: 'English', emoji: '🇬🇧' },
+        { code: 'es', name: 'Español', emoji: '🇪🇸' }
+    ];
+    
+    const currentLang = window.I18n.getCurrentLanguage();
+    
+    languages.forEach(lang => {
+        const button = document.createElement('button');
+        button.className = `lang-flag ${lang.code === currentLang ? 'active' : ''}`;
+        button.setAttribute('data-lang', lang.code);
+        button.setAttribute('data-language-switch', lang.code);
+        button.setAttribute('title', lang.name);
+        button.setAttribute('aria-label', `Switch to ${lang.name}`);
+        
+        button.textContent = lang.emoji;
+        
+        button.addEventListener('click', () => {
+            let langChanged = false;
+            
+            if (window.I18n && typeof window.I18n.setLanguage === 'function') {
+                langChanged = window.I18n.setLanguage(lang.code);
+            }
+            
+            if (langChanged) {
+                document.querySelectorAll('.lang-flag').forEach(btn => {
+                    btn.classList.toggle('active', btn.getAttribute('data-lang') === lang.code);
+                });
+                
+                setTimeout(() => {
+                    if (window.ChartStats && window.ChartStats.updateAllChartStats) {
+                        window.ChartStats.updateAllChartStats();
+                    }
+                }, 200);
+                
+                setTimeout(() => {
+                    if (window.updateChartLegendDOM) {
+                        window.updateChartLegendDOM();
+                    }
+                    
+                    if (window.chartInstances) {
+                        const instances = Object.values(window.chartInstances).filter(chart => chart);
+                        const originalAnimations = instances.map(chart => chart.options.animation);
+                        
+                        instances.forEach(chart => {
+                            if (chart && chart.options) {
+                                chart.options.animation = { duration: 0 };
+                            }
+                        });
+                        
+                        instances.forEach(chart => {
+                            try {
+                                chart.update();
+                            } catch (e) {
+                                // Silently ignore errors
+                            }
+                        });
+                        
+                        instances.forEach((chart, index) => {
+                            if (chart && chart.options) {
+                                chart.options.animation = originalAnimations[index];
+                            }
+                        });
+                    }
+                }, 100);
+            }
+        });
+        
+        container.appendChild(button);
+    });
+    
+    return container;
+}
+
+/**
  * Component Registry - simple lookup table for component factories
  */
 const ComponentRegistry = {
@@ -897,6 +986,7 @@ const ComponentRegistry = {
     'actionButtons': createActionButtons,
     'settingsDropdown': createSettingsDropdown,
     'searchContainer': createSearchContainer,
+    'languageSwitcher': createLanguageSwitcher,
     // Mobile-specific components
     'logoRow': createLogoRow,
     'dataRowTop': createDataRowTop,
