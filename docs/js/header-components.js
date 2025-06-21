@@ -683,7 +683,9 @@ function createStatsToggle(config) {
  * @param {Object} [config] - Configuration object for sort dropdown
  * @returns {HTMLElement} The sort dropdown element
  */
-function createSortDropdown(config = null) {
+function createSortDropdown(config) {
+    const categoryMap = config.categoryMap;
+    
     const sortContainer = document.createElement('div');
     sortContainer.className = 'sort-container mobile-sort-container';
     
@@ -699,33 +701,21 @@ function createSortDropdown(config = null) {
     defaultOption.setAttribute('data-i18n', 'default');
     sortSelect.appendChild(defaultOption);
     
-    // Add dynamic category options (reuse logic from createSearchContainer)
+    // Add dynamic category options from config
     if (window.chartConfigs && Array.isArray(window.chartConfigs)) {
         const categories = [...new Set(window.chartConfigs.map(chartConfig => chartConfig.category))];
-        const categoryTranslationMap = {
-            'temperature': 'temperatureSort',
-            'plant-temperature': 'temperatureSort',
-            'detail-temperature': 'temperatureSort',
-            'humidity': 'humiditySort',
-            'weather': 'weatherSort',
-            'system': 'systemSort',
-            'soil': 'soilSort',
-            'soil-moisture': 'soilSort',
-            'light': 'lightSort',
-            'structure': 'structureSort'
-        };
         
         categories.sort((a, b) => {
-            const keyA = categoryTranslationMap[a] || a;
-            const keyB = categoryTranslationMap[b] || b;
+            const keyA = categoryMap[a] || a;
+            const keyB = categoryMap[b] || b;
             const textA = window.I18n.translate(keyA);
             const textB = window.I18n.translate(keyB);
             return textA.localeCompare(textB);
         });
         
         categories.forEach(category => {
-            if (!categoryTranslationMap[category]) return;
-            const translationKey = categoryTranslationMap[category];
+            if (!categoryMap[category]) return;
+            const translationKey = categoryMap[category];
             if (category.includes('-') && !['soil-moisture'].includes(category)) return;
             
             const optionEl = document.createElement('option');

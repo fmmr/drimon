@@ -86,7 +86,20 @@ const DEFAULT_HEADER_CONFIG = {
         },
         sortDropdown: {
             type: 'sortDropdown',
-            config: {}
+            config: {
+                categoryMap: {
+                    'temperature': 'temperatureSort',
+                    'plant-temperature': 'temperatureSort',
+                    'detail-temperature': 'temperatureSort',
+                    'humidity': 'humiditySort',
+                    'weather': 'weatherSort',
+                    'system': 'systemSort',
+                    'soil': 'soilSort',
+                    'soil-moisture': 'soilSort',
+                    'light': 'lightSort',
+                    'structure': 'structureSort'
+                }
+            }
         },
         languageSwitcher: {
             type: 'languageSwitcher',
