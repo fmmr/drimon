@@ -58,6 +58,7 @@ const DEFAULT_HEADER_CONFIG = {
         settingsDropdown: {
             type: 'settingsDropdown',
             config: {
+                icon: 'fas fa-cog',
                 dateRanges: AllDateRanges.slice(6),  // Secondary ranges: today, yesterday, this-week, last-week, this-month, last-month, start
                 actions: [],                          // No actions in regular mode (they're top-level)
                 showDivider: false,                   // No divider needed since no actions
@@ -73,11 +74,15 @@ const DEFAULT_HEADER_CONFIG = {
         },
         darkModeToggle: {
             type: 'darkModeToggle',
-            config: {}
+            config: {
+                icon: 'fas fa-moon'
+            }
         },
         statsToggle: {
             type: 'statsToggle',
-            config: {}
+            config: {
+                icon: 'fas fa-chart-line'
+            }
         },
         sortDropdown: {
             type: 'sortDropdown',
@@ -106,6 +111,11 @@ const HEADER_MODE_CONFIGS = [
         id: 'mobile',
         
         components: {
+            logo: {
+                config: {
+                    logoUrl: null  // No link for mobile (like dashboard)
+                }
+            },
             data: {
                 type: 'dataContainer',
                 config: {
@@ -161,8 +171,13 @@ const HEADER_MODE_CONFIGS = [
             },
             settingsDropdown: {
                 config: {
+                    icon: 'fas fa-cog',
                     dateRanges: AllDateRanges,           // All ranges since no top-level date chips
                     actions: ['darkModeToggle', 'statsToggle'],  // Reuse existing components
+                    actionConfigs: {
+                        darkModeToggle: { icon: 'fas fa-moon' },
+                        statsToggle: { icon: 'fas fa-chart-line' }
+                    },
                     showDivider: true,                   // Divider between dates and actions
                     layout: 'horizontal'                 // Better for small dashboard screen
                 }

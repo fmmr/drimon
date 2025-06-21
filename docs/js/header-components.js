@@ -78,14 +78,15 @@ function createTimeChip() {
  * @param {Object} [config] - Configuration object for settings dropdown
  * @returns {HTMLElement} The settings dropdown container element
  */
-function createSettingsDropdown(config = null) {
+function createSettingsDropdown(config) {
     const dropdownContainer = document.createElement('div');
     dropdownContainer.className = 'settings-dropdown';
     
-    const dateRanges = config?.dateRanges || [];
-    const actions = config?.actions || [];
-    const showDivider = config?.showDivider || false;
-    const layout = config?.layout || 'vertical';
+    const dateRanges = config.dateRanges;
+    const actions = config.actions;
+    const actionConfigs = config.actionConfigs || {};
+    const showDivider = config.showDivider;
+    const layout = config.layout;
     
     // Only create dropdown if we have content to show
     if (dateRanges.length === 0 && actions.length === 0) {
@@ -93,9 +94,10 @@ function createSettingsDropdown(config = null) {
     }
     
     // Create dropdown button
+    const iconClass = config.icon;
     const dropdownButton = document.createElement('button');
     dropdownButton.className = 'settings-dropdown-button';
-    dropdownButton.innerHTML = '<i class="fas fa-cog"></i>';
+    dropdownButton.innerHTML = `<i class="${iconClass}"></i>`;
     dropdownButton.title = 'Settings';
     
     // Create dropdown content
@@ -122,7 +124,8 @@ function createSettingsDropdown(config = null) {
     actions.forEach(actionType => {
         const createFunction = ComponentRegistry[actionType];
         if (createFunction) {
-            const actionComponent = createFunction();
+            const componentConfig = actionConfigs[actionType] || {};
+            const actionComponent = createFunction(componentConfig);
             actionComponent.className = 'settings-dropdown-item settings-action-item';
             dropdownContent.appendChild(actionComponent);
         }
@@ -634,7 +637,9 @@ function createSearchContainer(config = null) {
  * @param {Object} [config] - Configuration object for dark mode toggle
  * @returns {HTMLElement} The dark mode toggle button element
  */
-function createDarkModeToggle(config = null) {
+function createDarkModeToggle(config) {
+    const iconClass = config.icon;
+    
     const darkModeToggle = document.createElement('button');
     darkModeToggle.id = 'darkModeToggle';
     
@@ -643,7 +648,7 @@ function createDarkModeToggle(config = null) {
     
     const darkModeIcon = document.createElement('span');
     darkModeIcon.className = 'icon';
-    darkModeIcon.innerHTML = '<i class="fas fa-moon"></i>';
+    darkModeIcon.innerHTML = `<i class="${iconClass}"></i>`;
     
     darkModeToggle.appendChild(darkModeIcon);
     
@@ -655,7 +660,9 @@ function createDarkModeToggle(config = null) {
  * @param {Object} [config] - Configuration object for stats toggle
  * @returns {HTMLElement} The stats toggle button element
  */
-function createStatsToggle(config = null) {
+function createStatsToggle(config) {
+    const iconClass = config.icon;
+    
     const statsToggle = document.createElement('button');
     statsToggle.id = 'statsToggle';
     
@@ -664,7 +671,7 @@ function createStatsToggle(config = null) {
     
     const statsIcon = document.createElement('span');
     statsIcon.className = 'icon';
-    statsIcon.innerHTML = '<i class="fas fa-chart-line"></i>';
+    statsIcon.innerHTML = `<i class="${iconClass}"></i>`;
     
     statsToggle.appendChild(statsIcon);
     
