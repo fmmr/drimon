@@ -82,43 +82,29 @@ function createSettingsDropdown(config = null) {
     const dropdownContainer = document.createElement('div');
     dropdownContainer.className = 'settings-dropdown';
     
-    // Get configuration options with defaults
-    const options = {
-        showDateRanges: true,
-        showDivider: false,
-        actions: {
-            darkMode: { enabled: false },
-            statsToggle: { enabled: false }
-        },
-        ...(config || {})
-    };
-    
-    // Get secondary date ranges from top-level config
-    const secondaryDateRanges = window.headerConfigs ? 
-        (window.Utils.isDashboardMode() ? 
-            window.headerConfigs.dashboard.secondaryDateRanges : 
-            window.headerConfigs.regular.secondaryDateRanges) : [];
+    const dateRanges = config?.dateRanges || [];
+    const actions = config?.actions || [];
+    const showDivider = config?.showDivider || false;
+    const layout = config?.layout || 'vertical';
     
     // Only create dropdown if we have content to show
-    if (!options.showDateRanges && !options.actions.darkMode.enabled && !options.actions.statsToggle.enabled) {
-        return dropdownContainer; // Return empty container
+    if (dateRanges.length === 0 && actions.length === 0) {
+        return dropdownContainer;
     }
     
     // Create dropdown button
     const dropdownButton = document.createElement('button');
     dropdownButton.className = 'settings-dropdown-button';
-    
-    // Always show settings gear icon
     dropdownButton.innerHTML = '<i class="fas fa-cog"></i>';
     dropdownButton.title = 'Settings';
     
     // Create dropdown content
     const dropdownContent = document.createElement('div');
-    dropdownContent.className = 'settings-dropdown-content';
+    dropdownContent.className = `settings-dropdown-content ${layout}`;
     
-    // Add secondary date ranges if enabled
-    if (options.showDateRanges && secondaryDateRanges.length > 0) {
-        secondaryDateRanges.forEach(chip => {
+    // Add date ranges
+    if (dateRanges.length > 0) {
+        dateRanges.forEach(chip => {
             const dateChip = createDateChip(chip.range, chip.key, chip.icon, chip.iconDouble, chip.text, chip.textDouble);
             dateChip.className = 'settings-dropdown-item date-chip';
             dropdownContent.appendChild(dateChip);
@@ -126,29 +112,21 @@ function createSettingsDropdown(config = null) {
     }
     
     // Add divider if we have both date ranges and actions
-    if (options.showDivider && options.showDateRanges && secondaryDateRanges.length > 0 && 
-        (options.actions.darkMode.enabled || options.actions.statsToggle.enabled)) {
+    if (showDivider && dateRanges.length > 0 && actions.length > 0) {
         const divider = document.createElement('div');
         divider.className = 'dropdown-divider';
         dropdownContent.appendChild(divider);
     }
     
-    // Add action buttons if enabled
-    if (options.actions.darkMode.enabled) {
-        const darkModeItem = document.createElement('button');
-        darkModeItem.className = 'settings-dropdown-item settings-action-item';
-        darkModeItem.innerHTML = '<i class="fas fa-moon"></i>';
-        darkModeItem.id = 'darkModeToggle';
-        dropdownContent.appendChild(darkModeItem);
-    }
-    
-    if (options.actions.statsToggle.enabled) {
-        const statsItem = document.createElement('button');
-        statsItem.className = 'settings-dropdown-item settings-action-item';
-        statsItem.innerHTML = '<i class="fas fa-chart-line"></i>';
-        statsItem.id = 'statsToggle';
-        dropdownContent.appendChild(statsItem);
-    }
+    // Add action components by reusing existing component functions
+    actions.forEach(actionType => {
+        const createFunction = ComponentRegistry[actionType];
+        if (createFunction) {
+            const actionComponent = createFunction();
+            actionComponent.className = 'settings-dropdown-item settings-action-item';
+            dropdownContent.appendChild(actionComponent);
+        }
+    });
     
     // Add dropdown elements to container
     dropdownContainer.appendChild(dropdownButton);

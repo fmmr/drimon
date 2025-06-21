@@ -372,8 +372,7 @@
     margin-right: 8px;
 }
 
-.mobile-header .header-row-2,
-.mobile-header .header-row-3 {
+.mobile-header .header-row-2 {
     justify-content: flex-start;
     gap: 8px;
     overflow-x: auto;
@@ -381,11 +380,11 @@
     -ms-overflow-style: none;
 }
 
-.mobile-header .header-row-2::-webkit-scrollbar,
-.mobile-header .header-row-3::-webkit-scrollbar {
+.mobile-header .header-row-2::-webkit-scrollbar {
     display: none;
 }
 
+.mobile-header .header-row-3,
 .mobile-header .header-row-4 {
     justify-content: center;
     gap: 3px;
@@ -394,11 +393,13 @@
     -ms-overflow-style: none;
 }
 
+.mobile-header .header-row-3::-webkit-scrollbar,
 .mobile-header .header-row-4::-webkit-scrollbar {
     display: none;
 }
 
 /* Balanced date chips for mobile to fit all on screen */
+.mobile-header .header-row-3 .date-chip,
 .mobile-header .header-row-4 .date-chip {
     padding: 4px 7px;
     font-size: 12px;

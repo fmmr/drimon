@@ -20,15 +20,6 @@ const AllDateRanges = [
 
 // Default header configuration - single source of truth
 const DEFAULT_HEADER_CONFIG = {
-    // Primary date ranges (shown as chips in dateRanges component)
-    // Regular/Mobile: first 6 dates = ['default', '1', '2', '6', '13', '30']
-    // Dashboard: empty array []
-    primaryDateRanges: AllDateRanges.slice(0, 6),
-    
-    // Secondary date ranges (shown in settingsDropdown component)  
-    // Regular/Mobile: remaining dates = ['today', 'yesterday', 'this-week', 'last-week', 'this-month', 'last-month', 'start']
-    // Dashboard: all dates = ['default', '1', '2', '6', '13', '30', 'today', 'yesterday', 'this-week', 'last-week', 'this-month', 'last-month', 'start']
-    secondaryDateRanges: AllDateRanges.slice(6),
     
     components: {
         logo: {
@@ -67,12 +58,10 @@ const DEFAULT_HEADER_CONFIG = {
         settingsDropdown: {
             type: 'settingsDropdown',
             config: {
-                showDateRanges: true,        // Show secondary date ranges in dropdown
-                showDivider: false,          // No divider needed (no actions below)
-                actions: {
-                    darkMode: { enabled: false },      // Not in dropdown for regular mode
-                    statsToggle: { enabled: false }    // Not in dropdown for regular mode
-                }
+                dateRanges: AllDateRanges.slice(6),  // Secondary ranges: today, yesterday, this-week, last-week, this-month, last-month, start
+                actions: [],                          // No actions in regular mode (they're top-level)
+                showDivider: false,                   // No divider needed since no actions
+                layout: 'vertical'
             }
         },
         search: {
@@ -115,8 +104,6 @@ const HEADER_MODE_CONFIGS = [
     },
     {
         id: 'mobile',
-        primaryDateRanges: [],
-        secondaryDateRanges: [],
         
         components: {
             data: {
@@ -146,19 +133,25 @@ const HEADER_MODE_CONFIGS = [
                         { range: 'start', key: 'start', icon: 'fas fa-hourglass-start' }
                     ]
                 }
+            },
+            dateRangesRow2: {
+                type: 'dateRanges',
+                config: {
+                    ranges: [
+                        { range: 'last-week', key: 'lastWeek', iconDouble: ['fas fa-step-backward', 'fas fa-calendar-week'] },
+                        { range: 'last-month', key: 'lastMonth', iconDouble: ['fas fa-step-backward', 'fas fa-calendar-alt'] }
+                    ]
+                }
             }
         },
         layout: ['logo', 'languageSwitcher', 'darkModeToggle', 'statsToggle', 'sortDropdown'],
         layout2: ['data'],
-        layout3: [], 
-        layout4: ['dateRanges'],
+        layout3: ['dateRanges'], 
+        layout4: ['dateRangesRow2'],
         theme: 'modern-header mobile-header'
     },
     {
         id: 'dashboard',
-        // Date range overrides - all dates go to settings dropdown
-        primaryDateRanges: [],  // No date chips in dateRanges component
-        secondaryDateRanges: AllDateRanges,  // All 13 dates in settingsDropdown: ['default', '1', '2', '6', '13', '30', 'today', 'yesterday', 'this-week', 'last-week', 'this-month', 'last-month', 'start']
         
         components: {
             logo: {
@@ -168,12 +161,10 @@ const HEADER_MODE_CONFIGS = [
             },
             settingsDropdown: {
                 config: {
-                    showDateRanges: true,        // Show all date ranges in dropdown
-                    showDivider: true,           // Show divider between dates and actions
-                    actions: {
-                        darkMode: { enabled: true },      // Dark mode in dropdown for dashboard
-                        statsToggle: { enabled: true }    // Stats toggle in dropdown for dashboard
-                    }
+                    dateRanges: AllDateRanges,           // All ranges since no top-level date chips
+                    actions: ['darkModeToggle', 'statsToggle'],  // Reuse existing components
+                    showDivider: true,                   // Divider between dates and actions
+                    layout: 'horizontal'                 // Better for small dashboard screen
                 }
             }
         },
