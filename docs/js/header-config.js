@@ -60,14 +60,8 @@ const DEFAULT_HEADER_CONFIG = {
         },
         dateRanges: {
             type: 'dateRanges',
-            config: {}  // Uses primaryDateRanges from top level
-        },
-        actionButtons: {
-            type: 'actionButtons',
             config: {
-                darkMode: { enabled: true },
-                statsToggle: { enabled: true },
-                languageSwitcher: { enabled: true }
+                ranges: AllDateRanges.slice(0, 6)  // First 6 ranges: default, 1, 2, 6, 13, 30
             }
         },
         settingsDropdown: {
@@ -87,11 +81,27 @@ const DEFAULT_HEADER_CONFIG = {
                 includeSortDropdown: true,   // chart sorting (mobile only)
                 includeResults: true         // results input + update button
             }
+        },
+        darkModeToggle: {
+            type: 'darkModeToggle',
+            config: {}
+        },
+        statsToggle: {
+            type: 'statsToggle',
+            config: {}
+        },
+        sortDropdown: {
+            type: 'sortDropdown',
+            config: {}
+        },
+        languageSwitcher: {
+            type: 'languageSwitcher',
+            config: {}
         }
     },
     
-    // Layout order
-    layout: ['logo', 'data', 'thingspeak', 'dateRanges', 'settingsDropdown', 'actionButtons', 'search'],
+    // Layout order (single row for regular mode)
+    layout: ['logo', 'data', 'thingspeak', 'dateRanges', 'settingsDropdown', 'darkModeToggle', 'statsToggle', 'search'],
     
     // Header theme
     theme: 'modern-header'
@@ -105,28 +115,12 @@ const HEADER_MODE_CONFIGS = [
     },
     {
         id: 'mobile',
-        // Mobile 4-row layout: logoRow, dataRowTop, dataRowBottom, dateRangesSimple
-        primaryDateRanges: [], // No primary ranges in mobile
-        secondaryDateRanges: [], // No secondary ranges in mobile
+        primaryDateRanges: [],
+        secondaryDateRanges: [],
         
         components: {
-            logoRow: {
-                type: 'logoRow',
-                config: {
-                    logo: {
-                        logoUrl: 'https://github.com/fmmr/drimon',
-                        logoImage: 'logos/1_100x55.webp',
-                        logoAlt: 'DriMon'
-                    },
-                    languageSwitcher: { enabled: true },
-                    actionButtons: {
-                        darkMode: { enabled: true },
-                        statsToggle: { enabled: true }
-                    }
-                }
-            },
-            dataRowTop: {
-                type: 'dataRowTop',
+            data: {
+                type: 'dataContainer',
                 config: {
                     chips: [
                         { id: 'time-since', icon: 'fas fa-clock', titleKey: 'time' },
@@ -138,19 +132,14 @@ const HEADER_MODE_CONFIGS = [
                     ]
                 }
             },
-            dataRowBottom: {
-                type: 'dataRowBottom',
-                config: {
-                    chips: [] // Empty - all pills in first row for now
-                }
-            },
-            dateRangesSimple: {
-                type: 'dateRangesSimple',
+            dateRanges: {
+                type: 'dateRanges',
                 config: {
                     ranges: [
                         { range: 'default', key: 'defaultDate', icon: 'fas fa-home' },
                         { range: '1', key: 'twoDay', icon: 'fas fa-2' },
                         { range: '6', key: 'sevenDay', icon: 'fas fa-7' },
+                        { range: '13', key: 'fourteenDay', iconDouble: ['fas fa-1', 'fas fa-4'] },
                         { range: '30', key: 'thirtyDay', iconDouble: ['fas fa-3', 'fas fa-0'] },
                         { range: 'today', key: 'today', icon: 'fas fa-calendar-day' },
                         { range: 'this-week', key: 'week', icon: 'fas fa-calendar-week' },
@@ -159,7 +148,10 @@ const HEADER_MODE_CONFIGS = [
                 }
             }
         },
-        layout: ['logoRow', 'dataRowTop', 'dataRowBottom', 'dateRangesSimple'],
+        layout: ['logo', 'languageSwitcher', 'darkModeToggle', 'statsToggle', 'sortDropdown'],
+        layout2: ['data'],
+        layout3: [], 
+        layout4: ['dateRanges'],
         theme: 'modern-header mobile-header'
     },
     {
@@ -185,7 +177,7 @@ const HEADER_MODE_CONFIGS = [
                 }
             }
         },
-        layout: ['logo', 'data', 'settingsDropdown'],  // No thingspeak, dateRanges, actionButtons, search
+        layout: ['logo', 'data', 'settingsDropdown'],
         theme: 'modern-header dashboard-header'
     }
 ];

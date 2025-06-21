@@ -321,11 +321,89 @@
     margin: 4px 0;
 }
 
+/* Header row system */
+.header-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+}
+
+/* Single row mode (regular + dashboard) */
+.header-row-1 {
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: nowrap;
+}
+
 /* Mobile header styling */
 .mobile-header {
     flex-direction: column !important;
     gap: 8px !important;
     padding: 8px 12px !important;
+}
+
+/* Mobile multi-row styling */
+.mobile-header .header-row-1 {
+    justify-content: flex-start;
+    gap: 8px;
+    align-items: center;
+}
+
+/* Logo takes some space, but not all */
+.mobile-header .header-row-1 .logo-container {
+    flex: 0 1 auto;
+    margin-right: auto;
+}
+
+/* Individual button styling for mobile header row */
+.mobile-header .header-row-1 button {
+    flex: 0 0 auto;
+    margin: 0;
+}
+
+.mobile-header .header-row-1 .language-switcher {
+    display: flex;
+    gap: 4px;
+    flex: 0 0 auto;
+}
+
+.mobile-header .header-row-1 .sort-container {
+    flex: 0 0 auto;
+    margin-right: 8px;
+}
+
+.mobile-header .header-row-2,
+.mobile-header .header-row-3 {
+    justify-content: flex-start;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.mobile-header .header-row-2::-webkit-scrollbar,
+.mobile-header .header-row-3::-webkit-scrollbar {
+    display: none;
+}
+
+.mobile-header .header-row-4 {
+    justify-content: center;
+    gap: 3px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.mobile-header .header-row-4::-webkit-scrollbar {
+    display: none;
+}
+
+/* Balanced date chips for mobile to fit all on screen */
+.mobile-header .header-row-4 .date-chip {
+    padding: 4px 7px;
+    font-size: 12px;
+    min-width: 32px;
+    margin: 0 1px;
 }
 
 .logo-row {
