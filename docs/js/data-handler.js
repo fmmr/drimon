@@ -257,32 +257,34 @@ function updateUIWithLatestData() {
         displayWindowState = window.I18n.translate(stateKey);
     }
     
-    elements.window.innerHTML = displayWindowState;
-    elements.window.parentElement.className = `data-chip`;
-    
-    // Set tooltip content to show the actual value
-    const windowTooltipData = {
-        [window.I18n.translate('window')]: `${latestData.windowOpening}mm`,
-        [window.I18n.translate('status')]: displayWindowState
-    };
+    if (elements.window) {
+        elements.window.innerHTML = displayWindowState;
+        elements.window.parentElement.className = `data-chip`;
+        
+        // Set tooltip content to show the actual value
+        const windowTooltipData = {
+            [window.I18n.translate('window')]: `${latestData.windowOpening}mm`,
+            [window.I18n.translate('status')]: displayWindowState
+        };
 
-    // Format window tooltip using HTML tabular formatter if available
-    const windowTooltip = window.Utils && typeof window.Utils.formatTabularTooltip === 'function'
-        ? window.Utils.formatTabularTooltip(windowTooltipData, { useHTML: true })
-        : `${window.I18n.translate('window')}: ${latestData.windowOpening}mm\n${displayWindowState}`;
+        // Format window tooltip using HTML tabular formatter if available
+        const windowTooltip = window.Utils && typeof window.Utils.formatTabularTooltip === 'function'
+            ? window.Utils.formatTabularTooltip(windowTooltipData, { useHTML: true })
+            : `${window.I18n.translate('window')}: ${latestData.windowOpening}mm\n${displayWindowState}`;
 
-    elements.window.parentElement.setAttribute('data-tooltip-content', windowTooltip);
-    elements.window.parentElement.setAttribute('data-has-tooltip', 'true');
-    
-    // Update window icon based on state
-    const windowIcon = elements.window.parentElement.querySelector('i');
-    if (windowIcon) {
-        if (windowState === 'Lukket') {
-            windowIcon.className = 'fas fa-window-close mr-1';
-        } else if (windowState === 'Glippe') {
-            windowIcon.className = 'fas fa-grip-lines-vertical mr-1';
-        } else if (windowState === 'Åpent') {
-            windowIcon.className = 'fas fa-window-maximize mr-1';
+        elements.window.parentElement.setAttribute('data-tooltip-content', windowTooltip);
+        elements.window.parentElement.setAttribute('data-has-tooltip', 'true');
+        
+        // Update window icon based on state
+        const windowIcon = elements.window.parentElement.querySelector('i');
+        if (windowIcon) {
+            if (windowState === 'Lukket') {
+                windowIcon.className = 'fas fa-window-close mr-1';
+            } else if (windowState === 'Glippe') {
+                windowIcon.className = 'fas fa-grip-lines-vertical mr-1';
+            } else if (windowState === 'Åpent') {
+                windowIcon.className = 'fas fa-window-maximize mr-1';
+            }
         }
     }
 
@@ -301,22 +303,24 @@ function updateUIWithLatestData() {
         displayLightState = window.I18n.translate(lightKey);
     }
     
-    elements.light.innerHTML = displayLightState;
-    elements.light.parentElement.className = `data-chip`;
-    
-    // Set tooltip content to show the actual light value
-    const lightTooltipData = {
-        [window.I18n.translate('ceiling')]: `${latestData.light} lux`,
-        [window.I18n.translate('light')]: displayLightState
-    };
+    if (elements.light) {
+        elements.light.innerHTML = displayLightState;
+        elements.light.parentElement.className = `data-chip`;
+        
+        // Set tooltip content to show the actual light value
+        const lightTooltipData = {
+            [window.I18n.translate('ceiling')]: `${latestData.light} lux`,
+            [window.I18n.translate('light')]: displayLightState
+        };
 
-    // Format light tooltip using HTML tabular formatter if available
-    const lightTooltip = window.Utils && typeof window.Utils.formatTabularTooltip === 'function'
-        ? window.Utils.formatTabularTooltip(lightTooltipData, { useHTML: true })
-        : `${window.I18n.translate('ceiling')}: ${latestData.light} lux\n${displayLightState}`;
+        // Format light tooltip using HTML tabular formatter if available
+        const lightTooltip = window.Utils && typeof window.Utils.formatTabularTooltip === 'function'
+            ? window.Utils.formatTabularTooltip(lightTooltipData, { useHTML: true })
+            : `${window.I18n.translate('ceiling')}: ${latestData.light} lux\n${displayLightState}`;
 
-    elements.light.parentElement.setAttribute('data-tooltip-content', lightTooltip);
-    elements.light.parentElement.setAttribute('data-has-tooltip', 'true');
+        elements.light.parentElement.setAttribute('data-tooltip-content', lightTooltip);
+        elements.light.parentElement.setAttribute('data-has-tooltip', 'true');
+    }
 
     if (elements.timeSince) {
         // Show HH:MM in the pill instead of "X minutes ago"

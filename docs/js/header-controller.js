@@ -9,11 +9,21 @@ document.addEventListener('DOMContentLoaded', () => {
     // Get the header mount point
     const headerMountPoint = document.getElementById('header-mount-point');
     
-    // Check for dashboard mode
+    // Check for dashboard and mobile modes
     const isDashboardMode = window.Utils.isDashboardMode();
+    const isMobileMode = window.matchMedia('(max-width: 768px)').matches && !isDashboardMode;
     
     // Create the header using appropriate config
-    const header = isDashboardMode ? createHeader(window.headerConfigs.dashboard) : createHeader(window.headerConfigs.regular);
+    let headerConfig;
+    if (isDashboardMode) {
+        headerConfig = window.headerConfigs.dashboard;
+    } else if (isMobileMode) {
+        headerConfig = window.headerConfigs.mobile || window.headerConfigs.regular; // Fallback if mobile not ready
+    } else {
+        headerConfig = window.headerConfigs.regular;
+    }
+    
+    const header = createHeader(headerConfig);
     
     // Mount the header to the DOM
     headerMountPoint.appendChild(header);

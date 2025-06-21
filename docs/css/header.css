@@ -321,6 +321,85 @@
     margin: 4px 0;
 }
 
+/* Mobile header styling */
+.mobile-header {
+    flex-direction: column !important;
+    gap: 8px !important;
+    padding: 8px 12px !important;
+}
+
+.logo-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    gap: 8px;
+}
+
+.logo-row .logo-container {
+    flex: 1;
+}
+
+.logo-row .action-buttons {
+    gap: 6px;
+}
+
+.logo-row .mobile-sort-container {
+    display: block;
+}
+
+.data-row {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 8px;
+    overflow-x: auto;
+    scrollbar-width: none; /* Hide scrollbar in Firefox */
+    -ms-overflow-style: none; /* Hide scrollbar in IE/Edge */
+    padding: 4px 0;
+}
+
+/* Hide scrollbar in Chrome/Safari/Opera */
+.data-row::-webkit-scrollbar {
+    display: none;
+}
+
+.data-row .data-chip {
+    flex: 0 0 auto; /* Don't shrink */
+    min-width: fit-content;
+    margin: 2px;
+    font-size: 11px;
+    padding: 4px 8px;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.date-ranges-simple {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    gap: 4px;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.date-ranges-simple::-webkit-scrollbar {
+    display: none;
+}
+
+.date-ranges-simple .date-chip {
+    font-size: 12px;
+    padding: 4px 6px;
+}
+
+/* Hide mobile sort container in non-mobile modes */
+.mobile-sort-container {
+    display: none;
+}
+
 /* Search container styling */
 .search-container {
     display: flex;

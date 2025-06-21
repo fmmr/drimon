@@ -258,6 +258,185 @@ function createSettingsDropdown(config = null) {
 }
 
 /**
+ * Creates logo row for mobile (logo + action buttons + sort dropdown)
+ * @param {Object} [config] - Configuration object for logo row
+ * @returns {HTMLElement} The logo row element
+ */
+function createLogoRow(config = null) {
+    const logoRow = document.createElement('div');
+    logoRow.className = 'logo-row';
+    
+    // Create logo (reuse existing logo logic)
+    const logoContainer = createLogoContainer(config?.logo);
+    logoRow.appendChild(logoContainer);
+    
+    // Create action buttons (dark mode + stats)
+    const actionButtons = createActionButtons(config?.actionButtons);
+    logoRow.appendChild(actionButtons);
+    
+    // Create sort dropdown for mobile
+    const sortContainer = document.createElement('div');
+    sortContainer.className = 'sort-container mobile-sort-container';
+    
+    const sortSelect = document.createElement('select');
+    sortSelect.id = 'sortSelect';
+    sortSelect.title = window.I18n.translate('sortBy');
+    sortSelect.setAttribute('data-i18n-title', 'sortBy');
+    
+    // Add default option
+    const defaultOption = document.createElement('option');
+    defaultOption.value = 'row';
+    defaultOption.textContent = window.I18n.translate('default');
+    defaultOption.setAttribute('data-i18n', 'default');
+    sortSelect.appendChild(defaultOption);
+    
+    // Add dynamic category options (reuse logic from createSearchContainer)
+    if (window.chartConfigs && Array.isArray(window.chartConfigs)) {
+        const categories = [...new Set(window.chartConfigs.map(chartConfig => chartConfig.category))];
+        const categoryTranslationMap = {
+            'temperature': 'temperatureSort',
+            'plant-temperature': 'temperatureSort',
+            'detail-temperature': 'temperatureSort',
+            'humidity': 'humiditySort',
+            'weather': 'weatherSort',
+            'system': 'systemSort',
+            'soil': 'soilSort',
+            'soil-moisture': 'soilSort',
+            'light': 'lightSort',
+            'structure': 'structureSort'
+        };
+        
+        categories.sort((a, b) => {
+            const keyA = categoryTranslationMap[a] || a;
+            const keyB = categoryTranslationMap[b] || b;
+            const textA = window.I18n.translate(keyA);
+            const textB = window.I18n.translate(keyB);
+            return textA.localeCompare(textB);
+        });
+        
+        categories.forEach(category => {
+            if (!categoryTranslationMap[category]) return;
+            const translationKey = categoryTranslationMap[category];
+            if (category.includes('-') && !['soil-moisture'].includes(category)) return;
+            
+            const optionEl = document.createElement('option');
+            optionEl.value = category;
+            optionEl.textContent = window.I18n.translate(translationKey);
+            optionEl.setAttribute('data-i18n', translationKey);
+            sortSelect.appendChild(optionEl);
+        });
+    }
+    
+    sortContainer.appendChild(sortSelect);
+    logoRow.appendChild(sortContainer);
+    
+    return logoRow;
+}
+
+/**
+ * Creates data row (all chips in one scrollable row for mobile)
+ * @param {Object} [config] - Configuration object for data row
+ * @returns {HTMLElement} The data row element
+ */
+function createDataRowTop(config = null) {
+    const dataRow = document.createElement('div');
+    dataRow.className = 'data-row data-row-top';
+    
+    if (!config || !config.chips) {
+        return dataRow;
+    }
+    
+    // Use all chips in one scrollable row (for now)
+    config.chips.forEach(chipConfig => {
+        let chip;
+        if (chipConfig.type === 'weatherPill') {
+            chip = createWeatherPill();
+        } else if (chipConfig.type === 'sunEventChip') {
+            chip = createSunEventChip();
+        } else {
+            chip = createDataChip(
+                chipConfig.id,
+                chipConfig.icon,
+                chipConfig.titleKey,
+                chipConfig.initialText || 'loading'
+            );
+        }
+        
+        if (chip) {
+            dataRow.appendChild(chip);
+        }
+    });
+    
+    return dataRow;
+}
+
+/**
+ * Creates data row (second half of chips - 4 chips in scrollable row for mobile)
+ * @param {Object} [config] - Configuration object for data row
+ * @returns {HTMLElement} The data row element
+ */
+function createDataRowBottom(config = null) {
+    const dataRow = document.createElement('div');
+    dataRow.className = 'data-row data-row-bottom';
+    
+    if (!config || !config.chips || config.chips.length === 0) {
+        dataRow.style.display = 'none'; // Hide if no chips
+        return dataRow;
+    }
+    
+    // Take second half of chips (last 4 of 8)
+    const bottomChips = config.chips.slice(Math.ceil(config.chips.length / 2));
+    
+    bottomChips.forEach(chipConfig => {
+        let chip;
+        if (chipConfig.type === 'weatherPill') {
+            chip = createWeatherPill();
+        } else if (chipConfig.type === 'sunEventChip') {
+            chip = createSunEventChip();
+        } else {
+            chip = createDataChip(
+                chipConfig.id,
+                chipConfig.icon,
+                chipConfig.titleKey,
+                chipConfig.initialText || 'loading'
+            );
+        }
+        
+        if (chip) {
+            dataRow.appendChild(chip);
+        }
+    });
+    
+    return dataRow;
+}
+
+/**
+ * Creates simple date ranges row for mobile (just key date chips)
+ * @param {Object} [config] - Configuration object for date ranges
+ * @returns {HTMLElement} The date ranges row element
+ */
+function createDateRangesSimple(config = null) {
+    const dateRanges = document.createElement('div');
+    dateRanges.className = 'date-ranges-simple';
+    
+    // Get simplified date ranges (just the most important ones)
+    const mobileRanges = config?.ranges || [
+        { range: 'default', key: 'defaultDate', icon: 'fas fa-home' },
+        { range: '1', key: 'twoDay', icon: 'fas fa-2' },
+        { range: '6', key: 'sevenDay', icon: 'fas fa-7' },
+        { range: 'today', key: 'today', icon: 'fas fa-calendar-day' },
+        { range: 'this-week', key: 'week', icon: 'fas fa-calendar-week' }
+    ];
+    
+    mobileRanges.forEach(chip => {
+        const dateChip = createDateChip(chip.range, chip.key, chip.icon, chip.iconDouble, chip.text, chip.textDouble);
+        dateRanges.appendChild(dateChip);
+    });
+    
+    return dateRanges;
+}
+
+/**
  * Creates a data chip element with icon and value
  * @param {string} id - The ID for the span element
  * @param {string} iconClass - The Font Awesome icon class
@@ -717,7 +896,12 @@ const ComponentRegistry = {
     'dateRanges': createDateRanges,
     'actionButtons': createActionButtons,
     'settingsDropdown': createSettingsDropdown,
-    'searchContainer': createSearchContainer
+    'searchContainer': createSearchContainer,
+    // Mobile-specific components
+    'logoRow': createLogoRow,
+    'dataRowTop': createDataRowTop,
+    'dataRowBottom': createDataRowBottom,
+    'dateRangesSimple': createDateRangesSimple
 };
 
 

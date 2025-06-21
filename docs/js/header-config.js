@@ -104,6 +104,64 @@ const HEADER_MODE_CONFIGS = [
         // Uses all defaults from DEFAULT_HEADER_CONFIG
     },
     {
+        id: 'mobile',
+        // Mobile 4-row layout: logoRow, dataRowTop, dataRowBottom, dateRangesSimple
+        primaryDateRanges: [], // No primary ranges in mobile
+        secondaryDateRanges: [], // No secondary ranges in mobile
+        
+        components: {
+            logoRow: {
+                type: 'logoRow',
+                config: {
+                    logo: {
+                        logoUrl: 'https://github.com/fmmr/drimon',
+                        logoImage: 'logos/1_100x55.webp',
+                        logoAlt: 'DriMon'
+                    },
+                    actionButtons: {
+                        darkMode: { enabled: true },
+                        statsToggle: { enabled: true }
+                    }
+                }
+            },
+            dataRowTop: {
+                type: 'dataRowTop',
+                config: {
+                    chips: [
+                        { id: 'time-since', icon: 'fas fa-clock', titleKey: 'time' },
+                        { id: 'temperature', icon: 'fas fa-thermometer-half', titleKey: 'temperature' },
+                        { id: 'weather', type: 'weatherPill' },
+                        { id: 'sunEvents', type: 'sunEventChip' },
+                        { id: 'pressure', icon: 'fas fa-compress-alt', titleKey: 'pressure' },
+                        { id: 'battery', icon: 'fas fa-battery-half', titleKey: 'battery' }
+                    ]
+                }
+            },
+            dataRowBottom: {
+                type: 'dataRowBottom',
+                config: {
+                    chips: [] // Empty - all pills in first row for now
+                }
+            },
+            dateRangesSimple: {
+                type: 'dateRangesSimple',
+                config: {
+                    ranges: [
+                        { range: 'default', key: 'defaultDate', icon: 'fas fa-home' },
+                        { range: '1', key: 'twoDay', icon: 'fas fa-2' },
+                        { range: '6', key: 'sevenDay', icon: 'fas fa-7' },
+                        { range: '30', key: 'thirtyDay', iconDouble: ['fas fa-3', 'fas fa-0'] },
+                        { range: 'today', key: 'today', icon: 'fas fa-calendar-day' },
+                        { range: 'this-week', key: 'week', icon: 'fas fa-calendar-week' },
+                        { range: 'start', key: 'start', icon: 'fas fa-hourglass-start' }
+                    ]
+                }
+            }
+        },
+        layout: ['logoRow', 'dataRowTop', 'dataRowBottom', 'dateRangesSimple'],
+        theme: 'modern-header mobile-header'
+    },
+    {
         id: 'dashboard',
         // Date range overrides - all dates go to settings dropdown
         primaryDateRanges: [],  // No date chips in dateRanges component
@@ -160,6 +218,7 @@ function mergeHeaderConfig(userConfig) {
 // Process configurations and export final results
 window.headerConfigs = {
     regular: mergeHeaderConfig(HEADER_MODE_CONFIGS.find(c => c.id === 'regular')),
+    mobile: mergeHeaderConfig(HEADER_MODE_CONFIGS.find(c => c.id === 'mobile')),
     dashboard: mergeHeaderConfig(HEADER_MODE_CONFIGS.find(c => c.id === 'dashboard'))
 };
 
