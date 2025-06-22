@@ -374,9 +374,21 @@
     color: white !important;
 }
 
-.settings-dropdown-content.horizontal .settings-dropdown-item:hover,
+.settings-dropdown-content.horizontal .date-chip.active {
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+    color: white !important;
+}
+
+.settings-dropdown-content.horizontal .date-chip.active:hover {
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+    color: white !important;
+}
+
+.settings-dropdown-content.horizontal .settings-dropdown-item:hover:not(.active),
 .settings-dropdown-content.horizontal .settings-action-item:hover,
-.settings-dropdown-content.horizontal .chart-set-button:hover {
+.settings-dropdown-content.horizontal .chart-set-button:hover:not(.active) {
     background-color: #e9ecef;
     border-color: #adb5bd;
     transform: translateY(-1px);
