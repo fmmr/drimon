@@ -1168,8 +1168,9 @@ window.sortChartsByCategory = function(category) {
 // Chart reload function for chart set changes
 window.loadChartsForMode = function() {
     const isDashboard = window.Utils.isDashboardMode();
-    const range = window.currentRange || 1;
-    const results = window.currentResults || 8000;
+    const urlParams = new URLSearchParams(window.location.search);
+    const range = urlParams.get('range') || 'default';
+    const results = parseInt(urlParams.get('results')) || 8000;
     
     // Destroy existing chart instances
     if (window.chartInstances) {
