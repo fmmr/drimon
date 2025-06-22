@@ -639,9 +639,8 @@ window.UnifiedChartRenderer = {
     _getSeriesLabel: function(seriesConfig, index) {
         if (seriesConfig.titleKey && window.I18n) {
             const translated = window.I18n.translate(seriesConfig.titleKey);
-            if (translated !== seriesConfig.titleKey) {
-                return translated;
-            }
+            // Always use the translated value, even if it's the same as the key
+            return translated;
         }
         return seriesConfig.title || `Series ${index + 1}`;
     },
