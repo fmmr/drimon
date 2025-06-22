@@ -340,7 +340,8 @@
 }
 
 .settings-dropdown-content.horizontal .settings-dropdown-item,
-.settings-dropdown-content.horizontal .settings-action-item {
+.settings-dropdown-content.horizontal .settings-action-item,
+.settings-dropdown-content.horizontal .chart-set-button {
     width: 40px;
     height: 40px;
     margin: 2px;
@@ -352,14 +353,30 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: #495057;
 }
 
 .settings-dropdown-content.horizontal .settings-action-item {
     margin-left: 2px;
 }
 
+.settings-dropdown-content.horizontal .chart-set-button.active {
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+    color: white !important;
+}
+
+.settings-dropdown-content.horizontal .chart-set-button.active:hover {
+    background-color: #007bff !important;
+    border-color: #007bff !important;
+    color: white !important;
+}
+
 .settings-dropdown-content.horizontal .settings-dropdown-item:hover,
-.settings-dropdown-content.horizontal .settings-action-item:hover {
+.settings-dropdown-content.horizontal .settings-action-item:hover,
+.settings-dropdown-content.horizontal .chart-set-button:hover {
     background-color: #e9ecef;
     border-color: #adb5bd;
     transform: translateY(-1px);

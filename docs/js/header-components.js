@@ -136,6 +136,18 @@ function createSettingsDropdown(config) {
         }
     });
     
+    // Add second divider and chart set selector for dashboard mode only
+    if (config.showSecondDivider && config.chartSetSelector && window.Utils && window.Utils.isDashboardMode()) {
+        const secondDivider = document.createElement('div');
+        secondDivider.className = 'dropdown-divider';
+        dropdownContent.appendChild(secondDivider);
+        
+        const chartSetButtons = createChartSetSelector(config.chartSetSelector);
+        chartSetButtons.forEach(button => {
+            dropdownContent.appendChild(button);
+        });
+    }
+    
     // Add dropdown elements to container
     dropdownContainer.appendChild(dropdownButton);
     dropdownContainer.appendChild(dropdownContent);
@@ -144,6 +156,25 @@ function createSettingsDropdown(config) {
     dropdownButton.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
+        
+        // Function to close the dropdown
+        function closeDropdown() {
+            dropdownContent.classList.remove('show', 'positioned', 'horizontal');
+            // Move back to original container
+            dropdownContainer.appendChild(dropdownContent);
+            // Reset only the calculated position values
+            dropdownContent.style.top = '';
+            dropdownContent.style.left = '';
+            dropdownContent.style.right = '';
+            document.removeEventListener('click', handleOutsideClick);
+        }
+        
+        // Check if dropdown is already open (has show class)
+        if (dropdownContent.classList.contains('show')) {
+            // Dropdown is open, close it
+            closeDropdown();
+            return;
+        }
         
         // Position dropdown relative to button and append to body
         const rect = dropdownButton.getBoundingClientRect();
@@ -172,18 +203,6 @@ function createSettingsDropdown(config) {
         
         // No mode-specific classes
         
-        // Function to close the dropdown
-        function closeDropdown() {
-            dropdownContent.classList.remove('show', 'positioned', 'horizontal');
-            // Move back to original container
-            dropdownContainer.appendChild(dropdownContent);
-            // Reset only the calculated position values
-            dropdownContent.style.top = '';
-            dropdownContent.style.left = '';
-            dropdownContent.style.right = '';
-            document.removeEventListener('click', handleOutsideClick);
-        }
-        
         // Close dropdown when clicking outside
         function handleOutsideClick(event) {
             if (!dropdownContainer.contains(event.target) && !dropdownContent.contains(event.target)) {
@@ -192,15 +211,51 @@ function createSettingsDropdown(config) {
         }
         document.addEventListener('click', handleOutsideClick);
         
-        // Close dropdown when clicking on date chips or action buttons
+        // Close dropdown when clicking on date chips, action buttons, or chart set buttons
         dropdownContent.addEventListener('click', (event) => {
-            if (event.target.closest('.date-chip') || event.target.closest('.settings-action-item')) {
+            if (event.target.closest('.date-chip') || event.target.closest('.settings-action-item') || event.target.closest('.chart-set-button')) {
                 closeDropdown();
             }
         });
     });
     
     return dropdownContainer;
+}
+
+function createChartSetSelector(config) {
+    const chartSets = config.chartSets;
+    const buttons = [];
+    
+    Object.keys(chartSets).forEach(setId => {
+        const chartSet = chartSets[setId];
+        
+        const button = document.createElement('button');
+        button.className = 'settings-dropdown-item chart-set-button';
+        button.setAttribute('data-set-id', setId);
+        
+        const icon = document.createElement('i');
+        icon.className = chartSet.icon;
+        button.appendChild(icon);
+        
+        button.addEventListener('click', () => {
+            if (window.Utils && window.Utils.setSelectedChartSet) {
+                window.Utils.setSelectedChartSet(parseInt(setId));
+            }
+            
+            buttons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            button.classList.add('active');
+        });
+        
+        if (setId === '1') {
+            button.classList.add('active');
+        }
+        
+        buttons.push(button);
+    });
+    
+    return buttons;
 }
 
 

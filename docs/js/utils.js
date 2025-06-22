@@ -183,6 +183,42 @@ const Utils = {
     },
     
     /**
+     * Chart set management for dashboard mode
+     */
+    selectedChartSet: 1, // Default to variant 1
+    
+    /**
+     * Get the currently selected chart set
+     * @returns {number} Chart set ID (1-4)
+     */
+    getSelectedChartSet: function() {
+        return this.selectedChartSet;
+    },
+    
+    /**
+     * Set the selected chart set and trigger chart reload
+     * @param {number} setId - Chart set ID (1-4)
+     */
+    setSelectedChartSet: function(setId) {
+        this.selectedChartSet = setId;
+        if (window.loadChartsForMode) {
+            window.loadChartsForMode();
+        }
+    },
+    
+    /**
+     * Get chart IDs for a specific chart set
+     * @param {number} setId - Chart set ID (1-4)
+     * @returns {Array<string>} Array of chart IDs
+     */
+    getChartsForSet: function(setId) {
+        if (window.ChartSets && window.ChartSets[setId]) {
+            return window.ChartSets[setId].charts;
+        }
+        return window.ChartSets[1].charts;
+    },
+    
+    /**
      * Create DOM element with attributes and children
      * @param {string} tagName - HTML tag name
      * @param {Object} [attributes={}] - HTML attributes

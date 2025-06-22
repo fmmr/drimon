@@ -299,7 +299,7 @@ window.UnifiedChartRenderer = {
                     };
                     tickConfig = { maxTicksLimit: window.innerWidth <= 768 ? 8 : 6 };
                     break;
-                
+
                 case 'this-week':
                     timeConfig = {
                         unit: 'hour',
@@ -1003,8 +1003,14 @@ window.refreshCharts = function(range, results) {
 window.updateAllCharts = async function(range, results) {
     if (!window.chartConfigs) return;
     
+    // Get configs based on current mode
+    const isDashboard = window.Utils.isDashboardMode();
+    const configsToUpdate = isDashboard 
+        ? window.getDashboardCharts()
+        : window.chartConfigs;
+    
     // Update each chart individually without destroying
-    const updatePromises = window.chartConfigs.map(async (config) => {
+    const updatePromises = configsToUpdate.map(async (config) => {
         const effectiveRange = range === 'default' ? config.defaultRange : range;
         
         if (window.DataComponents && window.DataComponents.fetchChartData) {
@@ -1028,8 +1034,14 @@ window.updateAllCharts = async function(range, results) {
 window.updateRecentCharts = async function(range, results) {
     if (!window.chartConfigs) return;
     
+    // Get configs based on current mode
+    const isDashboard = window.Utils.isDashboardMode();
+    const allConfigs = isDashboard 
+        ? window.getDashboardCharts()
+        : window.chartConfigs;
+    
     // Filter to only recent data charts
-    const recentCharts = window.chartConfigs.filter(config => {
+    const recentCharts = allConfigs.filter(config => {
         const effectiveRange = range === 'default' ? config.defaultRange : range;
         return parseInt(effectiveRange) <= 3;
     });
@@ -1091,6 +1103,17 @@ window.stopChartAutoRefresh = function() {
     }
 };
 
+// Global function to get dashboard charts for current selected set
+window.getDashboardCharts = function() {
+    const selectedSet = window.Utils.getSelectedChartSet();
+    const chartIds = window.Utils.getChartsForSet(selectedSet);
+    
+    // Return charts in the order specified in the chart set config, not chartConfigs order
+    return chartIds.map(chartId => {
+        return window.chartConfigs.find(config => config.id === chartId);
+    }).filter(Boolean);
+};
+
 // Chart loading function - handles both regular and dashboard modes
 async function loadAllCharts(range = 1, results = 8000, isDashboard = false) {
     if (!window.chartConfigs) {
@@ -1100,10 +1123,10 @@ async function loadAllCharts(range = 1, results = 8000, isDashboard = false) {
     
     // Filter configs for dashboard mode
     const configs = isDashboard 
-        ? window.chartConfigs.filter(config => config.show_dashboard === true).slice(0, 6)
+        ? window.getDashboardCharts()
         : window.chartConfigs;
     
-    // Only initialize chart layout if container is empty (initial load)
+    // Initialize chart layout if container is empty
     const chartContainer = document.getElementById('chartContainer');
     if (chartContainer && chartContainer.children.length === 0) {
         if (window.ChartLayout && window.ChartLayout.initializeChartLayout) {
@@ -1139,4 +1162,29 @@ window.sortChartsByCategory = function(category) {
     if (window.ChartLayout && window.ChartLayout.sortChartsByCategory) {
         window.ChartLayout.sortChartsByCategory(category);
     }
+};
+
+// Chart reload function for chart set changes
+window.loadChartsForMode = function() {
+    const isDashboard = window.Utils.isDashboardMode();
+    const range = window.currentRange || 1;
+    const results = window.currentResults || 8000;
+    
+    // Destroy existing chart instances
+    if (window.chartInstances) {
+        Object.values(window.chartInstances).forEach(chart => {
+            if (chart && chart.destroy) {
+                chart.destroy();
+            }
+        });
+        window.chartInstances = {};
+    }
+    
+    // Clear existing charts and layout for chart set changes
+    const chartContainer = document.getElementById('chartContainer');
+    if (chartContainer) {
+        chartContainer.innerHTML = '';
+    }
+    
+    loadAllCharts(range, results, isDashboard);
 };

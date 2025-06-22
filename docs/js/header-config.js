@@ -18,6 +18,30 @@ const AllDateRanges = [
     { range: 'start', key: 'start', icon: 'fas fa-hourglass-start' }
 ];
 
+// Chart set definitions for dashboard mode
+const ChartSets = {
+    1: {
+        key: 'defaultCharts',
+        icon: 'fas fa-home',
+        charts: ['chart-temp', 'chart-window', 'chart-light', 'chart-battery', 'chart-out-temp', 'chart-temp-diff']
+    },
+    2: {
+        key: 'temperatureCharts',
+        icon: 'fas fa-thermometer-half',
+        charts: ['chart-temp', 'chart-out-temp', 'chart-temp-diff', 'chart-plants-temp', 'chart-sensors-temp', 'chart-soil-moisture']
+    },
+    3: {
+        key: 'weatherCharts',
+        icon: 'fas fa-cloud',
+        charts: ['chart-humidity', 'chart-temperature', 'chart-wind', 'chart-rain', 'chart-light', 'chart-out-temp']
+    },
+    4: {
+        key: 'systemCharts',
+        icon: 'fas fa-cog',
+        charts: ['chart-window', 'chart-light', 'chart-battery', 'chart-battery-voltage', 'chart-wifi', 'chart-time-used']
+    }
+};
+
 // Default header configuration - single source of truth
 const DEFAULT_HEADER_CONFIG = {
     
@@ -66,6 +90,8 @@ const DEFAULT_HEADER_CONFIG = {
                 secondaryDateRanges: [],              // Optional secondary date ranges for row breaks
                 actions: [],                          // No actions in regular mode (they're top-level)
                 showDivider: false,                   // No divider needed since no actions
+                showSecondDivider: false,             // Second divider before chart selector
+                chartSetSelector: undefined,          // Chart set selector config (dashboard only)
                 layout: 'vertical'
             }
         },
@@ -195,7 +221,11 @@ const HEADER_MODE_CONFIGS = [
                         darkModeToggle: { icon: 'fas fa-moon' },
                         statsToggle: { icon: 'fas fa-chart-line' }
                     },
+                    chartSetSelector: {
+                        chartSets: ChartSets
+                    },
                     showDivider: true,                   // Divider between dates and actions
+                    showSecondDivider: true,             // Second divider before chart selector
                     layout: 'horizontal'                 // Better for small dashboard screen
                 }
             }
@@ -238,9 +268,13 @@ window.headerConfigs = {
     dashboard: mergeHeaderConfig(HEADER_MODE_CONFIGS.find(c => c.id === 'dashboard'))
 };
 
+// Export ChartSets globally for use by other modules
+window.ChartSets = ChartSets;
+
 // Also export the raw data for debugging
 window.HeaderConfigData = {
     DEFAULT_HEADER_CONFIG,
     HEADER_MODE_CONFIGS,
-    AllDateRanges
+    AllDateRanges,
+    ChartSets
 };
