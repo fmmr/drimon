@@ -282,9 +282,10 @@ window.UnifiedChartRenderer = {
      * @private
      */
     _createXAxisConfig: function(config) {
-        // Get range from URL params directly (same as _determineSmartTimeFormat)
+        // Get range from URL params and resolve to effective range for this chart
         const urlParams = new URLSearchParams(window.location.search);
-        const range = urlParams.get('range');
+        const urlRange = urlParams.get('range') || 'default';
+        const range = urlRange === 'default' ? config.defaultRange : urlRange;
         
         // Determine time configuration based on range intent first
         let timeConfig, tickConfig;
