@@ -63,6 +63,7 @@ const DEFAULT_HEADER_CONFIG = {
             config: {
                 icon: 'fas fa-cog',
                 dateRanges: AllDateRanges.slice(6),  // Secondary ranges: today, yesterday, this-week, last-week, this-month, last-month, start
+                secondaryDateRanges: [],              // Optional secondary date ranges for row breaks
                 actions: [],                          // No actions in regular mode (they're top-level)
                 showDivider: false,                   // No divider needed since no actions
                 layout: 'vertical'
@@ -187,7 +188,8 @@ const HEADER_MODE_CONFIGS = [
             settingsDropdown: {
                 config: {
                     icon: 'fas fa-cog',
-                    dateRanges: AllDateRanges,           // All ranges since no top-level date chips
+                    dateRanges: AllDateRanges.slice(0, 6),  // First 6: default, 1, 2, 6, 13, 30
+                    secondaryDateRanges: AllDateRanges.slice(6),  // Remaining: today, yesterday, this-week, last-week, this-month, last-month, start
                     actions: ['darkModeToggle', 'statsToggle'],  // Reuse existing components
                     actionConfigs: {
                         darkModeToggle: { icon: 'fas fa-moon' },

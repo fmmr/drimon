@@ -85,17 +85,33 @@ function createSettingsDropdown(config) {
     // Create dropdown button
     const iconClass = config.icon;
     const dropdownButton = document.createElement('button');
-    dropdownButton.className = 'settings-dropdown-button';
+    dropdownButton.className = 'settings-dropdown-button header-button';
     dropdownButton.innerHTML = `<i class="${iconClass}"></i>`;
     dropdownButton.title = 'Settings';
     
     // Create dropdown content
     const dropdownContent = document.createElement('div');
-    dropdownContent.className = `settings-dropdown-content ${layout}`;
+    dropdownContent.className = 'settings-dropdown-content';
     
     // Add date ranges
     if (dateRanges.length > 0) {
         dateRanges.forEach(chip => {
+            const dateChip = createDateChip(chip.range, chip.key, chip.icon, chip.iconDouble, chip.text, chip.textDouble);
+            dateChip.className = 'settings-dropdown-item date-chip';
+            dropdownContent.appendChild(dateChip);
+        });
+    }
+    
+    // Add secondary date ranges (for dashboard mode row break)
+    if (config.secondaryDateRanges && config.secondaryDateRanges.length > 0) {
+        // Add a break element to force new row in horizontal layout
+        if (layout === 'horizontal') {
+            const breakElement = document.createElement('div');
+            breakElement.className = 'row-break';
+            dropdownContent.appendChild(breakElement);
+        }
+        
+        config.secondaryDateRanges.forEach(chip => {
             const dateChip = createDateChip(chip.range, chip.key, chip.icon, chip.iconDouble, chip.text, chip.textDouble);
             dateChip.className = 'settings-dropdown-item date-chip';
             dropdownContent.appendChild(dateChip);
@@ -131,12 +147,24 @@ function createSettingsDropdown(config) {
         
         // Position dropdown relative to button and append to body
         const rect = dropdownButton.getBoundingClientRect();
-        dropdownContent.style.position = 'fixed';
-        dropdownContent.style.top = (rect.bottom + 4) + 'px';
         
-        // Always align to left edge of button
-        dropdownContent.style.left = rect.left + 'px';
-        dropdownContent.style.right = 'auto';
+        // Add positioning classes
+        dropdownContent.classList.add('positioned');
+        if (layout === 'horizontal') {
+            dropdownContent.classList.add('horizontal');
+        }
+        
+        // Set calculated position values only
+        dropdownContent.style.top = (rect.bottom + 4) + 'px';
+        if (layout === 'horizontal') {
+            // For dashboard, align to right edge of button to stay on screen
+            dropdownContent.style.right = (window.innerWidth - rect.right) + 'px';
+            dropdownContent.style.left = 'auto';
+        } else {
+            // For regular mode, align to left edge
+            dropdownContent.style.left = rect.left + 'px';
+            dropdownContent.style.right = 'auto';
+        }
         
         // Move to body to escape header stacking context
         document.body.appendChild(dropdownContent);
@@ -144,19 +172,30 @@ function createSettingsDropdown(config) {
         
         // No mode-specific classes
         
+        // Function to close the dropdown
+        function closeDropdown() {
+            dropdownContent.classList.remove('show', 'positioned', 'horizontal');
+            // Move back to original container
+            dropdownContainer.appendChild(dropdownContent);
+            // Reset only the calculated position values
+            dropdownContent.style.top = '';
+            dropdownContent.style.left = '';
+            dropdownContent.style.right = '';
+            document.removeEventListener('click', handleOutsideClick);
+        }
+        
         // Close dropdown when clicking outside
-        document.addEventListener('click', function closeDropdown(event) {
+        function handleOutsideClick(event) {
             if (!dropdownContainer.contains(event.target) && !dropdownContent.contains(event.target)) {
-                dropdownContent.classList.remove('show');
-                // No mode-specific classes to remove
-                // Move back to original container
-                dropdownContainer.appendChild(dropdownContent);
-                // Reset positioning
-                dropdownContent.style.position = 'absolute';
-                dropdownContent.style.top = '100%';
-                dropdownContent.style.left = '0';
-                dropdownContent.style.right = 'auto';
-                document.removeEventListener('click', closeDropdown);
+                closeDropdown();
+            }
+        }
+        document.addEventListener('click', handleOutsideClick);
+        
+        // Close dropdown when clicking on date chips or action buttons
+        dropdownContent.addEventListener('click', (event) => {
+            if (event.target.closest('.date-chip') || event.target.closest('.settings-action-item')) {
+                closeDropdown();
             }
         });
     });
@@ -497,6 +536,7 @@ function createDarkModeToggle(config) {
     
     const darkModeToggle = document.createElement('button');
     darkModeToggle.id = 'darkModeToggle';
+    darkModeToggle.className = 'header-button';
     
     darkModeToggle.title = window.I18n.translate('darkModeTooltip');
     darkModeToggle.setAttribute('data-i18n-title', 'darkModeTooltip');
@@ -520,6 +560,7 @@ function createStatsToggle(config) {
     
     const statsToggle = document.createElement('button');
     statsToggle.id = 'statsToggle';
+    statsToggle.className = 'header-button';
     
     statsToggle.title = window.I18n.translate('statsTooltip');
     statsToggle.setAttribute('data-i18n-title', 'statsTooltip');
