@@ -228,21 +228,11 @@
 
 .settings-dropdown-content {
     display: none;
-    position: absolute;
-    left: 0;
-    top: 100%;
     background-color: white;
-    width: auto;
     padding: 4px;
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
     border-radius: 4px;
     border: 1px solid #dee2e6;
-    z-index: 9999;
-    margin-top: 4px;
-}
-
-.settings-dropdown-content.show {
-    display: block;
 }
 
 .settings-dropdown-item {
@@ -303,21 +293,23 @@
     margin: 4px 0;
 }
 
-/* Horizontal layout for settings dropdown */
-.settings-dropdown-content.horizontal {
+.settings-dropdown-content.show.horizontal {
+    display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    width: 390px;
+    width: 318px;
 }
 
-/* Dropdown positioning modes */
-.settings-dropdown-content.positioned {
+.settings-dropdown-content.positioned.horizontal {
     position: fixed;
     z-index: 9999;
+    top: 42px;
+    right: 10px;
+    left: auto;
 }
 
 .settings-dropdown-content.horizontal.positioned {
-    width: 390px;
+    width: 318px;
 }
 
 .settings-dropdown-content.horizontal .settings-dropdown-item,

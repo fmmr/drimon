@@ -135,65 +135,23 @@ function createSettingsDropdown(config) {
         e.preventDefault();
         e.stopPropagation();
         
-        // Function to close the dropdown
         function closeDropdown() {
             dropdownContent.classList.remove('show', 'positioned', 'horizontal');
-            // Move back to original container
             dropdownContainer.appendChild(dropdownContent);
-            // Reset all styles
-            dropdownContent.style.top = '';
-            dropdownContent.style.left = '';
-            dropdownContent.style.right = '';
-            dropdownContent.style.display = '';
-            dropdownContent.style.flexDirection = '';
-            dropdownContent.style.flexWrap = '';
-            dropdownContent.style.width = '';
             document.removeEventListener('click', handleOutsideClick);
         }
         
-        // Check if dropdown is already open (has show class)
         if (dropdownContent.classList.contains('show')) {
-            // Dropdown is open, close it
             closeDropdown();
             return;
         }
         
-        // Position dropdown relative to button and append to body
-        const rect = dropdownButton.getBoundingClientRect();
-        
-        // Add positioning classes
         dropdownContent.classList.add('positioned');
-        if (layout === 'horizontal') {
-            dropdownContent.classList.add('horizontal');
-        }
+        dropdownContent.classList.add('horizontal');
         
-        // Set calculated position values only
-        dropdownContent.style.top = (rect.bottom + 4) + 'px';
-        if (layout === 'horizontal') {
-            // For dashboard, align to right edge of button to stay on screen
-            dropdownContent.style.right = (window.innerWidth - rect.right) + 'px';
-            dropdownContent.style.left = 'auto';
-        } else {
-            // For regular mode, align to left edge
-            dropdownContent.style.left = rect.left + 'px';
-            dropdownContent.style.right = 'auto';
-        }
-        
-        // Move to body to escape header stacking context
         document.body.appendChild(dropdownContent);
         dropdownContent.classList.add('show');
         
-        // Force horizontal layout
-        if (layout === 'horizontal') {
-            dropdownContent.style.setProperty('display', 'flex', 'important');
-            dropdownContent.style.setProperty('flex-direction', 'row', 'important');
-            dropdownContent.style.setProperty('flex-wrap', 'wrap', 'important');
-            dropdownContent.style.setProperty('width', '390px', 'important');
-        }
-        
-        // No mode-specific classes
-        
-        // Close dropdown when clicking outside
         function handleOutsideClick(event) {
             if (!dropdownContainer.contains(event.target) && !dropdownContent.contains(event.target)) {
                 closeDropdown();
@@ -201,7 +159,6 @@ function createSettingsDropdown(config) {
         }
         document.addEventListener('click', handleOutsideClick);
         
-        // Close dropdown when clicking on date chips, action buttons, or chart set buttons
         dropdownContent.addEventListener('click', (event) => {
             if (event.target.closest('.date-chip') || event.target.closest('.settings-action-item') || event.target.closest('.chart-set-button')) {
                 closeDropdown();

@@ -355,7 +355,7 @@ li.chartjs-legend-item span,
   font-size: 12px;
 }
 
-.show { display: block !important; }
+.show { display: block; }
 .hide { display: none !important; }
 .flex { display: flex !important; }
 
