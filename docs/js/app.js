@@ -1,9 +1,3 @@
-/**
- * Main Application Module
- *
- * Core initialization and global utilities for the DriMon application.
- */
-
 // Global timezone setting
 const timezone = "Europe/Oslo";
 
