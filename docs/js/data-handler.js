@@ -1,3 +1,52 @@
+// Generic thresholds with n values and n+1 corresponding CSS status classes
+window.THRESHOLDS = {
+    TEMPERATURE: {
+        ranges: [16, 35],
+        statuses: ['low', 'normal', 'critical']
+    },
+    BATTERY: {
+        ranges: [60, 80, 90],
+        statuses: ['critical', 'warning', 'low', 'good']
+    },
+    PRESSURE: {
+        ranges: [1000, 1010],
+        statuses: ['low-pressure', 'normal', 'high-pressure']
+    },
+    WEATHER: {
+        ranges: [17, 25],
+        statuses: ['low', 'normal', 'critical']
+    },
+    WINDOW: {
+        ranges: [75, 100],
+        texts: ['closed', 'ajar', 'open']
+    },
+    LIGHT: {
+        ranges: [5, 500, 9000],
+        texts: ['night', 'dusk', 'cloudy', 'sunny']
+    }
+};
+
+window.getStatusFromThreshold = function(value, thresholdConfig, type = 'statuses') {
+    const ranges = thresholdConfig.ranges;
+    const results = thresholdConfig[type];
+    
+    if (!results) {
+        throw new Error(`Invalid threshold config: missing ${type} property`);
+    }
+    
+    if (results.length !== ranges.length + 1) {
+        throw new Error(`Invalid threshold config: ${results.length} ${type} but ${ranges.length} ranges. Must be n+1.`);
+    }
+    
+    for (let i = 0; i < ranges.length; i++) {
+        if (value < ranges[i]) {
+            return results[i];
+        }
+    }
+    
+    return results[results.length - 1];
+}
+
 // Get elements function for dynamic access to DOM elements 
 function getElements() {
     return {
@@ -138,36 +187,6 @@ function status(data) {
     };
 }
 
-function getClassName(value, lowThreshold, highThreshold) {
-    if (value > highThreshold) return 'high';
-    if (value < lowThreshold) return 'low';
-    return 'norm';
-}
-
-function getBatteryClassName(battery) {
-    if (battery > 80) return 'full';
-    if (battery < 10) return 'bat-low';
-    return 'ok';
-}
-
-function getPressureClassName(pressure) {
-    if (pressure > 1010) return 'pressure-high';
-    if (pressure < 1000) return 'pressure-low';
-    return '';
-}
-
-function getWindowText(windowOpening) {
-    if (windowOpening < 75) return 'Lukket';
-    if (windowOpening < 100) return 'Glippe';
-    return 'Åpent';
-}
-
-function getLightText(light) {
-    if (light < 5) return 'Natt';
-    if (light < 500) return 'Skumring';
-    if (light < 9000) return 'Skyet';
-    return 'Sol';
-}
 
 /**
  * Update the UI elements with the latest data
@@ -182,7 +201,8 @@ function updateUIWithLatestData() {
     
     // Update temperature with dynamic icon
     elements.temperature.innerHTML = `${latestData.temperature} °C`;
-    elements.temperature.parentElement.className = `data-chip ${getClassName(latestData.temperature, 16, 35)}`;
+    const tempStatus = window.getStatusFromThreshold(latestData.temperature, window.THRESHOLDS.TEMPERATURE);
+    elements.temperature.parentElement.className = `data-chip ${tempStatus}`;
     
     // Tooltip is handled by temp-tooltip-updater.js
     
@@ -210,7 +230,8 @@ function updateUIWithLatestData() {
 
     // Update battery with dynamic icon
     elements.battery.innerHTML = `${latestData.battery} %`;
-    elements.battery.parentElement.className = `data-chip ${getBatteryClassName(latestData.battery)}`;
+    const batteryStatus = window.getStatusFromThreshold(latestData.battery, window.THRESHOLDS.BATTERY);
+    elements.battery.parentElement.className = `data-chip ${batteryStatus}`;
     
     // Set tooltip content for battery that includes voltage
     const batteryTooltipData = {
@@ -247,14 +268,10 @@ function updateUIWithLatestData() {
     // Battery voltage element is no longer shown as a separate chip
     
     // Get translated window state using I18n system
-    const windowState = getWindowText(latestData.windowOpening);
-    let displayWindowState = windowState;
+    const windowText = window.getStatusFromThreshold(latestData.windowOpening, window.THRESHOLDS.WINDOW, 'texts');
+    let displayWindowState = windowText;
     if (window.I18n && typeof window.I18n.translate === 'function') {
-        // Map window state to translation key
-        const stateKey = windowState === 'Lukket' ? 'closed' : 
-                         windowState === 'Glippe' ? 'ajar' : 
-                         windowState === 'Åpent' ? 'open' : windowState;
-        displayWindowState = window.I18n.translate(stateKey);
+        displayWindowState = window.I18n.translate(windowText);
     }
     
     if (elements.window) {
@@ -278,29 +295,25 @@ function updateUIWithLatestData() {
         // Update window icon based on state
         const windowIcon = elements.window.parentElement.querySelector('i');
         if (windowIcon) {
-            if (windowState === 'Lukket') {
+            if (windowText === 'Lukket') {
                 windowIcon.className = 'fas fa-window-close mr-1';
-            } else if (windowState === 'Glippe') {
+            } else if (windowText === 'Glippe') {
                 windowIcon.className = 'fas fa-grip-lines-vertical mr-1';
-            } else if (windowState === 'Åpent') {
+            } else if (windowText === 'Åpent') {
                 windowIcon.className = 'fas fa-window-maximize mr-1';
             }
         }
     }
 
     elements.pressure.innerHTML = `${latestData.pressure} hPa`;
-    elements.pressure.parentElement.className = `data-chip ${getPressureClassName(latestData.pressure)}`;
+    const pressureStatus = window.getStatusFromThreshold(latestData.pressure, window.THRESHOLDS.PRESSURE);
+    elements.pressure.parentElement.className = `data-chip ${pressureStatus}`;
 
     // Get translated light state using I18n system
-    const lightState = getLightText(latestData.light);
-    let displayLightState = lightState;
+    const lightText = window.getStatusFromThreshold(latestData.light, window.THRESHOLDS.LIGHT, 'texts');
+    let displayLightState = lightText;
     if (window.I18n && typeof window.I18n.translate === 'function') {
-        // Map light state to translation key
-        const lightKey = lightState === 'Natt' ? 'night' : 
-                         lightState === 'Skumring' ? 'dusk' : 
-                         lightState === 'Skyet' ? 'cloudy' : 
-                         lightState === 'Sol' ? 'sunny' : lightState;
-        displayLightState = window.I18n.translate(lightKey);
+        displayLightState = window.I18n.translate(lightText);
     }
     
     if (elements.light) {

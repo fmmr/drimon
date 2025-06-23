@@ -175,7 +175,8 @@ function updateWeatherDisplay() {
 
     // Update temperature display in the data chip
     elements.metTemp.innerHTML = `yr: ${temperature} °C`;
-    elements.metLink.className = `data-chip weather-data-chip ${temperature > 25 ? 'high' : temperature < 15 ? 'low' : 'norm'}`;
+    const tempStatus = window.getStatusFromThreshold(temperature, window.THRESHOLDS.WEATHER);
+    elements.metLink.className = `data-chip weather-data-chip ${tempStatus}`;
 
     // Get translated labels using I18n system
     let outTempTitle = 'Ute Temperatur';

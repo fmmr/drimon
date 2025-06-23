@@ -192,22 +192,22 @@
 }
 
 
-.norm, .full, .pressure-high {
+.normal, .good, .high-pressure {
     color: var(--success-color);
     border-left: 3px solid var(--success-color);
 }
 
-.high, .bat-low {
+.critical {
     color: var(--error-color);
     border-left: 3px solid var(--error-color);
 }
 
-.low, .pressure-low {
+.low, .low-pressure {
     color: var(--primary-color);
     border-left: 3px solid var(--primary-color);
 }
 
-.ok {
+.warning {
     color: var(--warning-color);
     border-left: 3px solid var(--warning-color);
 }
