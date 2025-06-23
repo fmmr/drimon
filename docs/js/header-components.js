@@ -37,29 +37,7 @@ function createLogoContainer(config) {
     return logoContainer;
 }
 
-/**
- * Creates a time chip element for displaying current time
- * @returns {HTMLElement} The time chip element  
- */
-function createTimeChip() {
-    const timePill = document.createElement('div');
-    timePill.className = 'data-chip time-pill';
-    timePill.setAttribute('data-has-tooltip', 'true');
-    
-    // Add clock icon
-    const timeIcon = document.createElement('i');
-    timeIcon.className = 'fas fa-clock mr-1';
-    timePill.appendChild(timeIcon);
-    
-    // Add time display (will show HH:MM instead of "X minutes ago")
-    const timeSpan = document.createElement('span');
-    timeSpan.id = 'time-since';
-    timeSpan.textContent = '--:--';
-    
-    timePill.appendChild(timeSpan);
-    
-    return timePill;
-}
+// createTimeChip function removed - now handled by ChipHandler
 
 
 /**
@@ -274,170 +252,14 @@ function createChartSetSelector(config) {
 
 
 
-/**
- * Creates a data chip element with icon and value
- * @param {string} id - The ID for the span element
- * @param {string} iconClass - The Font Awesome icon class
- * @param {string} title - The title attribute for the chip
- * @param {string} initialText - Initial text to display
- * @returns {HTMLElement} The data chip element
- */
-function createDataChip(id, iconClass, title, initialText = 'loading') {
-    const dataChip = document.createElement('div');
-    dataChip.className = 'data-chip';
-    
-    // Only add tooltip for specific data chips
-    const showTooltipFor = ['temperature', 'light', 'window', 'battery'];
-    
-    if (showTooltipFor.includes(id)) {
-        // Use data-tooltip-content instead of title for our custom tooltip
-        const tooltipText = window.I18n.translate(title);
-        dataChip.setAttribute('data-tooltip-content', tooltipText);
-        dataChip.setAttribute('data-has-tooltip', 'true');
-    }
-    
-    // Add data-i18n attributes for later translation updates
-    dataChip.setAttribute('data-i18n-title', title);
-    
-    if (iconClass) {
-        const icon = document.createElement('i');
-        icon.className = `${iconClass} mr-1`;
-        dataChip.appendChild(icon);
-    }
-    
-    const span = document.createElement('span');
-    span.id = id;
-    
-    const translatedText = window.I18n.translate(initialText);
-    
-    span.textContent = translatedText;
-    
-    if (initialText === 'loading') {
-        span.setAttribute('data-i18n', 'loading');
-    }
-    
-    dataChip.appendChild(span);
-    
-    return dataChip;
-}
+// createDataChip function removed - now handled by ChipHandler
+
+// createWeatherPill function removed - now handled by ChipHandler
+
+// createSunEventChip function removed - now handled by ChipHandler
 
 /**
- * Creates the weather data chip, restructured to match the sun-events-chip pattern
- * @param {Object} [config] - Configuration object for weather pill
- * @returns {HTMLElement} The weather data chip element
- */
-function createWeatherPill(config = {}) {
-    // Always use div - no mode detection
-    const useDiv = true;
-
-    // Create a single data-chip as the main container (like sun-events-chip)
-    const chip = document.createElement(useDiv ? 'div' : 'a');
-    if (!useDiv) {
-        chip.href = 'https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/1-60206/Norge/Akershus/Asker/R%C3%B8dtangen';
-    }
-    chip.className = 'data-chip weather-data-chip';
-    chip.id = 'met-link';
-
-    // Create weather icon container
-    const weatherIcon = document.createElement('div');
-    weatherIcon.className = 'weather-icon';
-    weatherIcon.id = 'weather-icon-container';
-
-    // Default empty SVG placeholder (will be replaced by weather.js)
-    weatherIcon.innerHTML = `<svg viewBox="0 0 20 20" width="16" height="16" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="10" cy="10" r="9" fill="transparent" stroke="#666" stroke-width="0.5" />
-    </svg>`;
-
-    // Create temperature display container
-    const temperatureDisplay = document.createElement('div');
-    temperatureDisplay.className = 'weather-temp-display';
-
-    // Temperature text element
-    const metTemp = document.createElement('span');
-    metTemp.id = 'met-temp';
-    metTemp.textContent = window.I18n.translate('loading');
-    metTemp.setAttribute('data-i18n', 'loading');
-
-    // Add elements to temperature display
-    temperatureDisplay.appendChild(metTemp);
-
-    // Add icon and temperature to chip
-    chip.appendChild(weatherIcon);
-    chip.appendChild(temperatureDisplay);
-
-    // Add tooltip data
-    const translatedTitle = window.I18n.translate('outTempChart');
-    chip.setAttribute('data-tooltip-content', translatedTitle);
-    chip.setAttribute('data-has-tooltip', 'true');
-    chip.setAttribute('data-i18n-title', 'outTempChart');
-
-    return chip;
-}
-
-/**
- * Creates the sun events chip with moon phase SVG
- * @returns {HTMLElement} The sun events chip
- */
-function createSunEventChip() {
-    const chip = document.createElement('div');
-    chip.className = 'data-chip sun-events-chip';
-    chip.id = 'sun-events-chip';
-    
-    // Create moon phase SVG icon container
-    const moonPhaseIcon = document.createElement('div');
-    moonPhaseIcon.className = 'moon-phase-icon';
-    moonPhaseIcon.id = 'moon-phase-icon';
-    
-    // Default moon SVG (new moon)
-    moonPhaseIcon.innerHTML = `<svg viewBox="0 0 20 20" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="10" cy="10" r="9" fill="#222" stroke="#666" stroke-width="0.5" />
-    </svg>`;
-    
-    // Create time display element
-    const timeDisplay = document.createElement('div');
-    timeDisplay.className = 'sun-event-time';
-    
-    // Main time element for next event
-    const nextEventTime = document.createElement('span');
-    nextEventTime.id = 'next-event-time';
-    nextEventTime.textContent = '--:--';
-    
-    // Remaining time element
-    const remainingTime = document.createElement('span');
-    remainingTime.id = 'remaining-time';
-    remainingTime.className = 'remaining-time';
-    remainingTime.textContent = '';
-    
-    // Add elements to time display
-    timeDisplay.appendChild(nextEventTime);
-    timeDisplay.appendChild(remainingTime);
-    
-    // Add icon and time to chip
-    chip.appendChild(moonPhaseIcon);
-    chip.appendChild(timeDisplay);
-    
-    // Create tooltip content (will be populated by script)
-    const tooltipContent = {
-        sunrise: '--:--',
-        sunset: '--:--',
-        dusk: '--:--',
-        moonrise: '--:--',
-        moonset: '--:--'
-    };
-    
-    // Set data attribute to store tooltip content
-    chip.dataset.tooltipContent = JSON.stringify(tooltipContent);
-    
-    // Mark this element as having a tooltip
-    chip.setAttribute('data-has-tooltip', 'true');
-    
-    // Initial data will be populated by sun-events.js when ready
-    
-    return chip;
-}
-
-/**
- * Creates the data container with all data chips
+ * Creates the data container with all data chips using unified ChipHandler
  * @param {Object} [config] - Configuration object for the data container
  * @returns {HTMLElement} The data container element
  */
@@ -446,35 +268,15 @@ function createDataContainer(config = null) {
     dataContainer.className = 'data-container';
     dataContainer.id = 'infoSection';
     
-    // Config must provide chips, otherwise fail
-    if (!config || !config.chips) {
-        throw new Error('DataContainer requires chips configuration');
-    }
+    // Determine view mode from config or default to 'desktop'
+    const view = config?.view || 'desktop';
     
-    const chips = config.chips;
+    // Use ChipHandler to create all chips for this view
+    const chips = window.ChipHandler.createChipsForView(view);
     
-    // Create and add each chip to the container
-    chips.forEach(chipConfig => {
-        let chip;
-        
-        // Special handling for custom chip types
-        if (chipConfig.type === 'weatherPill') {
-            chip = createWeatherPill();
-        } else if (chipConfig.type === 'sunEventChip') {
-            chip = createSunEventChip();
-        } else {
-            // Create regular data chip
-            chip = createDataChip(
-                chipConfig.id,
-                chipConfig.icon,
-                chipConfig.titleKey,
-                chipConfig.initialText || 'loading'
-            );
-        }
-        
-        if (chip) {
-            dataContainer.appendChild(chip);
-        }
+    // Add each chip to the container
+    chips.forEach(({ element }) => {
+        dataContainer.appendChild(element);
     });
     
     return dataContainer;

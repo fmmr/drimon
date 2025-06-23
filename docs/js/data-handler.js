@@ -1,84 +1,5 @@
-window.THRESHOLDS = {
-    TEMPERATURE: {
-        statusRanges: [16, 35],
-        statuses: ['low', 'normal', 'critical'],
-        iconRanges: [5, 10, 15, 20, 25, 30, 33],
-        icons: ['thermometer-empty', 'thermometer-quarter', 'thermometer-quarter', 'thermometer-half', 'thermometer-half', 'thermometer-three-quarters', 'thermometer-full', 'fire']
-    },
-    BATTERY: {
-        statusRanges: [60, 80, 90],
-        statuses: ['critical', 'warning', 'low', 'good'],
-        iconRanges: [10, 25, 50, 75, 95],
-        icons: ['battery-empty', 'battery-quarter', 'battery-quarter', 'battery-half', 'battery-three-quarters', 'battery-full']
-    },
-    PRESSURE: {
-        statusRanges: [1000, 1010],
-        statuses: ['low-pressure', 'normal', 'high-pressure']
-    },
-    WEATHER: {
-        statusRanges: [17, 25],
-        statuses: ['low', 'normal', 'critical']
-    },
-    WINDOW: {
-        textRanges: [75, 100],
-        texts: ['closed', 'ajar', 'open'],
-        iconRanges: [75, 100],
-        icons: ['window-close', 'grip-lines-vertical', 'window-maximize']
-    },
-    LIGHT: {
-        textRanges: [5, 500, 9000],
-        texts: ['night', 'dusk', 'cloudy', 'sunny']
-    }
-};
-
-window.getStatusFromThreshold = function(value, thresholdConfig, type = 'statuses') {
-    let ranges;
-    if (type === 'statuses') {
-        ranges = thresholdConfig.statusRanges;
-    } else if (type === 'icons') {
-        ranges = thresholdConfig.iconRanges;
-    } else if (type === 'texts') {
-        ranges = thresholdConfig.textRanges;
-    } else {
-        throw new Error(`Invalid type: ${type}. Must be 'statuses', 'icons', or 'texts'`);
-    }
-    
-    const results = thresholdConfig[type];
-    
-    if (!ranges) {
-        throw new Error(`Invalid threshold config: missing ${type}Ranges property`);
-    }
-    
-    if (!results) {
-        throw new Error(`Invalid threshold config: missing ${type} property`);
-    }
-    
-    if (results.length !== ranges.length + 1) {
-        throw new Error(`Invalid threshold config: ${results.length} ${type} but ${ranges.length} ranges. Must be n+1.`);
-    }
-    
-    for (let i = 0; i < ranges.length; i++) {
-        if (value < ranges[i]) {
-            return results[i];
-        }
-    }
-    
-    return results[results.length - 1];
-}
-
-function getElements() {
-    return {
-        temperature: document.getElementById('temperature'),
-        battery: document.getElementById('battery'),
-        // batteryVolt removed from header so don't include it here
-        window: document.getElementById('window'),
-        pressure: document.getElementById('pressure'),
-        light: document.getElementById('light'),
-        timeSince: document.getElementById('time-since'),
-        title: document.getElementById('main-title'),
-        metTemp: document.getElementById('met-temp')
-    };
-}
+// THRESHOLDS and getStatusFromThreshold moved to chip-config.js and chip-handler.js
+// getElements function removed - ChipHandler manages chip elements directly
 
 // Add an event listener for language changes
 document.addEventListener('languageChanged', () => {
@@ -89,8 +10,8 @@ document.addEventListener('languageChanged', () => {
         window.moment.locale(momentLocale);
     }
     
-    // Update data chips with new language
-    updateUIWithLatestData();
+    // Update data chips with new language using unified ChipHandler
+    window.ChipHandler.updateChipsForLanguageChange();
     
     // Update weather display if available
     if (typeof updateWeatherDisplay === 'function') {
@@ -128,14 +49,7 @@ let latestData = window.latestData;
 
 async function fetchData() {
     try {
-        // Get elements dynamically (after they've been created)
-        const elements = getElements();
-        
-        // If elements aren't loaded yet, try again later
-        if (!elements.temperature || !elements.battery) {
-            setTimeout(fetchData, 500);
-            return;
-        }
+        // ChipHandler manages chip elements - no need to check here
         
         const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
         const responses = await Promise.all([
@@ -187,14 +101,11 @@ async function fetchData() {
             lastUpdated: moment(data4.created_at).format('L LTS')
         };
 
-        // Call the updateUIWithLatestData function to update the UI
-        updateUIWithLatestData();
+        // Call the unified ChipHandler to update all chips
+        window.ChipHandler.updateAllChips(latestData);
     } catch (error) {
         console.error('Error fetching data:', error);
-        const elements = getElements();
-        if (elements.temperature) elements.temperature.textContent = 'Temperatur: Feil';
-        if (elements.battery) elements.battery.textContent = 'Batteri: Feil';
-        if (elements.timeSince) elements.timeSince.textContent = 'Sist oppdatert: Feil';
+        // No chip-specific error handling - let ChipHandler manage all chip state
     }
 }
 
@@ -206,220 +117,4 @@ function status(data) {
 }
 
 
-/**
- * Update the UI elements with the latest data
- * This function can be called both after data fetching and after language changes
- */
-function updateUIWithLatestData() {
-    // Ensure we have data and elements
-    if (!latestData.temperature) return;
-    
-    const elements = getElements();
-    if (!elements.temperature) return;
-    
-    // Update temperature with dynamic icon
-    elements.temperature.innerHTML = `${latestData.temperature} °C`;
-    const tempStatus = window.getStatusFromThreshold(latestData.temperature, window.THRESHOLDS.TEMPERATURE);
-    elements.temperature.parentElement.className = `data-chip ${tempStatus}`;
-    
-    // Tooltip is handled by temp-tooltip-updater.js
-    
-    // Update temperature icon based on value
-    const tempIcon = elements.temperature.parentElement.querySelector('i');
-    if (tempIcon) {
-        const tempIconName = window.getStatusFromThreshold(latestData.temperature, window.THRESHOLDS.TEMPERATURE, 'icons');
-        tempIcon.className = `fas fa-${tempIconName} mr-1`;
-    }
-
-    // Update battery with dynamic icon
-    elements.battery.innerHTML = `${latestData.battery} %`;
-    const batteryStatus = window.getStatusFromThreshold(latestData.battery, window.THRESHOLDS.BATTERY);
-    elements.battery.parentElement.className = `data-chip ${batteryStatus}`;
-    
-    // Set tooltip content for battery that includes voltage
-    const batteryTooltipData = {
-        [window.I18n.translate('battery')]: `${latestData.battery}%`,
-        [window.I18n.translate('batteryVoltage')]: `${latestData.batteryVolt}V`
-    };
-
-    // Format battery tooltip using HTML tabular formatter if available
-    const batteryTooltip = window.Utils && typeof window.Utils.formatTabularTooltip === 'function'
-        ? window.Utils.formatTabularTooltip(batteryTooltipData, { useHTML: true })
-        : `${window.I18n.translate('battery')}: ${latestData.battery}%\n${window.I18n.translate('batteryVoltage')}: ${latestData.batteryVolt}V`;
-
-    elements.battery.parentElement.setAttribute('data-tooltip-content', batteryTooltip);
-    elements.battery.parentElement.setAttribute('data-has-tooltip', 'true');
-    
-    // Update battery icon based on level
-    const batteryIcon = elements.battery.parentElement.querySelector('i');
-    if (batteryIcon) {
-        const batteryIconName = window.getStatusFromThreshold(latestData.battery, window.THRESHOLDS.BATTERY, 'icons');
-        batteryIcon.className = `fas fa-${batteryIconName} mr-1`;
-    }
-
-    // Battery voltage element is no longer shown as a separate chip
-    
-    // Get translated window state using I18n system
-    const windowText = window.getStatusFromThreshold(latestData.windowOpening, window.THRESHOLDS.WINDOW, 'texts');
-    let displayWindowState = windowText;
-    if (window.I18n && typeof window.I18n.translate === 'function') {
-        displayWindowState = window.I18n.translate(windowText);
-    }
-    
-    if (elements.window) {
-        elements.window.innerHTML = displayWindowState;
-        elements.window.parentElement.className = `data-chip`;
-        
-        // Set tooltip content to show the actual value
-        const windowTooltipData = {
-            [window.I18n.translate('window')]: `${latestData.windowOpening}mm`,
-            [window.I18n.translate('status')]: displayWindowState
-        };
-
-        // Format window tooltip using HTML tabular formatter if available
-        const windowTooltip = window.Utils && typeof window.Utils.formatTabularTooltip === 'function'
-            ? window.Utils.formatTabularTooltip(windowTooltipData, { useHTML: true })
-            : `${window.I18n.translate('window')}: ${latestData.windowOpening}mm\n${displayWindowState}`;
-
-        elements.window.parentElement.setAttribute('data-tooltip-content', windowTooltip);
-        elements.window.parentElement.setAttribute('data-has-tooltip', 'true');
-        
-        // Update window icon based on state
-        const windowIcon = elements.window.parentElement.querySelector('i');
-        if (windowIcon) {
-            const windowIconName = window.getStatusFromThreshold(latestData.windowOpening, window.THRESHOLDS.WINDOW, 'icons');
-            windowIcon.className = `fas fa-${windowIconName} mr-1`;
-        }
-    }
-
-    elements.pressure.innerHTML = `${latestData.pressure} hPa`;
-    const pressureStatus = window.getStatusFromThreshold(latestData.pressure, window.THRESHOLDS.PRESSURE);
-    elements.pressure.parentElement.className = `data-chip ${pressureStatus}`;
-
-    // Get translated light state using I18n system
-    const lightText = window.getStatusFromThreshold(latestData.light, window.THRESHOLDS.LIGHT, 'texts');
-    let displayLightState = lightText;
-    if (window.I18n && typeof window.I18n.translate === 'function') {
-        displayLightState = window.I18n.translate(lightText);
-    }
-    
-    if (elements.light) {
-        elements.light.innerHTML = displayLightState;
-        elements.light.parentElement.className = `data-chip`;
-        
-        // Set tooltip content to show the actual light value
-        const lightTooltipData = {
-            [window.I18n.translate('ceiling')]: `${latestData.light} lux`,
-            [window.I18n.translate('light')]: displayLightState
-        };
-
-        // Format light tooltip using HTML tabular formatter if available
-        const lightTooltip = window.Utils && typeof window.Utils.formatTabularTooltip === 'function'
-            ? window.Utils.formatTabularTooltip(lightTooltipData, { useHTML: true })
-            : `${window.I18n.translate('ceiling')}: ${latestData.light} lux\n${displayLightState}`;
-
-        elements.light.parentElement.setAttribute('data-tooltip-content', lightTooltip);
-        elements.light.parentElement.setAttribute('data-has-tooltip', 'true');
-    }
-
-    if (elements.timeSince) {
-        // Show HH:MM in the pill instead of "X minutes ago"
-        const createdDate = new Date(latestData.createdAt);
-        const timeFormatted = createdDate.toLocaleTimeString('no-NO', { 
-            hour: '2-digit', 
-            minute: '2-digit' 
-        });
-        elements.timeSince.textContent = timeFormatted;
-        elements.timeSince.setAttribute('data-timestamp', createdDate.toISOString());
-    }
-    
-    // Use data-tooltip-content instead of title
-    const timeIndicator = elements.timeSince?.parentElement;
-
-    const timeTooltipData = {};
-    
-    // Create labels using channel info from THINGSPEAK.CHANNELS
-    const drimonLabel = `${window.I18n.translate(window.THINGSPEAK.CHANNELS.DRIMON_CHANNEL.translationKey)} (${window.THINGSPEAK.CHANNELS.DRIMON_CHANNEL.id})`;
-    const tempLabel = `${window.I18n.translate(window.THINGSPEAK.CHANNELS.TEMP_CHANNEL.translationKey)} (${window.THINGSPEAK.CHANNELS.TEMP_CHANNEL.id})`;
-    const techLabel = `${window.I18n.translate(window.THINGSPEAK.CHANNELS.TECH_CHANNEL.translationKey)} (${window.THINGSPEAK.CHANNELS.TECH_CHANNEL.id})`;
-    const extLabel = `${window.I18n.translate(window.THINGSPEAK.CHANNELS.EXT_CHANNEL.translationKey)} (${window.THINGSPEAK.CHANNELS.EXT_CHANNEL.id})`;
-
-    // Add data from different channels with translated labels
-    // timeTooltipData[drimonLabel] = latestData.lastUpdated;
-    
-    // Get data from other channels if available
-    if (window.latestData1) {
-        timeTooltipData[drimonLabel] = window.latestData1.lastUpdated;
-    }
-
-    if (window.latestData2) {
-        timeTooltipData[tempLabel] = window.latestData2.lastUpdated;
-    }
-    
-    if (window.latestData3) {
-        timeTooltipData[techLabel] = window.latestData3.lastUpdated;
-    }
-    if (window.latestData4) {
-        timeTooltipData[extLabel] = window.latestData4.lastUpdated;
-    }
-    
-    // Add local time
-    timeTooltipData[window.I18n.translate('localTime')] = moment().format('L LTS');
-    
-    // Add weather data timestamps if available
-    if (window.latestWeatherData && window.latestWeatherData.properties) {
-        const weatherData = window.latestWeatherData.properties;
-        
-        // 1. First add the forecast time (the actual time the data is for)
-        if (weatherData.timeseries && weatherData.timeseries.length > 0) {
-            timeTooltipData[window.I18n.translate('forecastTime')] = moment(weatherData.timeseries[0].time).format('L LTS');
-        }
-        
-        // 2. Then add the nowcast data update time (when met.no updated their data)
-        if (weatherData.meta?.updated_at) {
-            timeTooltipData[window.I18n.translate('nowcastUpdated')] = moment(weatherData.meta.updated_at).format('L LTS');
-        }
-    }
-    
-    // 3. Finally add the forecast data update time
-    if (window.latestForecastData && window.latestForecastData._lastUpdated) {
-        timeTooltipData[window.I18n.translate('forecastUpdated')] = moment(window.latestForecastData._lastUpdated).format('L LTS');
-    } 
-    // If we don't have forecast data yet but we have the Forecast module, try to get it
-    else if (window.Forecast && typeof window.Forecast.fetchForecastData === 'function') {
-        // Try to fetch forecast data on demand
-        window.Forecast.fetchForecastData().then(data => {
-            if (data && data._lastUpdated) {
-                // We'll update this in the next refresh
-            }
-        }).catch(() => {});
-    }
-
-    // Add the "X minutes ago" text as the first item in the tooltip
-    const updateTimeData = {
-        [window.I18n.translate('time')]: latestData.timeSince
-    };
-    
-    // Combine update time with other channel data
-    const combinedTooltipData = { ...updateTimeData, ...timeTooltipData };
-    
-    // Format time tooltip using HTML tabular formatter with section divider
-    const timeTooltip = window.Utils && typeof window.Utils.formatTabularTooltip === 'function'
-        ? window.Utils.formatTabularTooltip(combinedTooltipData, { 
-            useHTML: true, 
-            dividerAfter: window.I18n.translate('time') // Divider after the time update info
-          })
-        : JSON.stringify(combinedTooltipData);
-
-    if (timeIndicator) {
-        timeIndicator.setAttribute('data-tooltip-content', timeTooltip);
-        timeIndicator.setAttribute('data-has-tooltip', 'true');
-    }
-    
-    if (elements.title) {
-        elements.title.title = latestData.status;
-    }
-    
-    // Update page title
-    document.title = `${latestData.temperature}°C | DriMon`;
-}
+// updateUIWithLatestData function removed - now handled by unified ChipHandler

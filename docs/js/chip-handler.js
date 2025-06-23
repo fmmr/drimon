@@ -8,6 +8,44 @@
 /**
  * Chip Handler - manages all chip operations
  */
+/**
+ * Threshold utility function - moved from data-handler.js
+ */
+window.getStatusFromThreshold = function(value, thresholdConfig, type = 'statuses') {
+    let ranges;
+    if (type === 'statuses') {
+        ranges = thresholdConfig.statusRanges;
+    } else if (type === 'icons') {
+        ranges = thresholdConfig.iconRanges;
+    } else if (type === 'texts') {
+        ranges = thresholdConfig.textRanges;
+    } else {
+        throw new Error(`Invalid type: ${type}. Must be 'statuses', 'icons', or 'texts'`);
+    }
+    
+    const results = thresholdConfig[type];
+    
+    if (!ranges) {
+        throw new Error(`Invalid threshold config: missing ${type}Ranges property`);
+    }
+    
+    if (!results) {
+        throw new Error(`Invalid threshold config: missing ${type} property`);
+    }
+    
+    if (results.length !== ranges.length + 1) {
+        throw new Error(`Invalid threshold config: ${results.length} ${type} but ${ranges.length} ranges. Must be n+1.`);
+    }
+    
+    for (let i = 0; i < ranges.length; i++) {
+        if (value < ranges[i]) {
+            return results[i];
+        }
+    }
+    
+    return results[results.length - 1];
+};
+
 window.ChipHandler = (function() {
     
     // Cache for created chip elements
@@ -23,25 +61,42 @@ window.ChipHandler = (function() {
      * @returns {HTMLElement} Created chip element
      */
     function createChip(chipKey, config) {
-        const chip = document.createElement('div');
-        chip.className = config.containerClass;
+        let chip;
+        let valueSpan;
+        let iconElement = null;
         
-        // Add icon if configured
-        if (config.hasIcon) {
-            const icon = document.createElement('i');
-            icon.className = 'fas fa-question mr-1'; // Default icon, will be updated
-            chip.appendChild(icon);
+        // Handle special chip types with complex DOM structures
+        if (chipKey === 'weather') {
+            chip = createWeatherChip(config);
+            valueSpan = chip.querySelector('#met-temp');
+            iconElement = chip.querySelector('.weather-icon');
+        } else if (chipKey === 'sunEvents') {
+            chip = createSunEventsChip(config);
+            valueSpan = chip.querySelector('#next-event-time');
+            iconElement = chip.querySelector('#moon-phase-icon');
+        } else {
+            // Standard chip creation
+            chip = document.createElement('div');
+            chip.className = config.containerClass;
+            
+            // Add icon if configured
+            if (config.hasIcon) {
+                const icon = document.createElement('i');
+                icon.className = 'fas fa-question mr-1'; // Default icon, will be updated
+                chip.appendChild(icon);
+                iconElement = icon;
+            }
+            
+            // Add value/text span
+            valueSpan = document.createElement('span');
+            valueSpan.id = config.elementId;
+            valueSpan.textContent = window.I18n.translate('loading');
+            valueSpan.setAttribute('data-i18n', 'loading');
+            chip.appendChild(valueSpan);
         }
         
-        // Add value/text span
-        const valueSpan = document.createElement('span');
-        valueSpan.id = config.elementId;
-        valueSpan.textContent = window.I18n.translate('loading');
-        valueSpan.setAttribute('data-i18n', 'loading');
-        chip.appendChild(valueSpan);
-        
         // Add tooltip if configured
-        if (config.hasTooltip) {
+        if (config.hasTooltip && config.tooltipKey) {
             const tooltipText = window.I18n.translate(config.tooltipKey);
             chip.setAttribute('data-tooltip-content', tooltipText);
             chip.setAttribute('data-has-tooltip', 'true');
@@ -52,8 +107,87 @@ window.ChipHandler = (function() {
         chipElements[chipKey] = {
             container: chip,
             valueElement: valueSpan,
-            iconElement: config.hasIcon ? chip.querySelector('i') : null
+            iconElement: iconElement
         };
+        
+        return chip;
+    }
+    
+    /**
+     * Create weather chip with complex DOM structure
+     * @param {Object} config - Chip configuration
+     * @returns {HTMLElement} Weather chip element
+     */
+    function createWeatherChip(config) {
+        const chip = document.createElement('div');
+        chip.className = config.containerClass;
+        chip.id = 'met-link';
+
+        // Create weather icon container
+        const weatherIcon = document.createElement('div');
+        weatherIcon.className = 'weather-icon';
+        weatherIcon.id = 'weather-icon-container';
+        weatherIcon.innerHTML = `<svg viewBox="0 0 20 20" width="16" height="16" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="10" cy="10" r="9" fill="transparent" stroke="#666" stroke-width="0.5" />
+        </svg>`;
+
+        // Create temperature display container
+        const temperatureDisplay = document.createElement('div');
+        temperatureDisplay.className = 'weather-temp-display';
+
+        // Temperature text element
+        const metTemp = document.createElement('span');
+        metTemp.id = config.elementId;
+        metTemp.textContent = window.I18n.translate('loading');
+        metTemp.setAttribute('data-i18n', 'loading');
+
+        temperatureDisplay.appendChild(metTemp);
+        chip.appendChild(weatherIcon);
+        chip.appendChild(temperatureDisplay);
+
+        return chip;
+    }
+    
+    /**
+     * Create sun events chip with complex DOM structure
+     * @param {Object} config - Chip configuration
+     * @returns {HTMLElement} Sun events chip element
+     */
+    function createSunEventsChip(config) {
+        const chip = document.createElement('div');
+        chip.className = config.containerClass;
+        chip.id = config.elementId;
+        
+        // Create moon phase SVG icon container
+        const moonPhaseIcon = document.createElement('div');
+        moonPhaseIcon.className = 'moon-phase-icon';
+        moonPhaseIcon.id = 'moon-phase-icon';
+        moonPhaseIcon.innerHTML = `<svg viewBox="0 0 20 20" width="20" height="20" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="10" cy="10" r="9" fill="#222" stroke="#666" stroke-width="0.5" />
+        </svg>`;
+        
+        // Create time display element
+        const timeDisplay = document.createElement('div');
+        timeDisplay.className = 'sun-event-time';
+        
+        // Main time element for next event
+        const nextEventTime = document.createElement('span');
+        nextEventTime.id = 'next-event-time';
+        nextEventTime.textContent = '--:--';
+        
+        // Remaining time element (empty now)
+        const remainingTime = document.createElement('span');
+        remainingTime.id = 'remaining-time';
+        remainingTime.className = 'remaining-time';
+        remainingTime.textContent = '';
+        
+        timeDisplay.appendChild(nextEventTime);
+        timeDisplay.appendChild(remainingTime);
+        chip.appendChild(moonPhaseIcon);
+        chip.appendChild(timeDisplay);
+        
+        // Mark as having tooltip
+        chip.setAttribute('data-has-tooltip', 'true');
         
         return chip;
     }
@@ -91,15 +225,32 @@ window.ChipHandler = (function() {
             return;
         }
         
-        // Get data value
-        const value = data[config.dataKey];
-        if (value === null || value === undefined) return;
+        // Get data value - special handling for weather chip
+        let value;
+        if (chipKey === 'weather') {
+            // Weather data comes from latestWeatherData
+            if (!window.latestWeatherData || !window.latestWeatherData.properties) return;
+            const details = window.latestWeatherData.properties.timeseries[0].data.instant.details;
+            value = Math.round(details.air_temperature * 10) / 10;
+        } else {
+            value = data[config.dataKey];
+            if (value === null || value === undefined) return;
+        }
         
         // Store latest value
         latestChipData[chipKey] = value;
         
         // Update display content
-        if (config.hasText) {
+        if (chipKey === 'timeChip') {
+            // Special handling for time chip - show HH:MM format
+            const createdDate = new Date(latestChipData.createdAt || data.createdAt);
+            const timeFormatted = createdDate.toLocaleTimeString('no-NO', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            elements.valueElement.textContent = timeFormatted;
+            elements.valueElement.setAttribute('data-timestamp', createdDate.toISOString());
+        } else if (config.hasText) {
             // Text-based chip (window, light)
             const textValue = window.getStatusFromThreshold(value, config.thresholds, 'texts');
             let displayText = textValue;
@@ -186,6 +337,59 @@ window.ChipHandler = (function() {
                     [window.I18n.translate('ceiling')]: `${value} lux`,
                     [window.I18n.translate('light')]: displayLightState
                 };
+                break;
+                
+            case 'timeChip':
+                // Complex time tooltip with multiple channel timestamps
+                const timeTooltipData = {};
+                
+                // Create labels using channel info from THINGSPEAK.CHANNELS
+                const drimonLabel = `${window.I18n.translate(window.THINGSPEAK.CHANNELS.DRIMON_CHANNEL.translationKey)} (${window.THINGSPEAK.CHANNELS.DRIMON_CHANNEL.id})`;
+                const tempLabel = `${window.I18n.translate(window.THINGSPEAK.CHANNELS.TEMP_CHANNEL.translationKey)} (${window.THINGSPEAK.CHANNELS.TEMP_CHANNEL.id})`;
+                const techLabel = `${window.I18n.translate(window.THINGSPEAK.CHANNELS.TECH_CHANNEL.translationKey)} (${window.THINGSPEAK.CHANNELS.TECH_CHANNEL.id})`;
+                const extLabel = `${window.I18n.translate(window.THINGSPEAK.CHANNELS.EXT_CHANNEL.translationKey)} (${window.THINGSPEAK.CHANNELS.EXT_CHANNEL.id})`;
+
+                // Add data from different channels
+                if (window.latestData1) {
+                    timeTooltipData[drimonLabel] = window.latestData1.lastUpdated;
+                }
+                if (window.latestData2) {
+                    timeTooltipData[tempLabel] = window.latestData2.lastUpdated;
+                }
+                if (window.latestData3) {
+                    timeTooltipData[techLabel] = window.latestData3.lastUpdated;
+                }
+                if (window.latestData4) {
+                    timeTooltipData[extLabel] = window.latestData4.lastUpdated;
+                }
+                
+                // Add local time
+                timeTooltipData[window.I18n.translate('localTime')] = window.moment().format('L LTS');
+                
+                // Add weather data timestamps if available
+                if (window.latestWeatherData && window.latestWeatherData.properties) {
+                    const weatherData = window.latestWeatherData.properties;
+                    
+                    if (weatherData.timeseries && weatherData.timeseries.length > 0) {
+                        timeTooltipData[window.I18n.translate('forecastTime')] = window.moment(weatherData.timeseries[0].time).format('L LTS');
+                    }
+                    
+                    if (weatherData.meta?.updated_at) {
+                        timeTooltipData[window.I18n.translate('nowcastUpdated')] = window.moment(weatherData.meta.updated_at).format('L LTS');
+                    }
+                }
+                
+                if (window.latestForecastData && window.latestForecastData._lastUpdated) {
+                    timeTooltipData[window.I18n.translate('forecastUpdated')] = window.moment(window.latestForecastData._lastUpdated).format('L LTS');
+                }
+
+                // Add the "X minutes ago" text as the first item in the tooltip
+                const updateTimeData = {
+                    [window.I18n.translate('time')]: latestChipData.timeSince || window.latestData?.timeSince
+                };
+                
+                // Combine update time with other channel data
+                tooltipData = { ...updateTimeData, ...timeTooltipData };
                 break;
                 
             default:
@@ -287,8 +491,6 @@ window.ChipHandler = (function() {
     function initialize() {
         // Listen for language changes
         document.addEventListener('languageChanged', updateChipsForLanguageChange);
-        
-        console.log('ChipHandler initialized');
     }
     
     // Public API

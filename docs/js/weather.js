@@ -143,7 +143,7 @@ function updateDisplay(data) {
 }
 
 // Separate function to update display that can be called when language changes
-function updateWeatherDisplay() {
+window.updateWeatherDisplay = function updateWeatherDisplay() {
     // Skip if we don't have weather data yet
     if (!latestWeatherData) return;
 

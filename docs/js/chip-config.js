@@ -84,13 +84,16 @@ const ChipConfigs = {
     },
     
     weather: {
-        dataKey: 'metTemp', // Special case - handled by weather.js
+        dataKey: 'metTemp', // Gets data from latestWeatherData
+        unit: '°C',
         hasIcon: true,
         hasStatus: true,
-        customUpdate: true,
-        updateFunction: 'updateWeatherDisplay',
+        thresholds: {
+            statusRanges: [17, 25],
+            statuses: ['low', 'normal', 'critical']
+        },
         hasTooltip: true,
-        customTooltip: true,
+        customTooltip: true, // Complex weather tooltip 
         tooltipKey: 'outTempChart',
         views: ['mobile', 'desktop', 'dashboard'],
         order: 3,
@@ -117,7 +120,7 @@ const ChipConfigs = {
             statusRanges: [1000, 1010],
             statuses: ['low-pressure', 'normal', 'high-pressure']
         },
-        tooltipKey: 'pressure',
+        hasTooltip: false,
         views: ['mobile', 'desktop', 'dashboard'],
         order: 5,
         elementId: 'pressure'
@@ -248,6 +251,36 @@ function getAllChipKeys() {
     return Object.keys(ChipConfigs);
 }
 
+/**
+ * Generate THRESHOLDS object from chip configurations for backward compatibility
+ * @returns {Object} THRESHOLDS object in the old format
+ */
+function generateThresholds() {
+    const thresholds = {};
+    
+    Object.keys(ChipConfigs).forEach(chipKey => {
+        const config = mergeChipConfig(ChipConfigs[chipKey]);
+        
+        if (config.thresholds && Object.keys(config.thresholds).length > 0) {
+            // Map chip keys to THRESHOLDS keys
+            let thresholdKey;
+            switch (chipKey) {
+                case 'temperature': thresholdKey = 'TEMPERATURE'; break;
+                case 'battery': thresholdKey = 'BATTERY'; break;
+                case 'pressure': thresholdKey = 'PRESSURE'; break;
+                case 'weather': thresholdKey = 'WEATHER'; break;
+                case 'window': thresholdKey = 'WINDOW'; break;
+                case 'light': thresholdKey = 'LIGHT'; break;
+                default: return; // Skip chips without threshold mapping
+            }
+            
+            thresholds[thresholdKey] = config.thresholds;
+        }
+    });
+    
+    return thresholds;
+}
+
 // Export configurations and utilities
 window.ChipConfig = {
     // Configurations
@@ -258,8 +291,12 @@ window.ChipConfig = {
     mergeChipConfig,
     getChipConfig,
     getChipsForView,
-    getAllChipKeys
+    getAllChipKeys,
+    generateThresholds
 };
+
+// Create THRESHOLDS object for backward compatibility
+window.THRESHOLDS = generateThresholds();
 
 // Make individual functions available globally for backward compatibility
 window.getChipConfig = getChipConfig;
