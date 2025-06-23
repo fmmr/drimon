@@ -1,34 +1,53 @@
-// Generic thresholds with n values and n+1 corresponding CSS status classes
 window.THRESHOLDS = {
     TEMPERATURE: {
-        ranges: [16, 35],
-        statuses: ['low', 'normal', 'critical']
+        statusRanges: [16, 35],
+        statuses: ['low', 'normal', 'critical'],
+        iconRanges: [5, 10, 15, 20, 25, 30, 33],
+        icons: ['fas fa-thermometer-empty mr-1', 'fas fa-thermometer-quarter mr-1', 'fas fa-thermometer-quarter mr-1', 'fas fa-thermometer-half mr-1', 'fas fa-thermometer-half mr-1', 'fas fa-thermometer-three-quarters mr-1', 'fas fa-thermometer-full mr-1', 'fas fa-fire mr-1']
     },
     BATTERY: {
-        ranges: [60, 80, 90],
-        statuses: ['critical', 'warning', 'low', 'good']
+        statusRanges: [60, 80, 90],
+        statuses: ['critical', 'warning', 'low', 'good'],
+        iconRanges: [10, 25, 50, 75, 95],
+        icons: ['fas fa-battery-empty mr-1', 'fas fa-battery-quarter mr-1', 'fas fa-battery-quarter mr-1', 'fas fa-battery-half mr-1', 'fas fa-battery-three-quarters mr-1', 'fas fa-battery-full mr-1']
     },
     PRESSURE: {
-        ranges: [1000, 1010],
+        statusRanges: [1000, 1010],
         statuses: ['low-pressure', 'normal', 'high-pressure']
     },
     WEATHER: {
-        ranges: [17, 25],
+        statusRanges: [17, 25],
         statuses: ['low', 'normal', 'critical']
     },
     WINDOW: {
-        ranges: [75, 100],
-        texts: ['closed', 'ajar', 'open']
+        textRanges: [75, 100],
+        texts: ['closed', 'ajar', 'open'],
+        iconRanges: [75, 100],
+        icons: ['fas fa-window-close mr-1', 'fas fa-grip-lines-vertical mr-1', 'fas fa-window-maximize mr-1']
     },
     LIGHT: {
-        ranges: [5, 500, 9000],
+        textRanges: [5, 500, 9000],
         texts: ['night', 'dusk', 'cloudy', 'sunny']
     }
 };
 
 window.getStatusFromThreshold = function(value, thresholdConfig, type = 'statuses') {
-    const ranges = thresholdConfig.ranges;
+    let ranges;
+    if (type === 'statuses') {
+        ranges = thresholdConfig.statusRanges;
+    } else if (type === 'icons') {
+        ranges = thresholdConfig.iconRanges;
+    } else if (type === 'texts') {
+        ranges = thresholdConfig.textRanges;
+    } else {
+        throw new Error(`Invalid type: ${type}. Must be 'statuses', 'icons', or 'texts'`);
+    }
+    
     const results = thresholdConfig[type];
+    
+    if (!ranges) {
+        throw new Error(`Invalid threshold config: missing ${type}Ranges property`);
+    }
     
     if (!results) {
         throw new Error(`Invalid threshold config: missing ${type} property`);
@@ -47,7 +66,6 @@ window.getStatusFromThreshold = function(value, thresholdConfig, type = 'statuse
     return results[results.length - 1];
 }
 
-// Get elements function for dynamic access to DOM elements 
 function getElements() {
     return {
         temperature: document.getElementById('temperature'),
@@ -209,23 +227,8 @@ function updateUIWithLatestData() {
     // Update temperature icon based on value
     const tempIcon = elements.temperature.parentElement.querySelector('i');
     if (tempIcon) {
-        if (latestData.temperature < 5) {
-            tempIcon.className = 'fas fa-thermometer-empty mr-1'; // Very cold
-        } else if (latestData.temperature < 10) {
-            tempIcon.className = 'fas fa-thermometer-quarter mr-1'; // Cold
-        } else if (latestData.temperature < 15) {
-            tempIcon.className = 'fas fa-thermometer-quarter mr-1'; // Cool
-        } else if (latestData.temperature < 20) {
-            tempIcon.className = 'fas fa-thermometer-half mr-1'; // Moderate
-        } else if (latestData.temperature < 25) {
-            tempIcon.className = 'fas fa-thermometer-half mr-1'; // Warm
-        } else if (latestData.temperature < 30) {
-            tempIcon.className = 'fas fa-thermometer-three-quarters mr-1'; // Hot
-        } else if (latestData.temperature < 33) {
-            tempIcon.className = 'fas fa-thermometer-full mr-1'; // Very hot
-        } else {
-            tempIcon.className = 'fas fa-fire mr-1'; // Extreme heat
-        }
+        const tempIconClass = window.getStatusFromThreshold(latestData.temperature, window.THRESHOLDS.TEMPERATURE, 'icons');
+        tempIcon.className = tempIconClass;
     }
 
     // Update battery with dynamic icon
@@ -250,19 +253,8 @@ function updateUIWithLatestData() {
     // Update battery icon based on level
     const batteryIcon = elements.battery.parentElement.querySelector('i');
     if (batteryIcon) {
-        if (latestData.battery < 10) {
-            batteryIcon.className = 'fas fa-battery-empty mr-1';
-        } else if (latestData.battery < 25) {
-            batteryIcon.className = 'fas fa-battery-quarter mr-1';
-        } else if (latestData.battery < 50) {
-            batteryIcon.className = 'fas fa-battery-quarter mr-1';
-        } else if (latestData.battery < 75) {
-            batteryIcon.className = 'fas fa-battery-half mr-1';
-        } else if (latestData.battery < 95) {
-            batteryIcon.className = 'fas fa-battery-three-quarters mr-1';
-        } else {
-            batteryIcon.className = 'fas fa-battery-full mr-1';
-        }
+        const batteryIconClass = window.getStatusFromThreshold(latestData.battery, window.THRESHOLDS.BATTERY, 'icons');
+        batteryIcon.className = batteryIconClass;
     }
 
     // Battery voltage element is no longer shown as a separate chip
@@ -295,13 +287,8 @@ function updateUIWithLatestData() {
         // Update window icon based on state
         const windowIcon = elements.window.parentElement.querySelector('i');
         if (windowIcon) {
-            if (windowText === 'Lukket') {
-                windowIcon.className = 'fas fa-window-close mr-1';
-            } else if (windowText === 'Glippe') {
-                windowIcon.className = 'fas fa-grip-lines-vertical mr-1';
-            } else if (windowText === 'Åpent') {
-                windowIcon.className = 'fas fa-window-maximize mr-1';
-            }
+            const windowIconClass = window.getStatusFromThreshold(latestData.windowOpening, window.THRESHOLDS.WINDOW, 'icons');
+            windowIcon.className = windowIconClass;
         }
     }
 
