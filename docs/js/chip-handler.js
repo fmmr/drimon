@@ -253,11 +253,7 @@ window.ChipHandler = (function() {
         } else if (config.hasText) {
             // Text-based chip (window, light)
             const textValue = window.getStatusFromThreshold(value, config.thresholds, 'texts');
-            let displayText = textValue;
-            
-            if (config.needsTranslation && window.I18n) {
-                displayText = window.I18n.translate(textValue);
-            }
+            const displayText = window.I18n.translate(textValue);
             
             elements.valueElement.innerHTML = displayText;
         } else {
@@ -322,7 +318,7 @@ window.ChipHandler = (function() {
             case 'window':
                 // Window tooltip shows value + status
                 const windowText = window.getStatusFromThreshold(value, config.thresholds, 'texts');
-                const displayWindowState = config.needsTranslation ? window.I18n.translate(windowText) : windowText;
+                const displayWindowState = window.I18n.translate(windowText);
                 tooltipData = {
                     [window.I18n.translate('window')]: `${value}mm`,
                     [window.I18n.translate('status')]: displayWindowState
@@ -332,7 +328,7 @@ window.ChipHandler = (function() {
             case 'light':
                 // Light tooltip shows value + status
                 const lightText = window.getStatusFromThreshold(value, config.thresholds, 'texts');
-                const displayLightState = config.needsTranslation ? window.I18n.translate(lightText) : lightText;
+                const displayLightState = window.I18n.translate(lightText);
                 tooltipData = {
                     [window.I18n.translate('ceiling')]: `${value} lux`,
                     [window.I18n.translate('light')]: displayLightState

@@ -18,7 +18,6 @@ const DefaultChipConfig = {
     hasIcon: false,             // Whether chip shows an icon
     hasStatus: false,           // Whether chip shows status CSS classes
     hasText: false,             // Whether chip shows text instead of value
-    needsTranslation: false,    // Whether text values need i18n translation
     
     // Threshold configuration
     thresholds: {
@@ -42,7 +41,6 @@ const DefaultChipConfig = {
     // Custom behavior
     customUpdate: false,        // Whether chip uses custom update logic
     updateFunction: null,       // Custom update function name (global scope)
-    additionalData: [],         // Additional data keys needed for this chip
     fixedIcon: null,            // Fixed icon name (overrides threshold-based icons)
     
     // Element configuration
@@ -86,7 +84,7 @@ const ChipConfigs = {
     weather: {
         dataKey: 'metTemp', // Gets data from latestWeatherData
         unit: '°C',
-        hasIcon: true,
+        hasIcon: false,
         hasStatus: true,
         thresholds: {
             statusRanges: [17, 25],
@@ -98,7 +96,7 @@ const ChipConfigs = {
         views: ['mobile', 'desktop', 'dashboard'],
         order: 3,
         elementId: 'met-temp',
-        containerClass: 'data-chip weather-data-chip'
+        containerClass: 'data-chip'
     },
     
     sunEvents: {
@@ -109,16 +107,19 @@ const ChipConfigs = {
         views: ['mobile', 'desktop'],
         order: 4,
         elementId: 'sun-events-chip',
-        containerClass: 'data-chip sun-events-chip'
+        containerClass: 'data-chip'
     },
     
     pressure: {
         dataKey: 'pressure',
         unit: 'hPa',
+        hasIcon: true,
         hasStatus: true,
         thresholds: {
             statusRanges: [1000, 1010],
-            statuses: ['low-pressure', 'normal', 'high-pressure']
+            statuses: ['low-pressure', 'normal', 'high-pressure'],
+            iconRanges: [1000, 1010],
+            icons: ['arrow-down', 'minus', 'arrow-up']
         },
         hasTooltip: false,
         views: ['mobile', 'desktop', 'dashboard'],
@@ -142,16 +143,13 @@ const ChipConfigs = {
         tooltipKey: 'battery',
         views: ['mobile', 'desktop', 'dashboard'],
         order: 6,
-        elementId: 'battery',
-        // Additional data needed for battery tooltip
-        additionalData: ['batteryVolt']
+        elementId: 'battery'
     },
     
     window: {
         dataKey: 'windowOpening',
         hasIcon: true,
         hasText: true,
-        needsTranslation: true,
         thresholds: {
             textRanges: [75, 100],
             texts: ['closed', 'ajar', 'open'],
@@ -168,11 +166,13 @@ const ChipConfigs = {
     
     light: {
         dataKey: 'light',
+        hasIcon: true,
         hasText: true,
-        needsTranslation: true,
         thresholds: {
-            textRanges: [5, 500, 9000],
-            texts: ['night', 'dusk', 'cloudy', 'sunny']
+            textRanges: [5, 500, 13000],
+            texts: ['dark', 'dim', 'bright', 'sunny'],
+            iconRanges: [5, 500, 13000],
+            icons: ['moon', 'lightbulb', 'cloud-sun', 'sun']
         },
         hasTooltip: true,
         customTooltip: true, // Uses light + status tooltip
@@ -225,22 +225,10 @@ function getChipConfig(chipKey) {
  * @returns {Array} Array of chip configurations sorted by order
  */
 function getChipsForView(view) {
-    const chips = [];
-    
-    Object.keys(ChipConfigs).forEach(chipKey => {
-        const config = getChipConfig(chipKey);
-        if (config.views.includes(view)) {
-            chips.push({
-                key: chipKey,
-                config: config
-            });
-        }
-    });
-    
-    // Sort by order
-    chips.sort((a, b) => a.config.order - b.config.order);
-    
-    return chips;
+    return Object.keys(ChipConfigs)
+        .map(chipKey => ({ key: chipKey, config: getChipConfig(chipKey) }))
+        .filter(({ config }) => config.views.includes(view))
+        .sort((a, b) => a.config.order - b.config.order);
 }
 
 /**
@@ -251,35 +239,6 @@ function getAllChipKeys() {
     return Object.keys(ChipConfigs);
 }
 
-/**
- * Generate THRESHOLDS object from chip configurations for backward compatibility
- * @returns {Object} THRESHOLDS object in the old format
- */
-function generateThresholds() {
-    const thresholds = {};
-    
-    Object.keys(ChipConfigs).forEach(chipKey => {
-        const config = mergeChipConfig(ChipConfigs[chipKey]);
-        
-        if (config.thresholds && Object.keys(config.thresholds).length > 0) {
-            // Map chip keys to THRESHOLDS keys
-            let thresholdKey;
-            switch (chipKey) {
-                case 'temperature': thresholdKey = 'TEMPERATURE'; break;
-                case 'battery': thresholdKey = 'BATTERY'; break;
-                case 'pressure': thresholdKey = 'PRESSURE'; break;
-                case 'weather': thresholdKey = 'WEATHER'; break;
-                case 'window': thresholdKey = 'WINDOW'; break;
-                case 'light': thresholdKey = 'LIGHT'; break;
-                default: return; // Skip chips without threshold mapping
-            }
-            
-            thresholds[thresholdKey] = config.thresholds;
-        }
-    });
-    
-    return thresholds;
-}
 
 // Export configurations and utilities
 window.ChipConfig = {
@@ -291,12 +250,8 @@ window.ChipConfig = {
     mergeChipConfig,
     getChipConfig,
     getChipsForView,
-    getAllChipKeys,
-    generateThresholds
+    getAllChipKeys
 };
-
-// Create THRESHOLDS object for backward compatibility
-window.THRESHOLDS = generateThresholds();
 
 // Make individual functions available globally for backward compatibility
 window.getChipConfig = getChipConfig;

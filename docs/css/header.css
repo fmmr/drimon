@@ -119,7 +119,6 @@
 
 
 .sun-events-chip {
-    background-color: var(--sun-events-bg);
     display: flex;
     align-items: center;
     gap: 6px;
@@ -149,47 +148,6 @@
 }
 
 
-.weather-data-chip {
-    background-color: var(--weather-bg);
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-@media (min-width: 769px) {
-    a.weather-data-chip:after {
-        content: "↗";
-        font-size: 8px;
-        opacity: 0.6;
-        margin-left: 3px;
-    }
-}
-
-.weather-data-chip .weather-icon {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    filter: drop-shadow(0 0 1px rgba(0,0,0,0.2));
-    width: 16px;
-    height: 16px;
-}
-
-.weather-data-chip .weather-temp-display {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    line-height: 1.2;
-    white-space: nowrap;
-}
-
-.weather-data-chip svg,
-.weather-data-chip object,
-.weather-data-chip img {
-    width: 16px;
-    height: 16px;
-    overflow: visible;
-}
 
 
 .normal, .good, .high-pressure {
