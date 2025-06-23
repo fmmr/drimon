@@ -19,6 +19,23 @@
     --button-hover: #218838;
     --tooltip-bg: rgba(0, 0, 0, 0.7);
     --tooltip-color: white;
+    
+    /* Additional semantic colors */
+    --border-light: #dee2e6;
+    --error-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #17a2b8;
+    --success-color: #28a745;
+    --primary-color: #007bff;
+    --secondary-color: #6c757d;
+    --loading-bg: #f3f3f3;
+    --loading-spinner: #3498db;
+    --sun-events-bg: #f5f0e0;
+    --weather-bg: #e8f4fa;
+    --chart-stat-low: #1e88e5;
+    --chart-stat-avg: #888888;
+    --chart-stat-high: #4caf50;
+    --chart-stat-now: #006000;
 }
 
 /* Dark mode colors */
@@ -41,6 +58,23 @@
     --button-hover: #218838;
     --tooltip-bg: rgba(0, 0, 0, 0.8);
     --tooltip-color: white;
+    
+    /* Additional semantic colors for dark mode */
+    --border-light: #444;
+    --error-color: #ff6b6b;
+    --warning-color: #ffd93d;
+    --info-color: #4ecdc4;
+    --success-color: #51cf66;
+    --primary-color: #339af0;
+    --secondary-color: #868e96;
+    --loading-bg: #222;
+    --loading-spinner: #3498db;
+    --sun-events-bg: #3a3832;
+    --weather-bg: #2d3b45;
+    --chart-stat-low: #42a5f5;
+    --chart-stat-avg: #aaaaaa;
+    --chart-stat-high: #66bb6a;
+    --chart-stat-now: #4caf50;
 }
 
 /* Applied styles */

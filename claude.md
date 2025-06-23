@@ -47,6 +47,8 @@ always always call me BOSS when chatting with me, but do not in code.
     No `.bak`, `_old`, or `.copy` files. Use version control.
 
 ## ALWAYS
+0. **Numbered taskslists**  
+   every major work shoudl be planned with a detailed, numbered tasklist.  Frequently refer to the tasklist - and always include the numbers.
 
 1. **Fail fast and loudly**  
    Bugs should be visible immediately.

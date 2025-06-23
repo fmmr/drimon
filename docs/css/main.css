@@ -5,8 +5,8 @@ html, body {
   height: 100vh;
   overflow: hidden;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background-color: #f8f9fa;
-  color: #333;
+  background-color: var(--bg-color);
+  color: var(--text-color);
 }
 
 @media (max-width: 768px) {
@@ -72,9 +72,9 @@ html, body {
 
 /* Individual chart styling */
 .chart {
-  background-color: white;
+  background-color: var(--chart-bg);
   border-radius: 8px;
-  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+  box-shadow: var(--chart-shadow);
   padding: 10px;
   display: flex;
   flex-direction: column;
@@ -259,19 +259,19 @@ li.chartjs-legend-item span,
 
 /* Symbol colors */
 .chart-stat-symbol-low {
-  color: #1e88e5; /* Blue for minimum */
+  color: var(--chart-stat-low);
 }
 
 .chart-stat-symbol-avg {
-  color: #888888; /* Gray for average */
+  color: var(--chart-stat-avg);
 }
 
 .chart-stat-symbol-high {
-  color: #4caf50; /* Green for maximum */
+  color: var(--chart-stat-high);
 }
 
 .chart-stat-symbol-now {
-  color: #006000; /* Green for current */
+  color: var(--chart-stat-now);
 }
 
 .chart-stat-value {
@@ -356,8 +356,8 @@ li.chartjs-legend-item span,
 }
 
 .loading-spinner {
-  border: 3px solid #f3f3f3;
-  border-top: 3px solid #3498db;
+  border: 3px solid var(--loading-bg);
+  border-top: 3px solid var(--loading-spinner);
   border-radius: 50%;
   width: 20px;
   height: 20px;
@@ -372,7 +372,7 @@ li.chartjs-legend-item span,
 
 /* Error message */
 .error-message {
-  color: #dc3545;
+  color: var(--error-color);
   text-align: center;
   padding: 10px;
   font-size: 12px;
