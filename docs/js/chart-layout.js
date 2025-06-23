@@ -128,7 +128,7 @@ window.ChartLayout = window.ChartLayout || {
         const loadingDiv = document.createElement('div');
         loadingDiv.className = 'loading-indicator';
         loadingDiv.id = `loading-${chartId}`;
-        loadingDiv.style.display = 'block'; // Ensure it's visible
+        loadingDiv.classList.add('show');
         
         // Create spinner
         const spinner = document.createElement('div');

@@ -355,6 +355,10 @@ li.chartjs-legend-item span,
   font-size: 12px;
 }
 
+.show { display: block !important; }
+.hide { display: none !important; }
+.flex { display: flex !important; }
+
 .loading-spinner {
   border: 3px solid var(--loading-bg);
   border-top: 3px solid var(--loading-spinner);

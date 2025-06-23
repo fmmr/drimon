@@ -82,6 +82,15 @@ const DateController = {
         // Refresh charts with new parameters (check dashboard mode again)
         const dashboardMode = window.Utils.isDashboardMode();
         
+        // Show loading indicators for all charts before destroying
+        Object.keys(window.chartInstances || {}).forEach(id => {
+            const loadingEl = document.getElementById(`loading-${id}`);
+            if (loadingEl) {
+                loadingEl.classList.remove('hide');
+                loadingEl.classList.add('show');
+            }
+        });
+        
         // Destroy existing charts and reload (same as regular view)
         Object.keys(window.chartInstances || {}).forEach(id => {
             if (window.chartInstances[id]) {

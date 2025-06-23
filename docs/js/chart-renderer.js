@@ -40,14 +40,14 @@ window.UnifiedChartRenderer = {
             if (loadingEl) {
                 const noDataText = window.I18n?.translate('noData') || 'No data';
                 loadingEl.innerHTML = `<div>${noDataText}</div>`;
-                loadingEl.style.display = 'block';
+                loadingEl.classList.add('show');
             }
             return null;
         }
         
         // Hide loading indicator when data is available
         if (loadingEl) {
-            loadingEl.style.display = 'none';
+            loadingEl.classList.add('hide');
         }
 
         // Config is already fully processed by mergeChartConfig() in chart-config.js

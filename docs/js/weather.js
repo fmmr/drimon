@@ -278,7 +278,7 @@ function updateWeatherDisplay() {
                       width="100" height="100" preserveAspectRatio="xMidYMid meet" />
             </svg>
         `;
-        elements.weatherIcon.style.display = 'flex';
+        elements.weatherIcon.classList.add('flex');
     }
 }
 

@@ -61,7 +61,8 @@ const StatsController = {
             }
             
             // Now set display style
-            el.style.display = isVisible ? 'none' : 'flex';
+            el.classList.toggle('hide', isVisible);
+            el.classList.toggle('flex', !isVisible);
             
             // Ensure stats get proper height allocation
             if (!isVisible) {
