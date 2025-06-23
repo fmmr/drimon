@@ -61,7 +61,10 @@
     display: none;
 }
 
-.data-chip {
+.chip-base,
+.data-chip,
+.date-chip,
+.thingspeak-chip {
     display: inline-flex;
     align-items: center;
     padding: 4px 8px;
@@ -71,24 +74,30 @@
     font-weight: 500;
     box-shadow: var(--chip-shadow);
     min-width: 50px;
-    height: 28px; /* Consistent height for all data chips */
+    height: 28px;
     justify-content: center;
     transition: transform 0.2s ease, box-shadow 0.2s ease;
     white-space: nowrap;
-    flex: 0 0 auto; /* Prevent shrinking - important for consistent appearance */
-    box-sizing: border-box; /* Include padding in height calculation */
+    flex: 0 0 auto;
+    box-sizing: border-box;
+    text-decoration: none;
+    border: 1px solid transparent;
 }
 
-.data-chip:hover {
+.chip-base:hover,
+.data-chip:hover,
+.date-chip:hover,
+.thingspeak-chip:hover {
     transform: translateY(-1px);
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
 }
 
+.chip-base[title],
 .data-chip[title] {
     cursor: help;
 }
 
-/* Sun events chip styling */
+
 .sun-events-chip {
     background-color: var(--sun-events-bg);
     display: flex;
@@ -120,7 +129,6 @@
 }
 
 
-/* Weather data chip styling (aligned with sun-events-chip) */
 .weather-data-chip {
     background-color: var(--weather-bg);
     display: flex;
@@ -128,7 +136,6 @@
     gap: 6px;
 }
 
-/* Add subtle visual indicator for desktop (link) version */
 @media (min-width: 769px) {
     a.weather-data-chip:after {
         content: "↗";
@@ -165,7 +172,6 @@
 }
 
 
-/* Colors for different states */
 .norm, .full, .pressure-high {
     color: var(--success-color);
     border-left: 3px solid var(--success-color);
@@ -186,7 +192,6 @@
     border-left: 3px solid var(--warning-color);
 }
 
-/* Time indicator style */
 .time-indicator {
     font-style: italic;
     opacity: 0.8;
@@ -197,7 +202,6 @@
     white-space: nowrap; /* Keep on one line */
 }
 
-/* Action buttons container styling */
 .action-buttons {
     display: flex;
     gap: 8px;
@@ -205,13 +209,12 @@
     flex: 0 0 auto; /* Don't grow or shrink */
 }
 
-/* Settings dropdown styling */
 .settings-dropdown {
     position: relative;
     display: inline-block;
 }
 
-.settings-dropdown-button {
+.button-base {
     background: none;
     border: none;
     cursor: pointer;
@@ -220,7 +223,28 @@
     transition: background-color 0.2s ease;
 }
 
-.settings-dropdown-button:hover {
+.button-base:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.settings-dropdown-button,
+.date-dropdown-button,
+#updateButton,
+#darkModeToggle,
+#statsToggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+}
+
+.settings-dropdown-button:hover,
+.date-dropdown-button:hover,
+#updateButton:hover,
+#darkModeToggle:hover,
+#statsToggle:hover {
     background-color: rgba(0, 0, 0, 0.1);
 }
 
@@ -596,18 +620,14 @@
 
 #updateButton {
     padding: 5px 12px;
-    background-color: #28a745;
+    background-color: var(--button-bg);
     color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
     font-size: 0.85rem;
-    transition: all 0.2s ease;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 #updateButton:hover {
-    background-color: #218838;
+    background-color: var(--button-hover);
     transform: translateY(-1px);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
 }
@@ -634,28 +654,17 @@
     align-items: center;
 }
 
+/* ThingSpeak chip modifier */
 .thingspeak-chip {
-    padding: 4px 10px;
     background-color: #e7f7f0;
     color: #333;
-    border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    text-align: center;
-    min-width: 32px;
     border: 1px solid #c0e0d0;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-    flex: 0 0 auto;
 }
 
 .thingspeak-chip:hover {
-    background-color: #28a745;
+    background-color: var(--success-color);
     color: white;
     border-color: #1e7e34;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Date range section */
@@ -673,28 +682,17 @@
     align-items: center; /* Align vertically */
 }
 
+/* Date chip modifier */
 .date-chip {
-    padding: 4px 10px;
     background-color: var(--pill-bg);
     color: var(--pill-color);
-    border-radius: 12px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    text-decoration: none;
-    transition: all 0.2s ease;
-    text-align: center;
-    min-width: 32px;
     border: 1px solid var(--pill-border);
-    box-shadow: var(--chip-shadow);
-    flex: 0 0 auto;
 }
 
 .date-chip:hover, .date-chip.active {
     background-color: var(--pill-active-bg);
     color: var(--pill-active-color);
     border-color: var(--pill-active-bg);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Date range dropdown */
@@ -703,25 +701,22 @@
     display: inline-block;
 }
 
+/* Date dropdown button specific styling */
 .date-dropdown-button {
-    background-color: #f0f0f0;
-    color: #333;
-    border: 1px solid #d0d0d0;
+    background-color: var(--pill-bg);
+    color: var(--pill-color);
+    border: 1px solid var(--pill-border);
     border-radius: 12px;
-    padding: 4px 8px;
     font-size: 0.8rem;
     font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    box-shadow: var(--chip-shadow);
 }
 
 .date-dropdown-button:hover {
-    background-color: #007bff;
-    color: white;
-    border-color: #0062cc;
+    background-color: var(--pill-active-bg);
+    color: var(--pill-active-color);
+    border-color: var(--pill-active-bg);
     transform: translateY(-1px);
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .date-dropdown-content {
