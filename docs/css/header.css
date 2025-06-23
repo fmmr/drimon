@@ -61,7 +61,7 @@
     display: none;
 }
 
-.chip-base,
+.chip,
 .data-chip,
 .date-chip,
 .thingspeak-chip {
@@ -69,6 +69,7 @@
     align-items: center;
     padding: 4px 8px;
     background-color: var(--chip-bg);
+    color: var(--text-color);
     border-radius: 16px;
     font-size: 0.85rem;
     font-weight: 500;
@@ -76,15 +77,15 @@
     min-width: 50px;
     height: 28px;
     justify-content: center;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    transition: all 0.2s ease;
     white-space: nowrap;
     flex: 0 0 auto;
     box-sizing: border-box;
     text-decoration: none;
-    border: 1px solid transparent;
+    border: 1px solid var(--pill-border);
 }
 
-.chip-base:hover,
+.chip:hover,
 .data-chip:hover,
 .date-chip:hover,
 .thingspeak-chip:hover {
@@ -92,7 +93,26 @@
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
 }
 
-.chip-base[title],
+.chip.active,
+.date-chip.active {
+    background-color: var(--pill-active-bg);
+    color: var(--pill-active-color);
+    border-color: var(--pill-active-bg);
+}
+
+.thingspeak-chip {
+    background-color: #e7f7f0;
+    color: #333;
+    border: 1px solid #c0e0d0;
+}
+
+.thingspeak-chip:hover {
+    background-color: var(--success-color);
+    color: white;
+    border-color: #1e7e34;
+}
+
+.chip[title],
 .data-chip[title] {
     cursor: help;
 }
@@ -655,17 +675,6 @@
 }
 
 /* ThingSpeak chip modifier */
-.thingspeak-chip {
-    background-color: #e7f7f0;
-    color: #333;
-    border: 1px solid #c0e0d0;
-}
-
-.thingspeak-chip:hover {
-    background-color: var(--success-color);
-    color: white;
-    border-color: #1e7e34;
-}
 
 /* Date range section */
 .date-ranges {
@@ -683,17 +692,6 @@
 }
 
 /* Date chip modifier */
-.date-chip {
-    background-color: var(--pill-bg);
-    color: var(--pill-color);
-    border: 1px solid var(--pill-border);
-}
-
-.date-chip:hover, .date-chip.active {
-    background-color: var(--pill-active-bg);
-    color: var(--pill-active-color);
-    border-color: var(--pill-active-bg);
-}
 
 /* Date range dropdown */
 .date-dropdown {

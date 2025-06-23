@@ -90,8 +90,7 @@ html, body {
     transition: background 0.3s ease;
 }
 
-.chip-base,
-.data-chip {
+.chip {
     background-color: var(--chip-bg);
     box-shadow: var(--chip-shadow);
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
