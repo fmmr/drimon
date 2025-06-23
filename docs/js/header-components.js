@@ -412,7 +412,7 @@ function createSortDropdown(config) {
     sortContainer.className = 'sort-container mobile-sort-container';
     
     const sortSelect = document.createElement('select');
-    sortSelect.id = 'sortSelect';
+    sortSelect.id = 'mobileSortSelect';
     sortSelect.title = window.I18n.translate('sortBy');
     sortSelect.setAttribute('data-i18n-title', 'sortBy');
     

@@ -1,38 +1,18 @@
-/**
- * @file utils.js
- * @description Core utility functions for the DriMon application
- * @module core/utils
- */
 
-/**
- * @namespace Utils
- * @description Common utility functions for the DriMon application
- */
 const Utils = {
-    /**
-     * Format a date according to locale and format string
-     * @param {Date|string} date - Date to format
-     * @param {string} [format='LLL'] - Format string (moment.js format)
-     * @param {string} [locale] - Optional locale override
-     * @returns {string} Formatted date string
-     */
     formatDate: function(date, format = 'LLL', locale = null) {
         if (!window.moment) {
             return String(date);
         }
         
-        // Store current locale to restore it later
         const currentLocale = moment.locale();
         
-        // Set locale if provided
         if (locale) {
             moment.locale(locale);
         }
         
-        // Format the date
         const formatted = moment(date).format(format);
         
-        // Restore original locale if we changed it
         if (locale) {
             moment.locale(currentLocale);
         }
@@ -40,21 +20,13 @@ const Utils = {
         return formatted;
     },
     
-    /**
-     * Format a relative time (e.g., "2 hours ago")
-     * @param {Date|string} date - Date to format relative to now
-     * @param {string} [locale] - Optional locale override
-     * @returns {string} Relative time string
-     */
     formatRelativeTime: function(date, locale = null) {
         if (!window.moment) {
             return String(date);
         }
         
-        // Store current locale to restore it later
         const currentLocale = moment.locale();
         
-        // Set locale if provided
         if (locale) {
             moment.locale(locale);
         }
@@ -62,7 +34,6 @@ const Utils = {
         // Format the relative time
         const formatted = moment(date).fromNow();
         
-        // Restore original locale if we changed it
         if (locale) {
             moment.locale(currentLocale);
         }
