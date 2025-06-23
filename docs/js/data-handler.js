@@ -3,13 +3,13 @@ window.THRESHOLDS = {
         statusRanges: [16, 35],
         statuses: ['low', 'normal', 'critical'],
         iconRanges: [5, 10, 15, 20, 25, 30, 33],
-        icons: ['fas fa-thermometer-empty mr-1', 'fas fa-thermometer-quarter mr-1', 'fas fa-thermometer-quarter mr-1', 'fas fa-thermometer-half mr-1', 'fas fa-thermometer-half mr-1', 'fas fa-thermometer-three-quarters mr-1', 'fas fa-thermometer-full mr-1', 'fas fa-fire mr-1']
+        icons: ['thermometer-empty', 'thermometer-quarter', 'thermometer-quarter', 'thermometer-half', 'thermometer-half', 'thermometer-three-quarters', 'thermometer-full', 'fire']
     },
     BATTERY: {
         statusRanges: [60, 80, 90],
         statuses: ['critical', 'warning', 'low', 'good'],
         iconRanges: [10, 25, 50, 75, 95],
-        icons: ['fas fa-battery-empty mr-1', 'fas fa-battery-quarter mr-1', 'fas fa-battery-quarter mr-1', 'fas fa-battery-half mr-1', 'fas fa-battery-three-quarters mr-1', 'fas fa-battery-full mr-1']
+        icons: ['battery-empty', 'battery-quarter', 'battery-quarter', 'battery-half', 'battery-three-quarters', 'battery-full']
     },
     PRESSURE: {
         statusRanges: [1000, 1010],
@@ -23,7 +23,7 @@ window.THRESHOLDS = {
         textRanges: [75, 100],
         texts: ['closed', 'ajar', 'open'],
         iconRanges: [75, 100],
-        icons: ['fas fa-window-close mr-1', 'fas fa-grip-lines-vertical mr-1', 'fas fa-window-maximize mr-1']
+        icons: ['window-close', 'grip-lines-vertical', 'window-maximize']
     },
     LIGHT: {
         textRanges: [5, 500, 9000],
@@ -227,8 +227,8 @@ function updateUIWithLatestData() {
     // Update temperature icon based on value
     const tempIcon = elements.temperature.parentElement.querySelector('i');
     if (tempIcon) {
-        const tempIconClass = window.getStatusFromThreshold(latestData.temperature, window.THRESHOLDS.TEMPERATURE, 'icons');
-        tempIcon.className = tempIconClass;
+        const tempIconName = window.getStatusFromThreshold(latestData.temperature, window.THRESHOLDS.TEMPERATURE, 'icons');
+        tempIcon.className = `fas fa-${tempIconName} mr-1`;
     }
 
     // Update battery with dynamic icon
@@ -253,8 +253,8 @@ function updateUIWithLatestData() {
     // Update battery icon based on level
     const batteryIcon = elements.battery.parentElement.querySelector('i');
     if (batteryIcon) {
-        const batteryIconClass = window.getStatusFromThreshold(latestData.battery, window.THRESHOLDS.BATTERY, 'icons');
-        batteryIcon.className = batteryIconClass;
+        const batteryIconName = window.getStatusFromThreshold(latestData.battery, window.THRESHOLDS.BATTERY, 'icons');
+        batteryIcon.className = `fas fa-${batteryIconName} mr-1`;
     }
 
     // Battery voltage element is no longer shown as a separate chip
@@ -287,8 +287,8 @@ function updateUIWithLatestData() {
         // Update window icon based on state
         const windowIcon = elements.window.parentElement.querySelector('i');
         if (windowIcon) {
-            const windowIconClass = window.getStatusFromThreshold(latestData.windowOpening, window.THRESHOLDS.WINDOW, 'icons');
-            windowIcon.className = windowIconClass;
+            const windowIconName = window.getStatusFromThreshold(latestData.windowOpening, window.THRESHOLDS.WINDOW, 'icons');
+            windowIcon.className = `fas fa-${windowIconName} mr-1`;
         }
     }
 

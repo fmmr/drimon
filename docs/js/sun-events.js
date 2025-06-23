@@ -516,10 +516,10 @@ window.SunEvents = (function() {
             nextEventTime.textContent = nextEvent.timeFormatted;
         }
         
-        // Update remaining time
+        // Update remaining time - REMOVED to make chip narrower
         const remainingTime = document.getElementById('remaining-time');
         if (remainingTime) {
-            remainingTime.textContent = `(${nextEvent.remaining})`;
+            remainingTime.textContent = '';
         }
         
         // Create tooltip content
