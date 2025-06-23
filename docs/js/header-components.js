@@ -162,10 +162,14 @@ function createSettingsDropdown(config) {
             dropdownContent.classList.remove('show', 'positioned', 'horizontal');
             // Move back to original container
             dropdownContainer.appendChild(dropdownContent);
-            // Reset only the calculated position values
+            // Reset all styles
             dropdownContent.style.top = '';
             dropdownContent.style.left = '';
             dropdownContent.style.right = '';
+            dropdownContent.style.display = '';
+            dropdownContent.style.flexDirection = '';
+            dropdownContent.style.flexWrap = '';
+            dropdownContent.style.width = '';
             document.removeEventListener('click', handleOutsideClick);
         }
         
@@ -200,6 +204,14 @@ function createSettingsDropdown(config) {
         // Move to body to escape header stacking context
         document.body.appendChild(dropdownContent);
         dropdownContent.classList.add('show');
+        
+        // Force horizontal layout
+        if (layout === 'horizontal') {
+            dropdownContent.style.setProperty('display', 'flex', 'important');
+            dropdownContent.style.setProperty('flex-direction', 'row', 'important');
+            dropdownContent.style.setProperty('flex-wrap', 'wrap', 'important');
+            dropdownContent.style.setProperty('width', '390px', 'important');
+        }
         
         // No mode-specific classes
         

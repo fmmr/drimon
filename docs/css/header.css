@@ -347,10 +347,9 @@
 
 /* Horizontal layout for settings dropdown */
 .settings-dropdown-content.horizontal {
-    display: flex;
     flex-direction: row;
     flex-wrap: wrap;
-    width: 320px;
+    width: 390px;
 }
 
 /* Dropdown positioning modes */
@@ -360,12 +359,15 @@
 }
 
 .settings-dropdown-content.horizontal.positioned {
-    width: 320px;
+    width: 390px;
 }
 
 .settings-dropdown-content.horizontal .settings-dropdown-item,
 .settings-dropdown-content.horizontal .settings-action-item,
-.settings-dropdown-content.horizontal .chart-set-button {
+.settings-dropdown-content.horizontal .chart-set-button,
+.settings-dropdown-content.horizontal .date-chip,
+.settings-dropdown-content.horizontal #darkModeToggle,
+.settings-dropdown-content.horizontal #statsToggle {
     width: 40px;
     height: 40px;
     margin: 2px;
@@ -380,6 +382,8 @@
     cursor: pointer;
     transition: all 0.2s ease;
     color: #495057;
+    min-width: 40px;
+    max-width: 40px;
 }
 
 .settings-dropdown-content.horizontal .settings-action-item {
