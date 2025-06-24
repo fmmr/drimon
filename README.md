@@ -78,6 +78,8 @@ The Arduino code for the ESP32 is organized into multiple files:
 - `7_display.ino`: OLED and LCD display handling
 - `8_sleep.ino`: Power management and deep sleep
 - `9_thingspeak.ino`: Data transmission to cloud storage
+- `9_util.ino`: utility functions
+- `secrets.h`: keys to wifi and thingspeak
 - `sensordata.h`: Data structure definitions
 
 ### Configuration
