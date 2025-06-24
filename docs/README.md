@@ -2,7 +2,7 @@
 
 ## Overview
 
-The DriMon web application is a sophisticated, responsive dashboard for visualizing greenhouse sensor data. Built with vanilla JavaScript and Chart.js, it provides real-time and historical data visualization with multi-language support, theming, and adaptive layouts.
+The DriMon web application is a sophisticated, responsive dashboard for visualizing greenhouse sensor data, developed by Fredrik Rødland. Built with vanilla JavaScript and Chart.js, it provides real-time and historical data visualization with multi-language support, theming, and adaptive layouts.
 
 ## Project Structure
 

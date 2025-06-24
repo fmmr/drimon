@@ -2,7 +2,7 @@
 
 ![logo](/docs/logos/1_1000x550.webp)
 
-DriMon is a comprehensive greenhouse monitoring system that combines ESP32-based sensor hardware with a web-based visualization platform. The system provides real-time and historical data about greenhouse conditions at Rødtangen, Norway, enabling smart monitoring and analysis of plant growth environments.
+DriMon is a comprehensive greenhouse monitoring system developed by Fredrik Rødland that combines ESP32-based sensor hardware with a web-based visualization platform. The system provides real-time and historical data about greenhouse conditions at Rødtangen, Norway, enabling smart monitoring and analysis of plant growth environments.
 
 ## Quick Links
 
