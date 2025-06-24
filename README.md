@@ -80,6 +80,39 @@ The Arduino code for the ESP32 is organized into multiple files:
 - `9_thingspeak.ino`: Data transmission to cloud storage
 - `sensordata.h`: Data structure definitions
 
+### Configuration
+
+Before compiling the Arduino code, you need to create a `secrets.h` file in the same directory with your specific configuration values:
+
+```cpp
+#ifndef SECRETS_H
+#define SECRETS_H
+
+// WiFi credentials
+#define WIFI_SSID "YourWiFiNetworkName"
+#define WIFI_PASSWORD "YourWiFiPassword"
+
+// ThingSpeak Channel 1 - Main environmental data
+#define THINGSPEAK_1_CHANNEL 2568299
+#define THINGSPEAK_1_API "YOUR_16_CHAR_API_KEY"
+
+// ThingSpeak Channel 2 - Plant monitoring data
+#define THINGSPEAK_2_CHANNEL 2584548
+#define THINGSPEAK_2_API "YOUR_16_CHAR_API_KEY"
+
+// ThingSpeak Channel 3 - System performance data
+#define THINGSPEAK_3_CHANNEL 2584547
+#define THINGSPEAK_3_API "YOUR_16_CHAR_API_KEY"
+
+#endif
+```
+
+Replace the placeholder values with:
+- Your WiFi network name and password
+- Your ThingSpeak write API keys (16-character strings from your ThingSpeak account)
+
+The channel numbers are already configured for the DriMon system's public channels.
+
 ## System Architecture
 
 The DriMon system consists of three main components:
