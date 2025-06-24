@@ -51,11 +51,23 @@ All components are integrated on a custom PCB with optimized power management fo
 
 - [Project Overview](documentation/DRIMON.md) - Complete system description with hardware and software details
 - [Development Guide](documentation/DEVELOPMENT.md) - Architecture, components, and code organization
+- [Web Application Documentation](docs/README.md) - Complete web dashboard technical documentation
 - [Future Enhancements](documentation/FUTURE.md) - Completed features and planned improvements
 
 ## Getting Started
 
 ### Web Dashboard
+
+The web interface is a sophisticated single-page application built with vanilla JavaScript and Chart.js. It features:
+
+- **34 JavaScript modules** organized in a component-based architecture
+- **Multi-language support** (Norwegian, English, Spanish) with dynamic loading
+- **Responsive design** optimized for desktop, mobile, and dashboard modes
+- **Real-time data visualization** with statistical analysis and interactive tooltips
+- **Advanced integrations** including weather APIs and astronomical calculations
+- **Smart caching** with performance optimization and offline capabilities
+
+**Live Dashboard**: [https://drimon.rodland.no/](https://drimon.rodland.no/)
 
 The web interface can be previewed locally using any static file server:
 
@@ -64,8 +76,10 @@ The web interface can be previewed locally using any static file server:
 python -m http.server
 
 # Or using Node.js
-npx serve
+npx serve docs/
 ```
+
+For complete technical documentation including all JavaScript modules, URL parameters, view modes, and API integrations, see the [Web Application Documentation](docs/README.md).
 
 ### Hardware Development
 
