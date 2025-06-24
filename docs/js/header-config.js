@@ -4,10 +4,10 @@
 // All available date ranges used by both regular and dashboard headers
 const AllDateRanges = [
     { range: 'default', key: 'defaultDate', icon: 'fas fa-home' },
-    { range: '1', key: 'twoDay', icon: 'fas fa-2' },
-    { range: '2', key: 'threeDay', icon: 'fas fa-3' },
-    { range: '6', key: 'sevenDay', icon: 'fas fa-7' },
-    { range: '13', key: 'fourteenDay', iconDouble: ['fas fa-1', 'fas fa-4'] },
+    { range: '2', key: 'twoDay', icon: 'fas fa-2' },
+    { range: '3', key: 'threeDay', icon: 'fas fa-3' },
+    { range: '7', key: 'sevenDay', icon: 'fas fa-7' },
+    { range: '14', key: 'fourteenDay', iconDouble: ['fas fa-1', 'fas fa-4'] },
     { range: '30', key: 'thirtyDay', iconDouble: ['fas fa-3', 'fas fa-0'] },
     { range: 'today', key: 'today', icon: 'fas fa-calendar-day' },
     { range: 'yesterday', key: 'yesterday', iconDouble: ['fas fa-step-backward', 'fas fa-calendar-day'] },

@@ -202,7 +202,7 @@ const RAW_CHART_CONFIGS = [
             showMax: false,
             showAvg: true
         },
-        defaultRange: 6
+        defaultRange: 7
     },
 
     // Row 2
@@ -373,7 +373,8 @@ const RAW_CHART_CONFIGS = [
         row: 3,
         category: 'weather',
         categoryHeaderKey: 'weather',
-        unit: 'm/s'
+        unit: 'm/s',
+        defaultRange: 7
     },
     { 
         id: 'chart-rain',
@@ -390,7 +391,7 @@ const RAW_CHART_CONFIGS = [
         category: 'weather',
         categoryHeaderKey: 'weather',
         unit: 'mm',
-        defaultRange: 13
+        defaultRange: 7
     },
 
     // Row 4
@@ -446,7 +447,7 @@ const RAW_CHART_CONFIGS = [
         yAxis: {
             roundToNearest: 0.1 // Round to nearest 0.1V for voltage charts
         },
-        defaultRange: 6
+        defaultRange: 7
     },
     { 
         id: 'chart-wifi',
