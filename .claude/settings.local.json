@@ -38,7 +38,8 @@
       "Bash(node:*)",
       "Bash(rg:*)",
       "Bash(git mv:*)",
-      "Bash(awk:*)"
+      "Bash(awk:*)",
+      "Bash(git restore:*)"
     ],
     "deny": []
   },

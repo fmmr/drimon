@@ -88,8 +88,11 @@ const DEFAULT_HEADER_CONFIG = {
                 icon: 'fas fa-cog',
                 dateRanges: AllDateRanges.slice(6),  // Secondary ranges: today, yesterday, this-week, last-week, this-month, last-month, start
                 secondaryDateRanges: [],              // Optional secondary date ranges for row breaks
-                actions: [],                          // No actions in regular mode (they're top-level)
-                showDivider: false,                   // No divider needed since no actions
+                actions: ['resetChartOrder'],         // Add reset chart order action
+                actionConfigs: {
+                    resetChartOrder: { icon: 'fas fa-undo' }
+                },
+                showDivider: true,                    // Show divider before actions
                 showSecondDivider: false,             // Second divider before chart selector
                 chartSetSelector: undefined,          // Chart set selector config (dashboard only)
                 layout: 'vertical'
@@ -134,6 +137,13 @@ const DEFAULT_HEADER_CONFIG = {
         languageSwitcher: {
             type: 'languageSwitcher',
             config: {}
+        },
+        resetChartOrder: {
+            type: 'resetChartOrder',
+            config: {
+                icon: 'fas fa-undo',
+                titleKey: 'resetChartOrder'
+            }
         }
     },
     
@@ -147,7 +157,7 @@ const DEFAULT_HEADER_CONFIG = {
 // Header configurations with overrides for different modes
 const HEADER_MODE_CONFIGS = [
     {
-        id: 'regular',
+        id: 'desktop',
         // Uses all defaults from DEFAULT_HEADER_CONFIG
     },
     {
@@ -216,7 +226,7 @@ const HEADER_MODE_CONFIGS = [
                     icon: 'fas fa-cog',
                     dateRanges: AllDateRanges.slice(0, 6),  // First 6: default, 1, 2, 6, 13, 30
                     secondaryDateRanges: AllDateRanges.slice(6),  // Remaining: today, yesterday, this-week, last-week, this-month, last-month, start
-                    actions: ['darkModeToggle', 'statsToggle'],  // Reuse existing components
+                    actions: ['darkModeToggle', 'statsToggle'],  // Reuse existing components (no resetChartOrder for dashboard)
                     actionConfigs: {
                         darkModeToggle: { icon: 'fas fa-moon' },
                         statsToggle: { icon: 'fas fa-chart-line' }
@@ -263,7 +273,7 @@ function mergeHeaderConfig(userConfig) {
 
 // Process configurations and export final results
 window.headerConfigs = {
-    regular: mergeHeaderConfig(HEADER_MODE_CONFIGS.find(c => c.id === 'regular')),
+    desktop: mergeHeaderConfig(HEADER_MODE_CONFIGS.find(c => c.id === 'desktop')),
     mobile: mergeHeaderConfig(HEADER_MODE_CONFIGS.find(c => c.id === 'mobile')),
     dashboard: mergeHeaderConfig(HEADER_MODE_CONFIGS.find(c => c.id === 'dashboard'))
 };

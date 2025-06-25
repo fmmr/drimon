@@ -160,12 +160,10 @@ window.ChartLayout = window.ChartLayout || {
         // Add appropriate CSS class based on chart count
         if (chartsToUse.length === 6) {
             chartContainer.classList.add('dashboard-mode');
-            chartContainer.classList.remove('regular-mode');
             
             // For 6 charts, skip the complex grid positioning and just use CSS grid
             // Charts will be placed in order: 3 charts per row, 2 rows
         } else {
-            chartContainer.classList.add('regular-mode');
             chartContainer.classList.remove('dashboard-mode');
             
             // Group charts by row (1-4) for organization for desktop view
@@ -211,6 +209,16 @@ window.ChartLayout = window.ChartLayout || {
                 
             const chartDiv = document.createElement('div');
             chartDiv.className = 'chart';
+            chartDiv.setAttribute('data-chart-id', config.id);
+            
+            // Only enable dragging in regular desktop mode (not dashboard or mobile)
+            const isDashboard = chartContainer.classList.contains('dashboard-mode');
+            const enableDragging = !isDashboard && !isMobile;
+            
+            if (enableDragging) {
+                chartDiv.draggable = true;
+                chartDiv.style.cursor = 'grab';
+            }
             
             // Add multi-series class if needed
             if (config.series && Array.isArray(config.series) && config.series.length > 1) {
@@ -227,8 +235,44 @@ window.ChartLayout = window.ChartLayout || {
             chartDiv.setAttribute('data-row', config.row);
             chartDiv.setAttribute('data-category', config.category || '');
             
-            // Create and add title
+            // Create and add title with drag handle
             const titleDiv = this.createChartTitle(config);
+            titleDiv.style.position = 'relative';
+            
+            // Add drag handle (grip icon) only if dragging is enabled
+            if (enableDragging) {
+                const dragHandle = document.createElement('span');
+                dragHandle.className = 'chart-drag-handle';
+                dragHandle.innerHTML = '<i class="fas fa-grip-vertical"></i>';
+                dragHandle.style.cssText = `
+                    position: absolute;
+                    right: 5px;
+                    top: 50%;
+                    transform: translateY(-50%);
+                    color: #888;
+                    cursor: grab;
+                    font-size: 12px;
+                    opacity: 0.7;
+                `;
+                dragHandle.title = 'Drag to reorder';
+                titleDiv.appendChild(dragHandle);
+            }
+            
+            // Add drag event listeners only if dragging is enabled
+            if (enableDragging) {
+                chartDiv.addEventListener('dragstart', (e) => {
+                    chartDiv.style.opacity = '0.6';  // Just slightly faded
+                    chartDiv.style.zIndex = '1000';
+                    chartDiv.style.boxShadow = '0 4px 8px rgba(0,0,0,0.15)';
+                    e.dataTransfer.setData('text/plain', config.id);
+                });
+                
+                chartDiv.addEventListener('dragend', (e) => {
+                    chartDiv.style.opacity = '';
+                    chartDiv.style.zIndex = '';
+                    chartDiv.style.boxShadow = '';
+                });
+            }
             
             // Create stats container (will be populated with data later)
             const statsDiv = document.createElement('div');
@@ -266,8 +310,86 @@ window.ChartLayout = window.ChartLayout || {
         window.removeEventListener('resize', window.resizeAllCharts);
         window.addEventListener('resize', window.resizeAllCharts);
         
+        // Make the chart container a drop zone only if not dashboard/mobile
+        const isDashboard = chartContainer.classList.contains('dashboard-mode');
+        const enableDragDropZone = !isDashboard && !isMobile;
+        
+        if (enableDragDropZone) {
+            chartContainer.addEventListener('dragover', (e) => {
+                e.preventDefault(); // Allow dropping
+                
+                // Clear all previous hover effects
+                document.querySelectorAll('.chart').forEach(chart => {
+                    chart.style.borderTop = '';
+                });
+                
+                // Find the chart we're hovering over
+                const hoveredChart = e.target.closest('.chart');
+                if (hoveredChart) {
+                    // Add visual feedback with theme-friendly color
+                    hoveredChart.style.borderTop = '3px solid #ff9500';
+                }
+            });
+            
+            chartContainer.addEventListener('drop', (e) => {
+                e.preventDefault();
+                const draggedChartId = e.dataTransfer.getData('text/plain');
+                
+                // Find drop target and dragged chart
+                const dropTarget = e.target.closest('.chart');
+                const draggedChart = document.querySelector(`.chart[data-chart-id="${draggedChartId}"]`);
+                
+                if (draggedChart && dropTarget && dropTarget !== draggedChart) {
+                    // Regular mode: 4 columns, 4 rows (dashboard mode disabled, so only regular)
+                    chartContainer.style.gridTemplateColumns = 'repeat(4, 1fr)';
+                    chartContainer.style.gridTemplateRows = 'repeat(4, 1fr)';
+                    
+                    // Clear all grid positioning
+                    document.querySelectorAll('.chart').forEach(chart => {
+                        chart.style.gridRow = '';
+                        chart.style.gridColumn = '';
+                        chart.style.borderTop = ''; // Clean up visual feedback
+                    });
+                    
+                    // Swap the two charts
+                    const draggedNext = draggedChart.nextElementSibling;
+                    const targetNext = dropTarget.nextElementSibling;
+                    
+                    if (draggedNext) {
+                        chartContainer.insertBefore(dropTarget, draggedNext);
+                    } else {
+                        chartContainer.appendChild(dropTarget);
+                    }
+                    
+                    if (targetNext) {
+                        chartContainer.insertBefore(draggedChart, targetNext);
+                    } else {
+                        chartContainer.appendChild(draggedChart);
+                    }
+                    
+                    // Save the new order
+                    this.saveChartOrder();
+                } else if (draggedChart && dropTarget === draggedChart) {
+                    // Dropped on itself - do nothing
+                    // Just clean up visual feedback
+                    document.querySelectorAll('.chart').forEach(chart => {
+                        chart.style.borderTop = '';
+                    });
+                } else if (draggedChart) {
+                    // Fallback: move to end if no valid drop target (dropped in empty space)
+                    chartContainer.appendChild(draggedChart);
+                    this.saveChartOrder();
+                }
+            });
+        }
+        
         // Add a class to the container based on viewport
         chartContainer.classList.toggle('mobile-layout', isMobile);
+        
+        // Restore saved chart order if any
+        setTimeout(() => {
+            this.restoreChartOrder();
+        }, 100);
     },
     
     /**
@@ -355,5 +477,59 @@ window.ChartLayout = window.ChartLayout || {
         
         // Store the current sort preference
         localStorage.setItem('chartSortPreference', category);
+    },
+
+    /**
+     * Save current chart order to localStorage
+     * @returns {void}
+     */
+    saveChartOrder: function() {
+        const chartContainer = document.getElementById('chartContainer');
+        const charts = chartContainer.querySelectorAll('.chart');
+        const order = Array.from(charts).map(chart => chart.getAttribute('data-chart-id'));
+        
+        localStorage.setItem('chartOrder', JSON.stringify(order));
+    },
+
+    /**
+     * Restore chart order from localStorage
+     * @returns {void}
+     */
+    restoreChartOrder: function() {
+        const saved = localStorage.getItem('chartOrder');
+        if (!saved) return;
+        
+        const order = JSON.parse(saved);
+        const chartContainer = document.getElementById('chartContainer');
+        
+        // Switch to reorderable mode based on mode
+        if (chartContainer.classList.contains('dashboard-mode')) {
+            // Dashboard mode: 3 columns, 2 rows
+            chartContainer.style.gridTemplateColumns = 'repeat(3, 1fr)';
+            chartContainer.style.gridTemplateRows = 'repeat(2, 1fr)';
+        } else {
+            // Regular mode: 4 columns, 4 rows
+            chartContainer.style.gridTemplateColumns = 'repeat(4, 1fr)';
+            chartContainer.style.gridTemplateRows = 'repeat(4, 1fr)';
+        }
+        
+        // Reorder charts according to saved order
+        order.forEach(chartId => {
+            const chart = document.querySelector(`.chart[data-chart-id="${chartId}"]`);
+            if (chart) {
+                chart.style.gridRow = '';
+                chart.style.gridColumn = '';
+                chartContainer.appendChild(chart);
+            }
+        });
+    },
+
+    /**
+     * Reset to original chart order
+     * @returns {void}
+     */
+    resetChartOrder: function() {
+        localStorage.removeItem('chartOrder');
+        // Could also reload charts here if needed
     }
 };

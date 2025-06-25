@@ -401,6 +401,30 @@ function createStatsToggle(config) {
 }
 
 /**
+ * Creates reset chart order button
+ * @param {Object} [config] - Configuration object for reset chart order button
+ * @returns {HTMLElement} The reset chart order button element
+ */
+function createResetChartOrder(config) {
+    const iconClass = config.icon;
+    
+    const resetButton = document.createElement('button');
+    resetButton.id = 'resetChartOrder';
+    resetButton.className = 'header-button';
+    
+    resetButton.title = window.I18n.translate('resetChartOrder');
+    resetButton.setAttribute('data-i18n-title', 'resetChartOrder');
+    
+    const resetIcon = document.createElement('span');
+    resetIcon.className = 'icon';
+    resetIcon.innerHTML = `<i class="${iconClass}"></i>`;
+    
+    resetButton.appendChild(resetIcon);
+    
+    return resetButton;
+}
+
+/**
  * Creates sort dropdown (mobile-only)
  * @param {Object} [config] - Configuration object for sort dropdown
  * @returns {HTMLElement} The sort dropdown element
@@ -551,6 +575,7 @@ const ComponentRegistry = {
     'languageSwitcher': createLanguageSwitcher,
     'darkModeToggle': createDarkModeToggle,
     'statsToggle': createStatsToggle,
+    'resetChartOrder': createResetChartOrder,
     'sortDropdown': createSortDropdown
 };
 

@@ -18,9 +18,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isDashboardMode) {
         headerConfig = window.headerConfigs.dashboard;
     } else if (isMobileMode) {
-        headerConfig = window.headerConfigs.mobile || window.headerConfigs.regular; // Fallback if mobile not ready
+        headerConfig = window.headerConfigs.mobile || window.headerConfigs.desktop; // Fallback if mobile not ready
     } else {
-        headerConfig = window.headerConfigs.regular;
+        headerConfig = window.headerConfigs.desktop;
     }
     
     const header = createHeader(headerConfig);
@@ -41,6 +41,16 @@ document.addEventListener('DOMContentLoaded', () => {
     const statsToggle = document.getElementById('statsToggle');
     if (statsToggle && window.StatsController) {
         statsToggle.addEventListener('click', () => window.StatsController.toggleStats());
+    }
+    
+    // Set up reset chart order button
+    const resetChartOrderButton = document.getElementById('resetChartOrder');
+    if (resetChartOrderButton && window.ChartLayout) {
+        resetChartOrderButton.addEventListener('click', () => {
+            window.ChartLayout.resetChartOrder();
+            // Optionally reload the page to show the reset
+            window.location.reload();
+        });
     }
     
     // Initialize date controller

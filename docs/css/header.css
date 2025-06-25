@@ -889,7 +889,7 @@
         /* The left and top will be set dynamically by JavaScript */
         z-index: 9999; /* Higher z-index to ensure it's above charts and all other elements */
         min-width: 120px;
-        max-height: 300px;
+        max-height: 350px;
         overflow-y: auto;
         max-width: 80vw; /* Limit width on small screens */
         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Stronger shadow for better visibility */

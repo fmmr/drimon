@@ -177,7 +177,8 @@ window.DriMonTranslations = {
     "fullMoon": "Full",
     "waningGibbous": "Avtagende",
     "lastQuarter": "Siste kv.",
-    "waningCrescent": "Nesten Ny"
+    "waningCrescent": "Nesten Ny",
+    "resetChartOrder": "Tilbakestill diagram rekkefølge"
   },
   "en": {
     "loading": "Loading...",
@@ -344,7 +345,8 @@ window.DriMonTranslations = {
     "fullMoon": "Full Moon",
     "waningGibbous": "Waning Gibbous",
     "lastQuarter": "Last Quarter",
-    "waningCrescent": "Waning Crescent"
+    "waningCrescent": "Waning Crescent",
+    "resetChartOrder": "Reset Chart Order"
   },
   "es": {
     "loading": "Cargando...",
@@ -511,6 +513,7 @@ window.DriMonTranslations = {
     "fullMoon": "Luna Llena",
     "waningGibbous": "Gibosa Menguante",
     "lastQuarter": "Cuarto Menguante",
-    "waningCrescent": "Luna Menguante"
+    "waningCrescent": "Luna Menguante",
+    "resetChartOrder": "Restablecer Orden de Gráficos"
   }
 };
