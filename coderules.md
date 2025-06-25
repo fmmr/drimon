@@ -45,29 +45,32 @@ Strictly follow these rules when generating or editing code.
 
 ## ALWAYS
 
-0. **Numbered taskslists**  
-   every major work shoudl be planned with a detailed, numbered tasklist.  Frequently refer to the tasklist - and always include the numbers.
+1. **Prefer small, focused changes**  
+   Make small, incremental changes. Stop and let user test each step manually.
 
-1. **Fail fast and loudly**  
+2. **Numbered taskslists**  
+   every major work should be planned with a detailed, numbered tasklist.  Frequently refer to the tasklist — and always include the numbers.
+
+3. **Fail fast and loudly**  
    Bugs should be visible immediately.
 
-2. **Use direct function calls**  
+4. **Use direct function calls**  
    Avoid indirection unless absolutely necessary.
 
-3. **Aggressively remove dead code**  
+5. **Aggressively remove dead code**  
    If it isn't clearly used or tested, remove it.
 
-4. **Consolidate duplicate functionality**  
+6. **Consolidate duplicate functionality**  
    Only one implementation per concern.
 
-5. **Use descriptive names over comments**  
+7. **Use descriptive names over comments**  
    Name things clearly so comments aren't needed.
 
-6. **Keep code concise and focused**  
+8. **Keep code concise and focused**  
    Avoid boilerplate, abstraction layers, or extra configuration.
 
-7. **Prefer editing existing documentation**  
+9. **Prefer editing existing documentation**  
    When documenting, modify files in the `documentation/` directory rather than creating new ones.
 
-8. **Keep documentation up to date**  
-   Always update relevant docs when making code changes.
+10. **Keep documentation up to date**  
+    Always update relevant docs when making code changes.
