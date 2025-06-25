@@ -75,9 +75,57 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
+    // Set up keyboard shortcuts directly
+    setupKeyboardShortcuts(headerConfig);
+    
     // Dispatch a custom event to indicate the header is fully initialized
     // This helps other components that depend on the header being ready
     setTimeout(() => {
         document.dispatchEvent(new CustomEvent('header:initialized'));
     }, 0);
 });
+
+/**
+ * Sets up keyboard shortcuts based on header configuration
+ * @param {Object} config - Header configuration object
+ */
+function setupKeyboardShortcuts(config) {
+    const shortcuts = new Map();
+    
+    // Collect shortcuts from all components
+    Object.values(config.components).forEach(component => {
+        if (component.config && component.config.keyboardShortcut) {
+            shortcuts.set(component.config.keyboardShortcut, component.type);
+        }
+        
+        // Also check actions for settings dropdown
+        if (component.config && component.config.actions) {
+            component.config.actions.forEach(actionType => {
+                const actionComponent = config.components[actionType];
+                if (actionComponent && actionComponent.config && actionComponent.config.keyboardShortcut) {
+                    shortcuts.set(actionComponent.config.keyboardShortcut, actionType);
+                }
+            });
+        }
+    });
+    
+    // Add global keydown listener
+    document.addEventListener('keydown', (e) => {
+        // Only trigger if no input/textarea is focused and no modifier keys
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || 
+            e.ctrlKey || e.metaKey || e.altKey) return;
+        
+        const key = e.key.toLowerCase();
+        const componentType = shortcuts.get(key);
+        
+        if (componentType) {
+            e.preventDefault();
+            
+            // Find and click the corresponding button
+            const button = document.getElementById(componentType);
+            if (button) {
+                button.click();
+            }
+        }
+    });
+}

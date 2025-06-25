@@ -89,9 +89,6 @@ const DEFAULT_HEADER_CONFIG = {
                 dateRanges: AllDateRanges.slice(6),  // Secondary ranges: today, yesterday, this-week, last-week, this-month, last-month, start
                 secondaryDateRanges: [],              // Optional secondary date ranges for row breaks
                 actions: ['resetChartOrder'],         // Add reset chart order action
-                actionConfigs: {
-                    resetChartOrder: { icon: 'fas fa-undo' }
-                },
                 showDivider: true,                    // Show divider before actions
                 showSecondDivider: false,             // Second divider before chart selector
                 chartSetSelector: undefined,          // Chart set selector config (dashboard only)
@@ -108,13 +105,15 @@ const DEFAULT_HEADER_CONFIG = {
         darkModeToggle: {
             type: 'darkModeToggle',
             config: {
-                icon: 'fas fa-moon'
+                icon: 'fas fa-moon',
+                keyboardShortcut: 'd'
             }
         },
         statsToggle: {
             type: 'statsToggle',
             config: {
-                icon: 'fas fa-chart-line'
+                icon: 'fas fa-chart-line',
+                keyboardShortcut: 's'
             }
         },
         sortDropdown: {
@@ -142,7 +141,8 @@ const DEFAULT_HEADER_CONFIG = {
             type: 'resetChartOrder',
             config: {
                 icon: 'fas fa-undo',
-                titleKey: 'resetChartOrder'
+                titleKey: 'resetChartOrder',
+                keyboardShortcut: 'r'
             }
         }
     },
@@ -227,10 +227,6 @@ const HEADER_MODE_CONFIGS = [
                     dateRanges: AllDateRanges.slice(0, 6),  // First 6: default, 1, 2, 6, 13, 30
                     secondaryDateRanges: AllDateRanges.slice(6),  // Remaining: today, yesterday, this-week, last-week, this-month, last-month, start
                     actions: ['darkModeToggle', 'statsToggle'],  // Reuse existing components (no resetChartOrder for dashboard)
-                    actionConfigs: {
-                        darkModeToggle: { icon: 'fas fa-moon' },
-                        statsToggle: { icon: 'fas fa-chart-line' }
-                    },
                     chartSetSelector: {
                         chartSets: ChartSets
                     },

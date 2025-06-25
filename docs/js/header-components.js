@@ -107,7 +107,13 @@ function createSettingsDropdown(config) {
     actions.forEach(actionType => {
         const createFunction = ComponentRegistry[actionType];
         if (createFunction) {
-            const componentConfig = actionConfigs[actionType] || {};
+            // Get config from main components, with actionConfigs as override
+            const mainComponentConfig = window.headerConfigs ? 
+                window.headerConfigs.desktop?.components?.[actionType]?.config || 
+                window.headerConfigs.dashboard?.components?.[actionType]?.config || {} : {};
+            const overrideConfig = actionConfigs?.[actionType] || {};
+            const componentConfig = { ...mainComponentConfig, ...overrideConfig };
+            
             const actionComponent = createFunction(componentConfig);
             actionComponent.className = 'settings-dropdown-item settings-action-item';
             dropdownContent.appendChild(actionComponent);

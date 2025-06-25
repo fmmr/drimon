@@ -72,7 +72,7 @@ This document tracks completed features and planned enhancements for the DriMon 
 - Implement automatic data quality validation
 
 ### User Experience Improvements
-- Add keyboard shortcuts for power users
+- ✅ Add keyboard shortcuts for power users (d=dark mode, s=stats, r=reset charts)
 - Implement undo/redo for chart customizations
 - Add chart bookmarking for quick access to specific views
 - Create guided onboarding tutorial for new users
