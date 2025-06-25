@@ -1,6 +1,6 @@
-# Future Enhancements for DriMon Dashboard
+# DriMon Dashboard: Development Status & Future Roadmap
 
-This document outlines completed enhancements and planned future improvements for the DriMon project.
+This document tracks completed features and planned enhancements for the DriMon greenhouse monitoring system.
 
 ## Completed Enhancements
 
@@ -14,6 +14,10 @@ This document outlines completed enhancements and planned future improvements fo
 - ✅ Custom tooltips with rich formatting and multi-chart data
 - ✅ Chart grid layout with responsive breakpoints
 - ✅ Visual indicators for extreme values (high/low temperature, battery status)
+- ✅ Dashboard mode with 6 predefined chart sets for organized viewing
+- ✅ Drag-and-drop chart reordering (desktop mode only)
+- ✅ Chart layout persistence across page reloads
+- ✅ Reset chart order functionality in settings dropdown
 
 ### Data Analysis & Visualization
 - ✅ Min/max/average calculations for selected time periods
@@ -33,6 +37,9 @@ This document outlines completed enhancements and planned future improvements fo
 - ✅ Cached weather data with TTL management
 - ✅ Indoor/outdoor temperature difference calculation
 - ✅ Wind direction and speed visualization
+- ✅ Astronomical data integration (sunrise/sunset times with countdown display)
+- ✅ Moon phase and planetary position information
+- ✅ Day length tracking with seasonal changes
 
 ### Data Management
 - ✅ ThingSpeak integration with multiple channels and fields
@@ -54,6 +61,24 @@ This document outlines completed enhancements and planned future improvements fo
 - ✅ Consistent error handling and recovery
 - ✅ Progressive chart loading with parallel fetching
 
+## High Priority Enhancements
+
+### Core Functionality Gaps
+- Add chart zoom and pan functionality for detailed data exploration
+- Implement data export (CSV/JSON) for external analysis
+- Add configurable alert thresholds with visual indicators
+- Create data backup and historical data management
+- Add sensor calibration interface
+- Implement automatic data quality validation
+
+### User Experience Improvements
+- Add keyboard shortcuts for power users
+- Implement undo/redo for chart customizations
+- Add chart bookmarking for quick access to specific views
+- Create guided onboarding tutorial for new users
+- Add contextual help tooltips throughout interface
+- Implement search functionality for finding specific data points
+
 ## Planned Future Enhancements
 
 ### Data Visualization Improvements
@@ -65,10 +90,10 @@ This document outlines completed enhancements and planned future improvements fo
 - Add high-resolution data viewing mode for detailed analysis
 
 ### Interactive Dashboard Customization
-- Allow users to drag-and-drop to rearrange charts
+- ✅ Allow users to drag-and-drop to rearrange charts (desktop mode)
+- ✅ Save user layout preferences in localStorage
 - Add ability to hide/show specific charts based on user preference
 - Enable chart resizing to emphasize important metrics
-- Save user layout preferences in localStorage
 - Add customizable chart themes beyond light/dark mode
 - Implement custom chart groupings defined by the user
 
@@ -82,7 +107,7 @@ This document outlines completed enhancements and planned future improvements fo
 
 ### Weather Integration Enhancements
 - Add forecast data overlay on charts to compare with greenhouse conditions
-- Show sunset/sunrise times with visual indicator of current daylight status
+- ✅ Show sunset/sunrise times with visual indicator of current daylight status
 - Add climate data correlation (how indoor/outdoor conditions affect each other)
 - Create growing degree day calculations based on temperature data
 - Implement weather-based action suggestions (e.g., "Good day to open windows")
@@ -112,6 +137,7 @@ This document outlines completed enhancements and planned future improvements fo
 - Add sync status indicator for real-time awareness
 
 ### Dashboard Overview Modes
+- ✅ Dashboard mode with condensed 6-chart view showing critical values
 - Add a condensed "summary view" showing critical values and their status
 - Create a full-screen mode for displaying on large monitors/TVs
 - Implement a slideshow mode that cycles through different chart views
@@ -130,7 +156,6 @@ This document outlines completed enhancements and planned future improvements fo
 ### Social and Sharing Features
 - Add screenshot and share functionality to export current view
 - Create shareable links with current time range and filter settings
-- Enable export of data in CSV/JSON formats for further analysis
 - Add optional community sharing for comparing greenhouse performance
 - Implement shareable insights and observations with annotation tools
 - Create templated reports for regular sharing
@@ -152,12 +177,10 @@ This document outlines completed enhancements and planned future improvements fo
 - Add automatic error reporting and diagnostics
 
 ### Advanced Interaction
-- Add chart zooming and panning for detailed data exploration
 - Implement data point annotations for significant events
 - Create customizable dashboard widgets for key metrics
 - Add natural language query support: "Show me temperature trends on hot days"
 - Implement voice control for hands-free dashboard interaction
-- Create guided analysis tours for new users
 
 ### Accessibility Improvements
 - Add screen reader support with ARIA attributes
