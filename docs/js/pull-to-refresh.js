@@ -145,9 +145,6 @@
                 // Hold the indicator visible while "refreshing"
                 pullIndicator.style.transform = 'translateY(0)';
                 
-                // Store that we're doing a pull-to-refresh reload
-                sessionStorage.setItem('pullToRefreshReload', 'true');
-                
                 // Reload the page after a short delay to show the animation
                 setTimeout(() => {
                     location.reload();
@@ -159,31 +156,6 @@
         });
     }
     
-    // Haptic feedback function
-    function triggerHapticFeedback() {
-        // Check if haptic feedback is supported
-        if ('vibrate' in navigator) {
-            // Medium intensity haptic feedback (150ms vibration)
-            navigator.vibrate(150);
-        }
-    }
-    
-    // Check if page was reloaded via pull-to-refresh and trigger haptic feedback
-    function checkForPullToRefreshReload() {
-        if (sessionStorage.getItem('pullToRefreshReload') === 'true') {
-            // Clear the flag
-            sessionStorage.removeItem('pullToRefreshReload');
-            
-            // Trigger haptic feedback 1 second after page load
-            setTimeout(() => {
-                triggerHapticFeedback();
-            }, 1000);
-        }
-    }
-    
     // Initialize pull-to-refresh when document is ready
     document.addEventListener('DOMContentLoaded', initPullToRefresh);
-    
-    // Check for pull-to-refresh reload haptic feedback
-    document.addEventListener('DOMContentLoaded', checkForPullToRefreshReload);
 })();
