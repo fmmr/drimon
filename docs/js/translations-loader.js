@@ -178,7 +178,8 @@ window.DriMonTranslations = {
     "waningGibbous": "Avtagende",
     "lastQuarter": "Siste kv.",
     "waningCrescent": "Nesten Ny",
-    "resetChartOrder": "Tilbakestill diagram rekkefølge"
+    "resetChartOrder": "Tilbakestill diagram rekkefølge",
+    "reloadPage": "Last siden på nytt"
   },
   "en": {
     "loading": "Loading...",
@@ -346,7 +347,8 @@ window.DriMonTranslations = {
     "waningGibbous": "Waning Gibbous",
     "lastQuarter": "Last Quarter",
     "waningCrescent": "Waning Crescent",
-    "resetChartOrder": "Reset Chart Order"
+    "resetChartOrder": "Reset Chart Order",
+    "reloadPage": "Reload Page"
   },
   "es": {
     "loading": "Cargando...",
@@ -514,6 +516,7 @@ window.DriMonTranslations = {
     "waningGibbous": "Gibosa Menguante",
     "lastQuarter": "Cuarto Menguante",
     "waningCrescent": "Luna Menguante",
-    "resetChartOrder": "Restablecer Orden de Gráficos"
+    "resetChartOrder": "Restablecer Orden de Gráficos",
+    "reloadPage": "Recargar Página"
   }
 };

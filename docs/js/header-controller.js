@@ -53,6 +53,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
+    // Set up reload page button
+    const reloadPageButton = document.getElementById('reloadPage');
+    if (reloadPageButton) {
+        reloadPageButton.addEventListener('click', () => {
+            window.location.reload();
+        });
+    }
+    
     // Initialize date controller
     if (window.DateController) {
         window.DateController.initialize();

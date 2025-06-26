@@ -431,6 +431,30 @@ function createResetChartOrder(config) {
 }
 
 /**
+ * Creates reload page button
+ * @param {Object} [config] - Configuration object for reload page button
+ * @returns {HTMLElement} The reload page button element
+ */
+function createReloadPage(config) {
+    const iconClass = config.icon;
+    
+    const reloadButton = document.createElement('button');
+    reloadButton.id = 'reloadPage';
+    reloadButton.className = 'header-button';
+    
+    reloadButton.title = window.I18n.translate('reloadPage');
+    reloadButton.setAttribute('data-i18n-title', 'reloadPage');
+    
+    const reloadIcon = document.createElement('span');
+    reloadIcon.className = 'icon';
+    reloadIcon.innerHTML = `<i class="${iconClass}"></i>`;
+    
+    reloadButton.appendChild(reloadIcon);
+    
+    return reloadButton;
+}
+
+/**
  * Creates sort dropdown (mobile-only)
  * @param {Object} [config] - Configuration object for sort dropdown
  * @returns {HTMLElement} The sort dropdown element
@@ -582,6 +606,7 @@ const ComponentRegistry = {
     'darkModeToggle': createDarkModeToggle,
     'statsToggle': createStatsToggle,
     'resetChartOrder': createResetChartOrder,
+    'reloadPage': createReloadPage,
     'sortDropdown': createSortDropdown
 };
 
