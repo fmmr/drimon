@@ -61,6 +61,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
+    // Set up shutdown Pi button
+    const shutdownPiButton = document.getElementById('shutdownPi');
+    if (shutdownPiButton) {
+        shutdownPiButton.addEventListener('click', () => {
+            if (confirm('Shutdown Pi? This will turn off the system.')) {
+                fetch('http://localhost:9999/shutdown', {
+                    method: 'POST'
+                }).then(response => {
+                    if (response.ok) {
+                        alert('Shutdown initiated. System will shutdown shortly.');
+                    }
+                }).catch(() => {
+                    alert('Could not connect to shutdown service. Make sure shutdown_service.py is running.');
+                });
+            }
+        });
+    }
+    
     // Initialize date controller
     if (window.DateController) {
         window.DateController.initialize();

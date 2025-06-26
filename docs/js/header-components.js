@@ -455,6 +455,30 @@ function createReloadPage(config) {
 }
 
 /**
+ * Creates shutdown Pi button
+ * @param {Object} [config] - Configuration object for shutdown Pi button
+ * @returns {HTMLElement} The shutdown Pi button element
+ */
+function createShutdownPi(config) {
+    const iconClass = config.icon;
+    
+    const shutdownButton = document.createElement('button');
+    shutdownButton.id = 'shutdownPi';
+    shutdownButton.className = 'header-button';
+    
+    shutdownButton.title = window.I18n.translate('shutdownPi');
+    shutdownButton.setAttribute('data-i18n-title', 'shutdownPi');
+    
+    const shutdownIcon = document.createElement('span');
+    shutdownIcon.className = 'icon';
+    shutdownIcon.innerHTML = `<i class="${iconClass}"></i>`;
+    
+    shutdownButton.appendChild(shutdownIcon);
+    
+    return shutdownButton;
+}
+
+/**
  * Creates sort dropdown (mobile-only)
  * @param {Object} [config] - Configuration object for sort dropdown
  * @returns {HTMLElement} The sort dropdown element
@@ -607,6 +631,7 @@ const ComponentRegistry = {
     'statsToggle': createStatsToggle,
     'resetChartOrder': createResetChartOrder,
     'reloadPage': createReloadPage,
+    'shutdownPi': createShutdownPi,
     'sortDropdown': createSortDropdown
 };
 

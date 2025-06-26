@@ -39,7 +39,9 @@
       "Bash(rg:*)",
       "Bash(git mv:*)",
       "Bash(awk:*)",
-      "Bash(git restore:*)"
+      "Bash(git restore:*)",
+      "Bash(claude /help)",
+      "Bash(mv:*)"
     ],
     "deny": []
   },
