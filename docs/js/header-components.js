@@ -479,6 +479,30 @@ function createShutdownPi(config) {
 }
 
 /**
+ * Creates reboot Pi button
+ * @param {Object} [config] - Configuration object for reboot Pi button
+ * @returns {HTMLElement} The reboot Pi button element
+ */
+function createRebootPi(config) {
+    const iconClass = config.icon;
+    
+    const rebootButton = document.createElement('button');
+    rebootButton.id = 'rebootPi';
+    rebootButton.className = 'header-button';
+    
+    rebootButton.title = window.I18n.translate('rebootPi');
+    rebootButton.setAttribute('data-i18n-title', 'rebootPi');
+    
+    const rebootIcon = document.createElement('span');
+    rebootIcon.className = 'icon';
+    rebootIcon.innerHTML = `<i class="${iconClass}"></i>`;
+    
+    rebootButton.appendChild(rebootIcon);
+    
+    return rebootButton;
+}
+
+/**
  * Creates sort dropdown (mobile-only)
  * @param {Object} [config] - Configuration object for sort dropdown
  * @returns {HTMLElement} The sort dropdown element
@@ -632,6 +656,7 @@ const ComponentRegistry = {
     'resetChartOrder': createResetChartOrder,
     'reloadPage': createReloadPage,
     'shutdownPi': createShutdownPi,
+    'rebootPi': createRebootPi,
     'sortDropdown': createSortDropdown
 };
 

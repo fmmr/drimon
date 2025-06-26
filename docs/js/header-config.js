@@ -158,6 +158,13 @@ const DEFAULT_HEADER_CONFIG = {
                 icon: 'fas fa-power-off',
                 titleKey: 'shutdownPi'
             }
+        },
+        rebootPi: {
+            type: 'rebootPi',
+            config: {
+                icon: 'fas fa-redo-alt',
+                titleKey: 'rebootPi'
+            }
         }
     },
     
@@ -240,7 +247,7 @@ const HEADER_MODE_CONFIGS = [
                     icon: 'fas fa-cog',
                     dateRanges: AllDateRanges.slice(0, 6),  // First 6: default, 1, 2, 6, 13, 30
                     secondaryDateRanges: AllDateRanges.slice(6),  // Remaining: today, yesterday, this-week, last-week, this-month, last-month, start
-                    actions: ['darkModeToggle', 'statsToggle', 'reloadPage', 'shutdownPi'],  // Dashboard-specific actions including page reload
+                    actions: ['darkModeToggle', 'statsToggle', 'reloadPage', 'rebootPi', 'shutdownPi'],  // Dashboard-specific actions including page reload
                     chartSetSelector: {
                         chartSets: ChartSets
                     },

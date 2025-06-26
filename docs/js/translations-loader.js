@@ -180,7 +180,8 @@ window.DriMonTranslations = {
     "waningCrescent": "Nesten Ny",
     "resetChartOrder": "Tilbakestill diagram rekkefølge",
     "reloadPage": "Last siden på nytt",
-    "shutdownPi": "Slå av Pi"
+    "shutdownPi": "Slå av Pi",
+    "rebootPi": "Start Pi på nytt"
   },
   "en": {
     "loading": "Loading...",
@@ -350,7 +351,8 @@ window.DriMonTranslations = {
     "waningCrescent": "Waning Crescent",
     "resetChartOrder": "Reset Chart Order",
     "reloadPage": "Reload Page",
-    "shutdownPi": "Shutdown Pi"
+    "shutdownPi": "Shutdown Pi",
+    "rebootPi": "Reboot Pi"
   },
   "es": {
     "loading": "Cargando...",
@@ -520,6 +522,7 @@ window.DriMonTranslations = {
     "waningCrescent": "Luna Menguante",
     "resetChartOrder": "Restablecer Orden de Gráficos",
     "reloadPage": "Recargar Página",
-    "shutdownPi": "Apagar Pi"
+    "shutdownPi": "Apagar Pi",
+    "rebootPi": "Reiniciar Pi"
   }
 };

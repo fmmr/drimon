@@ -79,6 +79,24 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
+    // Set up reboot Pi button
+    const rebootPiButton = document.getElementById('rebootPi');
+    if (rebootPiButton) {
+        rebootPiButton.addEventListener('click', () => {
+            if (confirm('Reboot Pi? This will restart the system.')) {
+                fetch('http://localhost:9999/reboot', {
+                    method: 'POST'
+                }).then(response => {
+                    if (response.ok) {
+                        alert('Reboot initiated. System will restart shortly.');
+                    }
+                }).catch(() => {
+                    alert('Could not connect to shutdown service. Make sure shutdown_service.py is running.');
+                });
+            }
+        });
+    }
+    
     // Initialize date controller
     if (window.DateController) {
         window.DateController.initialize();

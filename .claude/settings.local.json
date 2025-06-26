@@ -41,7 +41,8 @@
       "Bash(awk:*)",
       "Bash(git restore:*)",
       "Bash(claude /help)",
-      "Bash(mv:*)"
+      "Bash(mv:*)",
+      "Bash(chmod:*)"
     ],
     "deny": []
   },
