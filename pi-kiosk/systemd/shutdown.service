@@ -1,0 +1,14 @@
+[Unit]
+Description=Shutdown web service
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 %h/pi-kiosk/scripts/shutdown_service.py
+Type=simple
+Restart=on-failure
+RestartSec=5
+KillMode=mixed
+TimeoutStopSec=5
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,15 @@
+[Unit]
+Description=Chromium kiosk
+After=graphical-session.target
+Wants=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+ExecStart=%h/pi-kiosk/scripts/kiosk.sh
+Type=simple
+Restart=on-failure
+KillMode=mixed
+TimeoutStopSec=10
+
+[Install]
+WantedBy=default.target
