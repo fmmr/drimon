@@ -42,7 +42,9 @@
       "Bash(git restore:*)",
       "Bash(claude /help)",
       "Bash(mv:*)",
-      "Bash(chmod:*)"
+      "Bash(chmod:*)",
+      "Bash(curl:*)",
+      "WebFetch(domain:kartverket.no)"
     ],
     "deny": []
   },

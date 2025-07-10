@@ -110,6 +110,25 @@ const ChipConfigs = {
         containerClass: 'data-chip'
     },
     
+    waterLevel: {
+        dataKey: 'waterLevel',
+        unit: 'cm',
+        hasIcon: true,
+        hasStatus: true,
+        thresholds: {
+            statusRanges: [-10, 10],
+            statuses: ['low-tide', 'normal', 'high-tide'],
+            iconRanges: [-10, 10],
+            icons: ['arrow-down', 'minus', 'arrow-up']
+        },
+        hasTooltip: true,
+        customTooltip: true,
+        tooltipKey: 'waterLevel',
+        views: ['mobile', 'desktop', 'dashboard'],
+        order: 5,
+        elementId: 'water-level'
+    },
+    
     pressure: {
         dataKey: 'pressure',
         unit: 'hPa',
@@ -123,7 +142,7 @@ const ChipConfigs = {
         },
         hasTooltip: false,
         views: ['mobile', 'desktop', 'dashboard'],
-        order: 5,
+        order: 6,
         elementId: 'pressure'
     },
     
@@ -142,7 +161,7 @@ const ChipConfigs = {
         customTooltip: true, // Uses battery + voltage tooltip
         tooltipKey: 'battery',
         views: ['mobile', 'desktop', 'dashboard'],
-        order: 6,
+        order: 7,
         elementId: 'battery'
     },
     
@@ -160,7 +179,7 @@ const ChipConfigs = {
         customTooltip: true, // Uses window + status tooltip
         tooltipKey: 'window',
         views: ['mobile', 'desktop'],
-        order: 7,
+        order: 8,
         elementId: 'window'
     },
     
@@ -178,7 +197,7 @@ const ChipConfigs = {
         customTooltip: true, // Uses light + status tooltip
         tooltipKey: 'light',
         views: ['mobile', 'desktop'],
-        order: 8,
+        order: 9,
         elementId: 'light'
     }
 };

@@ -192,6 +192,10 @@ window.ChipHandler = (function() {
             const displayText = window.I18n.translate(textValue);
             
             elements.valueElement.innerHTML = displayText;
+        } else if (chipKey === 'waterLevel') {
+            // Show next tide time instead of water level
+            const nextTideTime = latestChipData.nextTideTime || '--:--';
+            elements.valueElement.innerHTML = nextTideTime;
         } else {
             elements.valueElement.innerHTML = `${value} ${config.unit}`;
         }
@@ -207,6 +211,16 @@ window.ChipHandler = (function() {
             let iconName;
             if (config.fixedIcon) {
                 iconName = config.fixedIcon;
+            } else if (chipKey === 'waterLevel') {
+                // Use trend for water level icon instead of water level value
+                const trend = latestChipData.waterLevelTrend || 'Ukjent';
+                if (trend === 'Stigende') {
+                    iconName = 'arrow-up';
+                } else if (trend === 'Synkende') {
+                    iconName = 'arrow-down';
+                } else {
+                    iconName = 'minus';
+                }
             } else {
                 iconName = window.getStatusFromThreshold(value, config.thresholds, 'icons');
             }
@@ -301,15 +315,63 @@ window.ChipHandler = (function() {
                 tooltipData = { ...updateTimeData, ...timeTooltipData };
                 break;
                 
+            case 'waterLevel':
+                const observedLevel = latestChipData.waterLevelObserved || 0;
+                const predictedLevel = latestChipData.waterLevelPredicted || 0;
+                const weatherEffect = latestChipData.weatherEffect || 0;
+                const forecastLevel = latestChipData.waterLevelForecast || 0;
+                const cdLevel = value + 55.0;
+                
+                const nextHighTides = latestChipData.nextHighTides || [];
+                const nextLowTides = latestChipData.nextLowTides || [];
+                const trend = latestChipData.waterLevelTrend || 'Ukjent';
+                const lastUpdated = latestChipData.waterLevelUpdated || '--:--';
+                
+                
+                tooltipData = {
+                    'Vannstand:': `${value} cm (kart: ${cdLevel.toFixed(0)})`,
+                    'Trend:': trend,
+                    'Neste høyvann': undefined
+                };
+                
+                // Add high tide entries
+                if (nextHighTides.length > 0) {
+                    nextHighTides.slice(0, 3).forEach(tide => {
+                        tooltipData[`  ${tide.time}`] = `${tide.level} cm`;
+                    });
+                } else {
+                    tooltipData['  Ingen data'] = undefined;
+                }
+                
+                tooltipData['Neste lavvann'] = undefined;
+                
+                // Add low tide entries  
+                if (nextLowTides.length > 0) {
+                    nextLowTides.slice(0, 3).forEach(tide => {
+                        tooltipData[`  ${tide.time}`] = `${tide.level} cm`;
+                    });
+                } else {
+                    tooltipData['  Ingen data'] = undefined;
+                }
+                
+                // Add detailed data section
+                Object.assign(tooltipData, {
+                    'Detaljerte data': undefined,
+                    'Predikert:': `${predictedLevel.toFixed(1)} cm`,
+                    'Observert:': `${observedLevel.toFixed(1)} cm`,
+                    'Væreffekt:': `${weatherEffect >= 0 ? '+' : ''}${weatherEffect.toFixed(1)} cm`,
+                    'Prognose:': `${forecastLevel.toFixed(1)} cm`,
+                    'Sist oppdatert:': lastUpdated
+                });
+                break;
+                
             default:
                 tooltipData = {
                     [window.I18n.translate(config.tooltipKey)]: `${value} ${config.unit}`
                 };
         }
         
-        const tooltipText = window.Utils && typeof window.Utils.formatTabularTooltip === 'function'
-            ? window.Utils.formatTabularTooltip(tooltipData, { useHTML: true })
-            : Object.entries(tooltipData).map(([key, val]) => `${key}: ${val}`).join('\n');
+        const tooltipText = window.Utils.formatTabularTooltip(tooltipData, { useHTML: true, skipEmptyValues: false });
         
         elements.container.setAttribute('data-tooltip-content', tooltipText);
     }

@@ -608,11 +608,22 @@ const Utils = {
             let html = '<div class="tooltip-table">';
 
             filteredRows.forEach(([label, value], index) => {
-                html += '<div class="tooltip-row">';
-                html += `<div class="tooltip-label">${label}</div>`;
-                html += `<div class="tooltip-value">${value}</div>`;
-                html += '</div>';
-
+                if (value === undefined) {
+                    // Header or divider - span both columns
+                    if (label.includes('─')) {
+                        // Divider - single element spanning both columns
+                        html += `<div class="tooltip-row" style="grid-column: 1 / -1; border-bottom: 1px solid #ccc; margin: 4px 0; height: 1px;"></div>`;
+                    } else {
+                        // Header - span both columns
+                        html += `<div class="tooltip-row" style="grid-column: 1 / -1; font-weight: bold; text-align: left;">${label}</div>`;
+                    }
+                } else {
+                    // Normal key-value pair
+                    html += '<div class="tooltip-row">';
+                    html += `<div class="tooltip-label">${label}</div>`;
+                    html += `<div class="tooltip-value">${value}</div>`;
+                    html += '</div>';
+                }
             });
 
             html += '</div>';
