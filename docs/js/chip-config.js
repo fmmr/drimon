@@ -116,10 +116,8 @@ const ChipConfigs = {
         hasIcon: true,
         hasStatus: true,
         thresholds: {
-            statusRanges: [-10, 10],
-            statuses: ['low-tide', 'normal', 'high-tide'],
-            iconRanges: [-10, 10],
-            icons: ['arrow-down', 'minus', 'arrow-up']
+            statusRanges: [-71, -50, -30, 20, 60, 100],
+            statuses: ['water-level-extreme', 'water-level-very-high', 'water-level-high', 'water-level-normal', 'water-level-high', 'water-level-very-high', 'water-level-extreme']
         },
         hasTooltip: true,
         customTooltip: true,

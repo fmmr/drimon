@@ -213,10 +213,10 @@ window.ChipHandler = (function() {
                 iconName = config.fixedIcon;
             } else if (chipKey === 'waterLevel') {
                 // Use trend for water level icon instead of water level value
-                const trend = latestChipData.waterLevelTrend || 'Ukjent';
-                if (trend === 'Stigende') {
+                const trend = latestChipData.waterLevelTrend;
+                if (trend === 'RISING') {
                     iconName = 'arrow-up';
-                } else if (trend === 'Synkende') {
+                } else if (trend === 'FALLING') {
                     iconName = 'arrow-down';
                 } else {
                     iconName = 'minus';
@@ -324,15 +324,26 @@ window.ChipHandler = (function() {
                 
                 const nextHighTides = latestChipData.nextHighTides || [];
                 const nextLowTides = latestChipData.nextLowTides || [];
-                const trend = latestChipData.waterLevelTrend || 'Ukjent';
+                const trendConstant = latestChipData.waterLevelTrend;
+                const trend = trendConstant === 'RISING' ? window.I18n.translate('waterLevelRising') :
+                              trendConstant === 'FALLING' ? window.I18n.translate('waterLevelFalling') :
+                              window.I18n.translate('waterLevelStable');
                 const lastUpdated = latestChipData.waterLevelUpdated || '--:--';
+                const waterLevelName = latestChipData.waterLevelName;
                 
                 
-                tooltipData = {
-                    'Vannstand:': `${value} cm (kart: ${cdLevel.toFixed(0)})`,
-                    'Trend:': trend,
-                    'Neste høyvann': undefined
-                };
+                tooltipData = {};
+                
+                // Add water level name at the top if it exists
+                if (waterLevelName) {
+                    tooltipData[waterLevelName] = undefined;
+                }
+                
+                Object.assign(tooltipData, {
+                    [`${window.I18n.translate('waterLevel')}:`]: `${value} cm (kart: ${cdLevel.toFixed(0)})`,
+                    [`${window.I18n.translate('waterLevelTrend')}:`]: trend,
+                    [window.I18n.translate('waterLevelNextHighTide')]: undefined
+                });
                 
                 // Add high tide entries
                 if (nextHighTides.length > 0) {
@@ -340,10 +351,10 @@ window.ChipHandler = (function() {
                         tooltipData[`  ${tide.time}`] = `${tide.level} cm`;
                     });
                 } else {
-                    tooltipData['  Ingen data'] = undefined;
+                    tooltipData[`  ${window.I18n.translate('noData')}`] = undefined;
                 }
                 
-                tooltipData['Neste lavvann'] = undefined;
+                tooltipData[window.I18n.translate('waterLevelNextLowTide')] = undefined;
                 
                 // Add low tide entries  
                 if (nextLowTides.length > 0) {
@@ -351,17 +362,17 @@ window.ChipHandler = (function() {
                         tooltipData[`  ${tide.time}`] = `${tide.level} cm`;
                     });
                 } else {
-                    tooltipData['  Ingen data'] = undefined;
+                    tooltipData[`  ${window.I18n.translate('noData')}`] = undefined;
                 }
                 
                 // Add detailed data section
                 Object.assign(tooltipData, {
-                    'Detaljerte data': undefined,
-                    'Predikert:': `${predictedLevel.toFixed(1)} cm`,
-                    'Observert:': `${observedLevel.toFixed(1)} cm`,
-                    'Væreffekt:': `${weatherEffect >= 0 ? '+' : ''}${weatherEffect.toFixed(1)} cm`,
-                    'Prognose:': `${forecastLevel.toFixed(1)} cm`,
-                    'Sist oppdatert:': lastUpdated
+                    [window.I18n.translate('waterLevelDetailedData')]: undefined,
+                    [`${window.I18n.translate('waterLevelPredicted')}:`]: `${predictedLevel.toFixed(1)} cm`,
+                    [`${window.I18n.translate('waterLevelObserved')}:`]: `${observedLevel.toFixed(1)} cm`,
+                    [`${window.I18n.translate('waterLevelWeatherEffect')}:`]: `${weatherEffect >= 0 ? '+' : ''}${weatherEffect.toFixed(1)} cm`,
+                    [`${window.I18n.translate('waterLevelForecast')}:`]: `${forecastLevel.toFixed(1)} cm`,
+                    [`${window.I18n.translate('waterLevelLastUpdated')}:`]: lastUpdated
                 });
                 break;
                 

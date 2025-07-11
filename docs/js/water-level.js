@@ -13,6 +13,7 @@ window.WaterLevel = (function() {
     const WATER_LEVELS = {
         HAT: 29.2,     // Høyeste astronomiske tidevann
         MHW: 12.5,     // Middel høyvann
+        MHWN: 9.6,     // Middel nipp høyvann
         MSL: 0.0,      // Middelvann
         CD: -55.0      // Chart datum offset
     };
@@ -188,14 +189,61 @@ window.WaterLevel = (function() {
         }
     }
     
+    function getWaterLevelName(waterLevel) {
+        const levels = [
+            { value: 216.9, key: 'waterLevelUpperEstimate' },
+            { value: 176.8, key: 'waterLevel1000Year' },
+            { value: 162.0, key: 'waterLevel200Year' },
+            { value: 155.2, key: 'waterLevel100Year' },
+            { value: 148.0, key: 'waterLevel50Year' },
+            { value: 137.9, key: 'waterLevel20Year' },
+            { value: 129.5, key: 'waterLevel10Year' },
+            { value: 120.3, key: 'waterLevel5Year' },
+            { value: 99.7, key: 'waterLevelAnnual' },
+            { value: 29.2, key: 'waterLevelHighestAstronomical' },
+            { value: 15.4, key: 'waterLevelMeanHighWaterSprings' },
+            { value: 12.5, key: 'waterLevelMeanHighWater' },
+            { value: 9.6, key: 'waterLevelMeanHighWaterNeaps' },
+            { value: 0.0, key: 'waterLevelMeanSeaLevel' },
+            { value: -9.6, key: 'waterLevelMeanLowWaterNeaps' },
+            { value: -12.5, key: 'waterLevelMeanLowWater' },
+            { value: -15.4, key: 'waterLevelMeanLowWaterSprings' },
+            { value: -37.7, key: 'waterLevelLowestAstronomical' },
+            { value: -57.7, key: 'waterLevelChartDatum' },
+            { value: -71.4, key: 'waterLevelAnnualLow' },
+            { value: -85.0, key: 'waterLevel5YearLow' },
+            { value: -97.4, key: 'waterLevel20YearLow' }
+        ];
+        
+        let closestLevel = levels[0];
+        let minDifference = Math.abs(waterLevel - levels[0].value);
+        
+        for (const level of levels) {
+            const difference = Math.abs(waterLevel - level.value);
+            if (difference < minDifference) {
+                minDifference = difference;
+                closestLevel = level;
+            }
+        }
+        
+        return window.I18n.translate(closestLevel.key);
+    }
+    
+    // Water level trend constants
+    const TREND = {
+        RISING: 'RISING',
+        FALLING: 'FALLING', 
+        STABLE: 'STABLE'
+    };
+    
     function calculateTrend(observations, extremes) {
-        if (observations.length < 2) return 'Ukjent';
+        if (observations.length < 2) return TREND.STABLE;
         
         const now = new Date();
         const nextExtreme = extremes.find(e => e.time > now);
         
         if (nextExtreme) {
-            return nextExtreme.type === 'high' ? 'Stigende' : 'Synkende';
+            return nextExtreme.type === 'high' ? TREND.RISING : TREND.FALLING;
         }
         
         const latest = observations[observations.length - 1];
@@ -205,11 +253,11 @@ window.WaterLevel = (function() {
         
         if (thirtyMinutesAgo) {
             const diff = latest.value - thirtyMinutesAgo.value;
-            if (diff > 1.0) return 'Stigende';
-            if (diff < -1.0) return 'Synkende';
+            if (diff > 1.0) return TREND.RISING;
+            if (diff < -1.0) return TREND.FALLING;
         }
         
-        return 'Stabil';
+        return TREND.STABLE;
     }
     
     async function fetchWaterLevelData() {
@@ -217,23 +265,7 @@ window.WaterLevel = (function() {
             return dataCache.data;
         }
         
-        try {
-            return await fetchFromXmlApi();
-        } catch (error) {
-            console.warn('Failed to fetch water level data:', error);
-            return latestWaterData || {
-                waterLevel: 0,
-                waterLevelObserved: 0,
-                waterLevelPredicted: 0,
-                waterLevelForecast: 0,
-                waterLevelTrend: 'Ukjent',
-                waterLevelUpdated: '--:--',
-                nextTideTime: '--:--',
-                nextHighTides: [],
-                nextLowTides: [],
-                weatherEffect: 0
-            };
-        }
+        return await fetchFromXmlApi();
     }
     
     
@@ -357,6 +389,7 @@ window.WaterLevel = (function() {
             waterLevelForecast: latestForecast.value,
             waterLevelTrend: trend,
             waterLevelUpdated: lastUpdated,
+            waterLevelName: getWaterLevelName(latestObservation.value),
             nextTideTime: nextTideTime,
             nextHighTides,
             nextLowTides,

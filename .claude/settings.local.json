@@ -44,7 +44,8 @@
       "Bash(mv:*)",
       "Bash(chmod:*)",
       "Bash(curl:*)",
-      "WebFetch(domain:kartverket.no)"
+      "WebFetch(domain:kartverket.no)",
+      "WebFetch(domain:vannstand.kartverket.no)"
     ],
     "deny": []
   },
