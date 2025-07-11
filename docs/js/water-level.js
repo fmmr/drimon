@@ -422,7 +422,7 @@ window.WaterLevel = (function() {
             }, 5 * 60 * 1000);
             
         } catch (error) {
-            console.warn('Failed to initialize water level module:', error);
+            console.error('Failed to initialize water level module:', error);
         }
     }
     
