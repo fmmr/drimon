@@ -223,6 +223,22 @@ window.ChipHandler = (function() {
                 elements.iconElement.className = 'mr-1';
                 elements.iconElement.innerHTML = `<img src="${iconSrc}" width="16" height="16" alt="Water level trend" />`;
                 return;
+            } else if (chipKey === 'pressure') {
+                // Use pressure-specific icons based on value thresholds
+                const statusClass = window.getStatusFromThreshold(value, config.thresholds, 'statuses');
+                let iconSrc;
+                if (statusClass === 'high-pressure') {
+                    iconSrc = 'img/pressure-high.svg';
+                } else if (statusClass === 'low-pressure') {
+                    iconSrc = 'img/pressure-low.svg';
+                } else {
+                    iconSrc = 'img/pressure-stable.svg';
+                }
+                
+                // Replace the FontAwesome icon with SVG image
+                elements.iconElement.className = 'mr-1';
+                elements.iconElement.innerHTML = `<img src="${iconSrc}" width="16" height="16" alt="Air pressure" />`;
+                return;
             } else {
                 iconName = window.getStatusFromThreshold(value, config.thresholds, 'icons');
             }
