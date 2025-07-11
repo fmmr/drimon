@@ -181,21 +181,17 @@ window.ChipHandler = (function() {
         
         if (chipKey === 'timeChip') {
             const createdDate = new Date(latestChipData.createdAt || data.createdAt);
-            const timeFormatted = createdDate.toLocaleTimeString('no-NO', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
+            elements.valueElement.textContent = createdDate.toLocaleTimeString('no-NO', {
+                hour: '2-digit',
+                minute: '2-digit'
             });
-            elements.valueElement.textContent = timeFormatted;
             elements.valueElement.setAttribute('data-timestamp', createdDate.toISOString());
         } else if (config.hasText) {
             const textValue = window.getStatusFromThreshold(value, config.thresholds, 'texts');
-            const displayText = window.I18n.translate(textValue);
-            
-            elements.valueElement.innerHTML = displayText;
+            elements.valueElement.innerHTML = window.I18n.translate(textValue);
         } else if (chipKey === 'waterLevel') {
             // Show next tide time instead of water level
-            const nextTideTime = latestChipData.nextTideTime || '--:--';
-            elements.valueElement.innerHTML = nextTideTime;
+            elements.valueElement.innerHTML = latestChipData.nextTideTime || '--:--';
         } else {
             elements.valueElement.innerHTML = `${value} ${config.unit}`;
         }
@@ -212,15 +208,21 @@ window.ChipHandler = (function() {
             if (config.fixedIcon) {
                 iconName = config.fixedIcon;
             } else if (chipKey === 'waterLevel') {
-                // Use trend for water level icon instead of water level value
+                // Use trend-based water icons
                 const trend = latestChipData.waterLevelTrend;
+                let iconSrc;
                 if (trend === 'RISING') {
-                    iconName = 'arrow-up';
+                    iconSrc = 'img/water-rising.svg';
                 } else if (trend === 'FALLING') {
-                    iconName = 'arrow-down';
+                    iconSrc = 'img/water-falling.svg';
                 } else {
-                    iconName = 'minus';
+                    iconSrc = 'img/water-stable.svg';
                 }
+                
+                // Replace the FontAwesome icon with SVG image
+                elements.iconElement.className = 'mr-1';
+                elements.iconElement.innerHTML = `<img src="${iconSrc}" width="16" height="16" alt="Water level trend" />`;
+                return;
             } else {
                 iconName = window.getStatusFromThreshold(value, config.thresholds, 'icons');
             }
