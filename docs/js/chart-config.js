@@ -374,7 +374,7 @@ const RAW_CHART_CONFIGS = [
         category: 'weather',
         categoryHeaderKey: 'weather',
         unit: 'm/s',
-        defaultRange: 7
+        defaultRange: 3
     },
     { 
         id: 'chart-rain',
@@ -391,7 +391,7 @@ const RAW_CHART_CONFIGS = [
         category: 'weather',
         categoryHeaderKey: 'weather',
         unit: 'mm',
-        defaultRange: 7
+        defaultRange: 3
     },
 
     // Row 4
