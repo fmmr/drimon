@@ -18,7 +18,7 @@ function getDateRange(range) {
         // If range is a number, subtract that many days
         const days = parseInt(range);
         startDate = now.clone().subtract(days, 'days').format(format);
-        endDate = now.format(format);
+        endDate = now.clone().subtract(days-30, 'days').format(format);
     } else {
         switch (range) {
             case 'today':
