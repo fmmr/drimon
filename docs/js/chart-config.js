@@ -262,7 +262,7 @@ const RAW_CHART_CONFIGS = [
                 color: '#e67e22',
                 dataFilter: {
                     max: 50,
-                    exclude: [-127]
+                    exclude: [-127, 85]
                 }
             },
             {
@@ -271,7 +271,7 @@ const RAW_CHART_CONFIGS = [
                 field: 5,
                 color: '#9b59b6',
                 dataFilter: {
-                    exclude: [-127]
+                    exclude: [-127, 85]
                 }
             }
         ],
@@ -305,7 +305,7 @@ const RAW_CHART_CONFIGS = [
                 field: 4,
                 color: '#2980b9',
                 dataFilter: {
-                    exclude: [-127]
+                    exclude: [-127, 85]
                 }
             }
         ],

@@ -1,5 +1,14 @@
 VL53L0X_RangingMeasurementData_t tofData;
 
+float readDallas(DeviceAddress addr) {
+  float t = sensors.getTempC(addr);
+  for (int retry = 0; retry < 2 && (t == 85.0 || t == -127.0); retry++) {
+    sensors.requestTemperatures();
+    t = sensors.getTempC(addr);
+  }
+  return t;
+}
+
 String status(SensorData& data) {
   String stat = "";
   if (data.temperature < 14) stat = stat + "T-COLD";
@@ -86,9 +95,9 @@ SensorData measure(long start) {
     total_soil3 += constrain(map(t3, 2600, 1009, 0, 100), 0, 100);
 
     sensors.requestTemperatures();  // Send the command to get temperatures
-    total_termo1 += sensors.getTempC(termo1);
-    total_termo2 += sensors.getTempC(termo2);
-    total_termo3 += sensors.getTempC(termo3);
+    total_termo1 += readDallas(termo1);
+    total_termo2 += readDallas(termo2);
+    total_termo3 += readDallas(termo3);
 
     delay(SLEEP_BETWEEN_READINGS);  // Short delay between readings
   }
@@ -107,12 +116,12 @@ SensorData measure(long start) {
   data.termo1 = total_termo1 / NUM_READINGS;
   data.termo2 = total_termo2 / NUM_READINGS;
   data.termo3 = total_termo3 / NUM_READINGS;
-  data.soilTerm = (total_termo1 + total_termo3) / 2;
+  data.soilTerm = (data.termo1 + data.termo3) / 2.0;
 
   data.batteryVoltage = total_batteryVoltage / NUM_READINGS;
   data.batteryPercentage = total_batteryPercentage / NUM_READINGS;
 
-  if (data.termo2 > 0.0) {
+  if (data.termo2 > 0.0 && data.termo2 < 60.0) {
     data.temperature = (2.0 * data.bmeTemp + data.ahtTemp + data.termo2) / 4.0;
   } else {
     data.temperature = (2.0 * data.bmeTemp + data.ahtTemp) / 3.0;
