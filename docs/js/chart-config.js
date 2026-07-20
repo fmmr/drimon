@@ -367,7 +367,8 @@ const RAW_CHART_CONFIGS = [
                 titleKey: 'windChart',
                 channel: window.THINGSPEAK.EXT_CHANNEL,
                 field: 5,
-                color: '#5c6bc0'
+                color: '#5c6bc0',
+                dataFilter: { max: 30 }
             }
         ],
         row: 3,
