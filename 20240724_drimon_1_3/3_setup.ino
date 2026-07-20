@@ -1,7 +1,10 @@
+RTC_DATA_ATTR uint8_t cachedBSSID[6] = {0};
+RTC_DATA_ATTR int32_t cachedChannel = 0;
+
 void setupPins() {
   pinMode(BLUE_LED_PIN, OUTPUT);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
-  pinMode(BUZZZER_PIN, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
   pinMode(GREEN_LED_PIN, OUTPUT);
   pinMode(POST_SWITCH_PIN, INPUT_PULLUP);
   pinMode(RED_LED_PIN, OUTPUT);
@@ -20,13 +23,24 @@ void setupPins() {
 }
 
 void connectToWiFi() {
+  IPAddress local_IP(192, 168, 1, 15);
+  IPAddress gateway(192, 168, 1, 1);
+  IPAddress subnet(255, 255, 255, 0);
+  IPAddress dns(192, 168, 1, 1);
+  WiFi.config(local_IP, gateway, subnet, dns);
+
   int retries = 0;
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  if (cachedChannel > 0) {
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD, cachedChannel, cachedBSSID);
+  } else {
+    WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  }
   Serial.print("  Initializing WiFi...");
   delay(2000);
 
   while (WiFi.status() != WL_CONNECTED && retries < WIFI_MAX_RETRIES) {
     WiFi.disconnect();
+    cachedChannel = 0;  // invalidate cache on failure, next attempt does full scan
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
     delay(1000);
     Serial.print(".");
@@ -35,6 +49,8 @@ void connectToWiFi() {
   Serial.println();
 
   if (WiFi.status() == WL_CONNECTED) {
+    memcpy(cachedBSSID, WiFi.BSSID(), 6);
+    cachedChannel = WiFi.channel();
     Serial.print("    WiFi: OK");
     Serial.print(", IP: ");
     Serial.print(WiFi.localIP());
@@ -120,13 +136,14 @@ void initSensors() {
     Serial.println("    AHT: OK");
   }
 
+  bool gaugeOk = (batteryMonitor.begin() == 0);
   int retriesGauge = 0;
-
-  while (batteryMonitor.begin() != 0 && retriesGauge < 5) {
+  while (!gaugeOk && retriesGauge < 5) {
     delay(30);
     retriesGauge++;
+    gaugeOk = (batteryMonitor.begin() == 0);
   }
-  if (batteryMonitor.begin() != 0) {
+  if (!gaugeOk) {
     Serial.println("    GAUGE: Failed");
     dispPrint("GAUGE: FAIL");
   } else {
@@ -142,7 +159,7 @@ void initSensors() {
     msg = msg + ")";
     dispPrint(msg);
   } else {
-    String msg = "SOIL 2: OK (";
+    String msg = "SOIL 1: OK (";
     msg = msg + soilTemp;
     msg = msg + ")";
     Serial.print("    ");

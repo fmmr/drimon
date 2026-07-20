@@ -34,7 +34,7 @@ String status(SensorData& data) {
 }
 
 SensorData measure(long start) {
-  SensorData data;
+  SensorData data = {};
 
   float total_bmeTemp = 0.0;
   float total_bmeHumidity = 0.0;
@@ -73,7 +73,7 @@ SensorData measure(long start) {
 
     total_bmeTemp += bme.readTemperature();
     total_bmeHumidity += bme.readHumidity();
-    total_pressure += (bme.readPressure() / 100.0F) + (12 * HEIGHT_ABOVE_SEE_LEVEL / 100.0);
+    total_pressure += (bme.readPressure() / 100.0F) + (12 * HEIGHT_ABOVE_SEA_LEVEL / 100.0);
 
     sensors_event_t ahtHumidity, ahtTemp;
     aht.getEvent(&ahtHumidity, &ahtTemp);

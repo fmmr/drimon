@@ -54,15 +54,6 @@ void postThingSpeak(SensorData& data) {
   ThingSpeak.setField(3, data.batteryPercentage);
   ThingSpeak.setField(4, data.timeUsed);
   ThingSpeak.setField(5, data.lux_int);
-  if (FETCHED_MET){ 
-    ThingSpeak.setField(6, data.tempDiff);
-    ThingSpeak.setField(7, data.humidityDiff);
-    ThingSpeak.setField(8, data.metTemp);
-  }
-  else{
-    Serial.println("  Thingspeak: no met data available");
-  }
-
   // Set the status
   ThingSpeak.setStatus(data.status);
 

@@ -41,15 +41,6 @@ void displaySerial(SensorData& data) {
   Serial.print("    Termo 3:      ");
   Serial.println(data.termo3);
 
-  Serial.print("    Met temp:      ");
-  Serial.println(data.metTemp);
-  Serial.print("    Met hum:       ");
-  Serial.println(data.metHumidity);
-  Serial.print("    Temp diff:     ");
-  Serial.println(data.tempDiff);
-  Serial.print("    Hum diff:      ");
-  Serial.println(data.humidityDiff);
-
   Serial.print("    Status:       ");
   Serial.println(data.status);
   Serial.print("    Time:         ");
@@ -107,8 +98,6 @@ void displayOled(SensorData& data) {
   display.setCursor(0, 56);
   display.print("Soil T: ");
   display.print(data.soilTerm, 1);
-  display.print(" Df: ");
-  display.print(data.tempDiff, 2);
 
   display.display();
 }
@@ -120,8 +109,6 @@ void displayLCD(SensorData& data) {
 
   lcd.print("t:");
   lcd.print(data.temperature, 1);
-  lcd.print(" ");
-  lcd.print(data.tempDiff, 1);
   lcd.print(" b:");
   lcd.print(data.batteryPercentageInt);
 

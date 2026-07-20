@@ -32,11 +32,6 @@ struct SensorData {
   float temperature;
   float humidity;
 
-  float metTemp;
-  float metHumidity;
-  float tempDiff;
-  float humidityDiff;
-
   String status;
   long timeUsed;
 };

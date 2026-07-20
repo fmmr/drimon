@@ -1,11 +1,3 @@
-#define NIGHT_LEVEL 2
-#define DUSK_LEVEL 700
-#define SHADE_LEVEL 6000
-
-#define SLEEP_DURATION_DUSK 300
-#define SLEEP_DURATION_DAY 500
-#define SLEEP_DURATION_NIGHT 700
-
 int getSleepDuration(float lux) {
   if (lux < NIGHT_LEVEL) {
     return SLEEP_DURATION_NIGHT;

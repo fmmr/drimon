@@ -21,7 +21,7 @@
 #define GREEN_LED_PIN 2
 #define RED_LED_PIN 4
 #define BLUE_LED_PIN 16
-#define BUZZZER_PIN 32
+#define BUZZER_PIN 32
 #define SENSOR_POWER_PIN 13
 #define POST_SWITCH_PIN 27
 #define SOIL_1_PIN 34
@@ -40,7 +40,7 @@
 #define NUM_READINGS 2
 #define NUM_DISTANCE_READINGS 10
 #define SLEEP_BETWEEN_READINGS 12
-#define HEIGHT_ABOVE_SEE_LEVEL 31
+#define HEIGHT_ABOVE_SEA_LEVEL 31
 
 #define DISPLAY_TIME 12000
 
@@ -59,7 +59,6 @@
 int dispLine = 0;
 bool SHOULD_POST = false;
 bool DISPLAY_ON = false;
-bool FETCHED_MET = false;
 bool TOF_OK = false;
 
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
@@ -95,9 +94,9 @@ void dispPrint(String msg) {
 }
 
 void beep(int del = 100) {
-  digitalWrite(BUZZZER_PIN, HIGH);
+  digitalWrite(BUZZER_PIN, HIGH);
   delay(del);
-  digitalWrite(BUZZZER_PIN, LOW);
+  digitalWrite(BUZZER_PIN, LOW);
   delay(del);
 }
 
@@ -153,10 +152,6 @@ void setup() {
   SensorData data = measure(start);
   Serial.println("Measuring: done");
 
-  // Serial.println("Fetching met data...");
-  // dispPrint("Fetching met data...");
-  // fetchMet(data);
-  // Serial.println("Fetching met data: done...");
 
   dispPrint("Done!");
 
