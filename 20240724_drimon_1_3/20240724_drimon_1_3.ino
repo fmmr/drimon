@@ -159,6 +159,7 @@ void setup() {
   displayData(data);
   Serial.println("Displaying data: done");
   if (DISPLAY_ON) {
+    Serial.printf("Sleeping %d ms for the display to be read...\n", DISPLAY_TIME);
     delay(DISPLAY_TIME);
   }
   if (SHOULD_POST) {

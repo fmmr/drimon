@@ -1,6 +1,9 @@
 RTC_DATA_ATTR uint8_t cachedBSSID[6] = {0};
 RTC_DATA_ATTR int32_t cachedChannel = 0;
 
+String g_wifiCacheStatus = "?";
+long g_wifiConnectMs = 0;
+
 void setupPins() {
   pinMode(BLUE_LED_PIN, OUTPUT);
   pinMode(BUTTON_PIN, INPUT_PULLUP);
@@ -23,6 +26,8 @@ void setupPins() {
 }
 
 void connectToWiFi() {
+  long wifiStart = millis();
+
   IPAddress local_IP(192, 168, 1, 15);
   IPAddress gateway(192, 168, 1, 1);
   IPAddress subnet(255, 255, 255, 0);
@@ -30,13 +35,22 @@ void connectToWiFi() {
   WiFi.config(local_IP, gateway, subnet, dns);
 
   int retries = 0;
-  if (cachedChannel > 0) {
+  bool usingCache = (cachedChannel > 0);
+  if (usingCache) {
+    Serial.printf("  WiFi: RTC cache present (ch %d, BSSID %02x:%02x:%02x:%02x:%02x:%02x)\n",
+                  cachedChannel,
+                  cachedBSSID[0], cachedBSSID[1], cachedBSSID[2],
+                  cachedBSSID[3], cachedBSSID[4], cachedBSSID[5]);
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD, cachedChannel, cachedBSSID);
   } else {
+    Serial.println("  WiFi: no RTC cache, doing full scan");
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   }
   Serial.print("  Initializing WiFi...");
-  delay(2000);
+  long deadline = millis() + 3000;
+  while (WiFi.status() != WL_CONNECTED && millis() < deadline) {
+    delay(50);
+  }
 
   while (WiFi.status() != WL_CONNECTED && retries < WIFI_MAX_RETRIES) {
     WiFi.disconnect();
@@ -51,14 +65,31 @@ void connectToWiFi() {
   if (WiFi.status() == WL_CONNECTED) {
     memcpy(cachedBSSID, WiFi.BSSID(), 6);
     cachedChannel = WiFi.channel();
-    Serial.print("    WiFi: OK");
-    Serial.print(", IP: ");
+    if (usingCache && retries == 0) {
+      g_wifiCacheStatus = "HIT";
+    } else if (usingCache) {
+      g_wifiCacheStatus = "FBK";
+    } else {
+      g_wifiCacheStatus = "MISS";
+    }
+    g_wifiConnectMs = millis() - wifiStart;
+    Serial.print("    WiFi: OK (");
+    Serial.print(g_wifiCacheStatus);
+    Serial.print("), IP: ");
     Serial.print(WiFi.localIP());
+    if (WiFi.localIP() == local_IP) {
+      Serial.print(" (static OK)");
+    } else {
+      Serial.print(" (DHCP fallback!)");
+    }
     Serial.print(", RSSI: ");
     Serial.println(WiFi.RSSI());
+    Serial.printf("    WiFi connect took %ld ms\n", g_wifiConnectMs);
     dispPrint(WiFi.localIP().toString() + "   " + WiFi.RSSI());
 
   } else {
+    g_wifiCacheStatus = "FAIL";
+    g_wifiConnectMs = millis() - wifiStart;
     Serial.println("    WiFi: FAILED");
     flashLED(RED_LED_PIN, FLASH_WIFI_CONNECT_FAILURE);
     dispPrint("WiFi FAILED - " + WiFi.RSSI());

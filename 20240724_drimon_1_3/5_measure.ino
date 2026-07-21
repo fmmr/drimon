@@ -30,6 +30,10 @@ String status(SensorData& data) {
   else if (data.pressure > PRESSURE_HIGH) stat = stat + "_P-HIGH";
   else stat = stat + "_P-OK";
 
+  stat = stat + "_WF-" + g_wifiCacheStatus;
+  stat = stat + "_WT-" + String(g_wifiConnectMs);
+  stat = stat + "_SD-" + (DISPLAY_ON ? String(DISPLAY_TIME) : "0");
+
   return stat;
 }
 
