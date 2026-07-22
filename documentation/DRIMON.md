@@ -78,6 +78,69 @@ DriMon data is organized across multiple ThingSpeak channels:
 * [ThingSpeak Channel 3](https://thingspeak.com/channels/2584547) - System monitoring
 * [GitHub Repository](https://github.com/fmmr/drimon) - Source code
 
+## Status Field Telemetry
+
+Each ThingSpeak entry carries a `status` string, set by the ESP32 via `ThingSpeak.setStatus()` on all three channels. The status is a `_`-separated set of `PREFIX-VALUE` parts.
+
+Example:
+
+```
+T-OK_SHADE_W-OPEN_B-OK_P-HIGH_WF-HIT_WT-388_SD-12000
+```
+
+| Prefix | Meaning | Values |
+|---|---|---|
+| `T-` | Temperature classification | `COLD` / `OK` / `HOT` |
+| (unprefixed) | Light level | `NIGHT` / `DUSK` / `SHADE` / `SUN` |
+| `W-` | Window state | `CLOSE` / `OPEN` |
+| `B-` | Battery state | `OK` / `LOW` |
+| `P-` | Air pressure | `LOW` / `OK` / `HIGH` |
+| `WF-` | WiFi cache outcome | `HIT` / `MISS` / `FBK` / `FAIL` |
+| `WT-` | WiFi connect time (ms) | integer |
+| `SD-` | Display-read pause (ms) | 0 (timer wake) or 12000 (button/fresh wake) |
+
+### Querying status history
+
+Dedicated endpoint (only returns entries where status was set):
+
+```
+https://api.thingspeak.com/channels/2568299/status.json?results=1000&days=100
+```
+
+- `results=` caps at 8000
+- `days=` defaults to 1 (24 h); increase to fetch further back
+- Both parameters are ANDed — increasing one without the other still caps at the smaller window
+
+Alternative: `feeds.json?results=8000&days=100&status=true` returns status alongside field values in one response.
+
+### Example analysis pipelines
+
+WiFi connect time over time:
+
+```bash
+curl -s 'https://api.thingspeak.com/channels/2568299/status.json?results=1000&days=100' \
+  | jq -r '.feeds[] | select(.status? and (.status | test("WT-"))) | [.created_at, (.status | capture("WT-(?<t>[0-9]+)").t)] | @tsv'
+```
+
+WiFi cache-hit histogram:
+
+```bash
+curl -s 'https://api.thingspeak.com/channels/2568299/status.json?results=1000&days=100' \
+  | jq -r '.feeds[].status // empty' \
+  | grep -oE 'WF-[A-Z]+' \
+  | sort | uniq -c
+```
+
+Window-open duration, temperature classification breakdown, etc. can be derived similarly by adjusting the prefix in the regex.
+
+### Ideas for future analytics
+
+- Window-open duration per day (`W-OPEN` vs `W-CLOSE` transitions)
+- Time spent in each light classification (`NIGHT` / `DUSK` / `SHADE` / `SUN`)
+- WiFi reliability trend (`WF-HIT` rate, `WT-` p95 over rolling windows)
+- Battery-low events per day (`B-LOW` count)
+- Correlation between weather pressure state (`P-*`) and other events
+
 ## Hardware Components
 
 The sensor system in the greenhouse is based on ESP32 microcontrollers with various sensors, powered by solar energy with battery backup.
