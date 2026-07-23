@@ -469,7 +469,7 @@ const RAW_CHART_CONFIGS = [
         disableFill: true,  // Negative values look bad with fill
         defaultRange: 30
     },
-    { 
+    {
         id: 'chart-time-used',
         titleKey: 'timeUsedChart',
         series: [
@@ -484,6 +484,36 @@ const RAW_CHART_CONFIGS = [
         category: 'system',
         categoryHeaderKey: 'system',
         unit: 'ms'
+    },
+    // Hidden — accessible via ?chart=overview
+    {
+        id: 'chart-overview',
+        hidden: true,
+        titleKey: 'Overview',
+        series: [
+            {
+                titleKey: 'batteryPercentChart',
+                channel: window.THINGSPEAK.TECH_CHANNEL,
+                field: 3,
+                color: '#56784b'
+            },
+            {
+                titleKey: 'ceiling',
+                channel: window.THINGSPEAK.DRIMON_CHANNEL,
+                field: 8,
+                color: '#e6a500',
+                axis: 'y1'
+            }
+        ],
+        row: 99,
+        category: 'overview',
+        categoryHeaderKey: 'system',
+        unit: '',
+        yAxis: {
+            formatLargeNumbers: true,
+            secondYAxis: true
+        },
+        defaultRange: 7
     },
 ];
 

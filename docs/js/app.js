@@ -42,22 +42,23 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const range = getURLParameter('range') || 'default';
     const results = parseInt(getURLParameter('results')) || 8000;
-    
+    const chartFilter = getURLParameter('chart');
+
     setTimeout(() => {
         const allDateChips = document.querySelectorAll('.date-chip');
-        
+
         allDateChips.forEach(chip => {
             chip.classList.remove('active');
         });
-        
+
         const activeChip = document.querySelector(`.date-chip[data-range="${range}"]`);
         if (activeChip) {
             activeChip.classList.add('active');
         }
     }, 100);
-    
+
     setTimeout(() => {
-        loadAllCharts(range, results, isDashboardMode).then(() => {
+        loadAllCharts(range, results, isDashboardMode, chartFilter).then(() => {
             window.startChartAutoRefresh(90);
         });
     }, 100);

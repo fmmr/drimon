@@ -78,6 +78,38 @@ DriMon data is organized across multiple ThingSpeak channels:
 * [ThingSpeak Channel 3](https://thingspeak.com/channels/2584547) - System monitoring
 * [GitHub Repository](https://github.com/fmmr/drimon) - Source code
 
+## URL Parameters
+
+The site accepts these query parameters:
+
+| Param | Values | Purpose |
+|---|---|---|
+| `range` | `1`, `3`, `7`, `30`, `default`, etc. | Time range for chart data (days) |
+| `results` | integer up to 8000 | Max entries per chart |
+| `chart` | short chart name, e.g. `battery` | Show only ONE chart, full viewport |
+
+`chart` accepts either the short name (`battery`) or the full ID (`chart-battery`). Unknown names fall back to showing all charts.
+
+Available short names (any chart in `docs/js/chart-config.js` without the `chart-` prefix): `temp`, `window`, `light`, `battery`, `out-temp`, `temp-diff`, `plants-temp`, `sensors-temp`, `humidity`, `temperature`, `wind`, `rain`, `soil-moisture`, `battery-voltage`, `wifi`, `time-used`, etc.
+
+Example: <https://drimon.rodland.no/?chart=battery&range=7>
+
+### Hidden charts (accessible only via `?chart=X`)
+
+Any chart-config entry with `hidden: true` is excluded from the main site grid but remains reachable via `?chart=<name>`. Useful for debug/utility charts you don't want on the dashboard.
+
+```js
+{
+    id: 'chart-termo3-raw',
+    hidden: true,                    // ← doesn't show on main site
+    titleKey: 'Termo 3 (raw)',
+    series: [{ ... }],
+    row: 99,                         // row doesn't matter — not in the grid
+    category: 'debug',
+    unit: '°C'
+}
+```
+
 ## Status Field Telemetry
 
 Each ThingSpeak entry carries a `status` string, set by the ESP32 via `ThingSpeak.setStatus()` on all three channels. The status is a `_`-separated set of `PREFIX-VALUE` parts.

@@ -158,14 +158,16 @@ window.ChartLayout = window.ChartLayout || {
         const chartsToUse = configs || window.chartConfigs;
         
         // Add appropriate CSS class based on chart count
-        if (chartsToUse.length === 6) {
+        chartContainer.classList.remove('single-chart-mode', 'dashboard-mode');
+        if (chartsToUse.length === 1) {
+            chartContainer.classList.add('single-chart-mode');
+            // Full-viewport single chart — no grid math needed
+        } else if (chartsToUse.length === 6) {
             chartContainer.classList.add('dashboard-mode');
-            
+
             // For 6 charts, skip the complex grid positioning and just use CSS grid
             // Charts will be placed in order: 3 charts per row, 2 rows
         } else {
-            chartContainer.classList.remove('dashboard-mode');
-            
             // Group charts by row (1-4) for organization for desktop view
             const rowGroups = {};
             chartsToUse.forEach(config => {
@@ -174,7 +176,7 @@ window.ChartLayout = window.ChartLayout || {
                 }
                 rowGroups[config.row].push(config);
             });
-            
+
             // Calculate grid positions for each chart (for desktop view)
             this.calculateGridPositions(rowGroups);
         }
@@ -225,8 +227,8 @@ window.ChartLayout = window.ChartLayout || {
                 chartDiv.classList.add('multi-series');
             }
             
-            // Only set grid positions if not mobile and not dashboard mode (CSS will override these)
-            if (!isMobile && !chartContainer.classList.contains('dashboard-mode')) {
+            // Only set grid positions if not mobile and not dashboard/single-chart mode (CSS will override these)
+            if (!isMobile && !chartContainer.classList.contains('dashboard-mode') && !chartContainer.classList.contains('single-chart-mode')) {
                 chartDiv.style.gridRow = config.gridRow;
                 chartDiv.style.gridColumn = config.gridColumn;
             }

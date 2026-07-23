@@ -1115,16 +1115,28 @@ window.getDashboardCharts = function() {
 };
 
 // Chart loading function - handles both regular and dashboard modes
-async function loadAllCharts(range = 1, results = 8000, isDashboard = false) {
+async function loadAllCharts(range = 1, results = 8000, isDashboard = false, chartFilter = '') {
     if (!window.chartConfigs) {
         console.error('Chart configs not loaded');
         return;
     }
-    
-    // Filter configs for dashboard mode
-    const configs = isDashboard 
-        ? window.getDashboardCharts()
-        : window.chartConfigs;
+
+    // Filter configs: single-chart mode > dashboard mode > all non-hidden
+    let configs;
+    if (chartFilter) {
+        const targetId = chartFilter.startsWith('chart-') ? chartFilter : 'chart-' + chartFilter;
+        const match = window.chartConfigs.find(c => c.id === targetId);
+        if (match) {
+            configs = [match];
+        } else {
+            console.warn(`Unknown chart '${chartFilter}', falling back to all charts`);
+            configs = window.chartConfigs.filter(c => !c.hidden);
+        }
+    } else if (isDashboard) {
+        configs = window.getDashboardCharts();
+    } else {
+        configs = window.chartConfigs.filter(c => !c.hidden);
+    }
     
     // Initialize chart layout if container is empty
     const chartContainer = document.getElementById('chartContainer');
@@ -1170,7 +1182,8 @@ window.loadChartsForMode = function() {
     const urlParams = new URLSearchParams(window.location.search);
     const range = urlParams.get('range') || 'default';
     const results = parseInt(urlParams.get('results')) || 8000;
-    
+    const chartFilter = urlParams.get('chart') || '';
+
     // Destroy existing chart instances
     if (window.chartInstances) {
         Object.values(window.chartInstances).forEach(chart => {
@@ -1180,12 +1193,12 @@ window.loadChartsForMode = function() {
         });
         window.chartInstances = {};
     }
-    
+
     // Clear existing charts and layout for chart set changes
     const chartContainer = document.getElementById('chartContainer');
     if (chartContainer) {
         chartContainer.innerHTML = '';
     }
-    
-    loadAllCharts(range, results, isDashboard);
+
+    loadAllCharts(range, results, isDashboard, chartFilter);
 };
