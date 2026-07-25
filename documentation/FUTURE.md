@@ -175,6 +175,7 @@ This document tracks completed features and planned enhancements for the DriMon 
 - Add system uptime tracking and visualization
 - Create predictive maintenance alerts based on system performance metrics
 - Add automatic error reporting and diagnostics
+- **Deconflict ambiguous red-LED flash codes**: currently red-3 means both "display init failed" and "ThingSpeak Channel 2 write failed"; red-4 means both "WiFi connect failed" and "ThingSpeak Channel 3 write failed". Reassign so each error has a unique count, or add a distinguishing prefix flash (e.g. all init errors start with a long flash). Counts above ~4 become hard to eyeball, so keep the space small.
 
 ### Advanced Interaction
 - Implement data point annotations for significant events

@@ -411,12 +411,20 @@ window.DataRequestManager = window.DataRequestManager || {
         if (options.end) {
             params.append('end', options.end);
         }
-        
+
+        // Trend-mode server-side aggregation
+        if (options.average) {
+            params.append('average', options.average);
+        }
+        if (options.timescale) {
+            params.append('timescale', options.timescale);
+        }
+
         // If this is a batched request with multiple fields
         if (options.fields) {
             // Nothing needed here, feeds.json endpoint returns all fields
         }
-        
+
         return `?${params.toString()}`;
     },
     
@@ -426,7 +434,8 @@ window.DataRequestManager = window.DataRequestManager || {
      * @returns {string} - Unique request ID
      */
     generateRequestId: function(options) {
-        return `${options.channel}_${options.field}_${options.start || 'nostart'}_${options.end || 'noend'}_${options.results || 8000}`;
+        const agg = options.average ? `_avg${options.average}` : (options.timescale ? `_ts${options.timescale}` : '');
+        return `${options.channel}_${options.field}_${options.start || 'nostart'}_${options.end || 'noend'}_${options.results || 8000}${agg}`;
     },
     
     /**

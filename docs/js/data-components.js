@@ -76,14 +76,18 @@ const dataCache = {
  * @param {number} results - Maximum number of results to fetch
  * @returns {Promise<Object>} - Chart data object
  */
-async function fetchChartData(config, range = 1, results = DEFAULT_RESULTS) {
+async function fetchChartData(config, range = 1, results = DEFAULT_RESULTS, trendOpts = null, explicitDates = null) {
     // Handle 'default' range by using the chart's defaultRange
     if (range === 'default') {
         range = config.defaultRange;
     }
-    
-    // Check if we have cached data
-    const cacheKey = dataCache.generateKey(config, range, results);
+
+    // Trend mode and explicit dates both bust the cache — include them in the key
+    const trendKey = trendOpts
+        ? `_trend${trendOpts.hour != null && !isNaN(trendOpts.hour) ? '_h' + trendOpts.hour : ''}`
+        : '';
+    const explicitKey = explicitDates ? `_ex_${explicitDates.start || ''}_${explicitDates.end || ''}` : '';
+    const cacheKey = dataCache.generateKey(config, range, results) + trendKey + explicitKey;
     const cachedData = dataCache.get(cacheKey);
     
     // Return cached data if available
@@ -91,10 +95,22 @@ async function fetchChartData(config, range = 1, results = DEFAULT_RESULTS) {
         return cachedData;
     }
     
-    // Get date range either from range parameter or URL
+    // Get date range: explicit URL dates override all range logic
     let startDateStr, endDateStr;
 
-    if (typeof range === 'string' || typeof range === 'number') {
+    if (explicitDates) {
+        // If only one bound is given, span 30 days from/to it
+        if (explicitDates.start && explicitDates.end) {
+            startDateStr = explicitDates.start;
+            endDateStr = explicitDates.end;
+        } else if (explicitDates.start) {
+            startDateStr = explicitDates.start;
+            endDateStr = moment(explicitDates.start).add(30, 'days').format(window.DateUtils.format);
+        } else {
+            startDateStr = moment(explicitDates.end).subtract(30, 'days').format(window.DateUtils.format);
+            endDateStr = explicitDates.end;
+        }
+    } else if (typeof range === 'string' || typeof range === 'number') {
         // Use centralized DateUtils implementation for all range types
         const dateRange = window.DateUtils.getDateRange(range);
         startDateStr = dateRange.startDate;
@@ -106,14 +122,14 @@ async function fetchChartData(config, range = 1, results = DEFAULT_RESULTS) {
         startDateStr = now.subtract(1, 'days').format(format);
         endDateStr = '';
     }
-    
+
     // Use the start date from the configuration if specified and we're using 'start' range
-    if (range === 'start' && config.startDate) {
+    if (range === 'start' && config.startDate && !explicitDates) {
         startDateStr = config.startDate;
     }
     
     // Fetch data
-    const data = await fetchTimeRangeData(config, startDateStr, endDateStr, results);
+    const data = await fetchTimeRangeData(config, startDateStr, endDateStr, results, trendOpts);
     
     // Cache the data if valid
     if (data && data.feeds && data.feeds.length > 0) {
@@ -131,7 +147,7 @@ async function fetchChartData(config, range = 1, results = DEFAULT_RESULTS) {
  * @param {number} results - Maximum number of results
  * @returns {Promise<Object>} - Processed data object
  */
-async function fetchTimeRangeData(config, startDateStr, endDateStr, results = DEFAULT_RESULTS) {
+async function fetchTimeRangeData(config, startDateStr, endDateStr, results = DEFAULT_RESULTS, trendOpts = null) {
     // Check if this is a multi-series chart
     if (config.series && Array.isArray(config.series)) {
         // Fetch data for all series in parallel
@@ -146,7 +162,8 @@ async function fetchTimeRangeData(config, startDateStr, endDateStr, results = DE
                     endDateStr,
                     seriesResults,
                     series.title,
-                    series.dataFilter
+                    series.dataFilter,
+                    trendOpts
                 );
             });
             
@@ -237,13 +254,14 @@ async function fetchTimeRangeData(config, startDateStr, endDateStr, results = DE
         // Single series - use original code, pass dataFilter from first series if available
         const dataFilter = (config.series && config.series[0] && config.series[0].dataFilter) || null;
         return fetchSingleSeries(
-            config.channel, 
-            config.field, 
-            startDateStr, 
-            endDateStr, 
+            config.channel,
+            config.field,
+            startDateStr,
+            endDateStr,
             results,
             config.title,
-            dataFilter
+            dataFilter,
+            trendOpts
         );
     }
 }
@@ -259,9 +277,16 @@ async function fetchTimeRangeData(config, startDateStr, endDateStr, results = DE
  * @param {Object} dataFilter - Optional data filtering config
  * @returns {Promise<Object>} - ThingSpeak API response
  */
-async function fetchSingleSeries(channel, field, startDateStr, endDateStr, results, title = "", dataFilter = null) {
+async function fetchSingleSeries(channel, field, startDateStr, endDateStr, results, title = "", dataFilter = null, trendOpts = null) {
     let data;
-    
+
+    // In trend mode, override the per-bucket aggregation the server does.
+    // Path A (no hour): average=1440 → one point per day (whole-day mean).
+    // Path B (hour set): timescale=60 → one point per hour, then client-filter to target hour.
+    const trendFetchOpts = trendOpts
+        ? (trendOpts.hour != null && !isNaN(trendOpts.hour) ? { timescale: 60 } : { average: 1440 })
+        : {};
+
     // Check if DataRequestManager is available (should be loaded in index.html)
     if (window.DataRequestManager) {
         // Use optimized request manager
@@ -272,20 +297,28 @@ async function fetchSingleSeries(channel, field, startDateStr, endDateStr, resul
             end: endDateStr,
             results,
             timezone: DEFAULT_TIMEZONE,
-            title
+            title,
+            ...trendFetchOpts
         });
     } else {
         // Fallback to original implementation if DataRequestManager isn't available
-        
+
         // Build API URL with appropriate parameters
         let url = `https://api.thingspeak.com/channels/${channel}/fields/${field}.json?timezone=${DEFAULT_TIMEZONE}&results=${results}`;
-        
+
         if (startDateStr) {
             url += `&start=${encodeURIComponent(startDateStr)}`;
         }
-        
+
         if (endDateStr) {
             url += `&end=${encodeURIComponent(endDateStr)}`;
+        }
+
+        if (trendFetchOpts.average) {
+            url += `&average=${trendFetchOpts.average}`;
+        }
+        if (trendFetchOpts.timescale) {
+            url += `&timescale=${trendFetchOpts.timescale}`;
         }
         
         try {
@@ -305,6 +338,17 @@ async function fetchSingleSeries(channel, field, startDateStr, endDateStr, resul
         }
     }
     
+    // Trend Path B: filter hourly buckets down to the target hour
+    if (trendOpts && trendOpts.hour != null && !isNaN(trendOpts.hour) && data && data.feeds && Array.isArray(data.feeds)) {
+        const targetHour = trendOpts.hour;
+        // ThingSpeak's timezone= param embeds the local hour digits in the created_at string
+        // regardless of the trailing 'Z'. Regex out the hour to stay timezone-agnostic.
+        data.feeds = data.feeds.filter(feed => {
+            const m = feed.created_at && feed.created_at.match(/T(\d{2}):/);
+            return m && parseInt(m[1]) === targetHour;
+        });
+    }
+
     // Apply data filtering if configured
     if (dataFilter && data && data.feeds && Array.isArray(data.feeds)) {
         const fieldName = `field${field}`;

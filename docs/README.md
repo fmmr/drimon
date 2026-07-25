@@ -74,33 +74,11 @@ The application follows a modular architecture with 34 JavaScript files:
 
 ## URL Parameters
 
-The application supports several URL parameters for customization:
+The site accepts `range`, `start`, `end`, `results`, `chart`, `trend`, `trendHour`, and `dashboard`. See [../documentation/URL_PARAMS.md](../documentation/URL_PARAMS.md) for the full reference with examples, including single-chart view, hidden charts, and trend mode.
 
-### Core Parameters
+`lang` and `theme` are **not URL params** — language switches via the flag toggle in the header (persists to localStorage) and theme via the moon icon or system preference.
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `range` | string | `'default'` | Time range for data display |
-| `results` | integer | `8000` | Maximum number of data points to fetch |
-| `dashboard` | boolean | `false` | Enable dashboard/kiosk mode |
-| `lang` | string | `'no'` | Interface language (no/en/es) |
-| `theme` | string | `'auto'` | Color theme (light/dark/auto) |
-
-### Usage Examples
-
-```
-# Basic usage with 3-day range
-https://drimon.rodland.no/?range=3
-
-# Dashboard mode with Norwegian language
-https://drimon.rodland.no/?dashboard=true&lang=no
-
-# Large dataset with specific date range
-https://drimon.rodland.no/?range=7&results=15000
-
-# Dark theme with English language
-https://drimon.rodland.no/?theme=dark&lang=en
-```
+For runtime/debugging reference (LED codes, buttons, status field decoding), see [../documentation/QUICK_REFERENCE.md](../documentation/QUICK_REFERENCE.md).
 
 ## View Modes
 

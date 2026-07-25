@@ -225,6 +225,7 @@ const RAW_CHART_CONFIGS = [
     // Row 2
     { 
         id: 'chart-out-temp',
+        trendCapable: true,
         titleKey: 'outTempChart',
         series: [
             {

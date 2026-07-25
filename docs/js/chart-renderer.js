@@ -287,14 +287,34 @@ window.UnifiedChartRenderer = {
     },
 
     /**
+     * When explicit start/end dates are given in URL, compute the span in days
+     * so axis-formatting logic can treat it like a numeric range.
+     * @private
+     */
+    _effectiveRangeFromUrl: function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const startStr = urlParams.get('start');
+        const endStr = urlParams.get('end');
+        if (!startStr && !endStr) return null;
+        // Mirror the "30-day window when one bound is missing" rule from fetchChartData
+        const start = startStr ? new Date(startStr) : new Date(new Date(endStr).getTime() - 30 * 86400000);
+        const end = endStr ? new Date(endStr) : new Date(new Date(startStr).getTime() + 30 * 86400000);
+        if (isNaN(start.getTime()) || isNaN(end.getTime())) return null;
+        return Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000));
+    },
+
+    /**
      * Create X-axis configuration using range-driven logic
      * @private
      */
     _createXAxisConfig: function(config) {
         // Get range from URL params and resolve to effective range for this chart
         const urlParams = new URLSearchParams(window.location.search);
+        const explicitDays = this._effectiveRangeFromUrl();
         const urlRange = urlParams.get('range') || 'default';
-        const range = urlRange === 'default' ? config.defaultRange : urlRange;
+        const range = explicitDays != null
+            ? String(explicitDays)
+            : (urlRange === 'default' ? config.defaultRange : urlRange);
         
         // Determine time configuration based on range intent first
         let timeConfig, tickConfig;
@@ -877,7 +897,8 @@ window.UnifiedChartRenderer = {
     _determineSmartTimeFormat: function(timestamps) {
         // Get range from URL params (same as _createXAxisConfig)
         const urlParams = new URLSearchParams(window.location.search);
-        const range = urlParams.get('range');
+        const explicitDays = this._effectiveRangeFromUrl();
+        const range = explicitDays != null ? String(explicitDays) : urlParams.get('range');
         
         // Check range intent first - fixes bug with string ranges like "this-month"
         if (range) {
@@ -1131,13 +1152,13 @@ window.getDashboardCharts = function() {
 };
 
 // Chart loading function - handles both regular and dashboard modes
-async function loadAllCharts(range = 1, results = 8000, isDashboard = false, chartFilter = '') {
+async function loadAllCharts(range = 1, results = 8000, isDashboard = false, chartFilter = '', trendOpts = null, explicitDates = null) {
     if (!window.chartConfigs) {
         console.error('Chart configs not loaded');
         return;
     }
 
-    // Filter configs: single-chart mode > dashboard mode > all non-hidden
+    // Filter configs: single-chart mode > trend mode > dashboard mode > all non-hidden
     let configs;
     if (chartFilter) {
         const targetId = chartFilter.startsWith('chart-') ? chartFilter : 'chart-' + chartFilter;
@@ -1147,6 +1168,11 @@ async function loadAllCharts(range = 1, results = 8000, isDashboard = false, cha
         } else {
             console.warn(`Unknown chart '${chartFilter}', falling back to all charts`);
             configs = window.chartConfigs.filter(c => !c.hidden);
+        }
+    } else if (trendOpts) {
+        configs = window.chartConfigs.filter(c => c.trendCapable);
+        if (configs.length === 0) {
+            console.warn('Trend mode active but no charts have trendCapable: true');
         }
     } else if (isDashboard) {
         configs = window.getDashboardCharts();
@@ -1167,7 +1193,7 @@ async function loadAllCharts(range = 1, results = 8000, isDashboard = false, cha
         const effectiveRange = range === 'default' ? config.defaultRange : range;
         
         if (window.DataComponents && window.DataComponents.fetchChartData) {
-            return window.DataComponents.fetchChartData(config, effectiveRange, results)
+            return window.DataComponents.fetchChartData(config, effectiveRange, results, trendOpts, explicitDates)
                 .then(data => {
                     window.UnifiedChartRenderer.addChart(config, data);
                     return data;
@@ -1199,6 +1225,9 @@ window.loadChartsForMode = function() {
     const range = urlParams.get('range') || 'default';
     const results = parseInt(urlParams.get('results')) || 8000;
     const chartFilter = urlParams.get('chart') || '';
+    const startParam = urlParams.get('start') || '';
+    const endParam = urlParams.get('end') || '';
+    const explicitDates = (startParam || endParam) ? { start: startParam, end: endParam } : null;
 
     // Destroy existing chart instances
     if (window.chartInstances) {
@@ -1216,5 +1245,5 @@ window.loadChartsForMode = function() {
         chartContainer.innerHTML = '';
     }
 
-    loadAllCharts(range, results, isDashboard, chartFilter);
+    loadAllCharts(range, results, isDashboard, chartFilter, null, explicitDates);
 };

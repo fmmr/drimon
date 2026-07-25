@@ -43,6 +43,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const range = getURLParameter('range') || 'default';
     const results = parseInt(getURLParameter('results')) || 8000;
     const chartFilter = getURLParameter('chart');
+    const trendEnabled = ['1', 'true', 'yes'].includes(getURLParameter('trend').toLowerCase());
+    const trendHourRaw = getURLParameter('trendHour');
+    const trendOpts = trendEnabled
+        ? { hour: trendHourRaw !== '' ? parseInt(trendHourRaw) : null }
+        : null;
+
+    const startParam = getURLParameter('start');
+    const endParam = getURLParameter('end');
+    const explicitDates = (startParam || endParam)
+        ? { start: startParam || '', end: endParam || '' }
+        : null;
 
     setTimeout(() => {
         const allDateChips = document.querySelectorAll('.date-chip');
@@ -58,7 +69,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 100);
 
     setTimeout(() => {
-        loadAllCharts(range, results, isDashboardMode, chartFilter).then(() => {
+        loadAllCharts(range, results, isDashboardMode, chartFilter, trendOpts, explicitDates).then(() => {
             window.startChartAutoRefresh(90);
         });
     }, 100);
