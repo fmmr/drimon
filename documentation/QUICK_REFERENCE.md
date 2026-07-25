@@ -46,6 +46,16 @@ Underscore-separated `PREFIX-VALUE` parts:
 | `WT-` | WiFi connect time | integer, milliseconds |
 | `SD-` | Display-read pause | `0` (timer wake, no delay) or `12000` (button/fresh wake, 12 s pause) |
 
+**Read the status from ThingSpeak** (any of the 3 channels works — same status on all):
+
+- **Latest status only**: <https://api.thingspeak.com/channels/2568299/status.json?results=1>
+- **Recent 10 statuses**: <https://api.thingspeak.com/channels/2568299/status.json?results=10>
+- **Last ~day**: <https://api.thingspeak.com/channels/2568299/status.json?results=1000>
+- **Last ~100 days**: <https://api.thingspeak.com/channels/2568299/status.json?results=1000&days=100>
+- **Latest entry with all fields + status**: <https://api.thingspeak.com/channels/2568299/feeds.json?results=1&status=true>
+
+For jq/curl analysis pipelines (WT-time trend, WF-cache histogram, etc.), see [TELEMETRY.md](TELEMETRY.md).
+
 ## Wake reasons — behavior at a glance
 
 | Wake type | `DISPLAY_ON` | `SHOULD_POST` | 12 s display pause? |
