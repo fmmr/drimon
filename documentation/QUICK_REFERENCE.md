@@ -5,13 +5,13 @@ Print-friendly single page. Stick a copy on/near the enclosure.
 ## Enclosure layout (front view)
 
 ```
-┌──────────┬─────────────────────────────────────────────────┬──────────┐
+┌──────────┬─────────────────────────────────────────────────┬───────────┐
 │ Rocker   │  LEDs   AHT temp/hum      LCD           OLED    │  🟢 Green │
-│ switch   │  ↑↑↑    (white grid)    (16×2 blue)   (black)   │  ────── │
-│  I/O     │                                                  │  🔵 Blue  │
-└──────────┴─────────────────────────────────────────────────┴──────────┘
+│ switch   │  ↑↑↑    (white grid)    (16×2 blue)   (black)   │   ──────  │
+│  I/O     │                                                 │  🔵 Blue  │
+└──────────┴─────────────────────────────────────────────────┴───────────┘
    ↑                                                              ↑
- post-enable                                              wake / reset
+ post-enable.                                                wake / reset
 ```
 
 - **Far left extension**: black rocker switch (post-enable)
