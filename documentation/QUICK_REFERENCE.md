@@ -2,7 +2,27 @@
 
 Print-friendly single page. Stick a copy on/near the enclosure.
 
+## Enclosure layout (front view)
+
+```
+┌──────────┬─────────────────────────────────────────────────┬──────────┐
+│ Rocker   │  LEDs   AHT temp/hum      LCD           OLED    │  🟢 Green │
+│ switch   │  ↑↑↑    (white grid)    (16×2 blue)   (black)   │  ────── │
+│  I/O     │                                                  │  🔵 Blue  │
+└──────────┴─────────────────────────────────────────────────┴──────────┘
+   ↑                                                              ↑
+ post-enable                                              wake / reset
+```
+
+- **Far left extension**: black rocker switch (post-enable)
+- **Main enclosure, left of center**: small LEDs + white AHT temperature/humidity sensor
+- **Main enclosure, center**: 16×2 LCD (blue backlight)
+- **Main enclosure, right of center**: OLED (128×64 monochrome)
+- **Right extension**: two round push buttons stacked — green on top, blue below
+
 ## LED codes
+
+Small LEDs on the **left of the enclosure**, between the rocker switch and the white AHT sensor.
 
 | Signal | Meaning |
 |---|---|
@@ -17,13 +37,13 @@ Print-friendly single page. Stick a copy on/near the enclosure.
 
 ## Buttons
 
-| Button | Effect |
-|---|---|
-| 🟢 Green push button (GPIO 15) | **Wake** from deep sleep. Soft — preserves RTC memory (WiFi cache intact). Forces display on, triggers a measurement + post cycle. |
-| ⚫ EN button (on ESP32 dev board) | **Hardware reset**. Full cold boot. Wipes RTC → next WiFi connect is a `WF-MISS` fresh scan. |
-| Post-enable switch (GPIO 27) | Read at every wake. **LOW** = post to ThingSpeak. **HIGH** = skip posting (use during bench debugging). |
+Physical controls on the enclosure:
 
-The external RESET button on the PCB is wired to the same EN pin as the dev-board button, if it's connected.
+| Location | Control | Wired to | Effect |
+|---|---|---|---|
+| Right extension, **top** | 🟢 **Green push button** | GPIO 15 (EXT0) | **Wake** from deep sleep. Soft — preserves RTC memory (WiFi cache intact). Forces display on, triggers a measurement + post cycle. |
+| Right extension, **below green** | 🔵 **Blue push button** | ESP32 EN pin | **Hardware reset**. Full cold boot. Wipes RTC → next WiFi connect is a `WF-MISS` fresh scan. Same effect as pressing EN on the dev board itself. |
+| Left extension | ⚫ **Black rocker switch** (I/O) | GPIO 27 | Read at every wake. **I (down / LOW)** = post to ThingSpeak. **O (up / HIGH)** = skip posting (use during bench debugging). |
 
 ## Status field decoder
 

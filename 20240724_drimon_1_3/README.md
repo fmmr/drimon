@@ -22,11 +22,11 @@ For runtime reference (LED codes, buttons, status field decoding), see [../docum
 
 Between measurements the ESP32 is in deep sleep (~10 µA). Three ways to wake:
 
-| Wake source | `DISPLAY_ON` | `SHOULD_POST` | RTC preserved? |
-|---|---|---|---|
-| Timer (5–15 min, light-adaptive) | false | reads switch | yes |
-| Green push button (GPIO 15, EXT0) | true | reads switch | yes |
-| EN / hard reset / fresh flash | true | **always false** | no |
+| Wake source | Enclosure control | `DISPLAY_ON` | `SHOULD_POST` | RTC preserved? |
+|---|---|---|---|---|
+| Timer (5–15 min, light-adaptive) | — | false | reads switch | yes |
+| GPIO 15 EXT0 | 🟢 green push button (right extension, top) | true | reads switch | yes |
+| EN reset | 🔵 blue push button (right extension, below green) | true | **always false** | no |
 
 `RTC_DATA_ATTR` variables (WiFi BSSID + channel cache) survive across timer/button wakes, so subsequent WiFi connects are `WF-HIT` (fast). A full reset wipes the cache → next connect is `WF-MISS` (fresh scan).
 
