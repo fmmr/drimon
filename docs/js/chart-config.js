@@ -181,26 +181,43 @@ const RAW_CHART_CONFIGS = [
             secondYAxis: true
         }
     },
-    { 
+    {
         id: 'chart-battery',
-        titleKey: 'batteryPercentChart',
+        titleKey: 'batteryChart',
         series: [
+            {
+                titleKey: 'batteryVoltageChart',
+                channel: window.THINGSPEAK.TECH_CHANNEL,
+                field: 2,
+                color: '#d97706',
+                unit: 'v'
+            },
             {
                 titleKey: 'batteryPercentChart',
                 channel: window.THINGSPEAK.TECH_CHANNEL,
                 field: 3,
-                color: '#56784b'
+                color: '#56784b',
+                axis: 'y1',
+                unit: '%'
             }
         ],
         row: 1,
         category: 'system',
         categoryHeaderKey: 'system',
-        unit: '%',
+        unit: 'v',
         show_dashboard: true,
         indicators: {
             showMin: true,
             showMax: false,
             showAvg: true
+        },
+        yAxis: {
+            secondYAxis: true,
+            roundToNearest: 0.05
+        },
+        formatting: {
+            useIntegerFormat: false,
+            decimalPlaces: 2
         },
         defaultRange: 7
     },
@@ -261,6 +278,7 @@ const RAW_CHART_CONFIGS = [
                 field: 3,
                 color: '#e67e22',
                 dataFilter: {
+                    min: -20,
                     max: 50,
                     exclude: [-127, 85]
                 }
@@ -271,6 +289,8 @@ const RAW_CHART_CONFIGS = [
                 field: 5,
                 color: '#9b59b6',
                 dataFilter: {
+                    min: -20,
+                    max: 50,
                     exclude: [-127, 85]
                 }
             }
@@ -305,6 +325,8 @@ const RAW_CHART_CONFIGS = [
                 field: 4,
                 color: '#2980b9',
                 dataFilter: {
+                    min: -20,
+                    max: 50,
                     exclude: [-127, 85]
                 }
             }
@@ -377,7 +399,7 @@ const RAW_CHART_CONFIGS = [
         unit: 'm/s',
         defaultRange: 3
     },
-    { 
+    {
         id: 'chart-rain',
         titleKey: 'rainChart',
         series: [
@@ -392,6 +414,24 @@ const RAW_CHART_CONFIGS = [
         category: 'weather',
         categoryHeaderKey: 'weather',
         unit: 'mm',
+        defaultRange: 3
+    },
+    {
+        id: 'chart-uv-index',
+        titleKey: 'uvIndexChart',
+        series: [
+            {
+                titleKey: 'uvIndexChart',
+                channel: window.THINGSPEAK.EXT_CHANNEL,
+                field: 8,
+                color: '#f9a825'
+            }
+        ],
+        row: 4,
+        startDate: '2026-07-24 00:00:00',
+        category: 'weather',
+        categoryHeaderKey: 'weather',
+        unit: '',
         defaultRange: 3
     },
 
@@ -426,31 +466,7 @@ const RAW_CHART_CONFIGS = [
         categoryHeaderKey: 'soil',
         unit: '%'
     },
-    { 
-        id: 'chart-battery-voltage',
-        titleKey: 'batteryVoltageChart',
-        series: [
-            {
-                titleKey: 'batteryVoltageChart',
-                channel: window.THINGSPEAK.TECH_CHANNEL,
-                field: 2,
-                color: '#4a6741'
-            }
-        ],
-        row: 4,
-        category: 'system',
-        categoryHeaderKey: 'system',
-        unit: 'V',
-        formatting: {
-            useIntegerFormat: false,
-            decimalPlaces: 2 // Always show 1 decimal place for battery voltage
-        },
-        yAxis: {
-            roundToNearest: 0.1 // Round to nearest 0.1V for voltage charts
-        },
-        defaultRange: 7
-    },
-    { 
+    {
         id: 'chart-wifi',
         titleKey: 'wifiChart',
         series: [

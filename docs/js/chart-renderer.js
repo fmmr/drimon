@@ -58,7 +58,7 @@ window.UnifiedChartRenderer = {
         }
         
         // Convert ThingSpeak data to Chart.js datasets and calculate time formatting
-        const { datasets, stats, timeFormat, timestamps } = this._createDatasets(config, data);
+        const { datasets, stats, seriesStats, timeFormat, timestamps } = this._createDatasets(config, data);
         
         if (datasets.length === 0) {
             console.warn(`No data for chart: ${config.id}`);
@@ -117,7 +117,7 @@ window.UnifiedChartRenderer = {
         window.chartInstances[config.id] = chart;
 
         // Update statistics
-        this._updateStats(config, stats, config.isMultiSeries);
+        this._updateStats(config, stats, config.isMultiSeries, seriesStats);
 
         // Set up language change listener for legend updates
         if (config.isMultiSeries) {
@@ -136,7 +136,7 @@ window.UnifiedChartRenderer = {
      */
     updateChart: function(config, data, chart) {
         // Convert new data to datasets
-        const { datasets, stats, timeFormat, timestamps } = this._createDatasets(config, data);
+        const { datasets, stats, seriesStats, timeFormat, timestamps } = this._createDatasets(config, data);
         
         if (datasets.length === 0) {
             console.warn(`No data for chart update: ${config.id}`);
@@ -153,7 +153,7 @@ window.UnifiedChartRenderer = {
         this._storeChartData(config, timestamps, datasets, data);
         
         // Update statistics
-        this._updateStats(config, stats, config.isMultiSeries);
+        this._updateStats(config, stats, config.isMultiSeries, seriesStats);
         
         return chart;
     },
@@ -167,6 +167,7 @@ window.UnifiedChartRenderer = {
         let allValues = [];
         let currentValue = null;
         let timestamps = [];
+        const seriesStats = [];
         
         const dataSource = data.is_multi_series ? data.series : [data];
         
@@ -208,6 +209,14 @@ window.UnifiedChartRenderer = {
                 const values = dataPoints.map(p => p.y);
                 allValues = allValues.concat(values);
 
+                seriesStats[index] = {
+                    min: Math.min(...values),
+                    max: Math.max(...values),
+                    avg: values.reduce((a, b) => a + b, 0) / values.length,
+                    current: values[values.length - 1],
+                    count: values.length
+                };
+
                 // Use the last value from the first series as current
                 if (index === 0 && currentValue === null) {
                     currentValue = values[values.length - 1];
@@ -246,7 +255,7 @@ window.UnifiedChartRenderer = {
             count: 0
         };
         
-        return { datasets, stats, timeFormat, timestamps };
+        return { datasets, stats, seriesStats, timeFormat, timestamps };
     },
 
 
@@ -672,17 +681,18 @@ window.UnifiedChartRenderer = {
                 }
             });
 
-            yAxisConfig.afterDataLimits = (scale) => {
-                const roundToNearest = config.yAxis.roundToNearest;
-                
-                // Only apply rounding if min/max are not explicitly set
-                if (config.yAxis.min === undefined) {
-                    scale.min = Math.floor(scale.min / roundToNearest) * roundToNearest;
-                }
-                if (config.yAxis.max === undefined) {
-                    scale.max = Math.ceil(scale.max / roundToNearest) * roundToNearest;
-                }
-            };
+            const roundToNearest = config.yAxis.roundToNearest;
+            if (roundToNearest) {
+                yAxisConfig.afterDataLimits = (scale) => {
+                    // Only apply rounding if min/max are not explicitly set
+                    if (config.yAxis.min === undefined) {
+                        scale.min = Math.floor(scale.min / roundToNearest) * roundToNearest;
+                    }
+                    if (config.yAxis.max === undefined) {
+                        scale.max = Math.ceil(scale.max / roundToNearest) * roundToNearest;
+                    }
+                };
+            }
             
             if (config.yAxis.formatLargeNumbers) {
                 yAxisConfig.ticks.callback = function(value) {
@@ -779,12 +789,17 @@ window.UnifiedChartRenderer = {
      * Update chart statistics display
      * @private
      */
-    _updateStats: function(config, stats, isMultiSeries) {
+    _updateStats: function(config, stats, isMultiSeries, seriesStats) {
         const statsContainer = document.getElementById(`stats-${config.id}`);
         if (!statsContainer || stats.count === 0) return;
 
-        const { min, max, avg, current } = stats;
-        const unit = config.unit || '';
+        // For mixed-unit multi-series charts, use the FIRST series' stats and its unit
+        // for the header display, rather than lumping series with different units together.
+        const primarySeries = config.series && config.series[0];
+        const usePrimary = seriesStats && seriesStats[0] && primarySeries && primarySeries.unit;
+        const displayStats = usePrimary ? seriesStats[0] : stats;
+        const { min, max, avg, current } = displayStats;
+        const unit = (usePrimary ? primarySeries.unit : config.unit) || '';
 
         // Build stats HTML with current value for single-series charts
         let statsHTML = `
@@ -837,7 +852,8 @@ window.UnifiedChartRenderer = {
                 // Format current value
                 if (currentValue !== null && !isNaN(currentValue)) {
                     const formattedValue = this._formatValue(currentValue, config);
-                    label = `${label}: ${formattedValue}${(config.displayUnit)}`;
+                    const seriesUnit = (config.series && config.series[index] && config.series[index].unit) || config.displayUnit || '';
+                    label = `${label}: ${formattedValue}${seriesUnit}`;
                 }
                 
                 labels.push({

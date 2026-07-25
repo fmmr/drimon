@@ -2,7 +2,7 @@ VL53L0X_RangingMeasurementData_t tofData;
 
 float readDallas(DeviceAddress addr) {
   float t = sensors.getTempC(addr);
-  for (int retry = 0; retry < 2 && (t == 85.0 || t == -127.0); retry++) {
+  for (int retry = 0; retry < 2 && (t < -20.0 || t > 60.0); retry++) {
     sensors.requestTemperatures();
     t = sensors.getTempC(addr);
   }

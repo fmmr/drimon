@@ -119,6 +119,8 @@ window.DriMonTranslations = {
     "rainChart": "Nedbør",
     "soilMoistureChart": "Jordfuktighet",
     "batteryVoltageChart": "Batteri (spenning)",
+    "batteryChart": "Batteri",
+    "uvIndexChart": "UV-indeks",
     "wifiChart": "WiFi",
     "timeUsedChart": "Tid brukt",
     
@@ -325,6 +327,8 @@ window.DriMonTranslations = {
     "rainChart": "Precipitation",
     "soilMoistureChart": "Soil Moisture",
     "batteryVoltageChart": "Battery (voltage)",
+    "batteryChart": "Battery",
+    "uvIndexChart": "UV Index",
     "wifiChart": "WiFi",
     "timeUsedChart": "Time Used",
     
@@ -531,6 +535,8 @@ window.DriMonTranslations = {
     "rainChart": "Precipitación",
     "soilMoistureChart": "Humedad del Suelo",
     "batteryVoltageChart": "Batería (voltaje)",
+    "batteryChart": "Batería",
+    "uvIndexChart": "Índice UV",
     "wifiChart": "WiFi",
     "timeUsedChart": "Tiempo Utilizado",
     

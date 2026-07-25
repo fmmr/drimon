@@ -284,13 +284,50 @@ The sensor system in the greenhouse is based on ESP32 microcontrollers with vari
 The monitoring system implements sophisticated power management:
 
 - **Solar Charging**: Primary power source with 5V solar panel
-- **LiPo Battery**: 3.7V backup power with charge monitoring
+- **Li-Ion Battery Pack**: 3.7V nominal, 1S3P (three 3000 mAh cells in parallel = 9000 mAh reserve)
 - **Deep Sleep Mode**: Automatic sleep scheduling based on light conditions
   - Night mode (900s sleep): Conserves power during darkness
   - Dusk mode (420s sleep): Moderate sampling rate
   - Day mode (600s sleep): Standard monitoring frequency
 - **Power Switching**: Sensor power control to minimize standby consumption
 - **Battery Monitoring**: Accurate voltage and percentage tracking
+
+#### Power Budget
+
+Empirically measured (from a period when solar charging was broken and the system ran on battery alone):
+
+| Metric | Value |
+|---|---|
+| Battery pack capacity | ~9000 mAh @ 3.7 V (~33 Wh) |
+| Standalone runtime (no charging) | ~14 days |
+| Daily consumption | ~640 mAh/day |
+| Average sustained current | ~27 mA (24/7) |
+
+Where the current goes (rough breakdown):
+
+- **DFR0559 boost converter quiescent** — on 24/7 to feed the ESP32 via USB-OUT; ~10–20 mA continuous
+- **DFR0563 fuel gauge** — always connected to battery; ~50 µA
+- **ESP32 deep sleep** — <10 µA between wakes
+- **ESP32 wake cycles** — ~200 wakes/day × ~7 s awake × ~100 mA avg = ~40 mAh/day
+  - Optimizations landed: static IP + RTC-cached BSSID/channel + polling connect wait (~1.9 s saved per wake vs pre-optimization baseline)
+
+For solar to keep pace, the panel needs to deliver **~640 mAh/day averaged over rolling weeks**. A sunny day typically delivers 2000–3000+ mAh, so 3–4 sunny days per week is enough to break even.
+
+#### Li-Ion voltage → state of charge
+
+Trust the voltage chart over the MAX17043 percentage — the gauge's `%` is a voltage-based estimate through Maxim's ModelGauge algorithm and gets noisy under WiFi TX load transients.
+
+The Li-Ion discharge curve is highly non-linear (flat in the middle):
+
+| Voltage | Approx SoC | Notes |
+|---|---|---|
+| 4.20 V | 100 % | Full — DFR0559 DONE LED lights (if load allows current to taper) |
+| 4.16 V | ~90 % | Typical peak in field operation |
+| 4.00 V | ~70–75 % | Long flat plateau in the middle |
+| 3.70 V | ~25 % | Curve starts steepening downward |
+| 3.30 V | 0 % | Cutoff — DFR0559 stops discharge |
+
+So the overnight drop from 4.16 V → 4.02 V looks large but represents only ~7–8 % of real capacity (~600–700 mAh), which matches the empirical daily consumption.
 
 ### Custom PCB
 
