@@ -307,6 +307,16 @@
     color: #007bff !important;
 }
 
+.settings-dropdown-item.settings-page-link {
+    color: #495057;
+    text-decoration: none;
+}
+
+.settings-dropdown-item.settings-page-link:hover {
+    color: #007bff;
+    text-decoration: none;
+}
+
 .dropdown-divider {
     height: 1px;
     background-color: #dee2e6;

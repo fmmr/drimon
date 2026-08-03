@@ -37,7 +37,7 @@ ESP32 wake → WiFi (RTC-cached BSSID) → measure 2× → post 3 ThingSpeak cha
 | ID | Const in webapp | Contents | Written by |
 |---|---|---|---|
 | 2568299 | `DRIMON_CHANNEL` | temp, hum, RSSI, distance (window), battery V/%, pressure, lux | ESP32 |
-| 2584548 | `TEMP_CHANNEL` | BME/AHT temp, 3× DS18B20, 3× soil moisture | ESP32 |
+| 2584548 | `TEMP_CHANNEL` | BME/AHT temp, 3× DS18B20, 3× soil moisture (⚠ hardware broken — readings unreliable, don't build features on them until sensors are fixed) | ESP32 |
 | 2584547 | `TECH_CHANNEL` | RSSI, battery V/%, wake time (ms), internal lux | ESP32 |
 | 2626867 | `EXT_CHANNEL` | MET temp/hum, temp/hum diffs, wind, precip, UV | MATLAB scraper |
 

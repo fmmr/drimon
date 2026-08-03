@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Simple kiosk script - starts Chromium with 2 tabs
+# Simple kiosk script - starts Chromium with the dashboard
 
 export DISPLAY=:0
 
@@ -28,7 +28,6 @@ unclutter -idle 1 -root &
 sed -i 's/"exited_cleanly":false/"exited_cleanly":true/' ~/.config/chromium/Default/Preferences 2>/dev/null || true
 sed -i 's/"exit_type":"Crashed"/"exit_type":"Normal"/' ~/.config/chromium/Default/Preferences 2>/dev/null || true
 
-# Start Chromium with both tabs
+# Start Chromium with the dashboard
 chromium-browser --start-fullscreen --noerrdialogs --disable-infobars \
-  'https://drimon.rodland.no/' \
-  'https://www.yr.no/nb/v%C3%A6rvarsel/daglig-tabell/1-60206/Norge/Akershus/Asker/R%C3%B8dtangen'
+  'https://drimon.rodland.no/'

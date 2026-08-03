@@ -44,6 +44,7 @@ Things that would clearly earn their place:
 
 ## Firmware / hardware
 
+- **Fix soil moisture sensors** — readings from all 3 probes are unreliable. Likely bad probes / wiring / calibration. Once fixed, several ideas open up: drying curves per pot, watering-cycle overlay on the calendar heatmap.
 - **Deconflict red-LED flash codes** — currently red-3 means both "display init failed" AND "ThingSpeak Channel 2 write failed"; red-4 overloads WiFi-fail with Channel 3. Reassign to unique counts, or add a distinguishing prefix flash (e.g. all init errors start with a long flash).
 - **Webcam / time-lapse** — a Raspberry Pi with a camera in the greenhouse, image capture on a schedule
 - **Automated watering** — closed-loop control from soil moisture readings

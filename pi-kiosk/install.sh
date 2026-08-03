@@ -32,34 +32,30 @@ systemctl --user disable shutdown-service.service 2>/dev/null || true
 
 # Remove old service files
 rm -f ~/.config/systemd/user/shutdown-service.service
+rm -f ~/.config/systemd/user/tab-cycling.service
 
 echo "2. Setting up file permissions..."
 chmod +x scripts/kiosk.sh
-chmod +x scripts/tab-cycling.sh
 chmod +x scripts/shutdown_service.py
 
 echo "3. Setting up sudo permissions for shutdown..."
 echo "$USER ALL=(ALL) NOPASSWD: /sbin/shutdown" | sudo tee /etc/sudoers.d/kiosk-shutdown
 sudo chmod 440 /etc/sudoers.d/kiosk-shutdown
 
-echo "4. Adding user to input group for touchscreen access..."
-sudo usermod -a -G input $USER
-
-echo "5. Installing systemd services..."
+echo "4. Installing systemd services..."
 mkdir -p ~/.config/systemd/user/
 
 # Install all services
 cp systemd/kiosk.service ~/.config/systemd/user/
-cp systemd/tab-cycling.service ~/.config/systemd/user/
 cp systemd/shutdown.service ~/.config/systemd/user/
 
-echo "6. Installing required packages..."
+echo "5. Installing required packages..."
 if command -v nodm >/dev/null 2>&1 && command -v chromium-browser >/dev/null 2>&1; then
     echo "Required packages already installed"
 else
     echo "Installing nodm, chromium, and tools..."
     sudo apt update
-    sudo apt install -y nodm unclutter xdotool chromium-browser
+    sudo apt install -y nodm unclutter chromium-browser
 fi
 
 # Configure nodm for auto-login
@@ -70,7 +66,7 @@ echo "NODM_USER=$USER" | sudo tee -a /etc/default/nodm
 sudo systemctl disable lightdm 2>/dev/null || true
 sudo systemctl enable nodm
 
-echo "7. Disabling WiFi power management..."
+echo "6. Disabling WiFi power management..."
 if command -v iwconfig >/dev/null 2>&1; then
     sudo iwconfig wlan0 power off 2>/dev/null || true
     # Add to rc.local for persistence
@@ -81,10 +77,9 @@ if command -v iwconfig >/dev/null 2>&1; then
     fi
 fi
 
-echo "8. Starting services..."
+echo "7. Starting services..."
 systemctl --user daemon-reload
 systemctl --user enable kiosk.service
-systemctl --user enable tab-cycling.service
 systemctl --user enable shutdown.service
 
 echo ""
@@ -93,16 +88,13 @@ echo "✓ Installation complete!"
 echo "============================================"
 echo ""
 echo "Services installed:"
-echo "- kiosk.service: Starts Chromium"
-echo "- tab-cycling.service: Cycles between tabs"  
+echo "- kiosk.service: Starts Chromium with the dashboard"
 echo "- shutdown.service: Web server for shutdown/reboot"
 echo ""
 echo "After reboot:"
 echo "- Desktop will auto-start"
-echo "- Chromium will open with 2 tabs"
-echo "- Tab cycling stops after 45s of inactivity"
-echo "- Screen blanks after 20s more (65s total)"
-echo "- Touch screen resumes cycling"
+echo "- Chromium will open fullscreen with the DriMon dashboard"
+echo "- Screen blanks after 20s of inactivity"
 echo ""
 echo "Ready to reboot? (y/n)"
 read -r response

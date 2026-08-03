@@ -125,13 +125,31 @@ function createSettingsDropdown(config) {
         const secondDivider = document.createElement('div');
         secondDivider.className = 'dropdown-divider';
         dropdownContent.appendChild(secondDivider);
-        
+
         const chartSetButtons = createChartSetSelector(config.chartSetSelector);
         chartSetButtons.forEach(button => {
             dropdownContent.appendChild(button);
         });
     }
-    
+
+    // Add links to companion pages (windows, calendar)
+    const pageLinksDivider = document.createElement('div');
+    pageLinksDivider.className = 'dropdown-divider';
+    dropdownContent.appendChild(pageLinksDivider);
+
+    const pageLinks = [
+        { href: 'windows.html', icon: 'fa-solid fa-window-maximize', title: 'Vindu per dag' },
+        { href: 'calendar.html', icon: 'fa-solid fa-calendar-days',  title: 'Kalender-heatmap' }
+    ];
+    pageLinks.forEach(p => {
+        const link = document.createElement('a');
+        link.className = 'settings-dropdown-item settings-page-link';
+        link.href = p.href;
+        link.title = p.title;
+        link.innerHTML = `<i class="${p.icon}"></i>`;
+        dropdownContent.appendChild(link);
+    });
+
     // Add dropdown elements to container
     dropdownContainer.appendChild(dropdownButton);
     dropdownContainer.appendChild(dropdownContent);
