@@ -9,6 +9,7 @@ The DriMon web application is a sophisticated, responsive dashboard for visualiz
 ### Core Files
 
 - **`index.html`** - Main HTML entry point with script loading order
+- **`windows.html`** - Standalone page: per-day window opening summary with inferred weather (☀️⛅☁️🌧️). Self-contained (`js/windows.js` + `css/windows.css`, only depends on moment.js). URL params: `days` (default 14), `threshold` (raw sensor mm, default 80), `minEvents` (flapping threshold, default 4), `lowMax` (☁️ ceiling, default 100 mm displayed), `rainyMax` (🌧️ ceiling, default 55 mm displayed).
 - **`css/`** - Stylesheets organized by component
 - **`js/`** - JavaScript modules following component-based architecture
 - **`img/`** - Icons and favicon assets

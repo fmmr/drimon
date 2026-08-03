@@ -65,6 +65,8 @@ Vanilla-JS SPA + Chart.js. No build step — static files served from `docs/` vi
 
 Entry: `index.html` → `js/app.js`. All script tags are wired in `index.html` and load order matters.
 
+**Extra pages**: `windows.html` — standalone per-day window opening summary with inferred weather (☀️⛅☁️🌧️). Self-contained (`js/windows.js` + `css/windows.css`, only needs moment.js). URL params: `days`, `threshold`, `minEvents`, `lowMax`, `rainyMax`.
+
 Key modules (see `docs/js/`):
 
 | Area | Files |
