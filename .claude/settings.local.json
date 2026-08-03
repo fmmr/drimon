@@ -46,7 +46,8 @@
       "Bash(curl:*)",
       "WebFetch(domain:kartverket.no)",
       "WebFetch(domain:vannstand.kartverket.no)",
-      "Bash(git -C /Users/fmr/projects/drimon status --short)"
+      "Bash(git -C /Users/fmr/projects/drimon status --short)",
+      "Bash(/usr/bin/find *)"
     ],
     "deny": []
   },
