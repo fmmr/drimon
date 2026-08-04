@@ -5,6 +5,7 @@ void postThingSpeak(SensorData& data) {
   ThingSpeak.begin(client);
   Serial.println("Posting data to ThingSpeak...");
   int result = 0;
+  bool anyPostOk = false;
 
   ThingSpeak.setField(1, data.temperature);
   ThingSpeak.setField(2, data.humidity);
@@ -22,6 +23,7 @@ void postThingSpeak(SensorData& data) {
   result = ThingSpeak.writeFields(THINGSPEAK_1_CHANNEL, THINGSPEAK_1_API);
   if (result == 200) {
     Serial.println("  Thingspeak: Channel 1 update successful.");
+    anyPostOk = true;
   } else {
     Serial.println("  Thingspeak: Problem updating channel 1. HTTP error code " + String(result));
     flashLED(RED_LED_PIN, 2);
@@ -43,6 +45,7 @@ void postThingSpeak(SensorData& data) {
   result = ThingSpeak.writeFields(THINGSPEAK_2_CHANNEL, THINGSPEAK_2_API);
   if (result == 200) {
     Serial.println("  Thingspeak: Channel 2 update successful.");
+    anyPostOk = true;
   } else {
     Serial.println("  Thingspeak: Problem updating channel 2. HTTP error code " + String(result));
     flashLED(RED_LED_PIN, 3);
@@ -61,9 +64,14 @@ void postThingSpeak(SensorData& data) {
   result = ThingSpeak.writeFields(THINGSPEAK_3_CHANNEL, THINGSPEAK_3_API);
   if (result == 200) {
     Serial.println("  Thingspeak: Channel 3 update successful.");
+    anyPostOk = true;
   } else {
     Serial.println("  Thingspeak: Problem updating channel 3. HTTP error code " + String(result));
     flashLED(RED_LED_PIN, 4);
+  }
+
+  if (anyPostOk) {
+    wifiFailStreak = 0;  // at least one channel persisted the pre-reset FC; safe to clear for next wake
   }
 
   Serial.println("Done Posting data to ThingSpeak...");

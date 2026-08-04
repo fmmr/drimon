@@ -65,7 +65,16 @@ Vanilla-JS SPA + Chart.js. No build step — static files served from `docs/` vi
 
 Entry: `index.html` → `js/app.js`. All script tags are wired in `index.html` and load order matters.
 
-**Extra pages**: `windows.html` — standalone per-day window opening summary with inferred weather (☀️⛅☁️🌧️). Self-contained (`js/windows.js` + `css/windows.css`, only needs moment.js). URL params: `days`, `threshold`, `minEvents`, `lowMax`, `rainyMax`.
+**Extra pages** (standalone, only need moment.js; each has footer links to the others):
+
+- `windows.html` — per-day window opening summary with inferred weather (☀️⛅☁️🌧️). Files: `js/windows.js` + `css/windows.css`. URL params: `days`, `threshold`, `minEvents`, `lowMax`, `rainyMax`.
+- `calendar.html` — GitHub-style heatmap of daily medians for window / temp / lux / wind, with gap collapsing. Files: `js/calendar.js` + `css/calendar.css`. URL params: `days`, `gapWeeks`.
+- `heat-frost.html` — critical-temperature log: nights near freezing and days over the heat threshold, with outdoor temp for context. Files: `js/heat-frost.js` + `css/heat-frost.css`. URL params: `days` (1–400, default 90), `frost` (°C), `heat` (°C), `all`, `agg` (`raw`/`timescale`/`median`, default `raw`). Raw preserves sub-hour spikes (a real 50 °C peak becomes 40 °C under `median=60`); use `timescale`/`median` only for comparison.
+- `status.html` — parses the ThingSpeak `status` field (`WF-`, `WT-`, `T-`, `W-`, `B-`, `P-`, light token) plus TECH_CHANNEL field 4 (wake duration): WiFi HIT/FBK/MISS/FAIL stacked bars per day (width = post count), WT p50/p95 per day, TU (time-used) p50/p95 per day, class-distribution mini-charts, last-20 statuses table. Files: `js/status.js` + `css/status.css`. URL params: `days` (1–400, default 14), `results` (max 8000). Uses `/status.json` for status data and `/fields/4.json` on TECH_CHANNEL for wake duration. Note: WF-/WT-/SD- tokens were added by a firmware update; older entries carry T-/W-/B-/P-/light only, so WF and WT charts have a shorter effective window than the distributions.
+
+Shared footer nav for all subpages: `js/subpage-footer.js` renders links from a single list into any `[data-subpage-footer]` element.
+
+Ideas backlog for future subpages: `documentation/FUTURE.md`.
 
 Key modules (see `docs/js/`):
 
@@ -101,7 +110,7 @@ Hidden charts (`hidden: true` in `chart-config.js`) are only reachable via `?cha
 
 ## Status string format
 
-Every ThingSpeak entry carries e.g. `T-OK_SHADE_W-OPEN_B-OK_P-HIGH_WF-HIT_WT-388_SD-0`. Prefixes: `T-` temp class, (bare) light level, `W-` window, `B-` battery, `P-` pressure, `WF-` WiFi cache outcome (`HIT`/`MISS`/`FBK`/`FAIL`), `WT-` connect time (ms), `SD-` display-pause (0 or 12000). Full decoder: `documentation/QUICK_REFERENCE.md`.
+Every ThingSpeak entry carries e.g. `T-OK_SHADE_W-OPEN_B-OK_P-HIGH_WF-HIT_WT-388_FC-0_SD-0`. Prefixes: `T-` temp class, (bare) light level, `W-` window, `B-` battery, `P-` pressure, `WF-` WiFi cache outcome (`HIT`/`MISS`/`FBK`/`FAIL`), `WT-` connect time (ms), `FC-` failed-wake streak (RTC counter, reset if any channel POST succeeds, saturates at 65535), `SD-` display-pause (0 or 12000). Full decoder: `documentation/QUICK_REFERENCE.md`.
 
 ## Code rules
 See `coderules.md`. Highlights:

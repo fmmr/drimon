@@ -138,8 +138,10 @@ function createSettingsDropdown(config) {
     dropdownContent.appendChild(pageLinksDivider);
 
     const pageLinks = [
-        { href: 'windows.html', icon: 'fa-solid fa-window-maximize', title: 'Vindu per dag' },
-        { href: 'calendar.html', icon: 'fa-solid fa-calendar-days',  title: 'Kalender-heatmap' }
+        { href: 'windows.html',    icon: 'fa-solid fa-window-maximize',    title: 'Vindu per dag' },
+        { href: 'calendar.html',   icon: 'fa-solid fa-calendar-days',      title: 'Kalender-heatmap' },
+        { href: 'heat-frost.html', icon: 'fa-solid fa-temperature-high',   title: 'Varme- og frostlogg' },
+        { href: 'status.html',     icon: 'fa-solid fa-signal',             title: 'Systemstatus' }
     ];
     pageLinks.forEach(p => {
         const link = document.createElement('a');

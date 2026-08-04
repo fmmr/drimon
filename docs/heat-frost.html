@@ -3,8 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DriMon — Vindusåpning per dag</title>
-    <link rel="stylesheet" href="css/windows.css">
+    <title>DriMon — Varme- og frostlogg</title>
+    <link rel="stylesheet" href="css/heat-frost.css">
     <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/locale/nb.min.js"></script>
@@ -12,30 +12,28 @@
 </head>
 <body>
     <header>
-        <h1>Vindusåpning per dag</h1>
+        <h1>Varme- og frostlogg</h1>
         <div id="controls"></div>
     </header>
     <main>
         <div id="status">Laster…</div>
         <section id="stats" hidden></section>
-        <table id="windows-table" hidden>
+        <table id="events-table" hidden>
             <thead>
                 <tr>
                     <th>Dag</th>
-                    <th>Åpnet</th>
-                    <th>Lukket</th>
-                    <th>Varighet</th>
-                    <th>Åpninger</th>
-                    <th>Maks</th>
-                    <th>Flapping</th>
-                    <th>Vær</th>
+                    <th>Min inne</th>
+                    <th>Maks inne</th>
+                    <th>Ute min / maks</th>
+                    <th>Type</th>
                 </tr>
             </thead>
             <tbody></tbody>
         </table>
+        <p id="empty" hidden>Ingen kritiske dager i valgt periode.</p>
         <p class="footer" data-subpage-footer></p>
     </main>
     <script src="js/subpage-footer.js"></script>
-    <script src="js/windows.js"></script>
+    <script src="js/heat-frost.js"></script>
 </body>
 </html>

@@ -50,7 +50,7 @@ Physical controls on the enclosure:
 Every ThingSpeak entry carries a `status` string like:
 
 ```
-T-OK_SHADE_W-OPEN_B-OK_P-HIGH_WF-HIT_WT-388_SD-0
+T-OK_SHADE_W-OPEN_B-OK_P-HIGH_WF-HIT_WT-388_FC-0_SD-0
 ```
 
 Underscore-separated `PREFIX-VALUE` parts:
@@ -62,8 +62,9 @@ Underscore-separated `PREFIX-VALUE` parts:
 | `W-` | Window state | `CLOSE` (distance <80 mm) / `OPEN` |
 | `B-` | Battery state | `OK` / `LOW` (<35 %) |
 | `P-` | Air pressure | `LOW` (<999) / `OK` / `HIGH` (>1010) hPa |
-| `WF-` | WiFi cache outcome | `HIT` (cache used, connected first try) / `MISS` (no cache, fresh scan) / `FBK` (cache failed, fell back) / `FAIL` |
+| `WF-` | WiFi cache outcome | `HIT` (cache used, connected first try) / `MISS` (no cache, fresh scan) / `FBK` (cache failed, fell back) / `FAIL` (unreachable in written status — no post if not connected) |
 | `WT-` | WiFi connect time | integer, milliseconds |
+| `FC-` | Failed-connect streak | `RTC_DATA_ATTR uint16_t`, incremented on each `WF-FAIL`, reset once at end of `postThingSpeak()` if any of the 3 channels returned HTTP 200. Saturates at 65535. Value on a status = "N wakes failed silently before this successful post". Wiped by cold reset / brownout / EN button. |
 | `SD-` | Display-read pause | `0` (timer wake, no delay) or `12000` (button/fresh wake, 12 s pause) |
 
 **Read the status from ThingSpeak** (any of the 3 channels works — same status on all):

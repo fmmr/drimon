@@ -1,5 +1,6 @@
 RTC_DATA_ATTR uint8_t cachedBSSID[6] = {0};
 RTC_DATA_ATTR int32_t cachedChannel = 0;
+RTC_DATA_ATTR uint16_t wifiFailStreak = 0;  // consecutive failed wakes since last successful post; wiped by cold reset
 
 String g_wifiCacheStatus = "?";
 long g_wifiConnectMs = 0;
@@ -90,7 +91,8 @@ void connectToWiFi() {
   } else {
     g_wifiCacheStatus = "FAIL";
     g_wifiConnectMs = millis() - wifiStart;
-    Serial.println("    WiFi: FAILED");
+    if (wifiFailStreak != UINT16_MAX) wifiFailStreak++;
+    Serial.printf("    WiFi: FAILED (streak now %u)\n", wifiFailStreak);
     flashLED(RED_LED_PIN, FLASH_WIFI_CONNECT_FAILURE);
     dispPrint("WiFi FAILED - " + WiFi.RSSI());
   }

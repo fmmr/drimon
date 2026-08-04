@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DriMon — Systemstatus</title>
+    <link rel="stylesheet" href="css/status.css">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32x32.png">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/locale/nb.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.43/moment-timezone-with-data-10-year-range.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>Systemstatus</h1>
+        <div id="controls"></div>
+    </header>
+    <main>
+        <div id="loading">Laster…</div>
+
+        <section id="stats" hidden></section>
+
+        <section id="wifi-section" hidden>
+            <h2>WiFi-tilkobling per dag</h2>
+            <div class="legend">
+                <span class="sw hit"></span>HIT
+                <span class="sw fbk"></span>FBK
+                <span class="sw miss"></span>MISS
+                <span class="sw fail"></span>FAIL
+            </div>
+            <div id="wifi-days" class="day-list"></div>
+        </section>
+
+        <section id="wt-section" hidden>
+            <h2>Tilkoblingstid (WT) per dag</h2>
+            <div class="legend">
+                <span>Blå boks = 0–P95 · strek = median</span>
+                <span class="scale-label" data-scale></span>
+            </div>
+            <div id="wt-days" class="day-list"></div>
+        </section>
+
+        <section id="battery-section" hidden>
+            <h2>Batterispenning per dag (V)</h2>
+            <div class="legend">
+                <span>Blå boks = min–maks per dag · strek = median</span>
+                <span id="batt-v-scale" class="scale-label"></span>
+            </div>
+            <div id="batt-v-days" class="day-list"></div>
+        </section>
+
+        <section id="tu-section" hidden>
+            <h2>Tid brukt per wake (ms) per dag</h2>
+            <div class="legend">
+                <span>Blå boks = 0–P95 · strek = median · felt 4 på TECH-kanalen</span>
+                <span class="scale-label" data-scale></span>
+            </div>
+            <div id="tu-days" class="day-list"></div>
+        </section>
+
+        <section id="fc-section" hidden>
+            <h2>Feilede oppvåkninger per dag (FC-token)</h2>
+            <div class="legend">
+                <span>Summerer FC bare når neste verdi er lavere (bekreftet reset)</span>
+                <span class="scale-label" data-scale></span>
+            </div>
+            <div id="fc-days" class="day-list"></div>
+        </section>
+
+        <section id="dists-section" hidden>
+            <h2>Klassifiseringer (hele perioden)</h2>
+            <div id="dists" class="dists"></div>
+        </section>
+
+        <section id="recent-section" hidden>
+            <h2>Siste 20 statuser</h2>
+            <table id="recent-table">
+                <thead>
+                    <tr>
+                        <th>Når</th>
+                        <th>WF</th>
+                        <th>WT</th>
+                        <th>Lys</th>
+                        <th>W</th>
+                        <th>T</th>
+                        <th>B</th>
+                        <th>P</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </section>
+
+        <p class="footer" data-subpage-footer></p>
+    </main>
+    <script src="js/subpage-footer.js"></script>
+    <script src="js/status.js"></script>
+</body>
+</html>

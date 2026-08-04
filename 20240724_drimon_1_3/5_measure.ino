@@ -32,6 +32,7 @@ String status(SensorData& data) {
 
   stat = stat + "_WF-" + g_wifiCacheStatus;
   stat = stat + "_WT-" + String(g_wifiConnectMs);
+  stat = stat + "_FC-" + String(wifiFailStreak);
   stat = stat + "_SD-" + (DISPLAY_ON ? String(DISPLAY_TIME) : "0");
 
   return stat;
