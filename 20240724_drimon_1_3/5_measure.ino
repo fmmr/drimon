@@ -11,8 +11,8 @@ float readDallas(DeviceAddress addr) {
 
 String status(SensorData& data) {
   String stat = "";
-  if (data.temperature < 14) stat = stat + "T-COLD";
-  else if (data.temperature > 40) stat = stat + "T-HOT";
+  if (data.temperature <= TEMP_COLD) stat = stat + "T-COLD";
+  else if (data.temperature >= TEMP_HOT) stat = stat + "T-HOT";
   else stat = stat + "T-OK";
 
   if (data.lux < 2) stat = stat + "_NIGHT";

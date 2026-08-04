@@ -36,6 +36,9 @@
 #define PRESSURE_LOW 999
 #define PRESSURE_HIGH 1010
 
+#define TEMP_COLD 5    // aggregate temp <= this → T-COLD (matches heat-frost.html frost=5 default)
+#define TEMP_HOT  35   // aggregate temp >= this → T-HOT  (matches heat-frost.html heat=35 default)
+
 #define WIFI_MAX_RETRIES 10
 #define NUM_READINGS 2
 #define NUM_DISTANCE_READINGS 10

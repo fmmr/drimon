@@ -276,8 +276,11 @@ function renderDistributions(entries) {
         if (!total) return '';
         const keys = [...new Set([...g.order, ...Object.keys(counts)])].filter(k => counts[k]);
         const rows = keys.map(k => {
-            const p = pct(counts[k], total);
-            return `<div class="dist-row"><span>${k}</span><span class="dist-bar" style="width:${p}%"></span><span class="dist-pct">${p}%</span></div>`;
+            const n = counts[k];
+            const raw = n / total * 100;
+            const barWidth = Math.max(0.5, raw).toFixed(2);
+            const label = raw >= 1 ? `${Math.round(raw)}%` : '<1%';
+            return `<div class="dist-row" title="${k}: ${n} av ${total}"><span>${k}</span><span class="dist-bar" style="width:${barWidth}%"></span><span class="dist-pct">${label}</span></div>`;
         }).join('');
         return `<div class="dist-group"><div class="dist-title">${g.title} · n=${total}</div>${rows}</div>`;
     }).join('');

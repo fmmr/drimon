@@ -57,7 +57,7 @@ Underscore-separated `PREFIX-VALUE` parts:
 
 | Prefix | Meaning | Values |
 |---|---|---|
-| `T-` | Temperature classification | `COLD` (<14 °C) / `OK` / `HOT` (>40 °C) |
+| `T-` | Temperature classification | `COLD` (≤5 °C, frost warning) / `OK` / `HOT` (≥35 °C, heat warning) — thresholds match heat-frost.html defaults |
 | (no prefix) | Light level | `NIGHT` / `DUSK` / `SHADE` / `SUN` |
 | `W-` | Window state | `CLOSE` (distance <80 mm) / `OPEN` |
 | `B-` | Battery state | `OK` / `LOW` (<35 %) |
