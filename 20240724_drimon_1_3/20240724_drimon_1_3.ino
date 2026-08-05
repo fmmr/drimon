@@ -40,6 +40,7 @@
 #define TEMP_HOT  35   // aggregate temp >= this → T-HOT  (matches heat-frost.html heat=35 default)
 
 #define WIFI_MAX_RETRIES 10
+#define WIFI_FAILS_BEFORE_FRESH_SCAN 3   // if wifiFailStreak exceeds this, skip cached BSSID and force fresh scan
 #define NUM_READINGS 2
 #define NUM_DISTANCE_READINGS 10
 #define SLEEP_BETWEEN_READINGS 12
@@ -161,15 +162,15 @@ void setup() {
   Serial.println("Displaying data...");
   displayData(data);
   Serial.println("Displaying data: done");
-  if (DISPLAY_ON) {
-    Serial.printf("Sleeping %d ms for the display to be read...\n", DISPLAY_TIME);
-    delay(DISPLAY_TIME);
-  }
   if (SHOULD_POST) {
     postThingSpeak(data);
   }
   else{
     Serial.println("NOT Posting data to ThingSpeak...");
+  }
+  if (DISPLAY_ON) {
+    Serial.printf("Sleeping %d ms for the display to be read...\n", DISPLAY_TIME);
+    delay(DISPLAY_TIME);
   }
 
   flashLED(GREEN_LED_PIN, 2);

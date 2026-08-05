@@ -45,7 +45,6 @@ Things that would clearly earn their place:
 ## Firmware / hardware
 
 - **Fix soil moisture sensors** — readings from all 3 probes are unreliable. Likely bad probes / wiring / calibration. Once fixed, several ideas open up: drying curves per pot, watering-cycle overlay on the calendar heatmap.
-- **Deconflict red-LED flash codes** — currently red-3 means both "display init failed" AND "ThingSpeak Channel 2 write failed"; red-4 overloads WiFi-fail with Channel 3. Reassign to unique counts, or add a distinguishing prefix flash (e.g. all init errors start with a long flash).
 - **Webcam / time-lapse** — a Raspberry Pi with a camera in the greenhouse, image capture on a schedule
 - **Automated watering** — closed-loop control from soil moisture readings
 - **Additional sensors** — CO₂, light spectrum, soil nutrients
@@ -70,3 +69,4 @@ Consolidated summary of prior wins — details live in git history.
 - **i18n**: no / en / es with key-based translations.
 - **Keyboard shortcuts**: `d` (dark mode), `s` (stats), `r` (reset charts).
 - **Windows-per-day page** (Aug 2026): `docs/windows.html` — daily open/close table + stats + inferred weather (☀️⛅☁️🌧️) from window behaviour.
+- **LED flash codes deconflicted** (Aug 2026): `postThingSpeak()` now flashes a 3-LED sequence after the blue LED — one flash per channel, 🟢 for success, 🔴 for failure (e.g. 🟢🔴🟢 = Ch 2 failed). Old ambiguous red-2/3/4 per-channel codes removed. Pre-post errors (display init red-3, WiFi red-4) still fire *before* the blue LED, so timing disambiguates them from post-post codes.

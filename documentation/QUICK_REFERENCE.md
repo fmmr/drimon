@@ -29,11 +29,11 @@ Small LEDs on the **left of the enclosure**, between the rocker switch and the w
 | 🟢 Green — 2 flashes at boot | Just booted, running setup |
 | 🟢 Green — 2 flashes + 2 beeps | Cycle complete, going to sleep |
 | 🔵 Blue — solid ON | Posting to ThingSpeak (2–3 s) |
-| 🔴 Red — 3 flashes | Display init failed **OR** ThingSpeak Channel 2 write failed ⚠ |
-| 🔴 Red — 4 flashes | WiFi connect failed **OR** ThingSpeak Channel 3 write failed ⚠ |
-| 🔴 Red — 2 flashes | ThingSpeak Channel 1 write failed |
+| 🟢🔴 Mixed — 3 flashes after blue turns off | Per-channel POST result in order (Ch 1 / Ch 2 / Ch 3): 🟢 = success, 🔴 = failure. E.g. 🟢🟢🟢 = all posted, 🟢🔴🟢 = Ch 2 failed, 🔴🔴🔴 = all failed. |
+| 🔴 Red — 3 flashes at boot (before blue) | Display init failed |
+| 🔴 Red — 4 flashes at boot (before blue) | WiFi connect failed (no POST attempted) |
 
-⚠ The red 3- and 4-flash codes overlap between init failures and post failures — context (are we early in boot or after "Posting..." was logged) tells you which. Deconflicting is on the FUTURE list.
+Post-POST 3-flash sequence disambiguates the old overlapping codes: any 🟢 in the sequence means "we got to the post phase," so display-init and WiFi-fail codes are unambiguously the ones that happen *before* the blue LED lights up.
 
 ## Buttons
 
@@ -50,7 +50,7 @@ Physical controls on the enclosure:
 Every ThingSpeak entry carries a `status` string like:
 
 ```
-T-OK_SHADE_W-OPEN_B-OK_P-HIGH_WF-HIT_WT-388_FC-0_SD-0
+T-OK_SHADE_W-OPEN_B-OK_P-HIGH_WF-HIT_BS-abc123_WT-388_FC-0_BV-4.09_TU-5435_SD-0
 ```
 
 Underscore-separated `PREFIX-VALUE` parts:
@@ -63,8 +63,11 @@ Underscore-separated `PREFIX-VALUE` parts:
 | `B-` | Battery state | `OK` / `LOW` (<35 %) |
 | `P-` | Air pressure | `LOW` (<999) / `OK` / `HIGH` (>1010) hPa |
 | `WF-` | WiFi cache outcome | `HIT` (cache used, connected first try) / `MISS` (no cache, fresh scan) / `FBK` (cache failed, fell back) / `FAIL` (unreachable in written status — no post if not connected) |
+| `BS-` | Connected AP's BSSID | Last 3 bytes of MAC as hex (e.g. `abc123`). Identifies which Linksys mesh node we landed on. |
 | `WT-` | WiFi connect time | integer, milliseconds |
 | `FC-` | Failed-connect streak | `RTC_DATA_ATTR uint16_t`, incremented on each `WF-FAIL`, reset once at end of `postThingSpeak()` if any of the 3 channels returned HTTP 200. Saturates at 65535. Value on a status = "N wakes failed silently before this successful post". Wiped by cold reset / brownout / EN button. |
+| `BV-` | Battery voltage | Volts, 2 decimals (e.g. `4.09`). Same reading as TECH_CHANNEL field 2, embedded per-status for temporal alignment. |
+| `TU-` | Time used (wake duration to end of measure) | ms integer (e.g. `5435`). Same reading as TECH_CHANNEL field 4, embedded per-status. Note: excludes the 12 s display delay and POST time — set at end of `measure()`. |
 | `SD-` | Display-read pause | `0` (timer wake, no delay) or `12000` (button/fresh wake, 12 s pause) |
 
 **Read the status from ThingSpeak** (any of the 3 channels works — same status on all):

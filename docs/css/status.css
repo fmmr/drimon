@@ -273,6 +273,10 @@ td.wf-fbk  { color: var(--fbk); font-weight: 600; }
 td.wf-miss { color: var(--miss); font-weight: 600; }
 td.wf-fail { color: var(--fail); font-weight: 600; }
 
+.ch-cell { font-variant-numeric: tabular-nums; letter-spacing: 0.05em; }
+.ch-ok      { color: var(--hit); font-weight: 600; }
+.ch-missing { color: var(--fail); font-weight: 600; }
+
 .footer {
     margin-top: 1.5rem;
     color: var(--muted);

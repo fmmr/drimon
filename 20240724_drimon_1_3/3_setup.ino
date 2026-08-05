@@ -4,6 +4,7 @@ RTC_DATA_ATTR uint16_t wifiFailStreak = 0;  // consecutive failed wakes since la
 
 String g_wifiCacheStatus = "?";
 long g_wifiConnectMs = 0;
+String g_wifiBssidShort = "?";
 
 void setupPins() {
   pinMode(BLUE_LED_PIN, OUTPUT);
@@ -34,6 +35,12 @@ void connectToWiFi() {
   IPAddress subnet(255, 255, 255, 0);
   IPAddress dns(192, 168, 1, 1);
   WiFi.config(local_IP, gateway, subnet, dns);
+
+  if (wifiFailStreak > WIFI_FAILS_BEFORE_FRESH_SCAN && cachedChannel > 0) {
+    Serial.printf("  WiFi: fail streak = %u (> %d), forcing fresh scan\n",
+                  wifiFailStreak, WIFI_FAILS_BEFORE_FRESH_SCAN);
+    cachedChannel = 0;
+  }
 
   int retries = 0;
   bool usingCache = (cachedChannel > 0);
@@ -73,6 +80,9 @@ void connectToWiFi() {
     } else {
       g_wifiCacheStatus = "MISS";
     }
+    char bs[7];
+    snprintf(bs, sizeof(bs), "%02x%02x%02x", cachedBSSID[3], cachedBSSID[4], cachedBSSID[5]);
+    g_wifiBssidShort = bs;
     g_wifiConnectMs = millis() - wifiStart;
     Serial.print("    WiFi: OK (");
     Serial.print(g_wifiCacheStatus);

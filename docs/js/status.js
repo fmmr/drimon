@@ -1,12 +1,18 @@
-const CHANNEL = 2568299;
+const STATUS_CHANNELS = [
+    { id: 2568299, num: 1, label: 'Drimon' },
+    { id: 2584548, num: 2, label: 'Detaljer' },
+    { id: 2584547, num: 3, label: 'Tech' }
+];
 const TECH_CHANNEL = 2584547;
 const TECH_VOLT_FIELD = 2;
 const TU_FIELD = 4;
+const MERGE_WINDOW_MS = 60000;
 const TZ = 'Europe/Oslo';
 
 const params = new URLSearchParams(location.search);
 const DAYS = Math.max(1, Math.min(400, parseInt(params.get('days') || '14', 10)));
 const RESULTS = Math.max(1, Math.min(8000, parseInt(params.get('results') || '8000', 10)));
+const RECENT = Math.max(1, Math.min(2000, parseInt(params.get('recent') || '20', 10)));
 
 moment.locale('nb');
 
@@ -14,35 +20,91 @@ document.getElementById('controls').textContent =
     `Siste ${DAYS} dager · henter opptil ${RESULTS} status-entries`;
 
 Promise.all([
-    fetch(`https://api.thingspeak.com/channels/${CHANNEL}/status.json?results=${RESULTS}&days=${DAYS}`).then(r => r.json()),
+    ...STATUS_CHANNELS.map(c =>
+        fetch(`https://api.thingspeak.com/channels/${c.id}/status.json?results=${RESULTS}&days=${DAYS}`)
+            .then(r => r.json())
+            .then(d => ({ num: c.num, feeds: d.feeds || [] }))
+    ),
     fetch(`https://api.thingspeak.com/channels/${TECH_CHANNEL}/feeds.json?results=${RESULTS}&days=${DAYS}`).then(r => r.json())
 ])
-    .then(([main, tech]) => render(main, tech))
+    .then(results => {
+        const byChannel = results.slice(0, STATUS_CHANNELS.length);
+        const tech = results[STATUS_CHANNELS.length];
+        render(byChannel, tech);
+    })
     .catch(err => {
         document.getElementById('loading').textContent = 'Feil ved henting: ' + err.message;
     });
+
+function mergeAcrossChannels(byChannel) {
+    const raw = [];
+    for (const { num, feeds } of byChannel) {
+        for (const f of feeds) {
+            if (!f.status) continue;
+            raw.push({
+                t: moment.tz(f.created_at, TZ),
+                raw: f.status,
+                s: parseStatus(f.status),
+                ch: num
+            });
+        }
+    }
+    raw.sort((a, b) => a.t.diff(b.t));
+
+    const wakes = [];
+    for (const e of raw) {
+        let matched = null;
+        for (let i = wakes.length - 1; i >= 0; i--) {
+            if (Math.abs(wakes[i].t.diff(e.t)) > MERGE_WINDOW_MS) break;
+            if (wakes[i].raw === e.raw) { matched = wakes[i]; break; }
+        }
+        if (matched) {
+            matched.channels.add(e.ch);
+        } else if (Object.keys(e.s).length > 0) {
+            wakes.push({ t: e.t, s: e.s, raw: e.raw, channels: new Set([e.ch]) });
+        }
+    }
+    wakes.sort((a, b) => a.t.diff(b.t));
+    return wakes;
+}
+
+function channelBadges(channels) {
+    return STATUS_CHANNELS.map(c => channels.has(c.num)
+        ? `<span class="ch-ok" title="${c.label}">${c.num}</span>`
+        : `<span class="ch-missing" title="${c.label} — mangler">·</span>`
+    ).join(' ');
+}
+
+const STATUS_TOKENS = [
+    { prefix: 'T-',  key: 'T',  parse: v => v },
+    { prefix: 'W-',  key: 'W',  parse: v => v },
+    { prefix: 'B-',  key: 'B',  parse: v => v },
+    { prefix: 'P-',  key: 'P',  parse: v => v },
+    { prefix: 'WF-', key: 'WF', parse: v => v },
+    { prefix: 'BS-', key: 'BS', parse: v => v },
+    { prefix: 'WT-', key: 'WT', parse: v => parseInt(v, 10) },
+    { prefix: 'FC-', key: 'FC', parse: v => parseInt(v, 10) },
+    { prefix: 'BV-', key: 'BV', parse: v => parseFloat(v) },
+    { prefix: 'TU-', key: 'TU', parse: v => parseInt(v, 10) },
+    { prefix: 'SD-', key: 'SD', parse: v => parseInt(v, 10) }
+];
+const LIGHT_TOKENS = new Set(['NIGHT', 'DUSK', 'SHADE', 'SUN']);
 
 function parseStatus(s) {
     const out = {};
     if (!s) return out;
     for (const p of s.split('_')) {
-        if (p.startsWith('T-'))       out.T = p.slice(2);
-        else if (p.startsWith('W-'))  out.W = p.slice(2);
-        else if (p.startsWith('B-'))  out.B = p.slice(2);
-        else if (p.startsWith('P-'))  out.P = p.slice(2);
-        else if (p.startsWith('WF-')) out.WF = p.slice(3);
-        else if (p.startsWith('WT-')) out.WT = parseInt(p.slice(3), 10);
-        else if (p.startsWith('FC-')) out.FC = parseInt(p.slice(3), 10);
-        else if (p.startsWith('SD-')) out.SD = parseInt(p.slice(3), 10);
-        else if (p)                   out.LIGHT = p;
+        if (!p) continue;
+        if (LIGHT_TOKENS.has(p)) { out.LIGHT = p; continue; }
+        const t = STATUS_TOKENS.find(tk => p.startsWith(tk.prefix));
+        if (t) out[t.key] = t.parse(p.slice(t.prefix.length));
+        // unknown tokens are silently ignored — never pollute another field
     }
     return out;
 }
 
-function render(main, tech) {
-    const entries = (main.feeds || [])
-        .map(f => ({ t: moment.tz(f.created_at, TZ), s: parseStatus(f.status) }))
-        .filter(e => Object.keys(e.s).length > 0);
+function render(byChannel, tech) {
+    const entries = mergeAcrossChannels(byChannel);
 
     if (!entries.length) {
         document.getElementById('loading').textContent = 'Ingen status-data.';
@@ -187,8 +249,11 @@ function renderStats(entries, wifiEntries, tuEntries, fcEntries, voltEntries) {
     const cell = (label, value, sub) =>
         `<div><span class="stat-label">${label}</span><span class="stat-value">${value}</span>${sub ? `<span class="stat-sub">${sub}</span>` : ''}</div>`;
 
+    const partial = entries.filter(e => e.channels.size < STATUS_CHANNELS.length).length;
+
     document.getElementById('stats').innerHTML = [
         cell('Antall poster', total, `${days.length} dager · snitt ${avgCycles}/dag`),
+        cell('Delvise poster', partial, partial ? `av ${total} m/ min. 1 kanal-feil` : 'alle kanaler ok'),
         cell('WF-telemetri', wfTotal, `${groupByDay(wifiEntries).length} dager m/ WF-token`),
         cell('WF-HIT', wfTotal ? `${hitPct}%` : '—', `HIT ${wfCounts.HIT || 0}`),
         cell('Ikke-HIT', wfTotal ? `${failPct}%` : '—', `FBK ${wfCounts.FBK || 0} · MISS ${wfCounts.MISS || 0} · FAIL ${wfCounts.FAIL || 0}`),
@@ -262,6 +327,7 @@ function renderTimingPerDay(el, entries, valFn) {
 function renderDistributions(entries) {
     const groups = [
         { key: 'WF',    title: 'WiFi-outcome', order: ['HIT', 'FBK', 'MISS', 'FAIL'] },
+        { key: 'BS',    title: 'BSSID (mesh-node)', sortByCount: true },
         { key: 'LIGHT', title: 'Lys',          order: ['NIGHT', 'DUSK', 'SHADE', 'SUN'] },
         { key: 'T',     title: 'Temp-klasse',  order: ['COLD', 'OK', 'HOT'] },
         { key: 'W',     title: 'Vindu',        order: ['CLOSE', 'OPEN'] },
@@ -274,7 +340,9 @@ function renderDistributions(entries) {
         const counts = countBy(entries, e => e.s[g.key]);
         const total = Object.values(counts).reduce((a, b) => a + b, 0);
         if (!total) return '';
-        const keys = [...new Set([...g.order, ...Object.keys(counts)])].filter(k => counts[k]);
+        const keys = g.sortByCount
+            ? Object.keys(counts).sort((a, b) => counts[b] - counts[a])
+            : [...new Set([...(g.order || []), ...Object.keys(counts)])].filter(k => counts[k]);
         const rows = keys.map(k => {
             const n = counts[k];
             const raw = n / total * 100;
@@ -288,13 +356,17 @@ function renderDistributions(entries) {
 
 function renderRecent(entries) {
     const tbody = document.querySelector('#recent-table tbody');
-    const rows = entries.slice(-20).reverse();
+    const rows = entries.slice(-RECENT).reverse();
+    const heading = document.querySelector('#recent-section h2');
+    if (heading) heading.textContent = `Siste ${rows.length} statuser`;
     tbody.innerHTML = rows.map(e => {
         const wf = e.s.WF || '—';
         const wfCls = wf === '—' ? '' : ` class="wf-${wf.toLowerCase()}"`;
         return `<tr>
             <td>${e.t.format('D. MMM HH:mm')}</td>
+            <td class="ch-cell">${channelBadges(e.channels)}</td>
             <td${wfCls}>${wf}</td>
+            <td>${e.s.BS || '—'}</td>
             <td>${Number.isFinite(e.s.WT) ? e.s.WT : '—'}</td>
             <td>${e.s.LIGHT || '—'}</td>
             <td>${e.s.W || '—'}</td>
