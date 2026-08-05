@@ -68,6 +68,10 @@ function mergeAcrossChannels(byChannel) {
     return wakes;
 }
 
+function shortBS(bs) {
+    return typeof bs === 'string' && bs.length >= 6 ? bs.slice(-6) : (bs || '—');
+}
+
 function channelBadges(channels) {
     return STATUS_CHANNELS.map(c => channels.has(c.num)
         ? `<span class="ch-ok" title="${c.label}">${c.num}</span>`
@@ -405,7 +409,20 @@ function renderDistributions(entries) {
 
     const el = document.getElementById('dists');
     el.innerHTML = groups.map(g => {
-        const counts = countBy(entries, e => e.s[g.key]);
+        const rawCounts = countBy(entries, e => e.s[g.key]);
+        // For BSSID, merge full-BSSID entries that share the same visible short suffix
+        let counts, fullByShort;
+        if (g.key === 'BS') {
+            counts = {};
+            fullByShort = {};
+            for (const [full, n] of Object.entries(rawCounts)) {
+                const short = shortBS(full);
+                counts[short] = (counts[short] || 0) + n;
+                (fullByShort[short] = fullByShort[short] || []).push(full);
+            }
+        } else {
+            counts = rawCounts;
+        }
         const total = Object.values(counts).reduce((a, b) => a + b, 0);
         if (!total) return '';
         const keys = g.sortByCount
@@ -416,7 +433,10 @@ function renderDistributions(entries) {
             const raw = n / total * 100;
             const barWidth = Math.max(0.5, raw).toFixed(2);
             const label = raw >= 1 ? `${Math.round(raw)}%` : '<1%';
-            return `<div class="dist-row" title="${k}: ${n} av ${total}"><span>${k}</span><span class="dist-bar" style="width:${barWidth}%"></span><span class="dist-pct">${label}</span></div>`;
+            const tooltip = g.key === 'BS' && fullByShort && fullByShort[k]
+                ? `${fullByShort[k].join(' + ')}: ${n} av ${total}`
+                : `${k}: ${n} av ${total}`;
+            return `<div class="dist-row" title="${tooltip}"><span>${k}</span><span class="dist-bar" style="width:${barWidth}%"></span><span class="dist-pct">${label}</span></div>`;
         }).join('');
         return `<div class="dist-group"><div class="dist-title">${g.title} · n=${total}</div>${rows}</div>`;
     }).join('');
@@ -435,7 +455,7 @@ function renderRecent(entries) {
             <td>${e.t.format('D. MMM HH:mm')}</td>
             <td class="ch-cell">${channelBadges(e.channels)}</td>
             <td${wfCls}>${wf}</td>
-            <td>${e.s.BS || '—'}</td>
+            <td title="${e.s.BS || ''}">${e.s.BS ? shortBS(e.s.BS) : '—'}</td>
             <td>${Number.isFinite(e.s.WT) ? e.s.WT : '—'}</td>
             <td class="ch-cell">${lrBadges(e.s.LR)}</td>
             <td>${Number.isFinite(e.s.FC) ? e.s.FC : '—'}</td>
