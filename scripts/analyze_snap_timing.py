@@ -27,6 +27,10 @@ OSLO = timezone(timedelta(hours=2))       # CEST — adjust to +1 outside DST if
 # Statuses from before this cutoff used older snap logic (pre-NTP-every-wake, etc.) — don't mix them in.
 CUTOFF = datetime(2026, 8, 5, 17, 17, 0, tzinfo=OSLO)
 
+# Safety headroom: worst-case predicted wake must land at least this many seconds PAST :XX:00.
+# Enforces goal (a) — never risk posts landing in the previous minute. Higher = safer/more conservative.
+MIN_MARGIN_PAST_BOUNDARY = 1
+
 TOKEN_PREFIXES = [
     ('WF-', 'WF'), ('BS-', 'BS'), ('WT-', 'WT'), ('FC-', 'FC'), ('PF-', 'PF'),
     ('BV-', 'BV'), ('TU-', 'TU'), ('TV-', 'TV'), ('LX-', 'LX'), ('WD-', 'WD'),
@@ -195,18 +199,22 @@ def report(wakes, current_buffer):
     print()
 
     # Shift target: predicted_sec = new_buffer + observed_delta
-    # For goal (a), predicted must always stay in [0, 60) even at padded worst cases
-    # For goal (b), maximize mean (closer to :XX:60 = tighter to boundary)
+    # For goal (a): worst-early-predicted MUST land at least MIN_MARGIN_PAST_BOUNDARY seconds past :XX:00,
+    #   and worst-late-predicted MUST stay under :XX:60. Goal (a) is a hard guarantee.
+    # For goal (b): MINIMIZE mean (post as close as possible to :XX:00) — best-effort within (a).
     best_buffer = None
-    best_mean_sec = -1
-    for candidate in range(-5, 61):
+    best_mean_sec = 999
+    for candidate in range(-30, 61):
         worst_early_predicted = candidate + padded_early
         worst_late_predicted  = candidate + padded_late
-        if 0 <= worst_early_predicted and worst_late_predicted < 60:
+        if MIN_MARGIN_PAST_BOUNDARY <= worst_early_predicted and worst_late_predicted < 60:
             mean_pred = sum(d + candidate for d in deltas) / n
-            if mean_pred > best_mean_sec:
+            if mean_pred < best_mean_sec:
                 best_mean_sec = mean_pred
                 best_buffer = candidate
+
+    print(f"Constraints: worst-early-predicted ≥ {MIN_MARGIN_PAST_BOUNDARY}s past :XX:00,  worst-late-predicted < 60 s")
+    print()
 
     if best_buffer is not None:
         predicted = [d + best_buffer for d in deltas]
@@ -214,9 +222,12 @@ def report(wakes, current_buffer):
         print(f"  observed posts landed at :XX:{min(secs):02d} to :XX:{max(secs):02d} (mean {sum(secs)/n:.1f})")
         print()
         print(f"Optimal buffer: {best_buffer}")
-        print(f"  predicted posts would land at :XX:{min(predicted):02d} to :XX:{max(predicted):02d} (mean {sum(predicted)/n:.1f})")
+        min_pred = min(predicted)
+        max_pred = max(predicted)
+        mean_pred = sum(predicted)/n
+        print(f"  predicted posts would land at :XX:{min_pred:02d} to :XX:{max_pred:02d} (mean {mean_pred:.1f})")
         print(f"  goal (a) preserved even at padded worst-case ±{safety} s")
-        print(f"  goal (b): mean shifts {sum(secs)/n:.1f} → {sum(predicted)/n:.1f}")
+        print(f"  goal (b): mean shifts {sum(secs)/n:.1f}s past :XX:00 → {mean_pred:.1f}s past :XX:00 (tighter to boundary)")
         print()
 
         if best_buffer != current_buffer:
