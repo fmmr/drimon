@@ -3,7 +3,6 @@ RTC_DATA_ATTR int32_t cachedChannel = 0;
 RTC_DATA_ATTR uint16_t wifiFailStreak = 0;  // consecutive wakes where WiFi never associated; wiped by cold reset
 RTC_DATA_ATTR uint16_t postFailStreak = 0;  // consecutive wakes where WiFi was OK but ALL 3 POSTs failed; wiped by cold reset
 RTC_DATA_ATTR int lastPostResults[3] = {0, 0, 0};  // HTTP codes from previous wake's 3 channel POSTs
-RTC_DATA_ATTR time_t lastNtpSync = 0;              // unix time of last successful NTP sync; 0 = never synced
 
 String g_wifiCacheStatus = "?";
 long g_wifiConnectMs = 0;
@@ -103,35 +102,22 @@ void connectToWiFi() {
     Serial.printf("    WiFi connect took %ld ms\n", g_wifiConnectMs);
     dispPrint(WiFi.localIP().toString() + "   " + WiFi.RSSI());
 
-    // NTP sync policy: sync if we don't have wall-clock yet, or if the last sync is >24 h old.
-    // Non-blocking — configTime kicks off SNTP in background; RTC then keeps ticking through deep sleep.
-    // On cold boot, lastNtpSync is stored as 0 (since we don't have a valid time to record yet). That
-    // causes ONE extra sync on the next wake to record the timestamp — after that, no sync for 24 h.
-    struct tm t;
-    bool haveTime = getLocalTime(&t, 0);
-    time_t now = haveTime ? time(NULL) : 0;
-    bool needsSync = !haveTime
-                  || lastNtpSync == 0
-                  || (now - lastNtpSync) > NTP_RESYNC_INTERVAL_SEC;
-    if (needsSync) {
-      Serial.printf("    NTP sync kicked off (haveTime=%d, lastSync=%ld, now=%ld)\n",
-                    haveTime, (long)lastNtpSync, (long)now);
-      configTime(0, 0, "pool.ntp.org");
-      lastNtpSync = now;   // 0 if no time yet → auto-re-sync next wake to properly record
-    }
-
-    // Set Oslo timezone for pretty local-time serial prints (snap logic doesn't need this — Norway is whole-hour offset).
-    setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
+    // Kick off NTP sync every wake — corrects the ~1-2% cumulative drift from the ESP32's internal 150 kHz RC
+    // oscillator during deep sleep. Non-blocking (SNTP fires in background), ~144 bytes UDP, sub-second WiFi cost.
+    // Every subsequent getLocalTime() sees the fresh, drift-corrected time.
+    configTime(0, 0, "pool.ntp.org");
+    setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);   // Oslo local time for pretty serial prints; snap doesn't need TZ
     tzset();
 
-    // Serial-visible wall-clock diagnostic (dev-time only, invisible in production per memory)
-    struct tm nowTm;
-    if (getLocalTime(&nowTm, 0)) {
+    // Serial-visible wall-clock diagnostic. Waits up to 2 s for SNTP to actually respond so the print reflects
+    // the corrected time — no-op on subsequent wakes since RTC already has a valid year.
+    struct tm t;
+    if (getLocalTime(&t, 2000)) {
       Serial.printf("    Wall clock: %04d-%02d-%02d %02d:%02d:%02d (Oslo)\n",
-                    nowTm.tm_year + 1900, nowTm.tm_mon + 1, nowTm.tm_mday,
-                    nowTm.tm_hour, nowTm.tm_min, nowTm.tm_sec);
+                    t.tm_year + 1900, t.tm_mon + 1, t.tm_mday,
+                    t.tm_hour, t.tm_min, t.tm_sec);
     } else {
-      Serial.println("    Wall clock: not synced yet (cold boot, NTP still in flight)");
+      Serial.println("    Wall clock: SNTP did not respond within 2 s — snap will use last-known time");
     }
 
   } else {

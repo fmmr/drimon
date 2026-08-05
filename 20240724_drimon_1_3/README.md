@@ -113,12 +113,12 @@ If upload fails with "chip stopped responding" after the baud upgrade to 921600,
 
 All defined at the top of `20240724_drimon_1_3.ino`, grouped by section (GPIO pins, LED codes, environmental thresholds, WiFi behaviour, static IP, ThingSpeak posting, serial, sensor plausibility, measurement loop, display, sleep durations). Each has an inline comment explaining what it controls. Tunable knobs worth knowing about:
 
-- **Sleep durations & snapping** — `SLEEP_DURATION_*` are seconds; `getSleepDuration()` snaps to nearest 5/10/15-min wall-clock boundary via NTP-set RTC (see `8_sleep.ino:snappedSleep`).
+- **Sleep intervals & snapping** — `SLEEP_INTERVAL_DUSK_MIN` (5), `SLEEP_INTERVAL_DAY_MIN` (10), `SLEEP_INTERVAL_NIGHT_MIN` (20). `getSleepDuration()` snaps to the next round wall-clock boundary via NTP-set RTC. Off-season multiplier `SEASON_MULT_OFFSEASON` (3) triples all intervals during 11 Sep – 9 Apr.
 - **Temperature classification** — `TEMP_COLD` (5 °C) and `TEMP_HOT` (35 °C) match `heat-frost.html`'s defaults.
 - **WiFi resilience** — `WIFI_MAX_RETRIES`, `WIFI_FAILS_BEFORE_FRESH_SCAN`, `WIFI_INITIAL_TIMEOUT_MS`, `WIFI_POLL_INTERVAL_MS`, `WIFI_RETRY_DELAY_MS`.
 - **Static WiFi config** — `WIFI_STATIC_IP`, `WIFI_GATEWAY`, `WIFI_SUBNET`, `WIFI_DNS` (4 comma-separated octets each, consumed by `IPAddress()`).
 - **ThingSpeak** — `THINGSPEAK_INTER_POST_MS` (delay between the 3 channel POSTs), `POST_FLASH_ON_MS` (per-channel result-LED on-duration).
-- **NTP** — `NTP_RESYNC_INTERVAL_SEC` (86400 = re-sync once per day to bound RTC drift).
+- **NTP** — synced every wake to cancel the ESP32's internal RC-oscillator drift (~1-2% per sleep). Non-blocking, ~144 bytes UDP + sub-second WiFi radio time per wake.
 - **Sensor plausibility** — `DALLAS_MIN_C`/`MAX_C`/`RETRIES`, `TOF_MAX_MM`/`INTERVAL_MS`, `TERMO2_INCLUDE_MIN_C`/`MAX_C`.
 
 ## Data flow

@@ -438,7 +438,11 @@ const RAW_CHART_CONFIGS = [
         category: 'weather',
         categoryHeaderKey: 'weather',
         unit: '',
-        defaultRange: 3
+        defaultRange: 3,
+        formatting: {
+            useIntegerFormat: false,
+            decimalPlaces: 1
+        }
     },
 
     // Row 4

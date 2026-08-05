@@ -57,7 +57,7 @@ Field maps: `documentation/ARCHITECTURE.md`.
 | `sensordata.h` | `SensorData` struct |
 | `secrets.h` | **NOT committed** — WiFi + ThingSpeak keys |
 
-Wake sources: timer (5–15 min light-adaptive, snapped to round wall-clock boundaries via NTP: :00/:10/:20 day, :00/:05/:10 dusk, :00/:15/:30/:45 night), green button (GPIO 15 EXT0, preserves RTC cache), blue button (EN reset, wipes RTC → `WF-MISS` and one un-snapped wake until NTP re-syncs).
+Wake sources: timer (5/10/20 min in-season light-adaptive, snapped to round wall-clock boundaries via NTP: :00/:10/:20 day, :00/:05/:10 dusk, :00/:20/:40 night). Off-season (outside 10 Apr – 10 Sep, `SEASON_MULT_OFFSEASON = 3`) triples the intervals to conserve battery when solar is weak: :00/:30 day, :00/:15/:30/:45 dusk, :00 hourly night. Green button (GPIO 15 EXT0) preserves RTC cache. Blue button (EN reset) wipes RTC → `WF-MISS` and one un-snapped wake until NTP re-syncs.
 
 ## Webapp map (`docs/`)
 

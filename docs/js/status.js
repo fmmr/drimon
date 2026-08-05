@@ -448,7 +448,11 @@ function renderRecent(entries) {
     const tbody = document.querySelector('#recent-table tbody');
     const rows = entries.slice(-RECENT).reverse();
     const heading = document.querySelector('#recent-section h2');
-    if (heading) heading.textContent = `Siste ${rows.length} statuser`;
+    if (heading) {
+        const ch1Id = STATUS_CHANNELS[0].id;
+        const url = `https://api.thingspeak.com/channels/${ch1Id}/status.json?results=20&days=1`;
+        heading.innerHTML = `<a href="${url}" target="_blank" rel="noopener noreferrer">Siste ${rows.length} statuser</a>`;
+    }
     tbody.innerHTML = rows.map(e => {
         const wf = e.s.WF || '—';
         const wfCls = wf === '—' ? '' : ` class="wf-${wf.toLowerCase()}"`;

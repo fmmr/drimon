@@ -54,7 +54,6 @@
 #define WIFI_INITIAL_TIMEOUT_MS       3000 // how long to wait for the initial cached-BSSID connect before retrying
 #define WIFI_POLL_INTERVAL_MS         50   // how often WiFi.status() is polled while waiting for association
 #define WIFI_RETRY_DELAY_MS           1000 // pause between each fresh-scan retry after the initial attempt fails
-#define NTP_RESYNC_INTERVAL_SEC       86400 // re-sync wall clock once per day to bound RTC drift (~1-3 s/day on the internal oscillator)
 
 // ---------- Static WiFi config (4 comma-separated octets, consumed by IPAddress()) ----------
 #define WIFI_STATIC_IP  192, 168, 1, 15    // ESP32's own IP on the LAN — outside DHCP pool
@@ -87,10 +86,26 @@
 // ---------- Display behaviour ----------
 #define DISPLAY_TIME 8000   // ms to keep the OLED/LCD lit for reading (button/fresh wake only; SD- token records this)
 
-// ---------- Deep-sleep durations (seconds), selected by ambient light level ----------
-#define SLEEP_DURATION_DUSK   300   // 5 min  (lux between NIGHT and DUSK)
-#define SLEEP_DURATION_DAY    600   // 10 min (daytime — most wakes)
-#define SLEEP_DURATION_NIGHT  900   // 15 min (below NIGHT_LEVEL — longest to save battery)
+// ---------- Deep-sleep intervals (minutes), selected by ambient light level ----------
+// Intervals chosen so that mult=1 (in-season) AND mult=3 (off-season) both land on tidy minute boundaries:
+//   dusk : in-season 5 min (:00,:05,:10…) / off-season 15 min (:00,:15,:30,:45)
+//   day  : in-season 10 min (:00,:10,:20…) / off-season 30 min (:00,:30)
+//   night: in-season 20 min (:00,:20,:40) / off-season 60 min (:00 hourly)
+#define SLEEP_INTERVAL_DUSK_MIN   5   // lux between NIGHT and DUSK
+#define SLEEP_INTERVAL_DAY_MIN    10  // daytime — most wakes
+#define SLEEP_INTERVAL_NIGHT_MIN  20  // below NIGHT_LEVEL — chosen so ×3 = 60 min off-season (clean hourly)
+
+// ---------- Growing season & off-season power saving ----------
+// In-season = greenhouse actively used (10 Apr – 10 Sep). Off-season sleeps this many times longer to save battery
+// (fewer daylight hours, less sun on the panel, no plants to monitor). Multiplier applies to both snap intervals
+// AND the fallback SLEEP_DURATION_* — chosen alongside SLEEP_DURATION_NIGHT so all boundaries are clean.
+#define SEASON_START_MONTH   4    // April (1-based)
+#define SEASON_START_DAY     10
+#define SEASON_END_MONTH     9    // September (1-based)
+#define SEASON_END_DAY       10
+#define SEASON_MULT_OFFSEASON 3   // 1 = same as in-season; 3 triples sleep during off-season
+
+#define SNAP_BOUNDARY_BUFFER_SEC 30  // added to every snapped sleep. ESP32 uses its internal 150 kHz RC oscillator for deep-sleep timing (±5 % accuracy), so a 10-min sleep can drift up to ±30 s. Buffer covers the "wake early" side so posts still land inside the intended minute even at worst-case drift.
 
 int dispLine = 0;
 bool SHOULD_POST = false;
