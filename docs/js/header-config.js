@@ -226,9 +226,17 @@ const HEADER_MODE_CONFIGS = [
                         { range: 'last-month', key: 'lastMonth', iconDouble: ['fas fa-step-backward', 'fas fa-calendar-alt'] }
                     ]
                 }
+            },
+            statusPageLink: {
+                type: 'pageLink',
+                config: {
+                    href: 'status.html',
+                    icon: 'fas fa-signal',
+                    title: 'Systemstatus'
+                }
             }
         },
-        layout: ['logo', 'languageSwitcher', 'darkModeToggle', 'statsToggle', 'sortDropdown'],
+        layout: ['logo', 'languageSwitcher', 'darkModeToggle', 'statsToggle', 'statusPageLink', 'sortDropdown'],
         layout2: ['data'],
         layout3: ['dateRanges'], 
         theme: 'modern-header mobile-header'

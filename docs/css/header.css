@@ -229,7 +229,8 @@
 .date-dropdown-button,
 #updateButton,
 #darkModeToggle,
-#statsToggle {
+#statsToggle,
+.header-button.header-page-link {
     background: none;
     border: none;
     cursor: pointer;
@@ -242,7 +243,8 @@
 .date-dropdown-button:hover,
 #updateButton:hover,
 #darkModeToggle:hover,
-#statsToggle:hover {
+#statsToggle:hover,
+.header-button.header-page-link:hover {
     background-color: rgba(0, 0, 0, 0.1);
 }
 
@@ -448,7 +450,8 @@
 }
 
 /* Individual button styling for mobile header row */
-.mobile-header .header-row-1 button {
+.mobile-header .header-row-1 button,
+.mobile-header .header-row-1 .header-page-link {
     flex: 0 0 auto;
     margin: 0;
 }

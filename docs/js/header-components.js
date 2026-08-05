@@ -337,14 +337,14 @@ function createDateChip(range, key, icon = null, iconDouble = null, text = null,
 function createDateRanges(config = null) {
     const dateRanges = document.createElement('div');
     dateRanges.className = 'date-ranges';
-    
+
     const ranges = config.ranges;
-    
+
     ranges.forEach(chip => {
         const dateChip = createDateChip(chip.range, chip.key, chip.icon, chip.iconDouble, chip.text, chip.textDouble);
         dateRanges.appendChild(dateChip);
     });
-    
+
     return dateRanges;
 }
 
@@ -376,6 +376,18 @@ function createResultsInput(config) {
     container.appendChild(updateButton);
     
     return container;
+}
+
+function createPageLink(config) {
+    const link = document.createElement('a');
+    link.className = 'header-button header-page-link';
+    link.href = config.href;
+    link.title = config.title;
+    const iconWrap = document.createElement('span');
+    iconWrap.className = 'icon';
+    iconWrap.innerHTML = `<i class="${config.icon}"></i>`;
+    link.appendChild(iconWrap);
+    return link;
 }
 
 /**
@@ -673,6 +685,7 @@ const ComponentRegistry = {
     'languageSwitcher': createLanguageSwitcher,
     'darkModeToggle': createDarkModeToggle,
     'statsToggle': createStatsToggle,
+    'pageLink': createPageLink,
     'resetChartOrder': createResetChartOrder,
     'reloadPage': createReloadPage,
     'shutdownPi': createShutdownPi,
