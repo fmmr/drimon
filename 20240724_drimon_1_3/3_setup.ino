@@ -120,6 +120,20 @@ void connectToWiFi() {
       lastNtpSync = now;   // 0 if no time yet → auto-re-sync next wake to properly record
     }
 
+    // Set Oslo timezone for pretty local-time serial prints (snap logic doesn't need this — Norway is whole-hour offset).
+    setenv("TZ", "CET-1CEST,M3.5.0,M10.5.0/3", 1);
+    tzset();
+
+    // Serial-visible wall-clock diagnostic (dev-time only, invisible in production per memory)
+    struct tm nowTm;
+    if (getLocalTime(&nowTm, 0)) {
+      Serial.printf("    Wall clock: %04d-%02d-%02d %02d:%02d:%02d (Oslo)\n",
+                    nowTm.tm_year + 1900, nowTm.tm_mon + 1, nowTm.tm_mday,
+                    nowTm.tm_hour, nowTm.tm_min, nowTm.tm_sec);
+    } else {
+      Serial.println("    Wall clock: not synced yet (cold boot, NTP still in flight)");
+    }
+
   } else {
     g_wifiCacheStatus = "FAIL";
     g_wifiConnectMs = millis() - wifiStart;
