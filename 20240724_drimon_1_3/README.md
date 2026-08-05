@@ -16,6 +16,9 @@ For runtime reference (LED codes, buttons, status field decoding), see [../docum
 | `9_thingspeak.ino` | Three-channel POST (main sensors, plant/temp, system/tech) with per-channel error LED codes |
 | `9_util.ino` | `calibrate_soil` — one-off soil-moisture calibration harness |
 | `sensordata.h` | `SensorData` struct |
+| `version.h` | Placeholder `FIRMWARE_VERSION` — overwritten locally by `gen_version.sh` (via `--skip-worktree`) so the running binary carries the git commit hash |
+| `gen_version.sh` | Regenerates `version.h` from `git rev-parse --short HEAD` (adds `+` if working tree is dirty) |
+| `hooks/post-commit` | Reference git hook — symlink into `.git/hooks/` to auto-refresh `version.h` after every commit |
 | `secrets.h` | **not committed** — WiFi credentials + ThingSpeak write API keys |
 
 ## Deep sleep + wake behavior
@@ -72,6 +75,32 @@ Create `secrets.h` (not committed) with WiFi + ThingSpeak keys:
 #endif
 ```
 
+### Firmware version tracking
+
+The status field embeds the git commit hash of the running firmware as the `V-` token (e.g. `V-cbb0aad`, or `V-cbb0aad+` if compiled from a dirty tree). This lets the status page (`docs/status.html`) show exactly which commit is on the ESP32.
+
+**One-time setup per clone:**
+
+```bash
+cd ~/projects/drimon
+
+# Tell git to ignore local modifications to version.h (it's committed as a placeholder)
+git update-index --skip-worktree 20240724_drimon_1_3/version.h
+
+# Install the post-commit hook — regenerates version.h after every commit
+ln -sf ../../20240724_drimon_1_3/hooks/post-commit .git/hooks/post-commit
+
+# Bootstrap version.h with the current HEAD hash
+cd 20240724_drimon_1_3
+./gen_version.sh
+```
+
+After that, the workflow is: edit → `git commit` → post-commit hook regenerates `version.h` → flash. The ESP32 reports `V-<hash>` on every status.
+
+**If you see `V-template` on the running firmware**, `gen_version.sh` has never been run — run it manually. `V-unknown` means `version.h` is corrupted or missing. `V-<hash>+` means uncommitted local changes were compiled in.
+
+**To undo the skip-worktree** (rare — mostly useful when re-installing hooks): `git update-index --no-skip-worktree 20240724_drimon_1_3/version.h`.
+
 ### macOS Sequoia / Tahoe USB serial
 
 No external drivers needed on macOS 14.4+ — CH34x and CP210x are supported in-tree. Just plug in, pick `/dev/cu.usbserial-*` in **Tools → Port**. If it doesn't appear, try a different USB cable first (many are power-only).
@@ -82,33 +111,34 @@ If upload fails with "chip stopped responding" after the baud upgrade to 921600,
 
 ## Configuration constants
 
-Defined at the top of `20240724_drimon_1_3.ino`:
+All defined at the top of `20240724_drimon_1_3.ino`, grouped by section (GPIO pins, LED codes, environmental thresholds, WiFi behaviour, static IP, ThingSpeak posting, serial, sensor plausibility, measurement loop, display, sleep durations). Each has an inline comment explaining what it controls. Tunable knobs worth knowing about:
 
-- Sleep durations: `SLEEP_DURATION_DUSK` (420 s), `SLEEP_DURATION_DAY` (600 s), `SLEEP_DURATION_NIGHT` (900 s)
-- Light thresholds: `NIGHT_LEVEL` (5 lux), `DUSK_LEVEL` (500 lux), `SHADE_LEVEL` (12000 lux)
-- `WINDOW_CLOSE` (80 mm) — TOF distance threshold for W-CLOSE status
-- `BATTERY_LOW` (35 %) — threshold for B-LOW status
-- `PRESSURE_LOW` / `PRESSURE_HIGH` (999 / 1010 hPa)
-- `NUM_READINGS` (2) — sensor sample count per wake (averaged)
-- `WIFI_MAX_RETRIES` (10) — retry count if initial connect fails
-- `HEIGHT_ABOVE_SEA_LEVEL` (31 m) — for pressure compensation
+- **Sleep durations & snapping** — `SLEEP_DURATION_*` are seconds; `getSleepDuration()` snaps to nearest 5/10/15-min wall-clock boundary via NTP-set RTC (see `8_sleep.ino:snappedSleep`).
+- **Temperature classification** — `TEMP_COLD` (5 °C) and `TEMP_HOT` (35 °C) match `heat-frost.html`'s defaults.
+- **WiFi resilience** — `WIFI_MAX_RETRIES`, `WIFI_FAILS_BEFORE_FRESH_SCAN`, `WIFI_INITIAL_TIMEOUT_MS`, `WIFI_POLL_INTERVAL_MS`, `WIFI_RETRY_DELAY_MS`.
+- **Static WiFi config** — `WIFI_STATIC_IP`, `WIFI_GATEWAY`, `WIFI_SUBNET`, `WIFI_DNS` (4 comma-separated octets each, consumed by `IPAddress()`).
+- **ThingSpeak** — `THINGSPEAK_INTER_POST_MS` (delay between the 3 channel POSTs), `POST_FLASH_ON_MS` (per-channel result-LED on-duration).
+- **NTP** — `NTP_RESYNC_INTERVAL_SEC` (86400 = re-sync once per day to bound RTC drift).
+- **Sensor plausibility** — `DALLAS_MIN_C`/`MAX_C`/`RETRIES`, `TOF_MAX_MM`/`INTERVAL_MS`, `TERMO2_INCLUDE_MIN_C`/`MAX_C`.
 
 ## Data flow
 
 ```
 ESP32 wake
   ↓
-setupPins → connectToWiFi (static IP + RTC cache) → initDisplays → initSensors
+setupPins → connectToWiFi (static IP + RTC cache + NTP sync if needed) → initDisplays → initSensors
   ↓
-measure() — 2× averaged sensor reads, readDallas retry for DS18B20 bad values
+measure() — 2× averaged sensor reads, readDallas retry for DS18B20 bad values,
+            builds status string (T-/light/W-/B-/P-/WF-/BS-/WT-/FC-/PF-/BV-/TU-/LR-/V-/SD-)
   ↓
 displayData(data) — Serial + (if DISPLAY_ON) OLED + LCD
   ↓
-if (DISPLAY_ON) delay(12000)   ← human-readable pause
+if (SHOULD_POST) postThingSpeak(data)   ← writes 3 channels sequentially with client.stop() between,
+                                            green/red LEDs flash the per-channel result immediately
   ↓
-if (SHOULD_POST) postThingSpeak(data)   ← writes 3 channels, status includes WF-/WT-/SD- telemetry
+if (DISPLAY_ON) delay(DISPLAY_TIME)     ← human-readable pause AFTER post so LED feedback lands fast
   ↓
-enterDeepSleep(getSleepDuration(data.lux))
+enterDeepSleep(getSleepDuration(data.lux))   ← snaps to :00/:10/:20 (day), :00/:05 (dusk), :00/:15/:30/:45 (night)
 ```
 
 ## Related docs
