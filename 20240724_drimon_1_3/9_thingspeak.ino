@@ -82,7 +82,11 @@ void postThingSpeak(SensorData& data) {
   }
 
   if (anyPostOk) {
-    wifiFailStreak = 0;  // at least one channel persisted the pre-reset FC; safe to clear for next wake
+    wifiFailStreak = 0;   // at least one channel persisted the pre-reset FC; safe to clear for next wake
+    postFailStreak = 0;   // same idea for PF: a live post got through, clear the silent-post-fail streak
+  } else {
+    // WiFi was OK (we got here) but every POST failed → silent wake, nothing written to ThingSpeak
+    if (postFailStreak != UINT16_MAX) postFailStreak++;
   }
 
   digitalWrite(BLUE_LED_PIN, LOW);

@@ -82,7 +82,7 @@
 #define HEIGHT_ABOVE_SEA_LEVEL 31   // meters — added into BME pressure reading for sea-level normalisation
 
 // ---------- Display behaviour ----------
-#define DISPLAY_TIME 10000   // ms to keep the OLED/LCD lit for reading (button/fresh wake only; SD- token records this)
+#define DISPLAY_TIME 8000   // ms to keep the OLED/LCD lit for reading (button/fresh wake only; SD- token records this)
 
 // ---------- Deep-sleep durations (seconds), selected by ambient light level ----------
 #define SLEEP_DURATION_DUSK   300   // 5 min  (lux between NIGHT and DUSK)

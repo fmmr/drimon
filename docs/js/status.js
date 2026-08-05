@@ -93,6 +93,7 @@ const STATUS_TOKENS = [
     { prefix: 'BS-', key: 'BS', parse: v => v },
     { prefix: 'WT-', key: 'WT', parse: v => parseInt(v, 10) },
     { prefix: 'FC-', key: 'FC', parse: v => parseInt(v, 10) },
+    { prefix: 'PF-', key: 'PF', parse: v => parseInt(v, 10) },
     { prefix: 'BV-', key: 'BV', parse: v => parseFloat(v) },
     { prefix: 'TU-', key: 'TU', parse: v => parseInt(v, 10) },
     { prefix: 'LR-', key: 'LR', parse: v => v.split('.').map(x => parseInt(x, 10)) },
@@ -123,6 +124,7 @@ function render(byChannel, tech) {
 
     const wifiEntries = entries.filter(e => e.s.WF || Number.isFinite(e.s.WT));
     const fcEntries = entries.filter(e => Number.isFinite(e.s.FC));
+    const pfEntries = entries.filter(e => Number.isFinite(e.s.PF));
 
     const techFeeds = (tech && tech.feeds) || [];
     const techEntries = techFeeds.map(f => ({
@@ -133,7 +135,7 @@ function render(byChannel, tech) {
     const tuEntries = techEntries.filter(e => Number.isFinite(e.tu)).map(e => ({ t: e.t, v: e.tu }));
     const voltEntries = techEntries.filter(e => Number.isFinite(e.v));
 
-    renderStats(entries, wifiEntries, tuEntries, fcEntries, voltEntries);
+    renderStats(entries, wifiEntries, tuEntries, fcEntries, voltEntries, pfEntries);
     renderWifiPerDay(wifiEntries);
     renderTimingPerDay(document.getElementById('wt-days'), wifiEntries, e => e.s.WT);
     renderRangePerDay(document.getElementById('batt-v-days'), document.getElementById('batt-v-scale'), voltEntries, e => e.v, 'V', v => v.toFixed(2));
@@ -278,7 +280,7 @@ function groupByDay(entries) {
         .map(([key, list]) => ({ key, day: moment.tz(key, TZ), list }));
 }
 
-function renderStats(entries, wifiEntries, tuEntries, fcEntries, voltEntries) {
+function renderStats(entries, wifiEntries, tuEntries, fcEntries, voltEntries, pfEntries) {
     const total = entries.length;
     const days = groupByDay(entries);
     const avgCycles = Math.round(total / days.length);
@@ -326,6 +328,7 @@ function renderStats(entries, wifiEntries, tuEntries, fcEntries, voltEntries) {
         cell('TU p50 / p95', tus.length ? `${tuP50} / ${tuP95} ms` : '—', `n=${tus.length}`),
         cell('Batteri lavest', voltEntries?.length ? `${voltEntries.reduce((m, e) => Math.min(m, e.v), Infinity).toFixed(2)} V` : '—', voltEntries?.length ? `n=${voltEntries.length}` : ''),
         cell('Feilede wakes', fcEntries.length ? sumConfirmedFails(fcEntries.map(e => e.s.FC)) : '—', fcEntries.length ? `n=${fcEntries.length} m/ FC` : 'venter på firmware'),
+        cell('Stille post-feil', pfEntries.length ? sumConfirmedFails(pfEntries.map(e => e.s.PF)) : '—', pfEntries.length ? `n=${pfEntries.length} m/ PF` : 'venter på firmware'),
         cell('Sist inne', last.t.format('D. MMM HH:mm'), last.s.WF ? `${last.s.WF} · ${last.s.WT} ms` : '')
     ].join('');
 }
@@ -436,6 +439,7 @@ function renderRecent(entries) {
             <td>${Number.isFinite(e.s.WT) ? e.s.WT : '—'}</td>
             <td class="ch-cell">${lrBadges(e.s.LR)}</td>
             <td>${Number.isFinite(e.s.FC) ? e.s.FC : '—'}</td>
+            <td>${Number.isFinite(e.s.PF) ? e.s.PF : '—'}</td>
             <td>${e.s.LIGHT || '—'}</td>
             <td>${e.s.W || '—'}</td>
             <td>${e.s.T || '—'}</td>

@@ -50,7 +50,7 @@ Physical controls on the enclosure:
 Every ThingSpeak entry carries a `status` string like:
 
 ```
-T-OK_SHADE_W-OPEN_B-OK_P-HIGH_WF-HIT_BS-14918294f9c4_WT-388_FC-0_BV-4.09_TU-5435_LR-200.200.200_SD-0
+T-OK_SHADE_W-OPEN_B-OK_P-HIGH_WF-HIT_BS-14918294f9c4_WT-388_FC-0_PF-0_BV-4.09_TU-5435_LR-200.200.200_SD-0
 ```
 
 Underscore-separated `PREFIX-VALUE` parts:
@@ -65,7 +65,8 @@ Underscore-separated `PREFIX-VALUE` parts:
 | `WF-` | WiFi cache outcome | `HIT` (cache used, connected first try) / `MISS` (no cache, fresh scan) / `FBK` (cache failed, fell back) / `FAIL` (unreachable in written status — no post if not connected) |
 | `BS-` | Connected AP's BSSID | Full 6-byte MAC as hex, no separators (e.g. `14918294f9c4`). Note: mesh nodes usually assign their 2.4 GHz radio MAC as LAN MAC +1 (or +2, +N), so match against LAN MAC allowing a small offset in the last byte. |
 | `WT-` | WiFi connect time | integer, milliseconds |
-| `FC-` | Failed-connect streak | `RTC_DATA_ATTR uint16_t`, incremented on each `WF-FAIL`, reset once at end of `postThingSpeak()` if any of the 3 channels returned HTTP 200. Saturates at 65535. Value on a status = "N wakes failed silently before this successful post". Wiped by cold reset / brownout / EN button. |
+| `FC-` | Failed-connect streak (WiFi never associated) | `RTC_DATA_ATTR uint16_t`, incremented on each `WF-FAIL`, reset once at end of `postThingSpeak()` if any of the 3 channels returned HTTP 200. Saturates at 65535. Value on a status = "N wakes with no WiFi before this successful post". Wiped by cold reset / brownout / EN button. |
+| `PF-` | Post-fail streak (WiFi OK but every POST failed) | `RTC_DATA_ATTR uint16_t`, incremented at end of `postThingSpeak()` when WiFi connected but no channel returned HTTP 200. Reset when any channel succeeds. Saturates at 65535. Complements FC — together they cover both classes of silent wakes. Wiped by cold reset / brownout / EN button. |
 | `BV-` | Battery voltage | Volts, 2 decimals (e.g. `4.09`). Same reading as TECH_CHANNEL field 2, embedded per-status for temporal alignment. |
 | `TU-` | Time used (wake duration to end of measure) | ms integer (e.g. `5435`). Same reading as TECH_CHANNEL field 4, embedded per-status. Note: excludes the 12 s display delay and POST time — set at end of `measure()`. |
 | `LR-` | Last-run HTTP results (dot-separated) | Three HTTP result codes from the previous wake's 3 channel POSTs, e.g. `200.200.200` all-ok, `200.429.429` rate-limited, `200.0.0` timeouts after Ch 1, `0.0.0` first wake after cold reset. RTC-persisted; wiped by brownout / EN button. |

@@ -34,6 +34,7 @@ String status(SensorData& data) {
   stat = stat + "_BS-" + g_wifiBssid;
   stat = stat + "_WT-" + String(g_wifiConnectMs);
   stat = stat + "_FC-" + String(wifiFailStreak);
+  stat = stat + "_PF-" + String(postFailStreak);
   stat = stat + "_BV-" + String(data.batteryVoltage, 2);
   stat = stat + "_TU-" + String(data.timeUsed);
   stat = stat + "_LR-" + String(lastPostResults[0]) + "." + String(lastPostResults[1]) + "." + String(lastPostResults[2]);
