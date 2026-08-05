@@ -32,6 +32,7 @@ void postThingSpeak(SensorData& data) {
     Serial.println("  Thingspeak: Problem updating channel 1. HTTP error code " + String(result));
   }
 
+  client.stop();   // force fresh TCP for next channel — old session state was causing -301/-304 on later POSTs
   delay(THINGSPEAK_INTER_POST_MS);
 
   ThingSpeak.setField(1, data.bmeTemp);
@@ -57,6 +58,7 @@ void postThingSpeak(SensorData& data) {
     Serial.println("  Thingspeak: Problem updating channel 2. HTTP error code " + String(result));
   }
 
+  client.stop();   // force fresh TCP for next channel
   delay(THINGSPEAK_INTER_POST_MS);
 
 

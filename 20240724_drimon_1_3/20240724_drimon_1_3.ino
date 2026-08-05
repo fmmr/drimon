@@ -60,7 +60,7 @@
 #define WIFI_DNS        192, 168, 1, 1     // reuse the gateway for DNS
 
 // ---------- ThingSpeak posting ----------
-#define THINGSPEAK_INTER_POST_MS 50   // delay between the 3 channel POSTs to reduce rate-limit / TCP-reuse issues
+#define THINGSPEAK_INTER_POST_MS 10   // brief settle after client.stop() before next channel POST
 #define POST_FLASH_ON_MS 300          // LED-on duration for the 3 post-POST channel-result flashes (off stays at flashLED default 180 ms)
 
 // ---------- Serial ----------
