@@ -139,11 +139,12 @@ function render(byChannel, tech) {
     renderRangePerDay(document.getElementById('batt-v-days'), document.getElementById('batt-v-scale'), voltEntries, e => e.v, 'V', v => v.toFixed(2));
     renderTimingPerDay(document.getElementById('tu-days'), tuEntries, e => e.v);
     renderFcPerDay(fcEntries);
+    renderHttpPerDay(entries);
     renderDistributions(entries);
     renderRecent(entries);
 
     document.getElementById('loading').hidden = true;
-    for (const id of ['stats', 'wifi-section', 'wt-section', 'battery-section', 'tu-section', 'fc-section', 'dists-section', 'recent-section']) {
+    for (const id of ['stats', 'wifi-section', 'wt-section', 'battery-section', 'tu-section', 'fc-section', 'http-section', 'dists-section', 'recent-section']) {
         document.getElementById(id).hidden = false;
     }
 }
@@ -183,6 +184,46 @@ function sumConfirmedFails(fcValues) {
         if (fcValues[i + 1] < fcValues[i]) sum += fcValues[i];
     }
     return sum;
+}
+
+function httpBucket(code) {
+    if (code === 200) return 'hit';
+    if (code === -304) return 'fbk';
+    if (code === -301) return 'fail';
+    return 'miss';
+}
+
+function renderHttpPerDay(entries) {
+    const el = document.getElementById('http-days');
+    const withLR = entries.filter(e => Array.isArray(e.s.LR));
+    if (!withLR.length) {
+        el.innerHTML = '<div class="day-label">Ingen HTTP-data — venter på firmware med LR-token.</div>';
+        return;
+    }
+
+    const days = groupByDay(withLR);
+    const perDay = days.map(d => {
+        const codes = d.list.flatMap(e => e.s.LR).filter(c => c !== 0);  // 0 = "never attempted"
+        const counts = { hit: 0, fbk: 0, fail: 0, miss: 0 };
+        for (const c of codes) counts[httpBucket(c)]++;
+        return { d, codes, counts };
+    });
+
+    const maxN = perDay.reduce((m, x) => Math.max(m, x.codes.length), 0) || 1;
+
+    el.innerHTML = perDay.map(({ d, codes, counts }) => {
+        const n = codes.length;
+        if (!n) {
+            return `<span class="day-label">${d.day.format('ddd D. MMM')}</span><span class="stack-bar"></span><span class="day-count">—</span>`;
+        }
+        const widthPct = (n / maxN * 100).toFixed(2);
+        const seg = key => counts[key]
+            ? `<span class="${key}" style="width:${(counts[key] / n * 100).toFixed(2)}%" title="${key}: ${counts[key]}"></span>`
+            : '';
+        return `<span class="day-label">${d.day.format('ddd D. MMM')}</span>` +
+            `<span class="stack-bar" style="width:${widthPct}%" title="${n} HTTP-forsøk">${seg('hit')}${seg('fbk')}${seg('fail')}${seg('miss')}</span>` +
+            `<span class="day-count">${n}</span>`;
+    }).join('');
 }
 
 function renderFcPerDay(entries) {
@@ -261,9 +302,23 @@ function renderStats(entries, wifiEntries, tuEntries, fcEntries, voltEntries) {
 
     const partial = entries.filter(e => e.channels.size < STATUS_CHANNELS.length).length;
 
+    const allLR = entries.flatMap(e => Array.isArray(e.s.LR) ? e.s.LR : []);
+    const lrCounts = {};
+    for (const code of allLR) lrCounts[code] = (lrCounts[code] || 0) + 1;
+    const lrOk = lrCounts[200] || 0;
+    const lrZero = lrCounts[0] || 0;
+    const lrAttempted = allLR.length - lrZero;
+    const lrOkPct = lrAttempted ? Math.round(lrOk / lrAttempted * 100) : 0;
+    const lrErrBreakdown = Object.entries(lrCounts)
+        .filter(([code]) => code !== '200' && code !== '0')
+        .sort((a, b) => b[1] - a[1])
+        .map(([code, n]) => `${code}:${n}`)
+        .join(' · ');
+
     document.getElementById('stats').innerHTML = [
         cell('Antall poster', total, `${days.length} dager · snitt ${avgCycles}/dag`),
         cell('Delvise poster', partial, partial ? `av ${total} m/ min. 1 kanal-feil` : 'alle kanaler ok'),
+        cell('HTTP OK-rate', lrAttempted ? `${lrOkPct}%` : '—', lrAttempted ? `${lrOk}/${lrAttempted} forsøk${lrErrBreakdown ? ' · ' + lrErrBreakdown : ''}` : 'venter på firmware m/ LR-token'),
         cell('WF-telemetri', wfTotal, `${groupByDay(wifiEntries).length} dager m/ WF-token`),
         cell('WF-HIT', wfTotal ? `${hitPct}%` : '—', `HIT ${wfCounts.HIT || 0}`),
         cell('Ikke-HIT', wfTotal ? `${failPct}%` : '—', `FBK ${wfCounts.FBK || 0} · MISS ${wfCounts.MISS || 0} · FAIL ${wfCounts.FAIL || 0}`),
