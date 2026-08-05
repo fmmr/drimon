@@ -192,18 +192,45 @@ window.UnifiedChartRenderer = {
             // All charts use {x, y} format for proper time scaling
             const dataPoints = seriesData.feeds.map(feed => {
                 let value = parseFloat(feed[`field${seriesConfig.field}`]);
-                
+
                 // Apply data transformation if configured
                 if (config.hasDataTransform) {
                     value += config.shiftByValue;
                 }
-                
+
                 return {
                     x: feed.created_at, // Let Chart.js handle the date parsing
                     y: value
                 };
             }).filter(point => !isNaN(point.y) && point.y !== null)
               .sort((a, b) => new Date(a.x).getTime() - new Date(b.x).getTime());
+
+            // Per-day night-zero fill (e.g. UV): if a day has NO datapoints in local 00:00–04:00,
+            // inject y=0 at each configured hour so Chart.js smoothing doesn't lerp through the guaranteed zero.
+            // Uses browser-local time (moment.tz is not loaded on the main dashboard) — fine for viewers in Norway.
+            if (Array.isArray(seriesConfig.fillNightZeros) && seriesConfig.fillNightZeros.length && dataPoints.length > 0) {
+                const daysCovered = new Set(dataPoints.map(p => moment(p.x).format('YYYY-MM-DD')));
+                const minHour = Math.min(...seriesConfig.fillNightZeros);
+                const maxHour = Math.max(...seriesConfig.fillNightZeros);
+                for (const dayKey of daysCovered) {
+                    // Empty-check window matches the injection range so we never inject on top of real early data
+                    const nightStart = moment(dayKey).hour(minHour).valueOf();
+                    const nightEnd   = moment(dayKey).hour(maxHour + 1).valueOf();
+                    const hasNightData = dataPoints.some(p => {
+                        const t = new Date(p.x).getTime();
+                        return t >= nightStart && t < nightEnd;
+                    });
+                    if (!hasNightData) {
+                        for (const h of seriesConfig.fillNightZeros) {
+                            dataPoints.push({
+                                x: moment(dayKey).hour(h).minute(0).second(0).millisecond(0).toISOString(),
+                                y: 0
+                            });
+                        }
+                    }
+                }
+                dataPoints.sort((a, b) => new Date(a.x).getTime() - new Date(b.x).getTime());
+            }
 
             if (dataPoints.length > 0) {
                 const values = dataPoints.map(p => p.y);

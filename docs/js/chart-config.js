@@ -10,7 +10,11 @@ const DEFAULT_SERIES_CONFIG = {
         min: undefined,
         max: undefined,
         exclude: []
-    }
+    },
+    // When set (e.g. [1, 2, 3]) and NO datapoints exist in the local-time night gap 00:00–04:00 for a given day,
+    // synthetic y=0 points are injected at each listed hour so chart smoothing doesn't linearly interpolate through
+    // the physically-guaranteed zero. Only applied per-day when the day is truly empty of night data. UV uses this.
+    fillNightZeros: undefined
 };
 
 // Default configuration values - single source of truth
@@ -425,7 +429,8 @@ const RAW_CHART_CONFIGS = [
                 titleKey: 'uvIndexChart',
                 channel: window.THINGSPEAK.EXT_CHANNEL,
                 field: 8,
-                color: '#f9a825'
+                color: '#f9a825',
+                fillNightZeros: [0, 1, 2, 3, 4, 5]  // sun below horizon 00–05 local — inject 0 if no scraper values in that whole window
             }
         ],
         row: 4,
