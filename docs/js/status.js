@@ -152,9 +152,9 @@ function render(byChannel, tech) {
 
     renderStats(entries, wifiEntries, tuEntries, fcEntries, voltEntries, pfEntries);
     renderWifiPerDay(wifiEntries);
-    renderTimingPerDay(document.getElementById('wt-days'), wifiEntries, e => e.s.WT);
+    renderRangePerDay(document.getElementById('wt-days'), document.querySelector('#wt-section .scale-label'), wifiEntries.map(e => ({ t: e.t, v: e.s.WT })), e => e.v, 'ms', v => Math.round(v));
     renderRangePerDay(document.getElementById('batt-v-days'), document.getElementById('batt-v-scale'), voltEntries, e => e.v, 'V', v => v.toFixed(2), 3.5, 4.20);
-    renderTimingPerDay(document.getElementById('tu-days'), tuEntries, e => e.v);
+    renderRangePerDay(document.getElementById('tu-days'), document.querySelector('#tu-section .scale-label'), tuEntries, e => e.v, 'ms', v => Math.round(v));
     renderFcPerDay(fcEntries);
     renderHttpPerDay(entries);
     renderDistributions(entries);
