@@ -348,7 +348,7 @@ function renderStats(entries, wifiEntries, tuEntries, fcEntries, voltEntries, pf
         cell('TU p50 / p95', tus.length ? `${tuP50} / ${tuP95} ms` : '—', `n=${tus.length}`),
         cell('Batteri lavest', voltEntries?.length ? `${voltEntries.reduce((m, e) => Math.min(m, e.v), Infinity).toFixed(2)} V` : '—', voltEntries?.length ? `n=${voltEntries.length}` : ''),
         cell('Feilede wakes', fcEntries.length ? sumConfirmedFails(fcEntries.map(e => e.s.FC)) : '—', fcEntries.length ? `n=${fcEntries.length} m/ FC` : 'venter på firmware'),
-        cell('Stille post-feil', pfEntries.length ? sumConfirmedFails(pfEntries.map(e => e.s.PF)) : '—', pfEntries.length ? `n=${pfEntries.length} m/ PF` : 'venter på firmware'),
+        cell('Stille post-feil', pfEntries.length ? pfEntries.reduce((s, e) => s + e.s.PF, 0) : '—', pfEntries.length ? `n=${pfEntries.length} m/ PF` : 'venter på firmware'),
         cell('Sist inne', last.t.format('D. MMM HH:mm'), last.s.WF ? `${last.s.WF} · ${last.s.WT} ms` : ''),
         cell('Firmware', githubCommitLink(last.s.V), last.s.V ? 'siste post sin versjon' : 'venter på firmware m/ V-token')
     ].join('');
