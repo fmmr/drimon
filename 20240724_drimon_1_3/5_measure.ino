@@ -37,6 +37,9 @@ String status(SensorData& data) {
   stat = stat + "_PF-" + String(postFailStreak);
   stat = stat + "_BV-" + String(data.batteryVoltage, 2);
   stat = stat + "_TU-" + String(data.timeUsed);
+  stat = stat + "_TV-" + String(data.temperature, 1);
+  stat = stat + "_LX-" + String((int)data.lux);
+  stat = stat + "_WD-" + String(data.distance);
   stat = stat + "_LR-" + String(lastPostResults[0]) + "." + String(lastPostResults[1]) + "." + String(lastPostResults[2]);
   stat = stat + "_V-" + FIRMWARE_VERSION;
   stat = stat + "_SD-" + (DISPLAY_ON ? String(DISPLAY_TIME) : "0");

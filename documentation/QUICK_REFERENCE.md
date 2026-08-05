@@ -50,7 +50,7 @@ Physical controls on the enclosure:
 Every ThingSpeak entry carries a `status` string like:
 
 ```
-T-OK_SHADE_W-OPEN_B-OK_P-HIGH_WF-HIT_BS-14918294f9c4_WT-388_FC-0_PF-0_BV-4.09_TU-5435_LR-200.200.200_SD-0
+T-OK_SHADE_W-OPEN_B-OK_P-HIGH_WF-HIT_BS-14918294f9c4_WT-388_FC-0_PF-0_BV-4.09_TU-5435_TV-21.4_LX-8500_WD-72_LR-200.200.200_V-d9976d7_SD-0
 ```
 
 Underscore-separated `PREFIX-VALUE` parts:
@@ -69,6 +69,9 @@ Underscore-separated `PREFIX-VALUE` parts:
 | `PF-` | Post-fail streak (WiFi OK but every POST failed) | `RTC_DATA_ATTR uint16_t`, incremented at end of `postThingSpeak()` when WiFi connected but no channel returned HTTP 200. Reset when any channel succeeds. Saturates at 65535. Complements FC — together they cover both classes of silent wakes. Wiped by cold reset / brownout / EN button. |
 | `BV-` | Battery voltage | Volts, 2 decimals (e.g. `4.09`). Same reading as TECH_CHANNEL field 2, embedded per-status for temporal alignment. |
 | `TU-` | Time used (wake duration to end of measure) | ms integer (e.g. `5435`). Same reading as TECH_CHANNEL field 4, embedded per-status. Note: excludes the 12 s display delay and POST time — set at end of `measure()`. |
+| `TV-` | Aggregate temperature (Celsius) | Float, 1 decimal (e.g. `21.4`). The value driving the `T-` classification and shown on the main dashboard temp chart. Weighted average of 2×BME + AHT (+ middle DS18B20 when plausible). |
+| `LX-` | Ceiling lux (raw) | Integer lux (e.g. `20651`). The value driving the light-class classification (NIGHT/DUSK/SHADE/SUN thresholds). Same as `DRIMON_CHANNEL` field 8. |
+| `WD-` | Window distance (raw) | Integer mm (e.g. `72`). Raw TOF distance reading before `WINDOW_CLOSE` classification. Same as `DRIMON_CHANNEL` field 4 (before the −63 mm shift). |
 | `LR-` | Last-run HTTP results (dot-separated) | Three HTTP result codes from the previous wake's 3 channel POSTs, e.g. `200.200.200` all-ok, `200.429.429` rate-limited, `200.0.0` timeouts after Ch 1, `0.0.0` first wake after cold reset. RTC-persisted; wiped by brownout / EN button. |
 | `SD-` | Display-read pause | `0` (timer wake, no delay) or `12000` (button/fresh wake, 12 s pause) |
 

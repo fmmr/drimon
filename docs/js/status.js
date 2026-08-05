@@ -72,6 +72,13 @@ function shortBS(bs) {
     return typeof bs === 'string' && bs.length >= 6 ? bs.slice(-6) : (bs || '—');
 }
 
+function githubCommitLink(hash) {
+    if (!hash || hash === 'template' || hash === 'unknown') return hash || '—';
+    const clean = hash.replace(/\+$/, '');   // strip the dirty '+' before linking
+    const dirtySuffix = hash.endsWith('+') ? '+' : '';
+    return `<a class="version-link" href="https://github.com/fmmr/drimon/commit/${clean}" target="_blank" rel="noopener noreferrer" title="Open commit ${hash} on GitHub">${clean}${dirtySuffix}</a>`;
+}
+
 function channelBadges(channels) {
     return STATUS_CHANNELS.map(c => channels.has(c.num)
         ? `<span class="ch-ok" title="${c.label}">${c.num}</span>`
@@ -100,6 +107,9 @@ const STATUS_TOKENS = [
     { prefix: 'PF-', key: 'PF', parse: v => parseInt(v, 10) },
     { prefix: 'BV-', key: 'BV', parse: v => parseFloat(v) },
     { prefix: 'TU-', key: 'TU', parse: v => parseInt(v, 10) },
+    { prefix: 'TV-', key: 'TV', parse: v => parseFloat(v) },
+    { prefix: 'LX-', key: 'LX', parse: v => parseInt(v, 10) },
+    { prefix: 'WD-', key: 'WD', parse: v => parseInt(v, 10) },
     { prefix: 'LR-', key: 'LR', parse: v => v.split('.').map(x => parseInt(x, 10)) },
     { prefix: 'V-',  key: 'V',  parse: v => v },
     { prefix: 'SD-', key: 'SD', parse: v => parseInt(v, 10) }
@@ -143,7 +153,7 @@ function render(byChannel, tech) {
     renderStats(entries, wifiEntries, tuEntries, fcEntries, voltEntries, pfEntries);
     renderWifiPerDay(wifiEntries);
     renderTimingPerDay(document.getElementById('wt-days'), wifiEntries, e => e.s.WT);
-    renderRangePerDay(document.getElementById('batt-v-days'), document.getElementById('batt-v-scale'), voltEntries, e => e.v, 'V', v => v.toFixed(2));
+    renderRangePerDay(document.getElementById('batt-v-days'), document.getElementById('batt-v-scale'), voltEntries, e => e.v, 'V', v => v.toFixed(2), 3.5, 4.20);
     renderTimingPerDay(document.getElementById('tu-days'), tuEntries, e => e.v);
     renderFcPerDay(fcEntries);
     renderHttpPerDay(entries);
@@ -156,16 +166,20 @@ function render(byChannel, tech) {
     }
 }
 
-function renderRangePerDay(el, scaleEl, entries, valFn, unit, fmt) {
+function renderRangePerDay(el, scaleEl, entries, valFn, unit, fmt, fixedMin, fixedMax) {
     if (!entries.length) { el.innerHTML = '<div class="day-label">Ingen data.</div>'; if (scaleEl) scaleEl.textContent = ''; return; }
     const allVals = entries.map(valFn).filter(Number.isFinite);
     if (!allVals.length) { el.innerHTML = '<div class="day-label">Ingen data.</div>'; if (scaleEl) scaleEl.textContent = ''; return; }
-    const globalMin = allVals.reduce((a, b) => Math.min(a, b), Infinity);
-    const globalMax = allVals.reduce((a, b) => Math.max(a, b), -Infinity);
+    const dataMin = allVals.reduce((a, b) => Math.min(a, b), Infinity);
+    const dataMax = allVals.reduce((a, b) => Math.max(a, b), -Infinity);
+    const globalMin = Number.isFinite(fixedMin) ? fixedMin : dataMin;
+    const globalMax = Number.isFinite(fixedMax) ? fixedMax : dataMax;
     const span = globalMax - globalMin || 1;
+    const rangeSource = (Number.isFinite(fixedMin) && Number.isFinite(fixedMax)) ? 'fast skala' : 'min → maks i data';
 
-    if (scaleEl) scaleEl.textContent = `Skala: ${fmt(globalMin)} → ${fmt(globalMax)} ${unit} (min → maks i data)`;
+    if (scaleEl) scaleEl.textContent = `Skala: ${fmt(globalMin)} → ${fmt(globalMax)} ${unit} (${rangeSource})`;
 
+    const clamp = v => Math.max(0, Math.min(100, v));
     const days = groupByDay(entries);
     el.innerHTML = days.map(d => {
         const vals = d.list.map(valFn).filter(Number.isFinite).sort((a, b) => a - b);
@@ -173,9 +187,10 @@ function renderRangePerDay(el, scaleEl, entries, valFn, unit, fmt) {
         const dMin = vals[0];
         const dMax = vals[vals.length - 1];
         const dMed = percentile(vals, 0.5);
-        const leftPct = (dMin - globalMin) / span * 100;
-        const widthPct = Math.max(1, (dMax - dMin) / span * 100);
-        const medianPct = (dMed - globalMin) / span * 100;
+        const leftPct = clamp((dMin - globalMin) / span * 100);
+        const rightPct = clamp((dMax - globalMin) / span * 100);
+        const widthPct = Math.max(1, rightPct - leftPct);
+        const medianPct = clamp((dMed - globalMin) / span * 100);
         return `<span class="day-label">${d.day.format('ddd D. MMM')}</span>` +
             `<span class="wt-bar" title="min ${fmt(dMin)} · median ${fmt(dMed)} · maks ${fmt(dMax)} ${unit} · n=${vals.length}">` +
                 `<span class="fill" style="left:${leftPct.toFixed(2)}%;width:${widthPct.toFixed(2)}%"></span>` +
@@ -335,7 +350,7 @@ function renderStats(entries, wifiEntries, tuEntries, fcEntries, voltEntries, pf
         cell('Feilede wakes', fcEntries.length ? sumConfirmedFails(fcEntries.map(e => e.s.FC)) : '—', fcEntries.length ? `n=${fcEntries.length} m/ FC` : 'venter på firmware'),
         cell('Stille post-feil', pfEntries.length ? sumConfirmedFails(pfEntries.map(e => e.s.PF)) : '—', pfEntries.length ? `n=${pfEntries.length} m/ PF` : 'venter på firmware'),
         cell('Sist inne', last.t.format('D. MMM HH:mm'), last.s.WF ? `${last.s.WF} · ${last.s.WT} ms` : ''),
-        cell('Firmware', last.s.V || '—', last.s.V ? 'siste post sin versjon' : 'venter på firmware m/ V-token')
+        cell('Firmware', githubCommitLink(last.s.V), last.s.V ? 'siste post sin versjon' : 'venter på firmware m/ V-token')
     ].join('');
 }
 
@@ -466,15 +481,15 @@ function renderRecent(entries) {
             <td class="ch-cell">${lrBadges(e.s.LR)}</td>
             <td>${Number.isFinite(e.s.FC) ? e.s.FC : '—'}</td>
             <td>${Number.isFinite(e.s.PF) ? e.s.PF : '—'}</td>
-            <td>${e.s.LIGHT || '—'}</td>
-            <td>${e.s.W || '—'}</td>
-            <td>${e.s.T || '—'}</td>
+            <td>${e.s.LIGHT || '—'}${Number.isFinite(e.s.LX) ? ` <span class="raw-value">${e.s.LX}</span>` : ''}</td>
+            <td>${e.s.W || '—'}${Number.isFinite(e.s.WD) ? ` <span class="raw-value">${e.s.WD}</span>` : ''}</td>
+            <td>${e.s.T || '—'}${Number.isFinite(e.s.TV) ? ` <span class="raw-value">${e.s.TV.toFixed(1)}</span>` : ''}</td>
             <td>${e.s.B || '—'}</td>
             <td>${Number.isFinite(e.s.BV) ? e.s.BV.toFixed(2) : '—'}</td>
             <td>${e.s.P || '—'}</td>
             <td>${Number.isFinite(e.s.TU) ? e.s.TU : '—'}</td>
             <td>${Number.isFinite(e.s.SD) ? (e.s.SD > 0 ? 'JA' : 'NEI') : '—'}</td>
-            <td>${e.s.V || '—'}</td>
+            <td>${githubCommitLink(e.s.V)}</td>
         </tr>`;
     }).join('');
 }
