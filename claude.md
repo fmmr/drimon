@@ -57,7 +57,7 @@ Field maps: `documentation/ARCHITECTURE.md`.
 | `sensordata.h` | `SensorData` struct |
 | `secrets.h` | **NOT committed** — WiFi + ThingSpeak keys |
 
-Wake sources: timer (5–15 min light-adaptive), green button (GPIO 15 EXT0, preserves RTC cache), blue button (EN reset, wipes RTC → `WF-MISS`).
+Wake sources: timer (5–15 min light-adaptive, snapped to round wall-clock boundaries via NTP: :00/:10/:20 day, :00/:05/:10 dusk, :00/:15/:30/:45 night), green button (GPIO 15 EXT0, preserves RTC cache), blue button (EN reset, wipes RTC → `WF-MISS` and one un-snapped wake until NTP re-syncs).
 
 ## Webapp map (`docs/`)
 

@@ -101,6 +101,7 @@ const STATUS_TOKENS = [
     { prefix: 'BV-', key: 'BV', parse: v => parseFloat(v) },
     { prefix: 'TU-', key: 'TU', parse: v => parseInt(v, 10) },
     { prefix: 'LR-', key: 'LR', parse: v => v.split('.').map(x => parseInt(x, 10)) },
+    { prefix: 'V-',  key: 'V',  parse: v => v },
     { prefix: 'SD-', key: 'SD', parse: v => parseInt(v, 10) }
 ];
 const LIGHT_TOKENS = new Set(['NIGHT', 'DUSK', 'SHADE', 'SUN']);
@@ -333,7 +334,8 @@ function renderStats(entries, wifiEntries, tuEntries, fcEntries, voltEntries, pf
         cell('Batteri lavest', voltEntries?.length ? `${voltEntries.reduce((m, e) => Math.min(m, e.v), Infinity).toFixed(2)} V` : '—', voltEntries?.length ? `n=${voltEntries.length}` : ''),
         cell('Feilede wakes', fcEntries.length ? sumConfirmedFails(fcEntries.map(e => e.s.FC)) : '—', fcEntries.length ? `n=${fcEntries.length} m/ FC` : 'venter på firmware'),
         cell('Stille post-feil', pfEntries.length ? sumConfirmedFails(pfEntries.map(e => e.s.PF)) : '—', pfEntries.length ? `n=${pfEntries.length} m/ PF` : 'venter på firmware'),
-        cell('Sist inne', last.t.format('D. MMM HH:mm'), last.s.WF ? `${last.s.WF} · ${last.s.WT} ms` : '')
+        cell('Sist inne', last.t.format('D. MMM HH:mm'), last.s.WF ? `${last.s.WF} · ${last.s.WT} ms` : ''),
+        cell('Firmware', last.s.V || '—', last.s.V ? 'siste post sin versjon' : 'venter på firmware m/ V-token')
     ].join('');
 }
 
@@ -468,6 +470,7 @@ function renderRecent(entries) {
             <td>${e.s.P || '—'}</td>
             <td>${Number.isFinite(e.s.TU) ? e.s.TU : '—'}</td>
             <td>${Number.isFinite(e.s.SD) ? (e.s.SD > 0 ? 'JA' : 'NEI') : '—'}</td>
+            <td>${e.s.V || '—'}</td>
         </tr>`;
     }).join('');
 }

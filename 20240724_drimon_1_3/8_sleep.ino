@@ -1,11 +1,25 @@
-int getSleepDuration(float lux) {
-  if (lux < NIGHT_LEVEL) {
-    return SLEEP_DURATION_NIGHT;
-  } else if (lux < DUSK_LEVEL) {
-    return SLEEP_DURATION_DUSK;
-  } else {
-    return SLEEP_DURATION_DAY;
+// Seconds until the next "round" wall-clock minute boundary — e.g. snappedSleep(10, ...) will target :00, :10, :20…
+// If a boundary is <intervalSec/3 away we skip to the next one (avoids waking again in a few seconds).
+// If wall-clock isn't available yet (cold boot before first NTP sync), returns fallbackSec.
+int snappedSleep(int intervalMinutes, int fallbackSec) {
+  struct tm t;
+  if (!getLocalTime(&t, 0)) {
+    Serial.printf("  Sleep: no wall-clock yet, falling back to %d s\n", fallbackSec);
+    return fallbackSec;
   }
+  int intervalSec = intervalMinutes * 60;
+  int currentSec  = t.tm_min * 60 + t.tm_sec;
+  int wait        = intervalSec - (currentSec % intervalSec);
+  if (wait < intervalSec / 3) wait += intervalSec;
+  Serial.printf("  Sleep: snapping to next %d-min boundary, wake in %d s (now :%02d:%02d)\n",
+                intervalMinutes, wait, t.tm_min, t.tm_sec);
+  return wait;
+}
+
+int getSleepDuration(float lux) {
+  if (lux < NIGHT_LEVEL) return snappedSleep(15, SLEEP_DURATION_NIGHT);   // :00, :15, :30, :45
+  if (lux < DUSK_LEVEL)  return snappedSleep(5,  SLEEP_DURATION_DUSK);    // :00, :05, :10, …
+  return                        snappedSleep(10, SLEEP_DURATION_DAY);     // :00, :10, :20, …
 }
 
 void enterDeepSleep(int sleepDuration) {
