@@ -31,11 +31,12 @@ String status(SensorData& data) {
   else stat = stat + "_P-OK";
 
   stat = stat + "_WF-" + g_wifiCacheStatus;
-  stat = stat + "_BS-" + g_wifiBssidShort;
+  stat = stat + "_BS-" + g_wifiBssid;
   stat = stat + "_WT-" + String(g_wifiConnectMs);
   stat = stat + "_FC-" + String(wifiFailStreak);
   stat = stat + "_BV-" + String(data.batteryVoltage, 2);
   stat = stat + "_TU-" + String(data.timeUsed);
+  stat = stat + "_LR-" + String(lastPostResults[0]) + "." + String(lastPostResults[1]) + "." + String(lastPostResults[2]);
   stat = stat + "_SD-" + (DISPLAY_ON ? String(DISPLAY_TIME) : "0");
 
   return stat;

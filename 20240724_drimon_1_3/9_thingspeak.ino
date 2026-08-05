@@ -23,6 +23,7 @@ void postThingSpeak(SensorData& data) {
 
   Serial.println("  Thingspeak: Attempting to update ThingSpeak Channel 1...");
   result = ThingSpeak.writeFields(THINGSPEAK_1_CHANNEL, THINGSPEAK_1_API);
+  lastPostResults[0] = result;
   if (result == 200) {
     Serial.println("  Thingspeak: Channel 1 update successful.");
     ch1Ok = true;
@@ -30,6 +31,8 @@ void postThingSpeak(SensorData& data) {
   } else {
     Serial.println("  Thingspeak: Problem updating channel 1. HTTP error code " + String(result));
   }
+
+  delay(THINGSPEAK_INTER_POST_MS);
 
   ThingSpeak.setField(1, data.bmeTemp);
   ThingSpeak.setField(2, data.ahtTemp);
@@ -45,6 +48,7 @@ void postThingSpeak(SensorData& data) {
 
   Serial.println("  Thingspeak: Attempting to update ThingSpeak Channel 2...");
   result = ThingSpeak.writeFields(THINGSPEAK_2_CHANNEL, THINGSPEAK_2_API);
+  lastPostResults[1] = result;
   if (result == 200) {
     Serial.println("  Thingspeak: Channel 2 update successful.");
     ch2Ok = true;
@@ -52,6 +56,8 @@ void postThingSpeak(SensorData& data) {
   } else {
     Serial.println("  Thingspeak: Problem updating channel 2. HTTP error code " + String(result));
   }
+
+  delay(THINGSPEAK_INTER_POST_MS);
 
 
   ThingSpeak.setField(1, data.rssi);
@@ -64,6 +70,7 @@ void postThingSpeak(SensorData& data) {
 
   Serial.println("  Thingspeak: Attempting to update ThingSpeak Channel 3...");
   result = ThingSpeak.writeFields(THINGSPEAK_3_CHANNEL, THINGSPEAK_3_API);
+  lastPostResults[2] = result;
   if (result == 200) {
     Serial.println("  Thingspeak: Channel 3 update successful.");
     ch3Ok = true;

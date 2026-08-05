@@ -78,15 +78,20 @@
                 <thead>
                     <tr>
                         <th>Når</th>
-                        <th title="Kanaler 1=Drimon, 2=Detaljer, 3=Tech">Ch</th>
-                        <th>WF</th>
-                        <th>BS</th>
-                        <th>WT</th>
-                        <th>Lys</th>
-                        <th>W</th>
-                        <th>T</th>
-                        <th>B</th>
-                        <th>P</th>
+                        <th title="Kanaler 1=Drimon, 2=Detaljer, 3=Tech — grønn = post OK, · = kanalen mangler dette wake">Kanaler</th>
+                        <th title="WiFi cache-utfall (WF-token): HIT / FBK / MISS / FAIL">WiFi</th>
+                        <th title="BSSID — mesh-nodens 2.4 GHz radio-MAC (full 6 bytes hex)">Node</th>
+                        <th title="Tid brukt på WiFi-tilkobling (WT-token)">Wifi-ms</th>
+                        <th title="Forrige wake sine HTTP-koder for de 3 kanalene (LR-token)">HTTP (last)</th>
+                        <th title="Antall wakes som feilet stille før dette (FC-token, RTC-teller)">FC</th>
+                        <th title="Lysnivå-klasse: NIGHT / DUSK / SHADE / SUN">Lys</th>
+                        <th title="Vindusposisjon: OPEN / CLOSE">Vindu</th>
+                        <th title="Temperatur-klasse: COLD (≤5 °C) / OK / HOT (≥35 °C)">Temp</th>
+                        <th title="Batteri-klasse: OK / LOW (&lt;35%)">Batt</th>
+                        <th title="Batterispenning (V, BV-token)">V</th>
+                        <th title="Trykk-klasse: LOW / OK / HIGH">Trykk</th>
+                        <th title="Tid brukt på wake (ms, TU-token) — til slutten av measure()">TU-ms</th>
+                        <th title="Skjerm-pause (SD-token): JA = 12 s pause etter measure (knappe-/frisk-wake), NEI = timer-wake uten pause">Skjerm</th>
                     </tr>
                 </thead>
                 <tbody></tbody>

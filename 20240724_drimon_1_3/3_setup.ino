@@ -1,10 +1,11 @@
 RTC_DATA_ATTR uint8_t cachedBSSID[6] = {0};
 RTC_DATA_ATTR int32_t cachedChannel = 0;
 RTC_DATA_ATTR uint16_t wifiFailStreak = 0;  // consecutive failed wakes since last successful post; wiped by cold reset
+RTC_DATA_ATTR int lastPostResults[3] = {0, 0, 0};  // HTTP codes from previous wake's 3 channel POSTs
 
 String g_wifiCacheStatus = "?";
 long g_wifiConnectMs = 0;
-String g_wifiBssidShort = "?";
+String g_wifiBssid = "?";
 
 void setupPins() {
   pinMode(BLUE_LED_PIN, OUTPUT);
@@ -80,9 +81,11 @@ void connectToWiFi() {
     } else {
       g_wifiCacheStatus = "MISS";
     }
-    char bs[7];
-    snprintf(bs, sizeof(bs), "%02x%02x%02x", cachedBSSID[3], cachedBSSID[4], cachedBSSID[5]);
-    g_wifiBssidShort = bs;
+    char bs[13];
+    snprintf(bs, sizeof(bs), "%02x%02x%02x%02x%02x%02x",
+             cachedBSSID[0], cachedBSSID[1], cachedBSSID[2],
+             cachedBSSID[3], cachedBSSID[4], cachedBSSID[5]);
+    g_wifiBssid = bs;
     g_wifiConnectMs = millis() - wifiStart;
     Serial.print("    WiFi: OK (");
     Serial.print(g_wifiCacheStatus);

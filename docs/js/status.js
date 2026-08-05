@@ -75,6 +75,15 @@ function channelBadges(channels) {
     ).join(' ');
 }
 
+function lrBadges(lr) {
+    if (!Array.isArray(lr) || lr.length !== 3) return '—';
+    return lr.map(code => {
+        const cls = code === 200 ? 'ch-ok' : (code === 0 ? 'ch-missing' : 'ch-missing');
+        const label = code === 200 ? 'OK' : (code === 0 ? 'ingen respons' : `HTTP ${code}`);
+        return `<span class="${cls}" title="${label}">${code}</span>`;
+    }).join(' ');
+}
+
 const STATUS_TOKENS = [
     { prefix: 'T-',  key: 'T',  parse: v => v },
     { prefix: 'W-',  key: 'W',  parse: v => v },
@@ -86,6 +95,7 @@ const STATUS_TOKENS = [
     { prefix: 'FC-', key: 'FC', parse: v => parseInt(v, 10) },
     { prefix: 'BV-', key: 'BV', parse: v => parseFloat(v) },
     { prefix: 'TU-', key: 'TU', parse: v => parseInt(v, 10) },
+    { prefix: 'LR-', key: 'LR', parse: v => v.split('.').map(x => parseInt(x, 10)) },
     { prefix: 'SD-', key: 'SD', parse: v => parseInt(v, 10) }
 ];
 const LIGHT_TOKENS = new Set(['NIGHT', 'DUSK', 'SHADE', 'SUN']);
@@ -362,17 +372,23 @@ function renderRecent(entries) {
     tbody.innerHTML = rows.map(e => {
         const wf = e.s.WF || '—';
         const wfCls = wf === '—' ? '' : ` class="wf-${wf.toLowerCase()}"`;
-        return `<tr>
+        const rawTitle = e.raw ? ` title="${e.raw.replace(/"/g, '&quot;')}"` : '';
+        return `<tr${rawTitle}>
             <td>${e.t.format('D. MMM HH:mm')}</td>
             <td class="ch-cell">${channelBadges(e.channels)}</td>
             <td${wfCls}>${wf}</td>
             <td>${e.s.BS || '—'}</td>
             <td>${Number.isFinite(e.s.WT) ? e.s.WT : '—'}</td>
+            <td class="ch-cell">${lrBadges(e.s.LR)}</td>
+            <td>${Number.isFinite(e.s.FC) ? e.s.FC : '—'}</td>
             <td>${e.s.LIGHT || '—'}</td>
             <td>${e.s.W || '—'}</td>
             <td>${e.s.T || '—'}</td>
             <td>${e.s.B || '—'}</td>
+            <td>${Number.isFinite(e.s.BV) ? e.s.BV.toFixed(2) : '—'}</td>
             <td>${e.s.P || '—'}</td>
+            <td>${Number.isFinite(e.s.TU) ? e.s.TU : '—'}</td>
+            <td>${Number.isFinite(e.s.SD) ? (e.s.SD > 0 ? 'JA' : 'NEI') : '—'}</td>
         </tr>`;
     }).join('');
 }

@@ -41,6 +41,7 @@
 
 #define WIFI_MAX_RETRIES 10
 #define WIFI_FAILS_BEFORE_FRESH_SCAN 3   // if wifiFailStreak exceeds this, skip cached BSSID and force fresh scan
+#define THINGSPEAK_INTER_POST_MS 50      // delay between the 3 channel POSTs to reduce rate-limit / TCP-reuse issues
 #define NUM_READINGS 2
 #define NUM_DISTANCE_READINGS 10
 #define SLEEP_BETWEEN_READINGS 12
