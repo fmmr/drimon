@@ -2,7 +2,7 @@ VL53L0X_RangingMeasurementData_t tofData;
 
 float readDallas(DeviceAddress addr) {
   float t = sensors.getTempC(addr);
-  for (int retry = 0; retry < 2 && (t < -20.0 || t > 60.0); retry++) {
+  for (int retry = 0; retry < DALLAS_RETRIES && (t < DALLAS_MIN_C || t > DALLAS_MAX_C); retry++) {
     sensors.requestTemperatures();
     t = sensors.getTempC(addr);
   }
@@ -68,11 +68,11 @@ SensorData measure(long start) {
     for (int i = 0; i < NUM_DISTANCE_READINGS; i++) {
       tof.rangingTest(&tofData, false);  // pass in 'true' to get debug data printout!
       int dist = tofData.RangeMilliMeter;
-      if (dist > 0 && dist < 8000) {
+      if (dist > 0 && dist < TOF_MAX_MM) {
         total_distance += tofData.RangeMilliMeter;
         count++;
       }
-      delay(12);
+      delay(TOF_INTERVAL_MS);
     }
     if (count > 0) {
       data.distance = total_distance / count;
@@ -130,7 +130,7 @@ SensorData measure(long start) {
   data.batteryVoltage = total_batteryVoltage / NUM_READINGS;
   data.batteryPercentage = total_batteryPercentage / NUM_READINGS;
 
-  if (data.termo2 > 0.0 && data.termo2 < 60.0) {
+  if (data.termo2 > TERMO2_INCLUDE_MIN_C && data.termo2 < TERMO2_INCLUDE_MAX_C) {
     data.temperature = (2.0 * data.bmeTemp + data.ahtTemp + data.termo2) / 4.0;
   } else {
     data.temperature = (2.0 * data.bmeTemp + data.ahtTemp) / 3.0;

@@ -31,10 +31,10 @@ void setupPins() {
 void connectToWiFi() {
   long wifiStart = millis();
 
-  IPAddress local_IP(192, 168, 1, 15);
-  IPAddress gateway(192, 168, 1, 1);
-  IPAddress subnet(255, 255, 255, 0);
-  IPAddress dns(192, 168, 1, 1);
+  IPAddress local_IP(WIFI_STATIC_IP);
+  IPAddress gateway(WIFI_GATEWAY);
+  IPAddress subnet(WIFI_SUBNET);
+  IPAddress dns(WIFI_DNS);
   WiFi.config(local_IP, gateway, subnet, dns);
 
   if (wifiFailStreak > WIFI_FAILS_BEFORE_FRESH_SCAN && cachedChannel > 0) {
@@ -56,16 +56,16 @@ void connectToWiFi() {
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
   }
   Serial.print("  Initializing WiFi...");
-  long deadline = millis() + 3000;
+  long deadline = millis() + WIFI_INITIAL_TIMEOUT_MS;
   while (WiFi.status() != WL_CONNECTED && millis() < deadline) {
-    delay(50);
+    delay(WIFI_POLL_INTERVAL_MS);
   }
 
   while (WiFi.status() != WL_CONNECTED && retries < WIFI_MAX_RETRIES) {
     WiFi.disconnect();
     cachedChannel = 0;  // invalidate cache on failure, next attempt does full scan
     WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-    delay(1000);
+    delay(WIFI_RETRY_DELAY_MS);
     Serial.print(".");
     retries++;
   }

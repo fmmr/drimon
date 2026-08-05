@@ -88,9 +88,9 @@ void postThingSpeak(SensorData& data) {
   // Per-channel result: green for OK, red for FAIL, flashed in channel order (1, 2, 3)
   Serial.printf("  Thingspeak: results %s %s %s\n",
                 ch1Ok ? "OK" : "FAIL", ch2Ok ? "OK" : "FAIL", ch3Ok ? "OK" : "FAIL");
-  flashLED(ch1Ok ? GREEN_LED_PIN : RED_LED_PIN, 1);
-  flashLED(ch2Ok ? GREEN_LED_PIN : RED_LED_PIN, 1);
-  flashLED(ch3Ok ? GREEN_LED_PIN : RED_LED_PIN, 1);
+  flashLED(ch1Ok ? GREEN_LED_PIN : RED_LED_PIN, 1, POST_FLASH_ON_MS);
+  flashLED(ch2Ok ? GREEN_LED_PIN : RED_LED_PIN, 1, POST_FLASH_ON_MS);
+  flashLED(ch3Ok ? GREEN_LED_PIN : RED_LED_PIN, 1, POST_FLASH_ON_MS);
 
   Serial.println("Done Posting data to ThingSpeak...");
 }

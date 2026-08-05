@@ -17,49 +17,77 @@
 // #define WIFI_SSID "xxx"
 // #define WIFI_PASSWORD "xxx"
 
-#define BUTTON_PIN 15
-#define GREEN_LED_PIN 2
-#define RED_LED_PIN 4
-#define BLUE_LED_PIN 16
-#define BUZZER_PIN 32
-#define SENSOR_POWER_PIN 13
-#define POST_SWITCH_PIN 27
-#define SOIL_1_PIN 34
-#define SOIL_2_PIN 39
-#define SOIL_3_PIN 36
-#define ONE_WIRE_PIN 23
+// ---------- GPIO pin assignments ----------
+#define BUTTON_PIN        15   // green push button (EXT0 wake source, preserves RTC memory)
+#define GREEN_LED_PIN     2    // status "OK" LED (boot done, sleep, per-channel POST success)
+#define RED_LED_PIN       4    // status "ERROR" LED (init/WiFi/POST failures)
+#define BLUE_LED_PIN      16   // solid ON while posting to ThingSpeak
+#define BUZZER_PIN        32   // piezo — short beep at boot and sleep
+#define SENSOR_POWER_PIN  13   // HIGH powers the sensor rail; goes LOW in enterDeepSleep()
+#define POST_SWITCH_PIN   27   // black rocker switch: LOW = post to ThingSpeak, HIGH = skip
+#define SOIL_1_PIN        34   // analog: soil moisture sensor 1
+#define SOIL_2_PIN        39   // analog: soil moisture sensor 2
+#define SOIL_3_PIN        36   // analog: soil moisture sensor 3
+#define ONE_WIRE_PIN      23   // OneWire bus for the 3 DS18B20 (Dallas) temperature sensors
 
+// ---------- LED flash-count codes (see QUICK_REFERENCE.md) ----------
+#define FLASH_WIFI_CONNECT_FAILURE 4   // red x 4 (before blue LED = WiFi failed to associate)
+#define FLASH_DISPLAY_INIT_FAILURE 3   // red x 3 (before blue LED = SSD1306 display init failed)
+#define FLASH_DEFAULT_MS 180           // default on/off duration for flashLED() when caller omits explicit values
 
-#define FLASH_WIFI_CONNECT_FAILURE 4
-#define FLASH_DISPLAY_INIT_FAILURE 3
+// ---------- Environmental classification thresholds (drive the status field) ----------
+#define PRESSURE_LOW  999    // hPa; below → P-LOW
+#define PRESSURE_HIGH 1010   // hPa; above → P-HIGH; between → P-OK
+#define TEMP_COLD     5      // aggregate temp <= this → T-COLD (matches heat-frost.html frost=5 default)
+#define TEMP_HOT      35     // aggregate temp >= this → T-HOT  (matches heat-frost.html heat=35 default)
+#define NIGHT_LEVEL   5      // lux < this → NIGHT
+#define DUSK_LEVEL    500    // lux between NIGHT and this → DUSK
+#define SHADE_LEVEL   12000  // lux between DUSK and this → SHADE; above → SUN
+#define WINDOW_CLOSE  80     // distance sensor (mm) < this → W-CLOSE, else W-OPEN
+#define BATTERY_LOW   35     // battery % < this → B-LOW
 
-#define PRESSURE_LOW 999
-#define PRESSURE_HIGH 1010
+// ---------- WiFi behaviour ----------
+#define WIFI_MAX_RETRIES              10   // fresh-scan retries after initial cache attempt fails
+#define WIFI_FAILS_BEFORE_FRESH_SCAN  3    // if wifiFailStreak exceeds this, skip cached BSSID and force fresh scan
+#define WIFI_INITIAL_TIMEOUT_MS       3000 // how long to wait for the initial cached-BSSID connect before retrying
+#define WIFI_POLL_INTERVAL_MS         50   // how often WiFi.status() is polled while waiting for association
+#define WIFI_RETRY_DELAY_MS           1000 // pause between each fresh-scan retry after the initial attempt fails
 
-#define TEMP_COLD 5    // aggregate temp <= this → T-COLD (matches heat-frost.html frost=5 default)
-#define TEMP_HOT  35   // aggregate temp >= this → T-HOT  (matches heat-frost.html heat=35 default)
+// ---------- Static WiFi config (4 comma-separated octets, consumed by IPAddress()) ----------
+#define WIFI_STATIC_IP  192, 168, 1, 15    // ESP32's own IP on the LAN — outside DHCP pool
+#define WIFI_GATEWAY    192, 168, 1, 1     // primary router (SOV_MF)
+#define WIFI_SUBNET     255, 255, 255, 0   // /24
+#define WIFI_DNS        192, 168, 1, 1     // reuse the gateway for DNS
 
-#define WIFI_MAX_RETRIES 10
-#define WIFI_FAILS_BEFORE_FRESH_SCAN 3   // if wifiFailStreak exceeds this, skip cached BSSID and force fresh scan
-#define THINGSPEAK_INTER_POST_MS 50      // delay between the 3 channel POSTs to reduce rate-limit / TCP-reuse issues
-#define NUM_READINGS 2
-#define NUM_DISTANCE_READINGS 10
-#define SLEEP_BETWEEN_READINGS 12
-#define HEIGHT_ABOVE_SEA_LEVEL 31
+// ---------- ThingSpeak posting ----------
+#define THINGSPEAK_INTER_POST_MS 50   // delay between the 3 channel POSTs to reduce rate-limit / TCP-reuse issues
+#define POST_FLASH_ON_MS 300          // LED-on duration for the 3 post-POST channel-result flashes (off stays at flashLED default 180 ms)
 
-#define DISPLAY_TIME 12000
+// ---------- Serial ----------
+#define SERIAL_BAUD 115200   // serial monitor baud (dev-time only; not visible in production)
 
-#define NIGHT_LEVEL 5
-#define DUSK_LEVEL 500
-#define SHADE_LEVEL 12000
+// ---------- Sensor plausibility bounds ----------
+#define DALLAS_MIN_C          -20.0   // below this = bogus (DS18B20 bit-corrupt or disconnect: -55, -127, 85, …)
+#define DALLAS_MAX_C           60.0   // above this = bogus
+#define DALLAS_RETRIES         2      // extra requestTemperatures() attempts on an implausible read
+#define TOF_MAX_MM             8000   // VL53L0X out-of-range cutoff (readings ≥ this are dropped)
+#define TOF_INTERVAL_MS        12     // delay between successive TOF distance samples
+#define TERMO2_INCLUDE_MIN_C   0.0    // range for including DS18B20 middle sensor (termo2) in temp aggregate;
+#define TERMO2_INCLUDE_MAX_C   60.0   // outside → aggregate falls back to BME + AHT only
 
-#define WINDOW_CLOSE 80
+// ---------- Measurement loop ----------
+#define NUM_READINGS           2    // how many times each I²C sensor is sampled per wake (averaged)
+#define NUM_DISTANCE_READINGS  10   // how many TOF distance samples are taken (best-effort averaged, drops invalid)
+#define SLEEP_BETWEEN_READINGS 12   // ms between successive samples inside NUM_READINGS loop
+#define HEIGHT_ABOVE_SEA_LEVEL 31   // meters — added into BME pressure reading for sea-level normalisation
 
-#define BATTERY_LOW 35
+// ---------- Display behaviour ----------
+#define DISPLAY_TIME 10000   // ms to keep the OLED/LCD lit for reading (button/fresh wake only; SD- token records this)
 
-#define SLEEP_DURATION_DUSK 420
-#define SLEEP_DURATION_DAY 600
-#define SLEEP_DURATION_NIGHT 900
+// ---------- Deep-sleep durations (seconds), selected by ambient light level ----------
+#define SLEEP_DURATION_DUSK   300   // 5 min  (lux between NIGHT and DUSK)
+#define SLEEP_DURATION_DAY    600   // 10 min (daytime — most wakes)
+#define SLEEP_DURATION_NIGHT  900   // 15 min (below NIGHT_LEVEL — longest to save battery)
 
 int dispLine = 0;
 bool SHOULD_POST = false;
@@ -105,12 +133,12 @@ void beep(int del = 100) {
   delay(del);
 }
 
-void flashLED(int pin, int times, int delayTime = 180) {
+void flashLED(int pin, int times, int onMs = FLASH_DEFAULT_MS, int offMs = FLASH_DEFAULT_MS) {
   for (int i = 0; i < times; i++) {
     digitalWrite(pin, HIGH);
-    delay(delayTime);
+    delay(onMs);
     digitalWrite(pin, LOW);
-    delay(delayTime);
+    delay(offMs);
   }
 }
 
@@ -119,7 +147,7 @@ void setup() {
   setupPins();
   beep(50);
   flashLED(GREEN_LED_PIN, 2);
-  Serial.begin(115200);
+  Serial.begin(SERIAL_BAUD);
 
   Serial.println("Setup...");
   esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
