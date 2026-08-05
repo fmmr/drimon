@@ -45,7 +45,7 @@
 #define NIGHT_LEVEL   5      // lux < this → NIGHT
 #define DUSK_LEVEL    200    // lux between NIGHT and this → DUSK. Kept conservative: higher values would classify overcast Norwegian winter days as DUSK for hours, tripling wake frequency for no signal (light isn't actually transitioning, just dim).
 #define SHADE_LEVEL   25000  // lux between DUSK and this → SHADE; above → SUN (calibrated Aug 2026 from observed sunny-vs-overcast lux data)
-#define WINDOW_CLOSE  80     // distance sensor (mm) < this → W-CLOSE, else W-OPEN
+#define WINDOW_CLOSE  82     // distance sensor (mm) < this → W-CLOSE, else W-OPEN
 #define BATTERY_LOW   35     // battery % < this → B-LOW
 
 // ---------- WiFi behaviour ----------
