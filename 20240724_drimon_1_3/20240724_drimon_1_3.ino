@@ -43,7 +43,7 @@
 #define TEMP_COLD     5      // aggregate temp <= this → T-COLD (matches heat-frost.html frost=5 default)
 #define TEMP_HOT      35     // aggregate temp >= this → T-HOT  (matches heat-frost.html heat=35 default)
 #define NIGHT_LEVEL   5      // lux < this → NIGHT
-#define DUSK_LEVEL    1500   // lux between NIGHT and this → DUSK (calibrated Aug 2026 — captures the whole ~1 h dawn/dusk transition curve at 5-min sampling)
+#define DUSK_LEVEL    500    // lux between NIGHT and this → DUSK. Kept conservative: higher values would classify overcast Norwegian winter days as DUSK for hours, tripling wake frequency for no signal (light isn't actually transitioning, just dim).
 #define SHADE_LEVEL   25000  // lux between DUSK and this → SHADE; above → SUN (calibrated Aug 2026 from observed sunny-vs-overcast lux data)
 #define WINDOW_CLOSE  80     // distance sensor (mm) < this → W-CLOSE, else W-OPEN
 #define BATTERY_LOW   35     // battery % < this → B-LOW
