@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Post-commit hook: regenerates version.h so it holds the hash of the commit we just made.
+# The updated version.h stays in the working tree (gitignored) and gets baked into
+# the ESP32 binary on the next flash.
+#
+# Install once:
+#   ln -sf ../../20240724_drimon_1_3/hooks/post-commit .git/hooks/post-commit
+#   chmod +x .git/hooks/post-commit
+# (or `cp` if you prefer no symlink)
+
+REPO_ROOT=$(git rev-parse --show-toplevel) || exit 0
+"$REPO_ROOT/20240724_drimon_1_3/gen_version.sh" || {
+    echo "post-commit: gen_version.sh failed — version.h may be stale" >&2
+    exit 0   # do not block subsequent hooks; version.h just stays whatever it was
+}
