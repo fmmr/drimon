@@ -51,7 +51,8 @@
       "WebFetch(domain:se.mathworks.com)",
       "Bash(git *)",
       "Bash(/Users/fmr/projects/drimon/scripts/analyze_snap_timing.py --since 2026-08-05T17:17:00 --buffer 30)",
-      "Bash(/Users/fmr/projects/drimon/scripts/analyze_snap_timing.py *)"
+      "Bash(/Users/fmr/projects/drimon/scripts/analyze_snap_timing.py *)",
+      "Bash(arduino-cli lib *)"
     ],
     "deny": []
   },

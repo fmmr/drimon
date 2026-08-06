@@ -16,7 +16,12 @@ HASH=$(git -C "$REPO_ROOT" rev-parse --short HEAD) || {
 }
 
 DIRTY=""
-git -C "$REPO_ROOT" diff --quiet HEAD -- "$(pwd)" || DIRTY="+"
+# Include modified/staged tracked files AND untracked-not-ignored files in the sketch folder.
+# git-status --porcelain is the right hammer here — `git diff --quiet` only sees tracked changes
+# and would silently pass on brand-new files.
+if [ -n "$(git -C "$REPO_ROOT" status --porcelain -- "$(pwd)")" ]; then
+    DIRTY="+"
+fi
 
 # Safeguard: when the sketch folder has uncommitted changes, write an #error into version.h so the
 # next compile fails instead of silently flashing firmware that reports the pre-fix commit hash.
