@@ -50,7 +50,7 @@ Physical controls on the enclosure:
 Every ThingSpeak entry carries a `status` string like:
 
 ```
-T-OK_SHADE_W-OPEN_B-OK_P-HIGH_WF-HIT_BS-14918294f9c4_WT-388_FC-0_PF-0_BV-4.09_TU-5435_TV-21.4_LX-8500_WD-72_LR-200.200.200_WR-8.4_V-d9976d7_SD-0
+T-OK_SHADE_W-OPEN_B-OK_P-HIGH_WF-HIT_BS-14918294f9c4_WT-388_FC-0_PF-0_BV-4.09_TU-5435_TV-21.4_LX-8500_WD-72_LR-200.200.200_PR-0.0.0_WR-8.4_V-d9976d7_SD-0
 ```
 
 Underscore-separated `PREFIX-VALUE` parts:
@@ -72,7 +72,8 @@ Underscore-separated `PREFIX-VALUE` parts:
 | `TV-` | Aggregate temperature (Celsius) | Float, 1 decimal (e.g. `21.4`). The value driving the `T-` classification and shown on the main dashboard temp chart. Weighted average of 2×BME + AHT (+ middle DS18B20 when plausible). |
 | `LX-` | Ceiling lux (raw) | Integer lux (e.g. `20651`). The value driving the light-class classification (NIGHT/DUSK/SHADE/SUN thresholds). Same as `DRIMON_CHANNEL` field 8. |
 | `WD-` | Window distance (raw) | Integer mm (e.g. `72`). Raw TOF distance reading before `WINDOW_CLOSE` classification. Same as `DRIMON_CHANNEL` field 4 (before the −63 mm shift). |
-| `LR-` | Last-run HTTP results (dot-separated) | Three HTTP result codes from the previous wake's 3 channel POSTs, e.g. `200.200.200` all-ok, `200.429.429` rate-limited, `200.0.0` timeouts after Ch 1, `0.0.0` first wake after cold reset. RTC-persisted; wiped by brownout / EN button. |
+| `LR-` | Last-run HTTP results (dot-separated) | Three HTTP result codes from the previous wake's 3 channel POSTs (final code after any retries), e.g. `200.200.200` all-ok, `200.429.429` rate-limited, `200.0.0` timeouts after Ch 1, `0.0.0` first wake after cold reset. RTC-persisted; wiped by brownout / EN button. |
+| `PR-` | Post retries (dot-separated) | Extra attempts each channel needed in the previous wake, e.g. `0.0.0` no retries, `1.0.1` ch1 + ch3 each retried once, `2.2.2` every channel hit `MAX_POST_RETRY`. Only transient codes (`0`, `-301`, `-302`, `-303`, `-304`) trigger retries; 4xx/5xx don't. RTC-persisted; wiped by cold reset. |
 | `WR-` | Wake reason: `<resetReason>.<wakeupCause>` | `resetReason` = `esp_reset_reason()` — `1` POWERON, `2` EXT (EN pin), `3` SW, `4` PANIC, `5` INT_WDT, `6` TASK_WDT, `7` WDT, `8` DEEPSLEEP (normal timer/EXT0 wake — RTC preserved), `9` BROWNOUT, `10` SDIO. `wakeupCause` = `esp_sleep_get_wakeup_cause()` — `0` UNDEFINED (fresh boot), `2` EXT0 (green button), `4` TIMER. Anything but `8.*` = a cold-path reset happened and RTC was wiped. Captured at start of `setup()`. |
 | `SD-` | Display-read pause | `0` (timer wake, no delay) or `12000` (button/fresh wake, 12 s pause) |
 

@@ -285,10 +285,13 @@ td.wf-fbk  { color: var(--fbk); font-weight: 600; }
 td.wf-miss { color: var(--miss); font-weight: 600; }
 td.wf-fail { color: var(--fail); font-weight: 600; }
 td.cold-boot { color: var(--fail); font-weight: 600; }
+.wr-timer { color: var(--muted); }
+.wr-button { color: var(--fbk); font-weight: 600; }
 
 .ch-cell { font-variant-numeric: tabular-nums; letter-spacing: 0.05em; }
 .ch-ok      { color: var(--hit); font-weight: 600; }
 .ch-missing { color: var(--fail); font-weight: 600; }
+.retry-count { color: var(--fbk); font-size: 0.75em; font-weight: 700; margin-left: 1px; }
 
 .raw-value {
     color: var(--muted);

@@ -64,6 +64,8 @@
 // ---------- ThingSpeak posting ----------
 #define THINGSPEAK_INTER_POST_MS 10   // brief settle after client.stop() before next channel POST
 #define POST_FLASH_ON_MS 300          // LED-on duration for the 3 post-POST channel-result flashes (off stays at flashLED default 180 ms)
+#define MAX_POST_RETRY 2              // extra attempts per channel on transient network errors (0/-301/-302/-303/-304). Total attempts = 1 + MAX_POST_RETRY.
+#define POST_RETRY_DELAY_MS 750       // pause between retry attempts on the same channel (after client.stop()). Long enough for TCP to settle, short enough not to shift the next boundary.
 
 // ---------- Serial ----------
 #define SERIAL_BAUD 115200   // serial monitor baud (dev-time only; not visible in production)

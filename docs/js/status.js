@@ -86,12 +86,16 @@ function channelBadges(channels) {
     ).join(' ');
 }
 
-function lrBadges(lr) {
+function lrBadges(lr, pr) {
     if (!Array.isArray(lr) || lr.length !== 3) return '—';
-    return lr.map(code => {
-        const cls = code === 200 ? 'ch-ok' : (code === 0 ? 'ch-missing' : 'ch-missing');
+    const prArr = Array.isArray(pr) && pr.length === 3 ? pr : [0, 0, 0];
+    return lr.map((code, i) => {
+        const cls = code === 200 ? 'ch-ok' : 'ch-missing';
         const label = code === 200 ? 'OK' : (code === 0 ? 'ingen respons' : `HTTP ${code}`);
-        return `<span class="${cls}" title="${label}">${code}</span>`;
+        const retries = Number.isFinite(prArr[i]) ? prArr[i] : 0;
+        const retrySuffix = retries > 0 ? `<sup class="retry-count">+${retries}</sup>` : '';
+        const fullLabel = retries > 0 ? `${label} · ${retries} ekstra forsøk` : label;
+        return `<span class="${cls}" title="${fullLabel}">${code}${retrySuffix}</span>`;
     }).join(' ');
 }
 
@@ -111,6 +115,7 @@ const STATUS_TOKENS = [
     { prefix: 'LX-', key: 'LX', parse: v => parseInt(v, 10) },
     { prefix: 'WD-', key: 'WD', parse: v => parseInt(v, 10) },
     { prefix: 'LR-', key: 'LR', parse: v => v.split('.').map(x => parseInt(x, 10)) },
+    { prefix: 'PR-', key: 'PR', parse: v => v.split('.').map(x => parseInt(x, 10)) },
     { prefix: 'WR-', key: 'WR', parse: v => v.split('.').map(x => parseInt(x, 10)) },
     { prefix: 'V-',  key: 'V',  parse: v => v },
     { prefix: 'SD-', key: 'SD', parse: v => parseInt(v, 10) }
@@ -380,6 +385,13 @@ function renderStats(entries, wifiEntries, tuEntries, fcEntries, voltEntries, pf
         cell('Feilede wakes', fcEntries.length ? sumConfirmedFails(fcEntries.map(e => e.s.FC)) : '—', fcEntries.length ? `n=${fcEntries.length} m/ FC` : 'venter på firmware'),
         cell('Stille post-feil', pfEntries.length ? pfEntries.reduce((s, e) => s + e.s.PF, 0) : '—', pfEntries.length ? `n=${pfEntries.length} m/ PF` : 'venter på firmware'),
         (() => {
+            const prEntries = entries.filter(e => Array.isArray(e.s.PR) && e.s.PR.length === 3);
+            if (!prEntries.length) return cell('Retries brukt', '—', 'venter på firmware m/ PR-token');
+            const totalRetries = prEntries.reduce((s, e) => s + e.s.PR.reduce((a, b) => a + (Number.isFinite(b) ? b : 0), 0), 0);
+            const wakesWithRetry = prEntries.filter(e => e.s.PR.some(v => v > 0)).length;
+            return cell('Retries brukt', totalRetries, `${wakesWithRetry}/${prEntries.length} wakes trengte retry`);
+        })(),
+        (() => {
             const wrEntries = entries.filter(e => wrEntry(e) !== null);
             if (!wrEntries.length) return cell('Kald-boot', '—', 'venter på firmware m/ WR-token');
             const coldBoots = wrEntries.filter(isColdBoot);
@@ -520,7 +532,7 @@ function renderRecent(entries) {
             <td${wfCls}>${wf}</td>
             <td title="${e.s.BS || ''}">${e.s.BS ? shortBS(e.s.BS) : '—'}</td>
             <td>${Number.isFinite(e.s.WT) ? e.s.WT : '—'}</td>
-            <td class="ch-cell">${lrBadges(e.s.LR)}</td>
+            <td class="ch-cell">${lrBadges(e.s.LR, e.s.PR)}</td>
             <td>${Number.isFinite(e.s.FC) ? e.s.FC : '—'}</td>
             <td>${Number.isFinite(e.s.PF) ? e.s.PF : '—'}</td>
             <td>${e.s.LIGHT || '—'}${Number.isFinite(e.s.LX) ? ` <span class="raw-value">${e.s.LX}</span>` : ''}</td>
@@ -534,8 +546,13 @@ function renderRecent(entries) {
             <td${isColdBoot(e) ? ' class="cold-boot"' : ''}>${(() => {
                 const wr = wrEntry(e);
                 if (!wr) return '—';
-                if (wr[0] === 8) return `<span title="WR-${wr[0]}.${wr[1]} — DEEPSLEEP · ${WAKEUP_CAUSE_NAMES[wr[1]] || wr[1]}">—</span>`;
-                return `<span title="WR-${wr[0]}.${wr[1]} — ${RESET_REASON_NAMES[wr[0]] || wr[0]} · ${WAKEUP_CAUSE_NAMES[wr[1]] || wr[1]}">${RESET_REASON_NAMES[wr[0]] || wr[0]}</span>`;
+                const rrName = RESET_REASON_NAMES[wr[0]] || String(wr[0]);
+                const wcName = WAKEUP_CAUSE_NAMES[wr[1]] || String(wr[1]);
+                const title = `WR-${wr[0]}.${wr[1]} — ${rrName} · ${wcName}`;
+                if (wr[0] !== 8) return `<span title="${title}">${rrName}</span>`;
+                if (wr[1] === 2) return `<span class="wr-button" title="${title}">BUTTON</span>`;
+                if (wr[1] === 4) return `<span class="wr-timer" title="${title}">TIMER</span>`;
+                return `<span title="${title}">${wcName}</span>`;
             })()}</td>
             <td>${githubCommitLink(e.s.V)}</td>
         </tr>`;

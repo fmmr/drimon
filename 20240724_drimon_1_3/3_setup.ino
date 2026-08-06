@@ -3,6 +3,7 @@ RTC_DATA_ATTR int32_t cachedChannel = 0;
 RTC_DATA_ATTR uint16_t wifiFailStreak = 0;  // consecutive wakes where WiFi never associated; wiped by cold reset
 RTC_DATA_ATTR uint16_t postFailStreak = 0;  // consecutive wakes where WiFi was OK but ALL 3 POSTs failed; wiped by cold reset
 RTC_DATA_ATTR int lastPostResults[3] = {0, 0, 0};  // HTTP codes from previous wake's 3 channel POSTs
+RTC_DATA_ATTR uint8_t postRetryCounts[3] = {0, 0, 0};  // per-channel EXTRA attempts used in previous wake (0 = no retry, up to MAX_POST_RETRY)
 
 String g_wifiCacheStatus = "?";
 long g_wifiConnectMs = 0;
