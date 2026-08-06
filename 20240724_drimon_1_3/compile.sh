@@ -23,4 +23,10 @@ cd "$(dirname "$0")"
 #   ZigbeeMode=default      "Zigbee Mode: Disabled"
 FQBN='esp32:esp32:esp32:CPUFreq=240,DebugLevel=none,EraseFlash=none,EventsCore=1,FlashFreq=80,FlashMode=qio,FlashSize=4M,JTAGAdapter=default,LoopCore=1,PartitionScheme=default,PSRAM=disabled,UploadSpeed=115200,ZigbeeMode=default'
 
-arduino-cli compile -v --fqbn "$FQBN" "$@" . 2>&1 | grep -E '^(Compiling|Linking|Using|Sketch uses|Global variables|Detecting|In file included)|(error|warning|note):|^\s+[0-9]+ \||^\s+\|'
+# Two-stage filter: first grep keeps only useful progress + errors/warnings from -v firehose;
+# second grep drops the two verbose sub-categories ("Using cached library dependencies…" and
+# "Using previously compiled file…") that carry no diagnostic value. Errors/warnings/source-snippet
+# lines don't start with those prefixes, so they always survive the second filter.
+arduino-cli compile -v --fqbn "$FQBN" "$@" . 2>&1 \
+    | grep -E '^(Compiling|Linking|Using|Sketch uses|Global variables|Detecting|In file included|gen_version\.sh|version\.h updated)|(error|warning|note):|^\s+[0-9]+ \||^\s+\|' \
+    | grep -vE '^Using (cached library dependencies|previously compiled file)'
