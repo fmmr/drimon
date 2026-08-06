@@ -31,10 +31,37 @@
             <div id="wifi-days" class="day-list"></div>
         </section>
 
-        <section id="wt-section" hidden>
-            <h2>Tilkoblingstid (WT) per dag</h2>
+        <section id="lt-section" hidden>
+            <h2>Total wake-tid (LT) per dag (ms)</h2>
             <div class="legend">
-                <span>Blå boks = min–maks per dag · strek = median</span>
+                <span>Blå boks = min–maks per dag · strek = median · rød strek = p95 · setup → sleep, inkl. measure + post + skjerm-pause + tail</span>
+                <span class="scale-label" data-scale></span>
+            </div>
+            <div id="lt-days" class="day-list"></div>
+        </section>
+
+        <section id="tu-section" hidden>
+            <h2>Measure-tid (TU) per dag (ms)</h2>
+            <div class="legend">
+                <span>Blå boks = min–maks per dag · strek = median · rød strek = p95 · setup → slutten av measure()</span>
+                <span class="scale-label" data-scale></span>
+            </div>
+            <div id="tu-days" class="day-list"></div>
+        </section>
+
+        <section id="lp-section" hidden>
+            <h2>Post-tid (LP) per dag (ms)</h2>
+            <div class="legend">
+                <span>Blå boks = min–maks per dag · strek = median · rød strek = p95 · tid inne i postThingSpeak() inkl. retries</span>
+                <span class="scale-label" data-scale></span>
+            </div>
+            <div id="lp-days" class="day-list"></div>
+        </section>
+
+        <section id="wt-section" hidden>
+            <h2>WiFi-tilkoblingstid (WT) per dag (ms)</h2>
+            <div class="legend">
+                <span>Blå boks = min–maks per dag · strek = median · rød strek = p95</span>
                 <span class="scale-label" data-scale></span>
             </div>
             <div id="wt-days" class="day-list"></div>
@@ -43,19 +70,10 @@
         <section id="battery-section" hidden>
             <h2>Batterispenning per dag (V)</h2>
             <div class="legend">
-                <span>Blå boks = min–maks per dag · strek = median</span>
+                <span>Blå boks = min–maks per dag · strek = median · rød strek = p95</span>
                 <span id="batt-v-scale" class="scale-label"></span>
             </div>
             <div id="batt-v-days" class="day-list"></div>
-        </section>
-
-        <section id="tu-section" hidden>
-            <h2>Tid brukt per wake (ms) per dag</h2>
-            <div class="legend">
-                <span>Blå boks = min–maks per dag · strek = median · felt 4 på TECH-kanalen</span>
-                <span class="scale-label" data-scale></span>
-            </div>
-            <div id="tu-days" class="day-list"></div>
         </section>
 
         <section id="fc-section" hidden>
@@ -97,9 +115,9 @@
                         <th class="prev-wake-col" title="Forrige wake sin post-tid i ms (LP-token) — inkl. retries og inter-post delays. Direkte signal på nettverkskost.">Post</th>
                         <th class="prev-wake-col" title="Forrige wake sin totale wall-clock tid i ms (LT-token) — setup start → sleep. Inkl. measure + post + skjerm-pause + tail. Batteri-kost.">Tot</th>
                         <th title="Tid brukt på wake (ms, TU-token) — til slutten av measure()">TU-ms</th>
+                        <th title="Tid brukt på WiFi-tilkobling (WT-token)">Wifi-ms</th>
                         <th title="WiFi cache-utfall (WF-token): HIT / FBK / MISS / FAIL">WiFi</th>
                         <th title="BSSID — mesh-nodens 2.4 GHz radio-MAC (full 6 bytes hex)">Node</th>
-                        <th title="Tid brukt på WiFi-tilkobling (WT-token)">Wifi-ms</th>
                         <th title="Lysnivå-klasse (NIGHT/DUSK/SHADE/SUN) + rå lux-verdi (LX-token)">Lys</th>
                         <th title="Vindusposisjon (OPEN/CLOSE) + rå avstand i mm (WD-token)">Vindu</th>
                         <th title="Temperatur-klasse (COLD ≤5 °C / OK / HOT ≥35 °C) + aggregert temperatur i °C (TV-token)">Temp</th>

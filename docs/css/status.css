@@ -216,6 +216,15 @@ h2 a:hover,
     background: var(--wt-median);
 }
 
+.wt-bar .p95 {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--fail);
+    opacity: 0.85;
+}
+
 .dists {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));

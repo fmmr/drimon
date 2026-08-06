@@ -183,19 +183,25 @@ function render(byChannel, tech) {
     }));
     const tuEntries = techEntries.filter(e => Number.isFinite(e.tu)).map(e => ({ t: e.t, v: e.tu }));
     const voltEntries = techEntries.filter(e => Number.isFinite(e.v));
+    // LT/LP are previous-wake timings from status tokens. Filter > 0 skips the initial-zero rows
+    // that follow a cold boot (RTC wiped, no previous wake yet).
+    const ltEntries = entries.filter(e => Number.isFinite(e.s.LT) && e.s.LT > 0).map(e => ({ t: e.t, v: e.s.LT }));
+    const lpEntries = entries.filter(e => Number.isFinite(e.s.LP) && e.s.LP > 0).map(e => ({ t: e.t, v: e.s.LP }));
 
     renderStats(entries, wifiEntries, tuEntries, fcEntries, voltEntries, pfEntries);
     renderWifiPerDay(wifiEntries);
+    renderRangePerDay(document.getElementById('lt-days'), document.querySelector('#lt-section .scale-label'), ltEntries, e => e.v, 'ms', v => Math.round(v));
+    renderRangePerDay(document.getElementById('tu-days'), document.querySelector('#tu-section .scale-label'), tuEntries, e => e.v, 'ms', v => Math.round(v));
+    renderRangePerDay(document.getElementById('lp-days'), document.querySelector('#lp-section .scale-label'), lpEntries, e => e.v, 'ms', v => Math.round(v));
     renderRangePerDay(document.getElementById('wt-days'), document.querySelector('#wt-section .scale-label'), wifiEntries.map(e => ({ t: e.t, v: e.s.WT })), e => e.v, 'ms', v => Math.round(v));
     renderRangePerDay(document.getElementById('batt-v-days'), document.getElementById('batt-v-scale'), voltEntries, e => e.v, 'V', v => v.toFixed(2), 3.5, 4.20);
-    renderRangePerDay(document.getElementById('tu-days'), document.querySelector('#tu-section .scale-label'), tuEntries, e => e.v, 'ms', v => Math.round(v));
     renderFcPerDay(fcEntries);
     renderHttpPerDay(entries);
     renderDistributions(entries);
     renderRecent(entries);
 
     document.getElementById('loading').hidden = true;
-    for (const id of ['stats', 'wifi-section', 'wt-section', 'battery-section', 'tu-section', 'fc-section', 'http-section', 'dists-section', 'recent-section']) {
+    for (const id of ['stats', 'wifi-section', 'lt-section', 'tu-section', 'lp-section', 'wt-section', 'battery-section', 'fc-section', 'http-section', 'dists-section', 'recent-section']) {
         document.getElementById(id).hidden = false;
     }
 }
@@ -221,14 +227,17 @@ function renderRangePerDay(el, scaleEl, entries, valFn, unit, fmt, fixedMin, fix
         const dMin = vals[0];
         const dMax = vals[vals.length - 1];
         const dMed = percentile(vals, 0.5);
+        const dP95 = percentile(vals, 0.95);
         const leftPct = clamp((dMin - globalMin) / span * 100);
         const rightPct = clamp((dMax - globalMin) / span * 100);
         const widthPct = Math.max(1, rightPct - leftPct);
         const medianPct = clamp((dMed - globalMin) / span * 100);
+        const p95Pct = clamp((dP95 - globalMin) / span * 100);
         return `<span class="day-label">${d.day.format('ddd D. MMM')}</span>` +
-            `<span class="wt-bar" title="min ${fmt(dMin)} · median ${fmt(dMed)} · maks ${fmt(dMax)} ${unit} · n=${vals.length}">` +
+            `<span class="wt-bar" title="min ${fmt(dMin)} · median ${fmt(dMed)} · p95 ${fmt(dP95)} · maks ${fmt(dMax)} ${unit} · n=${vals.length}">` +
                 `<span class="fill" style="left:${leftPct.toFixed(2)}%;width:${widthPct.toFixed(2)}%"></span>` +
                 `<span class="median" style="left:${medianPct.toFixed(2)}%"></span>` +
+                `<span class="p95" style="left:${p95Pct.toFixed(2)}%"></span>` +
             `</span>` +
             `<span class="day-count">${fmt(dMin)}/${fmt(dMax)}</span>`;
     }).join('');
@@ -397,16 +406,23 @@ function renderStats(entries, wifiEntries, tuEntries, fcEntries, voltEntries, pf
     const hitPct = pct(wfCounts.HIT || 0, wfTotal);
     const failPct = pct((wfCounts.FAIL || 0) + (wfCounts.FBK || 0) + (wfCounts.MISS || 0), wfTotal);
 
-    const wts = wifiEntries.map(e => e.s.WT).filter(Number.isFinite).sort((a, b) => a - b);
-    const wtP50 = percentile(wts, 0.5);
-    const wtP95 = percentile(wts, 0.95);
-
-    const tus = tuEntries.map(e => e.v).filter(Number.isFinite).sort((a, b) => a - b);
-    const tuP50 = percentile(tus, 0.5);
-    const tuP95 = percentile(tus, 0.95);
+    const wts = wifiEntries.map(e => e.s.WT).filter(Number.isFinite);
+    const tus = tuEntries.map(e => e.v).filter(Number.isFinite);
 
     const cell = (label, value, sub) =>
         `<div><span class="stat-label">${label}</span><span class="stat-value">${value}</span>${sub ? `<span class="stat-sub">${sub}</span>` : ''}</div>`;
+
+    // Distribution tile: value = "p50 / p95", sub = "min X · maks Y · n=Z". Accepts any numeric array
+    // (sorts internally). Assumes ms-integer values (rounds). `emptyMsg` shown as sub when no samples.
+    const distTile = (label, values, emptyMsg = 'ingen data') => {
+        if (!values.length) return cell(label, '—', emptyMsg);
+        const sorted = [...values].sort((a, b) => a - b);
+        const p50 = Math.round(percentile(sorted, 0.5));
+        const p95 = Math.round(percentile(sorted, 0.95));
+        const min = Math.round(sorted[0]);
+        const max = Math.round(sorted[sorted.length - 1]);
+        return cell(label, `${p50} / ${p95}`, `min ${min} · maks ${max} · n=${sorted.length}`);
+    };
 
     const partial = entries.filter(e => e.channels.size < STATUS_CHANNELS.length).length;
 
@@ -430,16 +446,10 @@ function renderStats(entries, wifiEntries, tuEntries, fcEntries, voltEntries, pf
         cell('WF-telemetri', wfTotal, `${groupByDay(wifiEntries).length} dager m/ WF-token`),
         cell('WF-HIT', wfTotal ? `${hitPct}%` : '—', `HIT ${wfCounts.HIT || 0}`),
         cell('Ikke-HIT', wfTotal ? `${failPct}%` : '—', `FBK ${wfCounts.FBK || 0} · MISS ${wfCounts.MISS || 0} · FAIL ${wfCounts.FAIL || 0}`),
-        cell('WT p50 / p95', wts.length ? `${wtP50} / ${wtP95} ms` : '—'),
-        cell('TU p50 / p95', tus.length ? `${tuP50} / ${tuP95} ms` : '—', `n=${tus.length}`),
-        (() => {
-            const lps = entries.map(e => e.s.LP).filter(v => Number.isFinite(v) && v > 0).sort((a, b) => a - b);
-            return cell('Post-tid p50 / p95', lps.length ? `${percentile(lps, 0.5)} / ${percentile(lps, 0.95)} ms` : '—', lps.length ? `n=${lps.length}` : 'venter på firmware m/ LP-token');
-        })(),
-        (() => {
-            const lts = entries.map(e => e.s.LT).filter(v => Number.isFinite(v) && v > 0).sort((a, b) => a - b);
-            return cell('Total-tid p50 / p95', lts.length ? `${percentile(lts, 0.5)} / ${percentile(lts, 0.95)} ms` : '—', lts.length ? `n=${lts.length}` : 'venter på firmware m/ LT-token');
-        })(),
+        distTile('WT p50 / p95', wts),
+        distTile('TU p50 / p95', tus),
+        distTile('Post-tid p50 / p95', entries.map(e => e.s.LP).filter(v => Number.isFinite(v) && v > 0), 'venter på firmware m/ LP-token'),
+        distTile('Total-tid p50 / p95', entries.map(e => e.s.LT).filter(v => Number.isFinite(v) && v > 0), 'venter på firmware m/ LT-token'),
         cell('Batteri lavest', voltEntries?.length ? `${voltEntries.reduce((m, e) => Math.min(m, e.v), Infinity).toFixed(2)} V` : '—', voltEntries?.length ? `n=${voltEntries.length}` : ''),
         cell('Feilede wakes', fcEntries.length ? sumConfirmedFails(fcEntries.map(e => e.s.FC)) : '—', fcEntries.length ? `n=${fcEntries.length} m/ FC` : 'venter på firmware'),
         cell('Stille post-feil', pfEntries.length ? pfEntries.reduce((s, e) => s + e.s.PF, 0) : '—', pfEntries.length ? `n=${pfEntries.length} m/ PF` : 'venter på firmware'),
@@ -527,10 +537,37 @@ function renderTimingPerDay(el, entries, valFn) {
 }
 
 function renderDistributions(entries) {
+    // Buckets a raw HTTP code into short codes (no parenthetical text — was wrapping ugly).
+    // Returns null for 0 (never attempted — cold-boot RTC init) so it's excluded from the counts.
+    const lrBucket = code => {
+        if (code === 0 || !Number.isFinite(code)) return null;
+        if (code === 200) return '200';
+        if (code === -304) return '-304';
+        if (code === -301) return '-301';
+        return `${code}`;
+    };
+    const lrChannelOrder = ['200', '-304', '-301', 'FEIL'];
+    // Silent (PF) wakes = all 3 channels failed at once. To avoid double-counting: LR on rows where
+    // PF>0 IS the last silent wake's codes, so we skip those from the per-channel LR counts and
+    // route the silent wakes to a dedicated 'FEIL' bucket via Σ PF across visible rows.
+    const silentCount = entries.reduce((sum, e) => sum + (Number.isFinite(e.s.PF) ? e.s.PF : 0), 0);
+    const channelGroups = STATUS_CHANNELS.map(ch => ({
+        key: `LR_CH${ch.num}`,
+        title: `Ch${ch.num} (${ch.label}) — HTTP`,
+        order: lrChannelOrder,
+        getValue: e => {
+            if (!Array.isArray(e.s.LR) || e.s.LR.length !== 3) return null;
+            if (Number.isFinite(e.s.PF) && e.s.PF > 0) return null;   // silent-wake LR → 'FEIL' bucket handles it
+            return lrBucket(e.s.LR[ch.num - 1]);
+        },
+        extraCounts: silentCount > 0 ? { FEIL: silentCount } : null
+    }));
+
     const groups = [
         { key: 'WF',    title: 'WiFi-outcome', order: ['HIT', 'FBK', 'MISS', 'FAIL'] },
         { key: 'BS',    title: 'BSSID (mesh-node)', sortByCount: true },
         { key: 'LIGHT', title: 'Lys',          order: ['NIGHT', 'DUSK', 'SHADE', 'SUN'] },
+        ...channelGroups,
         { key: 'T',     title: 'Temp-klasse',  order: ['COLD', 'OK', 'HOT'] },
         { key: 'W',     title: 'Vindu',        order: ['CLOSE', 'OPEN'] },
         { key: 'B',     title: 'Batteri',      order: ['OK', 'LOW'] },
@@ -539,7 +576,10 @@ function renderDistributions(entries) {
 
     const el = document.getElementById('dists');
     el.innerHTML = groups.map(g => {
-        const rawCounts = countBy(entries, e => e.s[g.key]);
+        const rawCounts = countBy(entries, g.getValue || (e => e.s[g.key]));
+        if (g.extraCounts) {
+            for (const [k, v] of Object.entries(g.extraCounts)) rawCounts[k] = (rawCounts[k] || 0) + v;
+        }
         // For BSSID, merge full-BSSID entries that share the same visible short suffix
         let counts, fullByShort;
         if (g.key === 'BS') {
@@ -607,9 +647,9 @@ function renderRecent(entries) {
             <td class="prev-wake-col">${Number.isFinite(e.s.LP) ? e.s.LP : '—'}</td>
             <td class="prev-wake-col">${Number.isFinite(e.s.LT) ? e.s.LT : '—'}</td>
             <td>${Number.isFinite(e.s.TU) ? e.s.TU : '—'}</td>
+            <td>${Number.isFinite(e.s.WT) ? e.s.WT : '—'}</td>
             <td${wfCls}>${wf}</td>
             <td title="${e.s.BS || ''}${nodeName(e.s.BS) ? ` — ${nodeName(e.s.BS)}` : ''}">${e.s.BS ? nodeLabel(e.s.BS) : '—'}</td>
-            <td>${Number.isFinite(e.s.WT) ? e.s.WT : '—'}</td>
             <td>${e.s.LIGHT || '—'}${Number.isFinite(e.s.LX) ? ` <span class="raw-value">${e.s.LX}</span>` : ''}</td>
             <td>${e.s.W || '—'}${Number.isFinite(e.s.WD) ? ` <span class="raw-value">${e.s.WD}</span>` : ''}</td>
             <td>${e.s.T || '—'}${Number.isFinite(e.s.TV) ? ` <span class="raw-value">${e.s.TV.toFixed(1)}</span>` : ''}</td>
@@ -685,7 +725,14 @@ function pct(n, total) {
 }
 
 function percentile(sortedArr, p) {
+    // Linear interpolation (R type 7 / Excel PERCENTILE). Previously used Math.floor(N * p) which
+    // collapsed p95 to max for any N ≤ 20, hiding the p95 marker at the bar's right edge and making
+    // the stat tile useless on small samples.
     if (!sortedArr.length) return 0;
-    const idx = Math.min(sortedArr.length - 1, Math.floor(sortedArr.length * p));
-    return sortedArr[idx];
+    if (sortedArr.length === 1) return sortedArr[0];
+    const pos = (sortedArr.length - 1) * p;
+    const lo = Math.floor(pos);
+    const hi = Math.ceil(pos);
+    if (lo === hi) return sortedArr[lo];
+    return sortedArr[lo] + (pos - lo) * (sortedArr[hi] - sortedArr[lo]);
 }
