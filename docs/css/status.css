@@ -293,6 +293,24 @@ td.cold-boot { color: var(--fail); font-weight: 600; }
 .ch-missing { color: var(--fail); font-weight: 600; }
 .retry-count { color: var(--fbk); font-size: 0.75em; font-weight: 700; margin-left: 1px; }
 
+/* Visual grouping: columns that hold PREVIOUS-wake data (HTTP/FC/PF/Post/Tot)
+   read as italic muted "context" distinct from current-wake columns. Only the group's
+   outer edges get a divider — internal boundaries stay clean. */
+#recent-table td.prev-wake-col {
+    font-style: italic;
+    color: var(--muted);
+}
+#recent-table td.prev-wake-col.ch-cell { font-style: normal; }
+#recent-table td.prev-wake-col .ch-ok,
+#recent-table td.prev-wake-col .ch-missing { font-style: normal; }
+/* Divider at both boundaries of the prev-wake group (entering + leaving). */
+#recent-table th:not(.prev-wake-col) + th.prev-wake-col,
+#recent-table th.prev-wake-col + th:not(.prev-wake-col),
+#recent-table td:not(.prev-wake-col) + td.prev-wake-col,
+#recent-table td.prev-wake-col + td:not(.prev-wake-col) {
+    border-left: 2px solid var(--muted);
+}
+
 #recent-table tbody tr[data-raw] { cursor: pointer; }
 #recent-table tbody tr.anomaly { background-color: rgba(217, 122, 43, 0.10); }
 #recent-table tbody tr.anomaly:hover { background-color: rgba(217, 122, 43, 0.18); }

@@ -90,21 +90,22 @@
                     <tr>
                         <th>Når</th>
                         <th title="Kanaler 1=Drimon, 2=Detaljer, 3=Tech — grønn = post OK, · = kanalen mangler dette wake">Kanaler</th>
+                        <th class="prev-wake-col" title="Forrige wake sine HTTP-koder for de 3 kanalene (LR-token). Orange superskript = ekstra forsøk (PR-token, +N).">HTTP</th>
+                        <th class="prev-wake-col" title="Antall wakes som feilet stille før dette (FC-token, RTC-teller): WiFi klarte ikke å koble til">FC</th>
+                        <th class="prev-wake-col" title="Antall wakes med WiFi-OK men ALLE 3 POST feilet (PF-token, RTC-teller): stille post-tap">PF</th>
+                        <th class="prev-wake-col" title="Forrige wake sin measure-tid i ms (LTU-token) — samme verdi som den wakens egen TU. Duplisert i RTC så hele tidsbudsjettet (LTU + LP + prev SD ≈ LT) kan leses på én rad.">TU</th>
+                        <th class="prev-wake-col" title="Forrige wake sin post-tid i ms (LP-token) — inkl. retries og inter-post delays. Direkte signal på nettverkskost.">Post</th>
+                        <th class="prev-wake-col" title="Forrige wake sin totale wall-clock tid i ms (LT-token) — setup start → sleep. Inkl. measure + post + skjerm-pause + tail. Batteri-kost.">Tot</th>
+                        <th title="Tid brukt på wake (ms, TU-token) — til slutten av measure()">TU-ms</th>
                         <th title="WiFi cache-utfall (WF-token): HIT / FBK / MISS / FAIL">WiFi</th>
                         <th title="BSSID — mesh-nodens 2.4 GHz radio-MAC (full 6 bytes hex)">Node</th>
                         <th title="Tid brukt på WiFi-tilkobling (WT-token)">Wifi-ms</th>
-                        <th title="Forrige wake sine HTTP-koder for de 3 kanalene (LR-token). Orange superskript = ekstra forsøk (PR-token, +N).">HTTP (last)</th>
-                        <th title="Antall wakes som feilet stille før dette (FC-token, RTC-teller): WiFi klarte ikke å koble til">FC</th>
-                        <th title="Antall wakes med WiFi-OK men ALLE 3 POST feilet (PF-token, RTC-teller): stille post-tap">PF</th>
                         <th title="Lysnivå-klasse (NIGHT/DUSK/SHADE/SUN) + rå lux-verdi (LX-token)">Lys</th>
                         <th title="Vindusposisjon (OPEN/CLOSE) + rå avstand i mm (WD-token)">Vindu</th>
                         <th title="Temperatur-klasse (COLD ≤5 °C / OK / HOT ≥35 °C) + aggregert temperatur i °C (TV-token)">Temp</th>
-                        <th title="Batteri-klasse: OK / LOW (&lt;35%)">Batt</th>
-                        <th title="Batterispenning (V, BV-token)">V</th>
+                        <th title="Batteri-klasse: OK / LOW (&lt;35%) + spenning (V, BV-token)">Batt</th>
                         <th title="Trykk-klasse: LOW / OK / HIGH">Trykk</th>
-                        <th title="Tid brukt på wake (ms, TU-token) — til slutten av measure()">TU-ms</th>
-                        <th title="Skjerm-pause (SD-token): JA = 12 s pause etter measure (knappe-/frisk-wake), NEI = timer-wake uten pause">Skjerm</th>
-                        <th title="Boot-årsak (WR-token): — = normal timer-/EXT0-wake fra deep sleep. Annet = kald-boot som blanket RTC (POWERON/BROWNOUT/PANIC/EXT/…). Hold over for full <resetReason>.<wakeupCause>-verdi.">Boot</th>
+                        <th title="Boot-årsak (WR-token): — = normal timer-/EXT0-wake fra deep sleep. Annet = kald-boot som blanket RTC (POWERON/BROWNOUT/PANIC/EXT/…). Suffix i grå = skjerm-pause i ms (SD-token, 0 utelates).">Boot</th>
                         <th title="Firmware-versjon (V-token): kort git commit-hash + '+' hvis kompilert med uncommittet endring">V</th>
                     </tr>
                 </thead>

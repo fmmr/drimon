@@ -235,6 +235,10 @@ void setup() {
   beep(40);
 
   int sleepDuration = getSleepDuration(data.lux);
+  long totalElapsed = millis() - start;
+  lastTotalTimeMs = totalElapsed > UINT16_MAX ? UINT16_MAX : (uint16_t)totalElapsed;
+  lastMeasureTimeMs = data.timeUsed > UINT16_MAX ? UINT16_MAX : (uint16_t)data.timeUsed;
+  Serial.printf("Total wake time %ld ms (measure %ld, post %u). Sleeping %d s.\n", totalElapsed, data.timeUsed, lastPostTimeMs, sleepDuration);
   enterDeepSleep(sleepDuration);
 }
 

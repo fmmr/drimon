@@ -50,7 +50,7 @@ Physical controls on the enclosure:
 Every ThingSpeak entry carries a `status` string like:
 
 ```
-T-OK_SHADE_W-OPEN_B-OK_P-HIGH_WF-HIT_BS-14918294f9c4_WT-388_FC-0_PF-0_BV-4.09_TU-5435_TV-21.4_LX-8500_WD-72_LR-200.200.200_PR-0.0.0_WR-8.4_V-d9976d7_SD-0
+T-OK_SHADE_W-OPEN_B-OK_P-HIGH_WF-HIT_BS-14918294f9c4_WT-388_FC-0_PF-0_BV-4.09_TU-5435_TV-21.4_LX-8500_WD-72_LR-200.200.200_PR-0.0.0_LTU-5312_LP-3120_LT-11250_WR-8.4_V-d9976d7_SD-0
 ```
 
 Underscore-separated `PREFIX-VALUE` parts:
@@ -74,8 +74,13 @@ Underscore-separated `PREFIX-VALUE` parts:
 | `WD-` | Window distance (raw) | Integer mm (e.g. `72`). Raw TOF distance reading before `WINDOW_CLOSE` classification. Same as `DRIMON_CHANNEL` field 4 (before the −63 mm shift). |
 | `LR-` | Last-run HTTP results (dot-separated) | Three HTTP result codes from the previous wake's 3 channel POSTs (final code after any retries), e.g. `200.200.200` all-ok, `200.429.429` rate-limited, `200.0.0` timeouts after Ch 1, `0.0.0` first wake after cold reset. RTC-persisted; wiped by brownout / EN button. |
 | `PR-` | Post retries (dot-separated) | Extra attempts each channel needed in the previous wake, e.g. `0.0.0` no retries, `1.0.1` ch1 + ch3 each retried once, `2.2.2` every channel hit `MAX_POST_RETRY`. Only transient codes (`0`, `-301`, `-302`, `-303`, `-304`) trigger retries; 4xx/5xx don't. RTC-persisted; wiped by cold reset. |
+| `LTU-` | Last TU (ms) | Previous wake's measure time — same value as that wake's own `TU-`, duplicated in RTC so the full timing decomposition (measure + post + display) fits on a single status row. `uint16_t`, saturates at 65535. |
+| `LP-` | Last Post time (ms) | Wall-clock ms the previous wake spent inside `postThingSpeak()` — includes retries, inter-post delays, and the 3× per-channel POST. Direct signal of network cost. Grows with `PR` values. RTC-persisted; wiped by cold reset. `uint16_t`, saturates at 65535. |
+| `LT-` | Last Total time (ms) | Wall-clock ms for the entire previous wake, setup start → just before `enterDeepSleep`. Sum of measure + post + display pause (`SD-`) + ~700 ms tail (flash/beep). Battery-cost proxy. Sanity check: `LTU + LP + prev_SD + ~700 ≈ LT`. RTC-persisted; wiped by cold reset. `uint16_t`, saturates at 65535. |
 | `WR-` | Wake reason: `<resetReason>.<wakeupCause>` | `resetReason` = `esp_reset_reason()` — `1` POWERON, `2` EXT (EN pin), `3` SW, `4` PANIC, `5` INT_WDT, `6` TASK_WDT, `7` WDT, `8` DEEPSLEEP (normal timer/EXT0 wake — RTC preserved), `9` BROWNOUT, `10` SDIO. `wakeupCause` = `esp_sleep_get_wakeup_cause()` — `0` UNDEFINED (fresh boot), `2` EXT0 (green button), `4` TIMER. Anything but `8.*` = a cold-path reset happened and RTC was wiped. Captured at start of `setup()`. |
-| `SD-` | Display-read pause | `0` (timer wake, no delay) or `12000` (button/fresh wake, 12 s pause) |
+| `SD-` | Display-read pause | `0` (timer wake, no delay) or `8000` (button/fresh wake, 8 s pause — value of `DISPLAY_TIME`) |
+
+**Naming convention**: tokens starting with `L*` (currently `LR-`, `LTU-`, `LP-`, `LT-`) hold data from the **previous wake** — captured in RTC memory at the end of that wake, embedded in the next wake's status. `PR-`, `FC-`, and `PF-` also describe accumulated state from previous wakes (historical inconsistency — kept for descriptive fit and backward compatibility). All other tokens describe the current wake.
 
 **Read the status from ThingSpeak** (any of the 3 channels works — same status on all):
 

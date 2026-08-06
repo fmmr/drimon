@@ -141,6 +141,9 @@ const STATUS_TOKENS = [
     { prefix: 'WD-', key: 'WD', parse: v => parseInt(v, 10) },
     { prefix: 'LR-', key: 'LR', parse: v => v.split('.').map(x => parseInt(x, 10)) },
     { prefix: 'PR-', key: 'PR', parse: v => v.split('.').map(x => parseInt(x, 10)) },
+    { prefix: 'LTU-', key: 'LTU', parse: v => parseInt(v, 10) },
+    { prefix: 'LP-', key: 'LP', parse: v => parseInt(v, 10) },
+    { prefix: 'LT-', key: 'LT', parse: v => parseInt(v, 10) },
     { prefix: 'WR-', key: 'WR', parse: v => v.split('.').map(x => parseInt(x, 10)) },
     { prefix: 'V-',  key: 'V',  parse: v => v },
     { prefix: 'SD-', key: 'SD', parse: v => parseInt(v, 10) }
@@ -429,6 +432,14 @@ function renderStats(entries, wifiEntries, tuEntries, fcEntries, voltEntries, pf
         cell('Ikke-HIT', wfTotal ? `${failPct}%` : '—', `FBK ${wfCounts.FBK || 0} · MISS ${wfCounts.MISS || 0} · FAIL ${wfCounts.FAIL || 0}`),
         cell('WT p50 / p95', wts.length ? `${wtP50} / ${wtP95} ms` : '—'),
         cell('TU p50 / p95', tus.length ? `${tuP50} / ${tuP95} ms` : '—', `n=${tus.length}`),
+        (() => {
+            const lps = entries.map(e => e.s.LP).filter(v => Number.isFinite(v) && v > 0).sort((a, b) => a - b);
+            return cell('Post-tid p50 / p95', lps.length ? `${percentile(lps, 0.5)} / ${percentile(lps, 0.95)} ms` : '—', lps.length ? `n=${lps.length}` : 'venter på firmware m/ LP-token');
+        })(),
+        (() => {
+            const lts = entries.map(e => e.s.LT).filter(v => Number.isFinite(v) && v > 0).sort((a, b) => a - b);
+            return cell('Total-tid p50 / p95', lts.length ? `${percentile(lts, 0.5)} / ${percentile(lts, 0.95)} ms` : '—', lts.length ? `n=${lts.length}` : 'venter på firmware m/ LT-token');
+        })(),
         cell('Batteri lavest', voltEntries?.length ? `${voltEntries.reduce((m, e) => Math.min(m, e.v), Infinity).toFixed(2)} V` : '—', voltEntries?.length ? `n=${voltEntries.length}` : ''),
         cell('Feilede wakes', fcEntries.length ? sumConfirmedFails(fcEntries.map(e => e.s.FC)) : '—', fcEntries.length ? `n=${fcEntries.length} m/ FC` : 'venter på firmware'),
         cell('Stille post-feil', pfEntries.length ? pfEntries.reduce((s, e) => s + e.s.PF, 0) : '—', pfEntries.length ? `n=${pfEntries.length} m/ PF` : 'venter på firmware'),
@@ -589,30 +600,36 @@ function renderRecent(entries) {
         return `<tr${trClass}${rawAttrs}>
             <td>${e.t.format('D. MMM HH:mm')}</td>
             <td class="ch-cell">${channelBadges(e.channels)}</td>
+            <td class="ch-cell prev-wake-col">${lrBadges(e.s.LR, e.s.PR)}</td>
+            <td class="prev-wake-col">${Number.isFinite(e.s.FC) ? e.s.FC : '—'}</td>
+            <td class="prev-wake-col">${Number.isFinite(e.s.PF) ? e.s.PF : '—'}</td>
+            <td class="prev-wake-col">${Number.isFinite(e.s.LTU) ? e.s.LTU : '—'}</td>
+            <td class="prev-wake-col">${Number.isFinite(e.s.LP) ? e.s.LP : '—'}</td>
+            <td class="prev-wake-col">${Number.isFinite(e.s.LT) ? e.s.LT : '—'}</td>
+            <td>${Number.isFinite(e.s.TU) ? e.s.TU : '—'}</td>
             <td${wfCls}>${wf}</td>
             <td title="${e.s.BS || ''}${nodeName(e.s.BS) ? ` — ${nodeName(e.s.BS)}` : ''}">${e.s.BS ? nodeLabel(e.s.BS) : '—'}</td>
             <td>${Number.isFinite(e.s.WT) ? e.s.WT : '—'}</td>
-            <td class="ch-cell">${lrBadges(e.s.LR, e.s.PR)}</td>
-            <td>${Number.isFinite(e.s.FC) ? e.s.FC : '—'}</td>
-            <td>${Number.isFinite(e.s.PF) ? e.s.PF : '—'}</td>
             <td>${e.s.LIGHT || '—'}${Number.isFinite(e.s.LX) ? ` <span class="raw-value">${e.s.LX}</span>` : ''}</td>
             <td>${e.s.W || '—'}${Number.isFinite(e.s.WD) ? ` <span class="raw-value">${e.s.WD}</span>` : ''}</td>
             <td>${e.s.T || '—'}${Number.isFinite(e.s.TV) ? ` <span class="raw-value">${e.s.TV.toFixed(1)}</span>` : ''}</td>
-            <td>${e.s.B || '—'}</td>
-            <td>${Number.isFinite(e.s.BV) ? e.s.BV.toFixed(2) : '—'}</td>
+            <td>${e.s.B || '—'}${Number.isFinite(e.s.BV) ? ` <span class="raw-value">${e.s.BV.toFixed(2)}</span>` : ''}</td>
             <td>${e.s.P || '—'}</td>
-            <td>${Number.isFinite(e.s.TU) ? e.s.TU : '—'}</td>
-            <td>${Number.isFinite(e.s.SD) ? (e.s.SD > 0 ? 'JA' : 'NEI') : '—'}</td>
             <td${isColdBoot(e) ? ' class="cold-boot"' : ''}>${(() => {
                 const wr = wrEntry(e);
-                if (!wr) return '—';
+                const sdSuffix = Number.isFinite(e.s.SD) && e.s.SD > 0
+                    ? ` <span class="raw-value">${e.s.SD / 1000}s</span>`
+                    : '';
+                if (!wr) return `—${sdSuffix}`;
                 const rrName = RESET_REASON_NAMES[wr[0]] || String(wr[0]);
                 const wcName = WAKEUP_CAUSE_NAMES[wr[1]] || String(wr[1]);
                 const title = `WR-${wr[0]}.${wr[1]} — ${rrName} · ${wcName}`;
-                if (wr[0] !== 8) return `<span title="${title}">${rrName}</span>`;
-                if (wr[1] === 2) return `<span class="wr-button" title="${title}">BUTTON</span>`;
-                if (wr[1] === 4) return `<span class="wr-timer" title="${title}">TIMER</span>`;
-                return `<span title="${title}">${wcName}</span>`;
+                let label;
+                if (wr[0] !== 8) label = `<span title="${title}">${rrName}</span>`;
+                else if (wr[1] === 2) label = `<span class="wr-button" title="${title}">BUTTON</span>`;
+                else if (wr[1] === 4) label = `<span class="wr-timer" title="${title}">TIMER</span>`;
+                else label = `<span title="${title}">${wcName}</span>`;
+                return `${label}${sdSuffix}`;
             })()}</td>
             <td>${githubCommitLink(e.s.V)}</td>
         </tr>`;

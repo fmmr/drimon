@@ -42,6 +42,9 @@ String status(SensorData& data) {
   stat = stat + "_WD-" + String(data.distance);
   stat = stat + "_LR-" + String(lastPostResults[0]) + "." + String(lastPostResults[1]) + "." + String(lastPostResults[2]);
   stat = stat + "_PR-" + String(postRetryCounts[0]) + "." + String(postRetryCounts[1]) + "." + String(postRetryCounts[2]);
+  stat = stat + "_LTU-" + String(lastMeasureTimeMs);
+  stat = stat + "_LP-" + String(lastPostTimeMs);
+  stat = stat + "_LT-" + String(lastTotalTimeMs);
   stat = stat + "_WR-" + String(g_resetReason) + "." + String(g_wakeupCause);
   stat = stat + "_V-" + FIRMWARE_VERSION;
   stat = stat + "_SD-" + (DISPLAY_ON ? String(DISPLAY_TIME) : "0");

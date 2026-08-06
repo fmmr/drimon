@@ -31,6 +31,7 @@ static int postChannel(unsigned long chId, const char* apiKey, int chNum, const 
 }
 
 void postThingSpeak(SensorData& data) {
+  long postStart = millis();
   digitalWrite(BLUE_LED_PIN, HIGH);
   ThingSpeak.begin(client);
   Serial.println("Posting data to ThingSpeak...");
@@ -92,5 +93,7 @@ void postThingSpeak(SensorData& data) {
                 postRetryCounts[0], postRetryCounts[1], postRetryCounts[2]);
   for (int i = 0; i < 3; i++) flashLED(chOk[i] ? GREEN_LED_PIN : RED_LED_PIN, 1, POST_FLASH_ON_MS);
 
-  Serial.println("Done Posting data to ThingSpeak...");
+  long postElapsed = millis() - postStart;
+  lastPostTimeMs = postElapsed > UINT16_MAX ? UINT16_MAX : (uint16_t)postElapsed;
+  Serial.printf("Done Posting data to ThingSpeak... (%ld ms)\n", postElapsed);
 }
