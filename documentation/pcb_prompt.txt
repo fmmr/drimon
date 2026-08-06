@@ -1,0 +1,25 @@
+ want to design a new PCB revision for the Drimon greenhouse monitor. Read
+  documentation/NEW_PCB_DESIGN.md first — it captures the requirements,
+  constraints, current architecture, and open questions from the previous
+  session (2026-08-06).
+
+  Context you should have from that doc:
+  - The system stops in prolonged low-solar periods (Dec 2024, Oct 2025)
+  - Root cause is DFR0559 boost + ESP32 dev module quiescent (~25 mA continuous)
+  - Goal is ≥25 days battery-only survival (currently ~12)
+  - Keep the MAX17043 fuel gauge — decision on dropping deferred until winter data
+  - Flashing must be zero-effort (USB-C on enclosure exterior, no disassembly)
+  - I'm a strong Kotlin/Java/C++ dev but not an EE — explain hardware choices,
+    don't just name parts
+
+  Start by:
+  1. Reading NEW_PCB_DESIGN.md end-to-end
+  2. Reading documentation/HARDWARE.md (current power budget + sensor list)
+  3. Skimming 20240724_drimon_1_3/20240724_drimon_1_3.ino (pin assignments)
+
+  Then walk me through the 10 open questions in NEW_PCB_DESIGN.md one at a
+  time, giving me trade-off analysis for each and your recommendation. After
+  we've settled them, we'll build the schematic (I use Fritzing today — happy
+  to switch to KiCad if you think it's worth it for this design).
+
+  Don't touch firmware yet — this is purely hardware design.

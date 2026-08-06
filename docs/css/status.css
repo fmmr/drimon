@@ -90,7 +90,7 @@ h2 a:hover,
 
 #stats {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
     gap: 0.4rem;
     margin-bottom: 0.5rem;
 }
@@ -105,10 +105,11 @@ h2 a:hover,
 }
 
 .stat-label {
-    font-size: 0.7rem;
+    font-size: 0.78rem;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: var(--muted);
+    color: var(--fg);
 }
 
 .stat-value {
@@ -122,6 +123,28 @@ h2 a:hover,
     font-size: 0.72rem;
     color: var(--muted);
     margin-top: 0.05rem;
+}
+
+/* Distribution tile: p50/p95 line (dist-primary) sits between .stat-value and .stat-sub in weight,
+   so it reads as "the number that matters" while min/max stays context. Both lines nowrap so they
+   never wrap mid-value; the stats grid's minmax handles the extra width. The "p50/p95:" and
+   "min/max:" prefix labels use dist-prefix (small, muted) so numbers are the visual anchor. */
+.dist-primary {
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    margin-top: 0.15rem;
+    white-space: nowrap;
+}
+.dist-secondary {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.dist-prefix {
+    font-size: 0.72rem;
+    font-weight: 400;
+    color: var(--muted);
+    margin-right: 0.15rem;
 }
 
 .legend {

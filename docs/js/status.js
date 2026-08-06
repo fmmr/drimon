@@ -412,16 +412,19 @@ function renderStats(entries, wifiEntries, tuEntries, fcEntries, voltEntries, pf
     const cell = (label, value, sub) =>
         `<div><span class="stat-label">${label}</span><span class="stat-value">${value}</span>${sub ? `<span class="stat-sub">${sub}</span>` : ''}</div>`;
 
-    // Distribution tile: value = "p50 / p95", sub = "min X · maks Y · n=Z". Accepts any numeric array
-    // (sorts internally). Assumes ms-integer values (rounds). `emptyMsg` shown as sub when no samples.
+    // Distribution tile: two-line body with p50/p95 slightly more prominent than min/max, both on
+    // single lines (nowrap). Count moves into the label. Accepts any numeric array (sorts
+    // internally). Assumes ms-integer values (rounds). `emptyMsg` shown as sub when no samples.
     const distTile = (label, values, emptyMsg = 'ingen data') => {
-        if (!values.length) return cell(label, '—', emptyMsg);
+        if (!values.length) return `<div><span class="stat-label">${label}</span><span class="stat-value">—</span><span class="stat-sub">${emptyMsg}</span></div>`;
         const sorted = [...values].sort((a, b) => a - b);
         const p50 = Math.round(percentile(sorted, 0.5));
         const p95 = Math.round(percentile(sorted, 0.95));
         const min = Math.round(sorted[0]);
         const max = Math.round(sorted[sorted.length - 1]);
-        return cell(label, `${p50} / ${p95}`, `min ${min} · maks ${max} · n=${sorted.length}`);
+        return `<div><span class="stat-label">${label} (${sorted.length})</span>` +
+            `<span class="dist-primary"><span class="dist-prefix">p50/p95:</span>${p50} / ${p95}</span>` +
+            `<span class="stat-sub dist-secondary"><span class="dist-prefix">min/max:</span>${min} / ${max}</span></div>`;
     };
 
     const partial = entries.filter(e => e.channels.size < STATUS_CHANNELS.length).length;
@@ -446,10 +449,10 @@ function renderStats(entries, wifiEntries, tuEntries, fcEntries, voltEntries, pf
         cell('WF-telemetri', wfTotal, `${groupByDay(wifiEntries).length} dager m/ WF-token`),
         cell('WF-HIT', wfTotal ? `${hitPct}%` : '—', `HIT ${wfCounts.HIT || 0}`),
         cell('Ikke-HIT', wfTotal ? `${failPct}%` : '—', `FBK ${wfCounts.FBK || 0} · MISS ${wfCounts.MISS || 0} · FAIL ${wfCounts.FAIL || 0}`),
-        distTile('WT p50 / p95', wts),
-        distTile('TU p50 / p95', tus),
-        distTile('Post-tid p50 / p95', entries.map(e => e.s.LP).filter(v => Number.isFinite(v) && v > 0), 'venter på firmware m/ LP-token'),
-        distTile('Total-tid p50 / p95', entries.map(e => e.s.LT).filter(v => Number.isFinite(v) && v > 0), 'venter på firmware m/ LT-token'),
+        distTile('WT', wts),
+        distTile('TU', tus),
+        distTile('Post-tid', entries.map(e => e.s.LP).filter(v => Number.isFinite(v) && v > 0), 'venter på firmware m/ LP-token'),
+        distTile('Total-tid', entries.map(e => e.s.LT).filter(v => Number.isFinite(v) && v > 0), 'venter på firmware m/ LT-token'),
         cell('Batteri lavest', voltEntries?.length ? `${voltEntries.reduce((m, e) => Math.min(m, e.v), Infinity).toFixed(2)} V` : '—', voltEntries?.length ? `n=${voltEntries.length}` : ''),
         cell('Feilede wakes', fcEntries.length ? sumConfirmedFails(fcEntries.map(e => e.s.FC)) : '—', fcEntries.length ? `n=${fcEntries.length} m/ FC` : 'venter på firmware'),
         cell('Stille post-feil', pfEntries.length ? pfEntries.reduce((s, e) => s + e.s.PF, 0) : '—', pfEntries.length ? `n=${pfEntries.length} m/ PF` : 'venter på firmware'),
