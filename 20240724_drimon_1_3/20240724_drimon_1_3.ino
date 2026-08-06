@@ -116,6 +116,19 @@ bool TOF_OK = false;
 uint8_t g_resetReason = 0;   // esp_reset_reason() at setup start — 8 = ESP_RST_DEEPSLEEP (normal), anything else = cold-path reset that wiped RTC
 uint8_t g_wakeupCause = 0;   // esp_sleep_get_wakeup_cause() at setup start — 4 = TIMER, 2 = EXT0, 0 = UNDEFINED (fresh boot)
 
+// All RTC_DATA_ATTR vars live here: Arduino concatenates the main sketch first, so any variable
+// referenced from setup() must be declared here to be in scope. Grouping the rest here too so all
+// wake-crossing state is in one place.
+RTC_DATA_ATTR uint8_t cachedBSSID[6] = {0};
+RTC_DATA_ATTR int32_t cachedChannel = 0;
+RTC_DATA_ATTR uint16_t wifiFailStreak = 0;    // consecutive wakes where WiFi never associated; wiped by cold reset
+RTC_DATA_ATTR uint16_t postFailStreak = 0;    // consecutive wakes where WiFi was OK but ALL 3 POSTs failed; wiped by cold reset
+RTC_DATA_ATTR int lastPostResults[3] = {0, 0, 0};   // HTTP codes from previous wake's 3 channel POSTs
+RTC_DATA_ATTR uint8_t postRetryCounts[3] = {0, 0, 0};   // per-channel EXTRA attempts used in previous wake (0 = no retry, up to MAX_POST_RETRY)
+RTC_DATA_ATTR uint16_t lastPostTimeMs = 0;    // ms spent inside postThingSpeak() during the previous wake (retries + inter-post delays)
+RTC_DATA_ATTR uint16_t lastTotalTimeMs = 0;   // ms for the entire previous wake (setup → just before enterDeepSleep); measure + post + display + tail
+RTC_DATA_ATTR uint16_t lastMeasureTimeMs = 0; // previous wake's measure time (same as that wake's own TU); emitted as LTU- to keep decomposition on one status row
+
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
 LCD_I2C lcd(0x27, 16, 2);
 Adafruit_VL53L0X tof = Adafruit_VL53L0X();
