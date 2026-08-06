@@ -293,6 +293,15 @@ td.cold-boot { color: var(--fail); font-weight: 600; }
 .ch-missing { color: var(--fail); font-weight: 600; }
 .retry-count { color: var(--fbk); font-size: 0.75em; font-weight: 700; margin-left: 1px; }
 
+#recent-table tbody tr[data-raw] { cursor: pointer; }
+#recent-table tbody tr.anomaly { background-color: rgba(217, 122, 43, 0.10); }
+#recent-table tbody tr.anomaly:hover { background-color: rgba(217, 122, 43, 0.18); }
+#recent-table tbody tr.copied,
+#recent-table tbody tr.copied:hover,
+#recent-table tbody tr.anomaly.copied,
+#recent-table tbody tr.anomaly.copied:hover { background-color: var(--hit); transition: background-color 0.15s ease-out; }
+#recent-table tbody tr.copied td { color: white; }
+
 .raw-value {
     color: var(--muted);
     font-size: 0.85em;

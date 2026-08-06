@@ -72,6 +72,31 @@ function shortBS(bs) {
     return typeof bs === 'string' && bs.length >= 6 ? bs.slice(-6) : (bs || '—');
 }
 
+// BSSID bytes 1-4 (8 hex chars, lowercase) → node name. Source: documentation/MESH_NODES.md.
+// Match strategy: drop byte 0 (varies with LA-bit interface variants: `14` LAN OUI, `1A`/`1E`/`26`
+// locally-administered radios) and byte 5 (varies with per-interface offset LAN+1, LAN+2, …). Bytes
+// 1-2 = `91:82` are the Linksys OUI (kept as a safety check against non-Linksys APs collision-matching
+// on bytes 3-4 alone). Bytes 3-4 are the unique-per-node bytes.
+const MESH_NODES = {
+    '918294f9': 'SOV_MF',
+    '91828f5f': 'EXTRA_UTE',
+    '91828f6c': 'STUE',
+    '91829500': 'TV_ROM'
+};
+
+function nodePrefix(bs) {
+    return typeof bs === 'string' && bs.length >= 12 ? bs.slice(2, -2).toLowerCase() : null;
+}
+
+function nodeName(bs) {
+    const prefix = nodePrefix(bs);
+    return prefix ? (MESH_NODES[prefix] || null) : null;
+}
+
+function nodeLabel(bs) {
+    return nodeName(bs) || shortBS(bs);
+}
+
 function githubCommitLink(hash) {
     if (!hash || hash === 'template' || hash === 'unknown') return hash || '—';
     const clean = hash.replace(/\+$/, '');   // strip the dirty '+' before linking
@@ -335,6 +360,29 @@ function isColdBoot(e) {
     return wr !== null && wr[0] !== 8;
 }
 
+function anomalyReasons(e) {
+    const reasons = [];
+    const wr = wrEntry(e);
+    if (wr && !(wr[0] === 8 && (wr[1] === 4 || wr[1] === 2))) {
+        const rr = RESET_REASON_NAMES[wr[0]] || wr[0];
+        const wc = WAKEUP_CAUSE_NAMES[wr[1]] || wr[1];
+        reasons.push(`WR-${wr[0]}.${wr[1]} (${rr}/${wc})`);
+    }
+    if (e.channels && e.channels.size < STATUS_CHANNELS.length) {
+        const missing = STATUS_CHANNELS.filter(c => !e.channels.has(c.num)).map(c => c.num).join(',');
+        reasons.push(`kanal-tap: ${missing}`);
+    }
+    if (Array.isArray(e.s.PR) && e.s.PR.some(v => Number.isFinite(v) && v > 0)) {
+        reasons.push(`retries=${e.s.PR.join('.')}`);
+    }
+    if (Number.isFinite(e.s.FC) && e.s.FC > 0) reasons.push(`FC=${e.s.FC}`);
+    if (Number.isFinite(e.s.PF) && e.s.PF > 0) reasons.push(`PF=${e.s.PF}`);
+    if (Array.isArray(e.s.LR) && e.s.LR.some(c => c !== 200 && c !== 0)) {
+        reasons.push(`LR=${e.s.LR.join('.')}`);
+    }
+    return reasons;
+}
+
 function renderStats(entries, wifiEntries, tuEntries, fcEntries, voltEntries, pfEntries) {
     const total = entries.length;
     const days = groupByDay(entries);
@@ -504,10 +552,18 @@ function renderDistributions(entries) {
             const raw = n / total * 100;
             const barWidth = Math.max(0.5, raw).toFixed(2);
             const label = raw >= 1 ? `${Math.round(raw)}%` : '<1%';
-            const tooltip = g.key === 'BS' && fullByShort && fullByShort[k]
-                ? `${fullByShort[k].join(' + ')}: ${n} av ${total}`
-                : `${k}: ${n} av ${total}`;
-            return `<div class="dist-row" title="${tooltip}"><span>${k}</span><span class="dist-bar" style="width:${barWidth}%"></span><span class="dist-pct">${label}</span></div>`;
+            let bsName = null;
+            let display = k;
+            let tooltip = `${k}: ${n} av ${total}`;
+            if (g.key === 'BS' && fullByShort && fullByShort[k] && fullByShort[k].length) {
+                // Older firmware stored BS as a 6-char short; newer stores the full 12-char BSSID.
+                // Prefer any full-length variant so nodeName's byte-slice actually matches.
+                const fullBs = fullByShort[k].find(bs => bs.length >= 12) || fullByShort[k][0];
+                bsName = nodeName(fullBs);
+                display = bsName || k;
+                tooltip = `${fullByShort[k].join(' + ')}${bsName ? ` — ${bsName}` : ''}: ${n} av ${total}`;
+            }
+            return `<div class="dist-row" title="${tooltip}"><span>${display}</span><span class="dist-bar" style="width:${barWidth}%"></span><span class="dist-pct">${label}</span></div>`;
         }).join('');
         return `<div class="dist-group"><div class="dist-title">${g.title} · n=${total}</div>${rows}</div>`;
     }).join('');
@@ -525,12 +581,16 @@ function renderRecent(entries) {
     tbody.innerHTML = rows.map(e => {
         const wf = e.s.WF || '—';
         const wfCls = wf === '—' ? '' : ` class="wf-${wf.toLowerCase()}"`;
-        const rawTitle = e.raw ? ` title="${e.raw.replace(/"/g, '&quot;')}"` : '';
-        return `<tr${rawTitle}>
+        const rawEscaped = e.raw ? e.raw.replace(/"/g, '&quot;') : '';
+        const reasons = anomalyReasons(e);
+        const trClass = reasons.length ? ' class="anomaly"' : '';
+        const titlePrefix = reasons.length ? `⚠ Uvanlig: ${reasons.join(' · ')} — ` : '';
+        const rawAttrs = e.raw ? ` title="${titlePrefix}Klikk for å kopiere: ${rawEscaped}" data-raw="${rawEscaped}"` : '';
+        return `<tr${trClass}${rawAttrs}>
             <td>${e.t.format('D. MMM HH:mm')}</td>
             <td class="ch-cell">${channelBadges(e.channels)}</td>
             <td${wfCls}>${wf}</td>
-            <td title="${e.s.BS || ''}">${e.s.BS ? shortBS(e.s.BS) : '—'}</td>
+            <td title="${e.s.BS || ''}${nodeName(e.s.BS) ? ` — ${nodeName(e.s.BS)}` : ''}">${e.s.BS ? nodeLabel(e.s.BS) : '—'}</td>
             <td>${Number.isFinite(e.s.WT) ? e.s.WT : '—'}</td>
             <td class="ch-cell">${lrBadges(e.s.LR, e.s.PR)}</td>
             <td>${Number.isFinite(e.s.FC) ? e.s.FC : '—'}</td>
@@ -557,6 +617,40 @@ function renderRecent(entries) {
             <td>${githubCommitLink(e.s.V)}</td>
         </tr>`;
     }).join('');
+
+    tbody.onclick = (evt) => {
+        if (evt.target.closest('a')) return;   // let commit-hash / other links work normally
+        const tr = evt.target.closest('tr[data-raw]');
+        if (!tr) return;
+        const raw = tr.dataset.raw;
+        if (!raw) return;
+        copyToClipboard(raw).then(ok => {
+            if (!ok) return;
+            tr.classList.add('copied');
+            setTimeout(() => tr.classList.remove('copied'), 600);
+        });
+    };
+}
+
+// navigator.clipboard requires a secure context (HTTPS/localhost). Falls back to the deprecated
+// execCommand('copy') via a hidden textarea for plain-HTTP dev URLs like http://local.finn.no:8000.
+function copyToClipboard(text) {
+    if (navigator.clipboard && window.isSecureContext) {
+        return navigator.clipboard.writeText(text).then(() => true).catch(() => false);
+    }
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.setAttribute('readonly', '');
+    ta.style.position = 'fixed';
+    ta.style.top = '0';
+    ta.style.left = '0';
+    ta.style.opacity = '0';
+    document.body.appendChild(ta);
+    ta.select();
+    let ok = false;
+    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+    document.body.removeChild(ta);
+    return Promise.resolve(ok);
 }
 
 function countBy(list, fn) {

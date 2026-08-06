@@ -1,6 +1,6 @@
 # DriMon Hardware
 
-Physical device — components, power, and PCB. For runtime references (LED codes, buttons, status field), see [QUICK_REFERENCE.md](QUICK_REFERENCE.md). For historical debug notes on a specific incident, see [HARDWARE_SOLAR_CHARGING_CHECK.md](HARDWARE_SOLAR_CHARGING_CHECK.md).
+Physical device — components, power, and PCB. For runtime references (LED codes, buttons, status field), see [QUICK_REFERENCE.md](QUICK_REFERENCE.md). For the WiFi mesh topology (BSSID → node-name mapping), see [MESH_NODES.md](MESH_NODES.md). For historical debug notes on a specific incident, see [HARDWARE_SOLAR_CHARGING_CHECK.md](HARDWARE_SOLAR_CHARGING_CHECK.md).
 
 ## Core Components
 
