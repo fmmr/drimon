@@ -111,6 +111,8 @@ int dispLine = 0;
 bool SHOULD_POST = false;
 bool DISPLAY_ON = false;
 bool TOF_OK = false;
+uint8_t g_resetReason = 0;   // esp_reset_reason() at setup start — 8 = ESP_RST_DEEPSLEEP (normal), anything else = cold-path reset that wiped RTC
+uint8_t g_wakeupCause = 0;   // esp_sleep_get_wakeup_cause() at setup start — 4 = TIMER, 2 = EXT0, 0 = UNDEFINED (fresh boot)
 
 Adafruit_SSD1306 display(128, 64, &Wire, -1);
 LCD_I2C lcd(0x27, 16, 2);
