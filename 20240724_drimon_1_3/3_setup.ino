@@ -7,6 +7,8 @@ RTC_DATA_ATTR int lastPostResults[3] = {0, 0, 0};  // HTTP codes from previous w
 String g_wifiCacheStatus = "?";
 long g_wifiConnectMs = 0;
 String g_wifiBssid = "?";
+uint8_t g_resetReason = 0;   // esp_reset_reason() at setup start — 8 = ESP_RST_DEEPSLEEP (normal), anything else = cold-path reset that wiped RTC
+uint8_t g_wakeupCause = 0;   // esp_sleep_get_wakeup_cause() at setup start — 4 = TIMER, 2 = EXT0, 0 = UNDEFINED (fresh boot)
 
 void setupPins() {
   pinMode(BLUE_LED_PIN, OUTPUT);

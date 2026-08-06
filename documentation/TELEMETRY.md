@@ -49,7 +49,7 @@ curl -s 'https://api.thingspeak.com/channels/2568299/status.json?results=1000&da
   | awk -F'\t' 'match($2, /WT-[0-9]+/) { print $1, substr($2, RSTART+3, RLENGTH-3) }'
 ```
 
-Same regex principle for any other prefix — swap `WT-` for `WF-`, `SD-`, `T-`, `B-`, `P-`, `W-`.
+Same regex principle for any other prefix — swap `WT-` for `WF-`, `SD-`, `T-`, `B-`, `P-`, `W-`, `WR-`, `LR-`, `FC-`, `PF-`, `BV-`, `TU-`, `TV-`, `LX-`, `WD-`.
 
 ## Ideas for future analytics
 

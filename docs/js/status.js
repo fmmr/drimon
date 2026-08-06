@@ -111,6 +111,7 @@ const STATUS_TOKENS = [
     { prefix: 'LX-', key: 'LX', parse: v => parseInt(v, 10) },
     { prefix: 'WD-', key: 'WD', parse: v => parseInt(v, 10) },
     { prefix: 'LR-', key: 'LR', parse: v => v.split('.').map(x => parseInt(x, 10)) },
+    { prefix: 'WR-', key: 'WR', parse: v => v.split('.').map(x => parseInt(x, 10)) },
     { prefix: 'V-',  key: 'V',  parse: v => v },
     { prefix: 'SD-', key: 'SD', parse: v => parseInt(v, 10) }
 ];
@@ -300,6 +301,35 @@ function groupByDay(entries) {
         .map(([key, list]) => ({ key, day: moment.tz(key, TZ), list }));
 }
 
+const RESET_REASON_NAMES = {
+    1: 'POWERON',
+    2: 'EXT',
+    3: 'SW',
+    4: 'PANIC',
+    5: 'INT_WDT',
+    6: 'TASK_WDT',
+    7: 'WDT',
+    8: 'DEEPSLEEP',
+    9: 'BROWNOUT',
+    10: 'SDIO'
+};
+const WAKEUP_CAUSE_NAMES = {
+    0: 'UNDEFINED',
+    2: 'EXT0',
+    4: 'TIMER'
+};
+
+function wrEntry(e) {
+    return Array.isArray(e.s.WR) && e.s.WR.length === 2 && Number.isFinite(e.s.WR[0]) && Number.isFinite(e.s.WR[1])
+        ? e.s.WR
+        : null;
+}
+
+function isColdBoot(e) {
+    const wr = wrEntry(e);
+    return wr !== null && wr[0] !== 8;
+}
+
 function renderStats(entries, wifiEntries, tuEntries, fcEntries, voltEntries, pfEntries) {
     const total = entries.length;
     const days = groupByDay(entries);
@@ -349,6 +379,18 @@ function renderStats(entries, wifiEntries, tuEntries, fcEntries, voltEntries, pf
         cell('Batteri lavest', voltEntries?.length ? `${voltEntries.reduce((m, e) => Math.min(m, e.v), Infinity).toFixed(2)} V` : '—', voltEntries?.length ? `n=${voltEntries.length}` : ''),
         cell('Feilede wakes', fcEntries.length ? sumConfirmedFails(fcEntries.map(e => e.s.FC)) : '—', fcEntries.length ? `n=${fcEntries.length} m/ FC` : 'venter på firmware'),
         cell('Stille post-feil', pfEntries.length ? pfEntries.reduce((s, e) => s + e.s.PF, 0) : '—', pfEntries.length ? `n=${pfEntries.length} m/ PF` : 'venter på firmware'),
+        (() => {
+            const wrEntries = entries.filter(e => wrEntry(e) !== null);
+            if (!wrEntries.length) return cell('Kald-boot', '—', 'venter på firmware m/ WR-token');
+            const coldBoots = wrEntries.filter(isColdBoot);
+            const byReason = {};
+            for (const e of coldBoots) byReason[e.s.WR[0]] = (byReason[e.s.WR[0]] || 0) + 1;
+            const breakdown = Object.entries(byReason)
+                .sort((a, b) => b[1] - a[1])
+                .map(([rr, n]) => `${RESET_REASON_NAMES[rr] || rr}:${n}`)
+                .join(' · ');
+            return cell('Kald-boot', coldBoots.length, coldBoots.length ? breakdown : `n=${wrEntries.length} m/ WR — ingen kald-boot`);
+        })(),
         cell('Sist inne', last.t.format('D. MMM HH:mm'), last.s.WF ? `${last.s.WF} · ${last.s.WT} ms` : ''),
         cell('Firmware', githubCommitLink(last.s.V), last.s.V ? 'siste post sin versjon' : 'venter på firmware m/ V-token')
     ].join('');
@@ -489,6 +531,12 @@ function renderRecent(entries) {
             <td>${e.s.P || '—'}</td>
             <td>${Number.isFinite(e.s.TU) ? e.s.TU : '—'}</td>
             <td>${Number.isFinite(e.s.SD) ? (e.s.SD > 0 ? 'JA' : 'NEI') : '—'}</td>
+            <td${isColdBoot(e) ? ' class="cold-boot"' : ''}>${(() => {
+                const wr = wrEntry(e);
+                if (!wr) return '—';
+                if (wr[0] === 8) return `<span title="WR-${wr[0]}.${wr[1]} — DEEPSLEEP · ${WAKEUP_CAUSE_NAMES[wr[1]] || wr[1]}">—</span>`;
+                return `<span title="WR-${wr[0]}.${wr[1]} — ${RESET_REASON_NAMES[wr[0]] || wr[0]} · ${WAKEUP_CAUSE_NAMES[wr[1]] || wr[1]}">${RESET_REASON_NAMES[wr[0]] || wr[0]}</span>`;
+            })()}</td>
             <td>${githubCommitLink(e.s.V)}</td>
         </tr>`;
     }).join('');

@@ -57,7 +57,7 @@ Field maps: `documentation/ARCHITECTURE.md`.
 | `sensordata.h` | `SensorData` struct |
 | `secrets.h` | **NOT committed** — WiFi + ThingSpeak keys |
 
-Wake sources: timer (5/10/20 min in-season light-adaptive, snapped to round wall-clock boundaries via NTP: :00/:10/:20 day, :00/:05/:10 dusk, :00/:20/:40 night). Off-season (outside 10 Apr – 10 Sep, `SEASON_MULT_OFFSEASON = 3`) triples the intervals to conserve battery when solar is weak: :00/:30 day, :00/:15/:30/:45 dusk, :00 hourly night. Green button (GPIO 15 EXT0) preserves RTC cache. Blue button (EN reset) wipes RTC → `WF-MISS` and one un-snapped wake until NTP re-syncs.
+Wake sources: timer (5/10/20 min in-season light-adaptive, snapped to round wall-clock boundaries via NTP: :00/:10/:20 day, :00/:05/:10 dusk, :00/:20/:40 night). Off-season (outside 10 Apr – 10 Sep, `SEASON_MULT_OFFSEASON = 3`) triples the intervals to conserve battery when solar is weak: :00/:30 day, :00/:15/:30/:45 dusk, :00 hourly night. Green button (GPIO 15 EXT0) preserves RTC cache. Blue button (EN reset) wipes RTC → `WF-MISS` and one un-snapped wake until NTP re-syncs. Fresh boots (cold reset from any cause) also POST — the `WR-` token exposes the exact reset reason.
 
 ## Webapp map (`docs/`)
 
@@ -110,7 +110,7 @@ Hidden charts (`hidden: true` in `chart-config.js`) are only reachable via `?cha
 
 ## Status string format
 
-Every ThingSpeak entry carries e.g. `T-OK_SHADE_W-OPEN_B-OK_P-HIGH_WF-HIT_BS-14918294f9c4_WT-388_FC-0_PF-0_BV-4.09_TU-5435_LR-200.200.200_SD-0`. Prefixes: `T-` temp class, (bare) light level, `W-` window, `B-` battery, `P-` pressure, `WF-` WiFi cache outcome (`HIT`/`MISS`/`FBK`/`FAIL`), `BS-` full 6-byte BSSID as hex (mesh-node radio MAC, LAN MAC +1/+2 typically), `WT-` connect time (ms), `FC-` WiFi-fail streak (RTC counter, reset if any channel POST succeeds), `PF-` post-fail streak (WiFi OK but all 3 POSTs failed, RTC counter, reset if any channel POST succeeds), `BV-` battery voltage (V, 2 dp), `TU-` wake-to-end-of-measure time (ms), `LR-` previous wake's 3 HTTP result codes (dot-sep, e.g. `200.429.0`), `SD-` display-pause (0 or 12000). Full decoder: `documentation/QUICK_REFERENCE.md`.
+Every ThingSpeak entry carries e.g. `T-OK_SHADE_W-OPEN_B-OK_P-HIGH_WF-HIT_BS-14918294f9c4_WT-388_FC-0_PF-0_BV-4.09_TU-5435_LR-200.200.200_WR-8.4_SD-0`. Prefixes: `T-` temp class, (bare) light level, `W-` window, `B-` battery, `P-` pressure, `WF-` WiFi cache outcome (`HIT`/`MISS`/`FBK`/`FAIL`), `BS-` full 6-byte BSSID as hex (mesh-node radio MAC, LAN MAC +1/+2 typically), `WT-` connect time (ms), `FC-` WiFi-fail streak (RTC counter, reset if any channel POST succeeds), `PF-` post-fail streak (WiFi OK but all 3 POSTs failed, RTC counter, reset if any channel POST succeeds), `BV-` battery voltage (V, 2 dp), `TU-` wake-to-end-of-measure time (ms), `LR-` previous wake's 3 HTTP result codes (dot-sep, e.g. `200.429.0`), `WR-` wake reason as `<resetReason>.<wakeupCause>` (e.g. `8.4` = normal deep-sleep timer wake, `1.0` = power-on cold boot); anything but `8.*` = a cold-path reset that wiped RTC. `SD-` display-pause (0 or 12000). Full decoder: `documentation/QUICK_REFERENCE.md`.
 
 ## Code rules
 See `coderules.md`. Highlights:

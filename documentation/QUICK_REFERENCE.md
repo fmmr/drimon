@@ -50,7 +50,7 @@ Physical controls on the enclosure:
 Every ThingSpeak entry carries a `status` string like:
 
 ```
-T-OK_SHADE_W-OPEN_B-OK_P-HIGH_WF-HIT_BS-14918294f9c4_WT-388_FC-0_PF-0_BV-4.09_TU-5435_TV-21.4_LX-8500_WD-72_LR-200.200.200_V-d9976d7_SD-0
+T-OK_SHADE_W-OPEN_B-OK_P-HIGH_WF-HIT_BS-14918294f9c4_WT-388_FC-0_PF-0_BV-4.09_TU-5435_TV-21.4_LX-8500_WD-72_LR-200.200.200_WR-8.4_V-d9976d7_SD-0
 ```
 
 Underscore-separated `PREFIX-VALUE` parts:
@@ -73,6 +73,7 @@ Underscore-separated `PREFIX-VALUE` parts:
 | `LX-` | Ceiling lux (raw) | Integer lux (e.g. `20651`). The value driving the light-class classification (NIGHT/DUSK/SHADE/SUN thresholds). Same as `DRIMON_CHANNEL` field 8. |
 | `WD-` | Window distance (raw) | Integer mm (e.g. `72`). Raw TOF distance reading before `WINDOW_CLOSE` classification. Same as `DRIMON_CHANNEL` field 4 (before the −63 mm shift). |
 | `LR-` | Last-run HTTP results (dot-separated) | Three HTTP result codes from the previous wake's 3 channel POSTs, e.g. `200.200.200` all-ok, `200.429.429` rate-limited, `200.0.0` timeouts after Ch 1, `0.0.0` first wake after cold reset. RTC-persisted; wiped by brownout / EN button. |
+| `WR-` | Wake reason: `<resetReason>.<wakeupCause>` | `resetReason` = `esp_reset_reason()` — `1` POWERON, `2` EXT (EN pin), `3` SW, `4` PANIC, `5` INT_WDT, `6` TASK_WDT, `7` WDT, `8` DEEPSLEEP (normal timer/EXT0 wake — RTC preserved), `9` BROWNOUT, `10` SDIO. `wakeupCause` = `esp_sleep_get_wakeup_cause()` — `0` UNDEFINED (fresh boot), `2` EXT0 (green button), `4` TIMER. Anything but `8.*` = a cold-path reset happened and RTC was wiped. Captured at start of `setup()`. |
 | `SD-` | Display-read pause | `0` (timer wake, no delay) or `12000` (button/fresh wake, 12 s pause) |
 
 **Read the status from ThingSpeak** (any of the 3 channels works — same status on all):
@@ -89,13 +90,15 @@ For jq/curl analysis pipelines (WT-time trend, WF-cache histogram, etc.), see [T
 
 | Wake type | `DISPLAY_ON` | `SHOULD_POST` | 12 s display pause? |
 |---|---|---|---|
-| Fresh boot (flash / reset / power) | true | **always false** | yes |
+| Fresh boot (flash / reset / power / brownout / EN) | true | reads switch | yes |
 | Timer wake (normal field cycle) | false | reads switch | no |
 | Green button (EXT0 wake) | true | reads switch | yes |
+
+Fresh boots do POST — they carry `WR-<resetReason>.0` in the status field so cold-path resets show up on ThingSpeak. Older firmware skipped the POST on fresh boot, which made cold reboots invisible (only inferable as `LR-0.0.0` on the next successful wake, together with `WF-MISS` if the fresh boot didn't re-cache the BSSID in time).
 
 ## Common quick checks
 
 - **"Is it charging?"** → check the DFR0559's charge LED (red = charging, green DONE = full). Or the battery voltage chart trend on <https://drimon.rodland.no/>.
-- **"Why didn't it post?"** → post-enable switch may be HIGH. On fresh boot after flash, posting is always skipped.
+- **"Why didn't it post?"** → post-enable switch may be HIGH.
 - **"Which WiFi did it join?"** → status field contains `WF-` outcome and `WT-` connect time; historical values queryable at `https://api.thingspeak.com/channels/2568299/status.json?results=1000&days=100`.
 - **"Cell temperature reads 85 °C, -55 °C, or -127 °C"** → DS18B20 bogus values (power-on default / bit corruption / disconnect). Filtered on the site; firmware retries at read time. If persistent, resolder the affected wire.

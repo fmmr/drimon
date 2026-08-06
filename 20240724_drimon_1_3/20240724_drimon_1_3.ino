@@ -168,7 +168,10 @@ void setup() {
   Serial.begin(SERIAL_BAUD);
 
   Serial.println("Setup...");
-  esp_sleep_wakeup_cause_t wakeup_reason = esp_sleep_get_wakeup_cause();
+  g_resetReason = (uint8_t)esp_reset_reason();
+  g_wakeupCause = (uint8_t)esp_sleep_get_wakeup_cause();
+  Serial.printf("  Reset reason %u, wakeup cause %u\n", g_resetReason, g_wakeupCause);
+  esp_sleep_wakeup_cause_t wakeup_reason = (esp_sleep_wakeup_cause_t)g_wakeupCause;
   if (wakeup_reason == ESP_SLEEP_WAKEUP_EXT0) {
     SHOULD_POST = digitalRead(POST_SWITCH_PIN) == LOW;
     DISPLAY_ON = true;
@@ -177,8 +180,11 @@ void setup() {
     SHOULD_POST = digitalRead(POST_SWITCH_PIN) == LOW;
     Serial.println("  Woke up from deep sleep by timer");
   } else {
-    Serial.println("  Starting fresh");
+    // Fresh boot (cold reset: POWERON/EXT/BROWNOUT/PANIC/…) — RTC state was wiped, WF cache is empty,
+    // wake cause is UNDEFINED. Still POST so the WR token surfaces the reset reason on ThingSpeak.
+    SHOULD_POST = digitalRead(POST_SWITCH_PIN) == LOW;
     DISPLAY_ON = true;
+    Serial.println("  Starting fresh");
   }
 
   initDisplays();
