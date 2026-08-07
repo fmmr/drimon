@@ -94,7 +94,7 @@ echo ""
 echo "After reboot:"
 echo "- Desktop will auto-start"
 echo "- Chromium will open fullscreen with the DriMon dashboard"
-echo "- Screen blanks after 20s of inactivity"
+echo "- Screen blanks after 60s of inactivity"
 echo ""
 echo "Ready to reboot? (y/n)"
 read -r response

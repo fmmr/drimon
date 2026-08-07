@@ -5,7 +5,7 @@ Complete kiosk setup for Raspberry Pi displaying the DriMon dashboard.
 ## Features
 
 - **Auto-start**: Chromium opens fullscreen with the DriMon dashboard
-- **Power management**: Screen blanks 20s after last input
+- **Power management**: Screen blanks 60s after last input
 - **Touch resume**: Screen wakes when touched
 - **Remote control**: Web-based shutdown/reboot buttons accessible from dashboard
 
@@ -38,7 +38,7 @@ ssh pi@your-pi-ip "cd ~/pi-kiosk && ./install.sh"
 - Auto-login setup for kiosk user
 - Sudo permissions for passwordless shutdown
 - WiFi power management disabled (prevents connection drops)
-- Screen saver: 20s timeout after keystrokes stop
+- Screen saver: 60s timeout after keystrokes stop
 
 ## File Structure
 
@@ -58,7 +58,7 @@ pi-kiosk/
 
 1. **Boot**: Auto-login → desktop starts → services launch
 2. **0s**: Chromium opens fullscreen with the DriMon dashboard
-3. **20s**: Screen blanks after last input
+3. **60s**: Screen blanks after last input
 4. **Touch**: Screen wakes
 
 ## Testing & Troubleshooting

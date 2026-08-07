@@ -9,9 +9,9 @@ while ! xdpyinfo >/dev/null 2>&1; do sleep 1; done
 # Wait a bit more for X server to be fully ready
 sleep 3
 
-# Setup screen blanking - 20 seconds (retry until it works)
+# Setup screen blanking - 60 seconds (retry until it works)
 for i in {1..5}; do
-    xset s on && xset s blank && xset s 20 20 && xset +dpms && xset dpms 0 0 20
+    xset s on && xset s blank && xset s 60 60 && xset +dpms && xset dpms 0 0 60
     # Check if it worked
     if xset q | grep -q "prefer blanking:  yes"; then
         echo "Screen saver configured successfully"
