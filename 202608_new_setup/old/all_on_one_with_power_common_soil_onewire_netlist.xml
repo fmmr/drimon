@@ -1,0 +1,2127 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!-- Created with Fritzing (https://fritzing.org/) -->
+<netlist date="2026-08-07T09:09:10" sketch="all_on_one_with_power_common_soil_onewire.fzz">
+ <net>
+  <connector id="connector21" name="D33">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector21" name="D33">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="534190" label="33" title="Generic female header - 3 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="534191" label="33" title="Generic female header - 3 pins"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="via">
+   <part id="658790" label="Via18" title="Via"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="658791" label="Via18" title="Via"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="364630" label="Via5" title="Via"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="364631" label="Via5" title="Via"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="372840" label="Via6" title="Via"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="372841" label="Via6" title="Via"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="446230" label="J27" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="446231" label="J27" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector2" name="2">
+   <part id="553821" label="RESET" title="SWITCH-MOMENTARY-2"/>
+  </connector>
+  <connector id="connector2" name="2">
+   <part id="553820" label="RESET" title="SWITCH-MOMENTARY-2"/>
+  </connector>
+  <connector id="connector1" name="2">
+   <part id="359691" label="Buzzer" title="Buzzer 12mm"/>
+  </connector>
+  <connector id="connector1" name="2">
+   <part id="359690" label="Buzzer" title="Buzzer 12mm"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="446210" label="J26" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="446211" label="J26" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="545591" label="AUX1" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="545590" label="AUX1" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector28" name="GND">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector28" name="GND">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector1" name="GND">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector1" name="GND">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector0" name="connector0">
+   <part id="881630" label="Copper Fill1" title="Copper Fill"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="446250" label="J28" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="446251" label="J28" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="723520" label="Via19" title="Via"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="723521" label="Via19" title="Via"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="596741" label="Via17" title="Via"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="596740" label="Via17" title="Via"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="546750" label="AUX2" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="546751" label="AUX2" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="302920" label="Gnd" title="Generic male header - 2 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="302921" label="Gnd" title="Generic male header - 2 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="489731" label="3v3" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="489730" label="3v3" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector0" name="connector0">
+   <part id="882170" label="Copper Fill55" title="Copper Fill"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="547850" label="AUX3" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="547851" label="AUX3" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector2" name="2">
+   <part id="337540" label="Button 27" title="SWITCH-MOMENTARY-2"/>
+  </connector>
+  <connector id="connector2" name="2">
+   <part id="337541" label="Button 27" title="SWITCH-MOMENTARY-2"/>
+  </connector>
+  <connector id="connector0" name="1">
+   <part id="338010" label="Button 15" title="SWITCH-MOMENTARY-2"/>
+  </connector>
+  <connector id="connector0" name="1">
+   <part id="338011" label="Button 15" title="SWITCH-MOMENTARY-2"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="340400" label="J21" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="340401" label="J21" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="339180" label="J20" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="339181" label="J20" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="582920" label="Via14" title="Via"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="582921" label="Via14" title="Via"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="582950" label="Via15" title="Via"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="582951" label="Via15" title="Via"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="176300" label="RGB LED" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="176301" label="RGB LED" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector0" name="Pin 0">
+   <part id="176151" label="220Ω" title="220 Ω Resistor"/>
+  </connector>
+  <connector id="connector0" name="Pin 0">
+   <part id="176150" label="220Ω" title="220Ω Resistor"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="434571" label="J22" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="434570" label="J22" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="Pin 0">
+   <part id="176181" label="220Ω" title="220 Ω Resistor"/>
+  </connector>
+  <connector id="connector0" name="Pin 0">
+   <part id="176180" label="220Ω" title="220Ω Resistor"/>
+  </connector>
+  <connector id="connector0" name="1">
+   <part id="379240" label="Button 5" title="SWITCH-MOMENTARY-2"/>
+  </connector>
+  <connector id="connector0" name="1">
+   <part id="379241" label="Button 5" title="SWITCH-MOMENTARY-2"/>
+  </connector>
+  <connector id="connector0" name="Pin 0">
+   <part id="176201" label="220Ω" title="220 Ω Resistor"/>
+  </connector>
+  <connector id="connector0" name="Pin 0">
+   <part id="176200" label="220Ω" title="220Ω Resistor"/>
+  </connector>
+  <connector id="connector5" name="GND">
+   <part id="783520" label="USB 5v" title="USB Connectors"/>
+  </connector>
+  <connector id="connector5" name="GND">
+   <part id="783521" label="USB 5v" title="USB Connectors"/>
+  </connector>
+  <connector id="connector0" name="connector0">
+   <part id="882290" label="Copper Fill67" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector4" name="VBUS">
+   <part id="783520" label="USB 5v" title="USB Connectors"/>
+  </connector>
+  <connector id="connector4" name="VBUS">
+   <part id="783521" label="USB 5v" title="USB Connectors"/>
+  </connector>
+  <connector id="connector29" name="VIN">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector29" name="VIN">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="545590" label="AUX1" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="545591" label="AUX1" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="446230" label="J27" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="446231" label="J27" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="546750" label="AUX2" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="546751" label="AUX2" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="446210" label="J26" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="446211" label="J26" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="547850" label="AUX3" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="547851" label="AUX3" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="446250" label="J28" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="446251" label="J28" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="302910" label="Vcc" title="Generic male header - 2 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="302911" label="Vcc" title="Generic male header - 2 pins"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="via">
+   <part id="480390" label="Via9" title="Via"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="480391" label="Via9" title="Via"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="282910" label="Vcc" title="Generic male header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="282911" label="Vcc" title="Generic male header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="Pin 0">
+   <part id="827121" label="4.7kΩ" title="220 Ω Resistor"/>
+  </connector>
+  <connector id="connector0" name="Pin 0">
+   <part id="827120" label="4.7kΩ" title="220Ω Resistor"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="440310" label="J24" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="440311" label="J24" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="440290" label="J23" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="440291" label="J23" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="234221" label="J1" title="Generic male header - 5 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="234220" label="J1" title="Generic male header - 5 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="440330" label="J25" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="440331" label="J25" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="155881" label="J2" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="155880" label="J2" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="155901" label="J3" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="155900" label="J3" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="534191" label="33" title="Generic female header - 3 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="534190" label="33" title="Generic female header - 3 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="344670" label="HC-SR04" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="344671" label="HC-SR04" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="155921" label="J4" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="155920" label="J4" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="336440" label="36" title="Generic female header - 3 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="336441" label="36" title="Generic female header - 3 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="845380" label="Soil+1wire" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="845381" label="Soil+1wire" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="157311" label="J5" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="157310" label="J5" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="348400" label="39" title="Generic female header - 3 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="348401" label="39" title="Generic female header - 3 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="157331" label="J6" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="157330" label="J6" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="348380" label="34" title="Generic female header - 3 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="348381" label="34" title="Generic female header - 3 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="157351" label="J7" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="157350" label="J7" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="157371" label="J8" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="157370" label="J8" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="157391" label="J9" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="157390" label="J9" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="157411" label="J10" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="157410" label="J10" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="219280" label="J12" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="219281" label="J12" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="219260" label="J11" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="219261" label="J11" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="219300" label="J13" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="219301" label="J13" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector0" name="0">
+   <part id="259921" label="C2" title="Ceramic Capacitor"/>
+  </connector>
+  <connector id="connector0" name="0">
+   <part id="259920" label="C2" title="Ceramic Capacitor"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="215440" label="Charger" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="215441" label="Charger" title="Generic female header - 6 pins"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector1" name="pin2">
+   <part id="489730" label="3v3" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="489731" label="3v3" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="489730" label="3v3" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="489731" label="3v3" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="489730" label="3v3" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="489731" label="3v3" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector0" name="3V3">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector0" name="3V3">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector1" name="pin2">
+   <part id="440310" label="J24" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="440311" label="J24" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="440290" label="J23" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="440291" label="J23" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="440330" label="J25" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="440331" label="J25" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="534191" label="33" title="Generic female header - 3 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="534190" label="33" title="Generic female header - 3 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="344670" label="HC-SR04" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="344671" label="HC-SR04" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="336440" label="36" title="Generic female header - 3 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="336441" label="36" title="Generic female header - 3 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="282891" label="Gnd" title="Generic male header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="282890" label="Gnd" title="Generic male header - 2 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="845380" label="Soil+1wire" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="845381" label="Soil+1wire" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="348400" label="39" title="Generic female header - 3 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="348401" label="39" title="Generic female header - 3 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="348380" label="34" title="Generic female header - 3 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="348381" label="34" title="Generic female header - 3 pins"/>
+  </connector>
+  <connector id="connector1" name="1">
+   <part id="259921" label="C2" title="Ceramic Capacitor"/>
+  </connector>
+  <connector id="connector1" name="1">
+   <part id="259920" label="C2" title="Ceramic Capacitor"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="219301" label="J13" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="219300" label="J13" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="215440" label="Charger" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="215441" label="Charger" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="219260" label="J11" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="219261" label="J11" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="219280" label="J12" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="219281" label="J12" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="157410" label="J10" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="157411" label="J10" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="157391" label="J9" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="157390" label="J9" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="157371" label="J8" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="157370" label="J8" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="157351" label="J7" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="157350" label="J7" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="157331" label="J6" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="157330" label="J6" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="157311" label="J5" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="157310" label="J5" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="155921" label="J4" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="155920" label="J4" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="155901" label="J3" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="155900" label="J3" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="155881" label="J2" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="155880" label="J2" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="234221" label="J1" title="Generic male header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="234220" label="J1" title="Generic male header - 5 pins"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector5" name="pin6">
+   <part id="215440" label="Charger" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector5" name="pin6">
+   <part id="215441" label="Charger" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="501740" label="Via10" title="Via"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="501741" label="Via10" title="Via"/>
+  </connector>
+  <connector id="connector27" name="D13">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector27" name="D13">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector2" name="2">
+   <part id="379240" label="Button 5" title="SWITCH-MOMENTARY-2"/>
+  </connector>
+  <connector id="connector2" name="2">
+   <part id="379241" label="Button 5" title="SWITCH-MOMENTARY-2"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="434570" label="J22" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="434571" label="J22" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector7" name="D5">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector7" name="D5">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector3" name="pin4">
+   <part id="219300" label="J13" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="219301" label="J13" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="219260" label="J11" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="219261" label="J11" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector13" name="D22">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector13" name="D22">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="219280" label="J12" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="219281" label="J12" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="213711" label="Gauge" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="213710" label="Gauge" title="Generic female header - 6 pins"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="Pin 0">
+   <part id="176240" label="220Ω" title="220Ω Resistor"/>
+  </connector>
+  <connector id="connector0" name="Pin 0">
+   <part id="176241" label="220Ω" title="220 Ω Resistor"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="176300" label="RGB LED" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="176301" label="RGB LED" title="Generic female header - 4 pins"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector1" name="pin2">
+   <part id="339180" label="J20" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="339181" label="J20" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector2" name="D15">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector2" name="D15">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector2" name="2">
+   <part id="338010" label="Button 15" title="SWITCH-MOMENTARY-2"/>
+  </connector>
+  <connector id="connector2" name="2">
+   <part id="338011" label="Button 15" title="SWITCH-MOMENTARY-2"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector2" name="pin3">
+   <part id="546750" label="AUX2" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="546751" label="AUX2" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="547850" label="AUX3" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="547851" label="AUX3" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="545590" label="AUX1" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="545591" label="AUX1" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector26" name="D12">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector26" name="D12">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector3" name="pin4">
+   <part id="546750" label="AUX2" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="546751" label="AUX2" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="547850" label="AUX3" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="547851" label="AUX3" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="545590" label="AUX1" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="545591" label="AUX1" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector25" name="D14">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector25" name="D14">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="1">
+   <part id="337540" label="Button 27" title="SWITCH-MOMENTARY-2"/>
+  </connector>
+  <connector id="connector0" name="1">
+   <part id="337541" label="Button 27" title="SWITCH-MOMENTARY-2"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="340400" label="J21" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="340401" label="J21" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="852201" label="Via20" title="Via"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="852200" label="Via20" title="Via"/>
+  </connector>
+  <connector id="connector24" name="D27">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector24" name="D27">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector20" name="D32">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector20" name="D32">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector0" name="1">
+   <part id="359690" label="Buzzer" title="Buzzer 12mm"/>
+  </connector>
+  <connector id="connector0" name="1">
+   <part id="359691" label="Buzzer" title="Buzzer 12mm"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector4" name="D4">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector4" name="D4">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="176500" label="Red" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="176501" label="Red" title="Generic female header - 2 pins"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector5" name="RX2">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector5" name="RX2">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="176520" label="Blue" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="176521" label="Blue" title="Generic female header - 2 pins"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector1" name="1">
+   <part id="247980" label="C1" title="Ceramic Capacitor"/>
+  </connector>
+  <connector id="connector1" name="1">
+   <part id="247981" label="C1" title="Ceramic Capacitor"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="213710" label="Gauge" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="213711" label="Gauge" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="282891" label="Gnd" title="Generic male header - 2 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="282890" label="Gnd" title="Generic male header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="302921" label="Gnd" title="Generic male header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="302920" label="Gnd" title="Generic male header - 2 pins"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="pin1">
+   <part id="302910" label="Vcc" title="Generic male header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="302911" label="Vcc" title="Generic male header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="0">
+   <part id="247980" label="C1" title="Ceramic Capacitor"/>
+  </connector>
+  <connector id="connector0" name="0">
+   <part id="247981" label="C1" title="Ceramic Capacitor"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="282910" label="Vcc" title="Generic male header - 2 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="282911" label="Vcc" title="Generic male header - 2 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="213710" label="Gauge" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="213711" label="Gauge" title="Generic female header - 6 pins"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="pin1">
+   <part id="176480" label="Green" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="176481" label="Green" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector3" name="D2">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector3" name="D2">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="pin1">
+   <part id="219300" label="J13" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="219301" label="J13" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="219260" label="J11" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="219261" label="J11" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="219280" label="J12" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="219281" label="J12" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector1" name="Pin 1">
+   <part id="827120" label="4.7kΩ" title="220Ω Resistor"/>
+  </connector>
+  <connector id="connector1" name="Pin 1">
+   <part id="827121" label="4.7kΩ" title="220 Ω Resistor"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="157410" label="J10" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="157411" label="J10" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector14" name="D23">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector14" name="D23">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="157391" label="J9" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="157390" label="J9" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="157371" label="J8" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="157370" label="J8" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="875060" label="Via23" title="Via"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="875061" label="Via23" title="Via"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="157351" label="J7" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="157350" label="J7" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="875011" label="Via22" title="Via"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="875010" label="Via22" title="Via"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="157331" label="J6" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="157330" label="J6" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="157311" label="J5" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="157310" label="J5" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="867060" label="Via21" title="Via"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="867061" label="Via21" title="Via"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="155921" label="J4" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="155920" label="J4" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="845381" label="Soil+1wire" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="845380" label="Soil+1wire" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="155901" label="J3" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="155900" label="J3" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="155881" label="J2" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="155880" label="J2" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="234221" label="J1" title="Generic male header - 5 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="234220" label="J1" title="Generic male header - 5 pins"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector19" name="D35">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector19" name="D35">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="215440" label="Charger" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="215441" label="Charger" title="Generic female header - 6 pins"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector4" name="pin5">
+   <part id="219280" label="J12" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="219281" label="J12" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="219260" label="J11" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="219261" label="J11" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="157410" label="J10" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="157411" label="J10" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="219300" label="J13" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="219301" label="J13" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="157391" label="J9" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="157390" label="J9" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="157371" label="J8" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="157370" label="J8" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="157351" label="J7" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="157350" label="J7" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="157331" label="J6" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="157330" label="J6" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="157311" label="J5" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="157310" label="J5" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="155921" label="J4" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="155920" label="J4" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="155901" label="J3" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="155900" label="J3" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="155881" label="J2" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="155880" label="J2" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="234221" label="J1" title="Generic male header - 5 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="234220" label="J1" title="Generic male header - 5 pins"/>
+  </connector>
+  <connector id="connector10" name="D21">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector10" name="D21">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector5" name="pin6">
+   <part id="213711" label="Gauge" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector5" name="pin6">
+   <part id="213710" label="Gauge" title="Generic female header - 6 pins"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector1" name="pin2">
+   <part id="176720" label="Bat" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="176721" label="Bat" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="215440" label="Charger" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="215441" label="Charger" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="213710" label="Gauge" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="213711" label="Gauge" title="Generic female header - 6 pins"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="pin1">
+   <part id="176720" label="Bat" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="176721" label="Bat" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="215440" label="Charger" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="215441" label="Charger" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="213710" label="Gauge" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="213711" label="Gauge" title="Generic female header - 6 pins"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector3" name="pin4">
+   <part id="176300" label="RGB LED" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="176301" label="RGB LED" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector0" name="Pin 0">
+   <part id="176260" label="220Ω" title="220Ω Resistor"/>
+  </connector>
+  <connector id="connector0" name="Pin 0">
+   <part id="176261" label="220Ω" title="220 Ω Resistor"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector2" name="pin3">
+   <part id="348380" label="34" title="Generic female header - 3 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="348381" label="34" title="Generic female header - 3 pins"/>
+  </connector>
+  <connector id="connector18" name="D34">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector18" name="D34">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="845381" label="Soil+1wire" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="845380" label="Soil+1wire" title="Generic female header - 6 pins"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector2" name="pin3">
+   <part id="348400" label="39" title="Generic female header - 3 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="348401" label="39" title="Generic female header - 3 pins"/>
+  </connector>
+  <connector id="connector17" name="VN">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector17" name="VN">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="845381" label="Soil+1wire" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector4" name="pin5">
+   <part id="845380" label="Soil+1wire" title="Generic female header - 6 pins"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector2" name="pin3">
+   <part id="336440" label="36" title="Generic female header - 3 pins"/>
+  </connector>
+  <connector id="connector2" name="pin3">
+   <part id="336441" label="36" title="Generic female header - 3 pins"/>
+  </connector>
+  <connector id="connector16" name="VP">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector16" name="VP">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector5" name="pin6">
+   <part id="845381" label="Soil+1wire" title="Generic female header - 6 pins"/>
+  </connector>
+  <connector id="connector5" name="pin6">
+   <part id="845380" label="Soil+1wire" title="Generic female header - 6 pins"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="Pin 0">
+   <part id="176220" label="220Ω" title="220Ω Resistor"/>
+  </connector>
+  <connector id="connector0" name="Pin 0">
+   <part id="176221" label="220Ω" title="220 Ω Resistor"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="176300" label="RGB LED" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="176301" label="RGB LED" title="Generic female header - 4 pins"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector3" name="pin4">
+   <part id="155880" label="J2" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="155881" label="J2" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="234221" label="J1" title="Generic male header - 5 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="234220" label="J1" title="Generic male header - 5 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="155901" label="J3" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="155900" label="J3" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="155921" label="J4" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="155920" label="J4" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="157311" label="J5" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="157310" label="J5" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="157331" label="J6" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="157330" label="J6" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="157351" label="J7" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="157350" label="J7" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="157371" label="J8" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="157370" label="J8" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="157391" label="J9" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="157390" label="J9" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="157411" label="J10" title="Generic female header - 5 pins"/>
+  </connector>
+  <connector id="connector3" name="pin4">
+   <part id="157410" label="J10" title="Generic female header - 5 pins"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="1">
+   <part id="553820" label="RESET" title="SWITCH-MOMENTARY-2"/>
+  </connector>
+  <connector id="connector0" name="1">
+   <part id="553821" label="RESET" title="SWITCH-MOMENTARY-2"/>
+  </connector>
+  <connector id="connector15" name="EN">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector15" name="EN">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector1" name="pin2">
+   <part id="344670" label="HC-SR04" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="344671" label="HC-SR04" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector22" name="D25">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector22" name="D25">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="pin1">
+   <part id="344670" label="HC-SR04" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector0" name="pin1">
+   <part id="344671" label="HC-SR04" title="Generic female header - 4 pins"/>
+  </connector>
+  <connector id="connector23" name="D26">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector23" name="D26">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector1" name="pin2">
+   <part id="176480" label="Green" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="176481" label="Green" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector1" name="Pin 1">
+   <part id="176201" label="220Ω" title="220 Ω Resistor"/>
+  </connector>
+  <connector id="connector1" name="Pin 1">
+   <part id="176200" label="220Ω" title="220Ω Resistor"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector1" name="Pin 1">
+   <part id="176150" label="220Ω" title="220Ω Resistor"/>
+  </connector>
+  <connector id="connector1" name="Pin 1">
+   <part id="176151" label="220Ω" title="220 Ω Resistor"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="176521" label="Blue" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="176520" label="Blue" title="Generic female header - 2 pins"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector1" name="Pin 1">
+   <part id="176180" label="220Ω" title="220Ω Resistor"/>
+  </connector>
+  <connector id="connector1" name="Pin 1">
+   <part id="176181" label="220Ω" title="220 Ω Resistor"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="176501" label="Red" title="Generic female header - 2 pins"/>
+  </connector>
+  <connector id="connector1" name="pin2">
+   <part id="176500" label="Red" title="Generic female header - 2 pins"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector1" name="Pin 1">
+   <part id="176220" label="220Ω" title="220Ω Resistor"/>
+  </connector>
+  <connector id="connector1" name="Pin 1">
+   <part id="176221" label="220Ω" title="220 Ω Resistor"/>
+  </connector>
+  <connector id="connector9" name="D19">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector9" name="D19">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector1" name="Pin 1">
+   <part id="176240" label="220Ω" title="220Ω Resistor"/>
+  </connector>
+  <connector id="connector1" name="Pin 1">
+   <part id="176241" label="220Ω" title="220 Ω Resistor"/>
+  </connector>
+  <connector id="connector8" name="D18">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector8" name="D18">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector1" name="Pin 1">
+   <part id="176260" label="220Ω" title="220Ω Resistor"/>
+  </connector>
+  <connector id="connector1" name="Pin 1">
+   <part id="176261" label="220Ω" title="220 Ω Resistor"/>
+  </connector>
+  <connector id="connector6" name="TX2">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector6" name="TX2">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector12" name="TX0">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector12" name="TX0">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector11" name="RX0">
+   <part id="170280" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+  <connector id="connector11" name="RX0">
+   <part id="170281" label="ESP32 WROOM WiFi" title="DOIT Esp32 DevKit v1 (30 pins long, 11 pins width)"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="via">
+   <part id="582830" label="Via11" title="Via"/>
+  </connector>
+  <connector id="connector0" name="via">
+   <part id="582831" label="Via11" title="Via"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector2" name="D-">
+   <part id="783520" label="USB 5v" title="USB Connectors"/>
+  </connector>
+  <connector id="connector2" name="D-">
+   <part id="783521" label="USB 5v" title="USB Connectors"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector3" name="D+">
+   <part id="783520" label="USB 5v" title="USB Connectors"/>
+  </connector>
+  <connector id="connector3" name="D+">
+   <part id="783521" label="USB 5v" title="USB Connectors"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882950" label="Copper Fill133" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882940" label="Copper Fill132" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882930" label="Copper Fill131" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882920" label="Copper Fill130" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882910" label="Copper Fill129" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882900" label="Copper Fill128" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882890" label="Copper Fill127" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882880" label="Copper Fill126" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882870" label="Copper Fill125" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882860" label="Copper Fill124" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882850" label="Copper Fill123" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882840" label="Copper Fill122" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882830" label="Copper Fill121" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882820" label="Copper Fill120" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882810" label="Copper Fill119" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882800" label="Copper Fill118" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882790" label="Copper Fill117" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882780" label="Copper Fill116" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882770" label="Copper Fill115" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882760" label="Copper Fill114" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882750" label="Copper Fill113" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882740" label="Copper Fill112" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882730" label="Copper Fill111" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882720" label="Copper Fill110" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882710" label="Copper Fill109" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882700" label="Copper Fill108" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882690" label="Copper Fill107" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882680" label="Copper Fill106" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882670" label="Copper Fill105" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882660" label="Copper Fill104" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882650" label="Copper Fill103" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882640" label="Copper Fill102" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882630" label="Copper Fill101" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882620" label="Copper Fill100" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882610" label="Copper Fill99" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882600" label="Copper Fill98" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882590" label="Copper Fill97" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882580" label="Copper Fill96" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882570" label="Copper Fill95" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882560" label="Copper Fill94" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882550" label="Copper Fill93" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882540" label="Copper Fill92" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882530" label="Copper Fill91" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882520" label="Copper Fill90" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882510" label="Copper Fill89" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882500" label="Copper Fill88" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882490" label="Copper Fill87" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882480" label="Copper Fill86" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882470" label="Copper Fill85" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882460" label="Copper Fill84" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882450" label="Copper Fill83" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882440" label="Copper Fill82" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882430" label="Copper Fill81" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882420" label="Copper Fill80" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882410" label="Copper Fill79" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882400" label="Copper Fill78" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882390" label="Copper Fill77" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882380" label="Copper Fill76" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882370" label="Copper Fill75" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882360" label="Copper Fill74" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882350" label="Copper Fill73" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882340" label="Copper Fill72" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882330" label="Copper Fill71" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882320" label="Copper Fill70" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882310" label="Copper Fill69" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882300" label="Copper Fill68" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882280" label="Copper Fill66" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882270" label="Copper Fill65" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882260" label="Copper Fill64" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882250" label="Copper Fill63" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882240" label="Copper Fill62" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882230" label="Copper Fill61" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882220" label="Copper Fill60" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882210" label="Copper Fill59" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882200" label="Copper Fill58" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882190" label="Copper Fill57" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882180" label="Copper Fill56" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882160" label="Copper Fill54" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882150" label="Copper Fill53" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882140" label="Copper Fill52" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882130" label="Copper Fill51" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882120" label="Copper Fill50" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882110" label="Copper Fill49" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882100" label="Copper Fill48" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882090" label="Copper Fill47" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882080" label="Copper Fill46" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882070" label="Copper Fill45" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882060" label="Copper Fill44" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882050" label="Copper Fill43" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882040" label="Copper Fill42" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882030" label="Copper Fill41" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882020" label="Copper Fill40" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882010" label="Copper Fill39" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="882000" label="Copper Fill38" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881990" label="Copper Fill37" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881980" label="Copper Fill36" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881970" label="Copper Fill35" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881960" label="Copper Fill34" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881950" label="Copper Fill33" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881940" label="Copper Fill32" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881930" label="Copper Fill31" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881920" label="Copper Fill30" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881910" label="Copper Fill29" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881900" label="Copper Fill28" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881890" label="Copper Fill27" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881880" label="Copper Fill26" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881870" label="Copper Fill25" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881860" label="Copper Fill24" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881850" label="Copper Fill23" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881840" label="Copper Fill22" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881830" label="Copper Fill21" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881820" label="Copper Fill20" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881810" label="Copper Fill19" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881800" label="Copper Fill18" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881790" label="Copper Fill17" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881780" label="Copper Fill16" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881770" label="Copper Fill15" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881760" label="Copper Fill14" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881750" label="Copper Fill13" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881740" label="Copper Fill12" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881730" label="Copper Fill11" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881720" label="Copper Fill10" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881710" label="Copper Fill9" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881700" label="Copper Fill8" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881690" label="Copper Fill7" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881680" label="Copper Fill6" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881670" label="Copper Fill5" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881660" label="Copper Fill4" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881650" label="Copper Fill3" title="Copper Fill"/>
+  </connector>
+ </net>
+ <net>
+  <connector id="connector0" name="connector0">
+   <part id="881640" label="Copper Fill2" title="Copper Fill"/>
+  </connector>
+ </net>
+</netlist>

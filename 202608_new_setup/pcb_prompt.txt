@@ -1,0 +1,47 @@
+I want to continue the Drimon greenhouse-monitor PCB redesign. This is a resume from a prior brainstorming session, not a fresh start.
+
+## Start here
+
+Read `202608_new_setup/NEW_PCB_DESIGN.md` end-to-end. It's the single source of truth for the design and it's structured for a resume:
+
+1. **Purpose** and **Design goals** — what the new board must achieve
+2. **Sensor set** — the data firmware collects (non-negotiable)
+3. **Locked design decisions** — power topology, flashing, connectors, wiring conventions (all already decided; do not renegotiate)
+4. **Sensor placement** — three physical groups (on-PCB / on-enclosure / remote)
+5. **Open design questions** — split into:
+   - **A. Needs BOSS input** (architectural — A1..A6)
+   - **B. Defaults to confirm** (implementation defaults with a proposed answer each — B1..B10, quick nods)
+6. **Reference material**, **v1.2 lessons appendix**, **skill-level context**
+
+## Framing — do not slip on this
+
+The current v1.2 PCB, its wiring topology, and its enclosure arrangement are **not constraints** on the new design. Only the sensor set (what data firmware collects) is carried forward. Everything else — physical layout, PCB pin assignments, connector choices, sensor mounting, enclosure geometry, whether the DFR0559 / MAX17043 sit integrated on the main PCB or remain as separate modules — is fully open. Don't anchor on v1.2 when proposing new-design choices. The v1.2 lessons appendix in the doc explains what to protect against; it is context, not a template.
+
+## What to do first
+
+Walk the **B (defaults to confirm)** list first — it's a quick pass, each item has a proposed default with rationale. Present them one at a time (or grouped) and ask BOSS for a nod or a redirect. Landing these clears noise before tackling the architectural questions.
+
+Then walk the **A (needs BOSS input)** list in order — each is a real trade-off, needs discussion. For each, give trade-off analysis and a recommendation, then wait for a decision.
+
+For every decision that lands, edit the `NEW_PCB_DESIGN.md` file to move the item out of "open" and into the locked-decisions section (or wherever it belongs). Keep the doc clean going forward — don't leave a chronological session log; the doc should always describe the current state of the design.
+
+## Style
+
+- Call BOSS "BOSS".
+- BOSS is a strong Kotlin/Java/C++ dev, not an EE. Explain hardware trade-offs from first principles; don't just name parts.
+- For critical or unattended workflows, prefer hardware (a $2 IC) over firmware workarounds when both are viable. See the flashing decision in the doc for an example.
+- Don't narrate; act. Terse updates at key moments.
+- The I²C socket pinout is locked to `SDA – SCL – VCC – GND` so existing sensor plugs carry over — do not renegotiate.
+- Don't touch firmware in this session. It's a hardware-design session only.
+
+## Supporting files (in `202608_new_setup/`)
+
+- `NEW_PCB_DESIGN.md` — the design brief (read this)
+- `old/aisler.png` — Aisler etching preview of the deployed v1.2 board
+- `old/all_on_one_with_power_common_soil_onewire_netlist.xml` — v1.2 netlist
+- `old/IMG_2849.JPG`, `old/IMG_2850.JPG`, `old/IMG_2851.JPG` — live-setup photos
+
+## Firmware for read-only reference
+
+- `20240724_drimon_1_3/*.ino`
+- `documentation/HARDWARE.md`, `documentation/QUICK_REFERENCE.md`, `documentation/ARCHITECTURE.md`

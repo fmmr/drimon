@@ -53,7 +53,10 @@
       "Bash(/Users/fmr/projects/drimon/scripts/analyze_snap_timing.py --since 2026-08-05T17:17:00 --buffer 30)",
       "Bash(/Users/fmr/projects/drimon/scripts/analyze_snap_timing.py *)",
       "Bash(arduino-cli lib *)",
-      "Read(//Users/fmr/projects/fritzing/**)"
+      "Read(//Users/fmr/projects/fritzing/**)",
+      "Read(//private/tmp/fritzing_peek/**)",
+      "Bash(sips -s format png svg.breadboard.esp32*.svg --out breadboard.png)",
+      "Bash(sips -s format png svg.schematic.esp32*.svg --out schematic.png)"
     ],
     "deny": []
   },

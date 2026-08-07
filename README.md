@@ -15,6 +15,7 @@ Greenhouse monitoring system for Rødtangen, Norway. ESP32 in the greenhouse pos
 | [`matlab/`](matlab/README.md) | ThingSpeak MATLAB scraper for MET.no weather |
 | [`pi-kiosk/`](pi-kiosk/README.md) | Raspberry Pi kiosk that displays the dashboard fullscreen |
 | [`documentation/`](documentation/) | Cross-cutting reference docs |
+| [`202608_new_setup/`](202608_new_setup/README.md) | Next-revision PCB design workspace (in-progress brainstorm) |
 | `sketches_scratchpad/` | Arduino sandbox (ignore) |
 
 ## Documentation
