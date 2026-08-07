@@ -6,6 +6,20 @@ Greenhouse monitoring system for Rødtangen, Norway. ESP32 in the greenhouse pos
 
 **Live site**: <https://drimon.rodland.no/>
 
+## Diagnostics — no serial cable required
+
+The ESP32 sits inaccessible in a greenhouse: no serial monitor, no debugger, no live console. Every runtime signal has to be packed into the ≤255-byte ThingSpeak `status` string that rides on every POST.
+
+**[Status page](https://drimon.rodland.no/status.html)** decodes those strings into a browsable dashboard:
+
+- Per-day range charts for WiFi connect time, measure time, post time, total wake time, battery voltage (min / median / p95 / max)
+- Daily WiFi-outcome stack (HIT / FBK / MISS / FAIL) and per-day HTTP-outcome bars per channel
+- Distributions over the whole window: WiFi cache-hit rate, per-channel HTTP outcomes with a `FEIL` bucket for silent (all-3-fail) wakes, per-channel retry rescue rate, light/window/temp/battery/pressure class breakdowns, mesh-node BSSID resolution to friendly names
+- Recent statuses table with row-click-to-copy raw string, anomaly rows tinted amber, per-channel retry `+1`/`+2` superscripts on HTTP codes
+- Top-of-page summary tiles for cold-boot count, silent-post-fail count, retries used, HTTP OK-rate, WT/TU/Post/Total time p50/p95, and more
+
+Full historical post-mortem debugging from any browser — no infrastructure, no logs to rotate, no server-side database. See [QUICK_REFERENCE.md](documentation/QUICK_REFERENCE.md#status-field-decoder) for the exact meaning of each token in the status string.
+
 ## Repo layout
 
 | Path | What it is |

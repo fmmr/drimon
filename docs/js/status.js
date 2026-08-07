@@ -554,17 +554,42 @@ function renderDistributions(entries) {
     // PF>0 IS the last silent wake's codes, so we skip those from the per-channel LR counts and
     // route the silent wakes to a dedicated 'FEIL' bucket via Σ PF across visible rows.
     const silentCount = entries.reduce((sum, e) => sum + (Number.isFinite(e.s.PF) ? e.s.PF : 0), 0);
-    const channelGroups = STATUS_CHANNELS.map(ch => ({
-        key: `LR_CH${ch.num}`,
-        title: `Ch${ch.num} (${ch.label}) — HTTP`,
-        order: lrChannelOrder,
-        getValue: e => {
-            if (!Array.isArray(e.s.LR) || e.s.LR.length !== 3) return null;
-            if (Number.isFinite(e.s.PF) && e.s.PF > 0) return null;   // silent-wake LR → 'FEIL' bucket handles it
-            return lrBucket(e.s.LR[ch.num - 1]);
-        },
-        extraCounts: silentCount > 0 ? { FEIL: silentCount } : null
-    }));
+    const channelGroups = STATUS_CHANNELS.map(ch => {
+        const idx = ch.num - 1;
+        // Count wakes where this channel used exactly N retries (final code doesn't matter — the
+        // point is showing how often this channel needed retries per attempt level).
+        const retry1 = entries.filter(e => Array.isArray(e.s.PR) && e.s.PR[idx] === 1).length;
+        const retry2 = entries.filter(e => Array.isArray(e.s.PR) && e.s.PR[idx] === 2).length;
+        // Rescue rate: wakes where retries fired AND ended in 200 (data preserved) vs all wakes
+        // where retries fired. Answers "how often does the retry mechanism earn its keep on this
+        // channel". Silent-wake rows count as attempts that failed (their LR is a non-200 code).
+        const retryAttempts = entries.filter(e => Array.isArray(e.s.PR) && e.s.PR[idx] > 0).length;
+        const retryRescues = entries.filter(e =>
+            Array.isArray(e.s.PR) && e.s.PR[idx] > 0 &&
+            Array.isArray(e.s.LR) && e.s.LR[idx] === 200
+        ).length;
+        const footerLines = [];
+        if (retry1 || retry2) {
+            if (retry1) footerLines.push(`+1&nbsp;&nbsp;${retry1}`);
+            if (retry2) footerLines.push(`+2&nbsp;&nbsp;${retry2}`);
+            if (retryAttempts > 0) {
+                const pct = Math.round(retryRescues / retryAttempts * 100);
+                footerLines.push(`reddet&nbsp;&nbsp;${retryRescues}/${retryAttempts}&nbsp;(${pct}%)`);
+            }
+        }
+        return {
+            key: `LR_CH${ch.num}`,
+            title: `Ch${ch.num} (${ch.label}) — HTTP`,
+            order: lrChannelOrder,
+            getValue: e => {
+                if (!Array.isArray(e.s.LR) || e.s.LR.length !== 3) return null;
+                if (Number.isFinite(e.s.PF) && e.s.PF > 0) return null;   // silent-wake LR → 'FEIL' bucket handles it
+                return lrBucket(e.s.LR[idx]);
+            },
+            extraCounts: silentCount > 0 ? { FEIL: silentCount } : null,
+            footerLines
+        };
+    });
 
     const groups = [
         { key: 'WF',    title: 'WiFi-outcome', order: ['HIT', 'FBK', 'MISS', 'FAIL'] },
@@ -619,7 +644,10 @@ function renderDistributions(entries) {
             }
             return `<div class="dist-row" title="${tooltip}"><span>${display}</span><span class="dist-bar" style="width:${barWidth}%"></span><span class="dist-pct">${label}</span></div>`;
         }).join('');
-        return `<div class="dist-group"><div class="dist-title">${g.title} · n=${total}</div>${rows}</div>`;
+        const footer = Array.isArray(g.footerLines) && g.footerLines.length
+            ? `<div class="dist-footer">${g.footerLines.map(l => `<span>${l}</span>`).join('')}</div>`
+            : '';
+        return `<div class="dist-group"><div class="dist-title">${g.title} · n=${total}</div>${rows}${footer}</div>`;
     }).join('');
 }
 

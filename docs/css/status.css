@@ -278,6 +278,20 @@ h2 a:hover,
     margin-bottom: 0.15rem;
 }
 
+/* Footer for channel dist-groups: per-retry-level counts, text-only, doesn't distort the bar
+   percentages above. One span per retry level so we can stack them via display:block. */
+.dist-footer {
+    margin-top: 0.35rem;
+    padding-top: 0.3rem;
+    border-top: 1px solid var(--pill-border);
+    font-size: 0.72rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+}
+.dist-footer span {
+    display: block;
+}
+
 .dist-bar {
     height: 10px;
     background: var(--accent);
