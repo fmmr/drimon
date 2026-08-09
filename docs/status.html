@@ -124,6 +124,7 @@
                         <th title="Batteri-klasse: OK / LOW (&lt;35%) + spenning (V, BV-token)">Batt</th>
                         <th title="Trykk-klasse: LOW / OK / HIGH">Trykk</th>
                         <th title="Boot-årsak (WR-token): — = normal timer-/EXT0-wake fra deep sleep. Annet = kald-boot som blanket RTC (POWERON/BROWNOUT/PANIC/EXT/…). Suffix i grå = skjerm-pause i ms (SD-token, 0 utelates).">Boot</th>
+                        <th title="Forrige wake sin siste fase + serienummer (LS-token, format `N.XX`, NVS-lagret så den overlever panic). Fase: OK = ren deep sleep, ellers hvor koden døde — SP=setupPins, ID=initDisplays, WF=connectToWiFi, IS=initSensors, MS=measure, PS=post, DP=display-pause. `??` = første boot noensinne (NVS tom). Serienummeret (N) er en per-wake teller som wrapper ved 65535 — sikrer at hver status er unik selv når innholdet er identisk (viktig for panic-loop-rader).">LS</th>
                         <th title="Firmware-versjon (V-token): kort git commit-hash + '+' hvis kompilert med uncommittet endring">V</th>
                     </tr>
                 </thead>

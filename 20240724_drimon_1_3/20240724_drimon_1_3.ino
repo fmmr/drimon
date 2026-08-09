@@ -9,6 +9,7 @@
 #include <OneWire.h>
 #include <DallasTemperature.h>
 #include <Wire.h>
+#include <Preferences.h>   // NVS-backed breadcrumb (g_lastStage) — survives panic/reset
 
 #include <secrets.h>
 #include <sensordata.h>
@@ -116,6 +117,17 @@ bool TOF_OK = false;
 uint8_t g_resetReason = 0;   // esp_reset_reason() at setup start — 8 = ESP_RST_DEEPSLEEP (normal), anything else = cold-path reset that wiped RTC
 uint8_t g_wakeupCause = 0;   // esp_sleep_get_wakeup_cause() at setup start — 4 = TIMER, 2 = EXT0, 0 = UNDEFINED (fresh boot)
 
+// NVS-backed breadcrumb — survives panic / reset / brownout (RTC does not). Written at the START
+// of each phase via stage(); on next boot g_lastStage holds whichever phase the previous wake was
+// inside when it died, or "OK" if it entered deep sleep cleanly. Paired with g_prevWakeNum, a
+// monotonic wake serial (wraps at 65535 ~= 2 years @ 15-min intervals) so every wake's status is
+// unique — no more silent merging of identical panic-loop rows. Exposed together as the `LS-` token
+// in the format `<prevWakeNum>.<prevStage>`, e.g. `LS-3.OK` on wake 4 after 3 clean wakes.
+Preferences prefs;
+char g_lastStage[3] = "??";
+uint16_t g_prevWakeNum = 0;   // wnum in NVS when this wake started — previous wake's serial
+uint16_t g_wakeNum = 0;       // g_prevWakeNum + 1, this wake's serial (already written back to NVS)
+
 // All RTC_DATA_ATTR vars live here: Arduino concatenates the main sketch first, so any variable
 // referenced from setup() must be declared here to be in scope. Grouping the rest here too so all
 // wake-crossing state is in one place.
@@ -177,14 +189,35 @@ void flashLED(int pin, int times, int onMs = FLASH_DEFAULT_MS, int offMs = FLASH
   }
 }
 
+// Write a 2-byte breadcrumb to NVS at the start of each phase. If a panic/reset happens inside
+// the phase, the next boot reads this code as g_lastStage and posts it in the LS- status token.
+// Cost: one NVS put per phase (~10–30 ms on flash). Wear-leveled, comfortably within flash life.
+void stage(const char* code) {
+  prefs.putBytes("stage", code, 2);
+}
+
 void setup() {
   long start = millis();
+
+  // Open NVS and read the previous wake's last stage + serial number BEFORE overwriting. First-ever
+  // boot (no keys yet) leaves g_lastStage as "??" and g_prevWakeNum as 0.
+  prefs.begin("drimon", false);
+  if (prefs.getBytesLength("stage") == 2) {
+    prefs.getBytes("stage", g_lastStage, 2);
+  }
+  g_lastStage[2] = '\0';
+  g_prevWakeNum = prefs.getUShort("wnum", 0);
+  g_wakeNum = g_prevWakeNum + 1;   // wraps at 65535, harmless — just a serial for uniqueness
+  prefs.putUShort("wnum", g_wakeNum);
+
+  stage("SP");
   setupPins();
   beep(50);
   flashLED(GREEN_LED_PIN, 2);
   Serial.begin(SERIAL_BAUD);
 
   Serial.println("Setup...");
+  Serial.printf("  Wake #%u (previous #%u ended at stage: %s)\n", g_wakeNum, g_prevWakeNum, g_lastStage);
   g_resetReason = (uint8_t)esp_reset_reason();
   g_wakeupCause = (uint8_t)esp_sleep_get_wakeup_cause();
   Serial.printf("  Reset reason %u, wakeup cause %u\n", g_resetReason, g_wakeupCause);
@@ -208,7 +241,9 @@ void setup() {
     Serial.println("  Starting fresh");
   }
 
+  stage("ID");
   initDisplays();
+  stage("WF");
   connectToWiFi();  // not really neded when pressing button, but nic to see status...
 
   if (SHOULD_POST) {
@@ -219,6 +254,7 @@ void setup() {
     dispPrint("Will NOT POST");
   }
 
+  stage("IS");
   initSensors();
 
   Serial.println("Setup: done");
@@ -227,6 +263,7 @@ void setup() {
 
   Serial.println("Measuring...");
   dispPrint("Measuring...");
+  stage("MS");
   SensorData data = measure(start);
   Serial.println("Measuring: done");
 
@@ -237,12 +274,14 @@ void setup() {
   displayData(data);
   Serial.println("Displaying data: done");
   if (SHOULD_POST) {
+    stage("PS");
     postThingSpeak(data);
   }
   else{
     Serial.println("NOT Posting data to ThingSpeak...");
   }
   if (DISPLAY_ON) {
+    stage("DP");
     Serial.printf("Sleeping %d ms for the display to be read...\n", DISPLAY_TIME);
     delay(DISPLAY_TIME);
   }
@@ -256,6 +295,7 @@ void setup() {
   lastTotalTimeMs = totalElapsed > UINT16_MAX ? UINT16_MAX : (uint16_t)totalElapsed;
   lastMeasureTimeMs = data.timeUsed > UINT16_MAX ? UINT16_MAX : (uint16_t)data.timeUsed;
   Serial.printf("Total wake time %ld ms (measure %ld, post %u). Sleeping %d s.\n", totalElapsed, data.timeUsed, lastPostTimeMs, sleepDuration);
+  stage("OK");
   enterDeepSleep(sleepDuration);
 }
 

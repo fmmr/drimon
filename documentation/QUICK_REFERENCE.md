@@ -50,7 +50,7 @@ Physical controls on the enclosure:
 Every ThingSpeak entry carries a `status` string like:
 
 ```
-T-OK_SHADE_W-OPEN_B-OK_P-HIGH_WF-HIT_BS-14918294f9c4_WT-388_FC-0_PF-0_BV-4.09_TU-5435_TV-21.4_LX-8500_WD-72_LR-200.200.200_PR-0.0.0_LTU-5312_LP-3120_LT-11250_WR-8.4_V-d9976d7_SD-0
+T-OK_SHADE_W-OPEN_B-OK_P-HIGH_WF-HIT_BS-14918294f9c4_WT-388_FC-0_PF-0_BV-4.09_TU-5435_TV-21.4_LX-8500_WD-72_LR-200.200.200_PR-0.0.0_LTU-5312_LP-3120_LT-11250_WR-8.4_LS-42.OK_V-d9976d7_SD-0
 ```
 
 Underscore-separated `PREFIX-VALUE` parts:
@@ -78,9 +78,10 @@ Underscore-separated `PREFIX-VALUE` parts:
 | `LP-` | Last Post time (ms) | Wall-clock ms the previous wake spent inside `postThingSpeak()` — includes retries, inter-post delays, and the 3× per-channel POST. Direct signal of network cost. Grows with `PR` values. RTC-persisted; wiped by cold reset. `uint16_t`, saturates at 65535. |
 | `LT-` | Last Total time (ms) | Wall-clock ms for the entire previous wake, setup start → just before `enterDeepSleep`. Sum of measure + post + display pause (`SD-`) + ~700 ms tail (flash/beep). Battery-cost proxy. Sanity check: `LTU + LP + prev_SD + ~700 ≈ LT`. RTC-persisted; wiped by cold reset. `uint16_t`, saturates at 65535. |
 | `WR-` | Wake reason: `<resetReason>.<wakeupCause>` | `resetReason` = `esp_reset_reason()` — `1` POWERON, `2` EXT (EN pin), `3` SW, `4` PANIC, `5` INT_WDT, `6` TASK_WDT, `7` WDT, `8` DEEPSLEEP (normal timer/EXT0 wake — RTC preserved), `9` BROWNOUT, `10` SDIO. `wakeupCause` = `esp_sleep_get_wakeup_cause()` — `0` UNDEFINED (fresh boot), `2` EXT0 (green button), `4` TIMER. Anything but `8.*` = a cold-path reset happened and RTC was wiped. Captured at start of `setup()`. |
+| `LS-` | Last stage — previous wake's serial + breadcrumb, format `<n>.<stage>` (e.g. `42.OK`, `43.WF`) | Both parts stored in NVS (flash, not RTC) so they survive panic/reset/brownout. `<n>` is a monotone `uint16_t` wake serial, incremented once at boot; wraps harmlessly at 65535 (~2 years @ 15-min intervals). `<stage>` is written at the START of each phase via `stage("XX")` in the main `.ino`; whichever phase the previous wake was *inside* when it died is what the current wake reads back. Stage codes: `SP` setupPins+Serial, `ID` initDisplays, `WF` connectToWiFi, `IS` initSensors, `MS` measure, `PS` postThingSpeak, `DP` display-pause 8 s hold, `OK` reached `enterDeepSleep()` cleanly. Special stage: `??` = first-ever boot after firmware flash (NVS key not yet written). Reading `LS-<n>.OK` = previous wake slept cleanly; anything else = crashed there, and the `WR-` on this row usually shows PANIC/WDT/BROWNOUT to match. The serial also makes every wake's status unique so identical panic-loop rows never silently merge in the status page. |
 | `SD-` | Display-read pause | `0` (timer wake, no delay) or `8000` (button/fresh wake, 8 s pause — value of `DISPLAY_TIME`) |
 
-**Naming convention**: tokens starting with `L*` (currently `LR-`, `LTU-`, `LP-`, `LT-`) hold data from the **previous wake** — captured in RTC memory at the end of that wake, embedded in the next wake's status. `PR-`, `FC-`, and `PF-` also describe accumulated state from previous wakes (historical inconsistency — kept for descriptive fit and backward compatibility). All other tokens describe the current wake.
+**Naming convention**: tokens starting with `L*` (currently `LR-`, `LTU-`, `LP-`, `LT-`, `LS-`) hold data from the **previous wake** — captured in RTC memory (or NVS for `LS-`, which needs to survive panic) at the end of that wake, embedded in the next wake's status. `PR-`, `FC-`, and `PF-` also describe accumulated state from previous wakes (historical inconsistency — kept for descriptive fit and backward compatibility). All other tokens describe the current wake.
 
 **Read the status from ThingSpeak** (any of the 3 channels works — same status on all):
 
@@ -94,17 +95,19 @@ For jq/curl analysis pipelines (WT-time trend, WF-cache histogram, etc.), see [T
 
 ## Wake reasons — behavior at a glance
 
-| Wake type | `DISPLAY_ON` | `SHOULD_POST` | 12 s display pause? |
+| Wake type | `DISPLAY_ON` | `SHOULD_POST` | 8 s display pause? |
 |---|---|---|---|
-| Fresh boot (flash / reset / power / brownout / EN) | true | reads switch | yes |
 | Timer wake (normal field cycle) | false | reads switch | no |
 | Green button (EXT0 wake) | true | reads switch | yes |
+| Cold boot from `POWERON` (battery reconnect) or `EXT` (blue EN button) | true | reads switch | yes |
+| Cold boot from `PANIC` / `WDT` / `BROWNOUT` / `SW` (no human present) | false | reads switch | no |
 
-Fresh boots do POST — they carry `WR-<resetReason>.0` in the status field so cold-path resets show up on ThingSpeak. Older firmware skipped the POST on fresh boot, which made cold reboots invisible (only inferable as `LR-0.0.0` on the next successful wake, together with `WF-MISS` if the fresh boot didn't re-cache the BSSID in time).
+Every wake POSTs — cold boots carry `WR-<resetReason>.0` in the status field so cold-path resets show up on ThingSpeak. The `DISPLAY_ON` split above is a whitelist: only *human-triggered* cold boots light displays. `PANIC` etc. stay headless to preserve battery — proven mattering in the 2026-08-08→09 panic-restart loop, where 11 h of `DISPLAY_ON=true` cold boots burned ~130 mAh on 8 s display-pauses (see `LS-` for where the crash happened).
 
 ## Common quick checks
 
 - **"Is it charging?"** → check the DFR0559's charge LED (red = charging, green DONE = full). Or the battery voltage chart trend on <https://drimon.rodland.no/>.
 - **"Why didn't it post?"** → post-enable switch may be HIGH.
 - **"Which WiFi did it join?"** → status field contains `WF-` outcome and `WT-` connect time; historical values queryable at `https://api.thingspeak.com/channels/2568299/status.json?results=1000&days=100`.
+- **"Did the previous wake crash?"** → check `LS-` in the latest status: `LS-<n>.OK` = wake #n slept cleanly, `LS-<n>.<stage>` (any other stage) = wake #n panicked inside that phase. Usually the `WR-` on the same row shows `4.*` (PANIC) or a WDT code, corroborating.
 - **"Cell temperature reads 85 °C, -55 °C, or -127 °C"** → DS18B20 bogus values (power-on default / bit corruption / disconnect). Filtered on the site; firmware retries at read time. If persistent, resolder the affected wire.

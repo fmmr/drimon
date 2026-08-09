@@ -46,6 +46,7 @@ String status(SensorData& data) {
   stat = stat + "_LP-" + String(lastPostTimeMs);
   stat = stat + "_LT-" + String(lastTotalTimeMs);
   stat = stat + "_WR-" + String(g_resetReason) + "." + String(g_wakeupCause);
+  stat = stat + "_LS-" + String(g_prevWakeNum) + "." + g_lastStage;   // previous wake's serial + last phase (OK = clean sleep, else where it died)
   stat = stat + "_V-" + FIRMWARE_VERSION;
   stat = stat + "_SD-" + (DISPLAY_ON ? String(DISPLAY_TIME) : "0");
 

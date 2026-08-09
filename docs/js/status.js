@@ -145,6 +145,14 @@ const STATUS_TOKENS = [
     { prefix: 'LP-', key: 'LP', parse: v => parseInt(v, 10) },
     { prefix: 'LT-', key: 'LT', parse: v => parseInt(v, 10) },
     { prefix: 'WR-', key: 'WR', parse: v => v.split('.').map(x => parseInt(x, 10)) },
+    // LS format: `<wakeSerial>.<stage>` (e.g. `3.OK`, `7.WF`). Older firmware emitted just the stage
+    // (`OK`, `WF`); handle both — missing serial → n=null. Serial ensures each wake's status is
+    // unique so identical panic-loop rows don't merge in mergeAcrossChannels().
+    { prefix: 'LS-', key: 'LS', parse: v => {
+        const dot = v.indexOf('.');
+        if (dot < 0) return { n: null, stage: v };
+        return { n: parseInt(v.slice(0, dot), 10), stage: v.slice(dot + 1) };
+    }},
     { prefix: 'V-',  key: 'V',  parse: v => v },
     { prefix: 'SD-', key: 'SD', parse: v => parseInt(v, 10) }
 ];
@@ -391,6 +399,12 @@ function anomalyReasons(e) {
     if (Number.isFinite(e.s.PF) && e.s.PF > 0) reasons.push(`PF=${e.s.PF}`);
     if (Array.isArray(e.s.LR) && e.s.LR.some(c => c !== 200 && c !== 0)) {
         reasons.push(`LR=${e.s.LR.join('.')}`);
+    }
+    // LS.stage='OK' = previous wake entered deep sleep cleanly. Anything else = previous wake died
+    // mid-phase. '??' = first-ever boot (no prior NVS write); don't flag as anomaly.
+    if (e.s.LS && typeof e.s.LS.stage === 'string' && e.s.LS.stage !== 'OK' && e.s.LS.stage !== '??') {
+        const nPart = Number.isFinite(e.s.LS.n) ? `${e.s.LS.n}.` : '';
+        reasons.push(`LS=${nPart}${e.s.LS.stage}`);
     }
     return reasons;
 }
@@ -702,6 +716,11 @@ function renderRecent(entries) {
                 else label = `<span title="${title}">${wcName}</span>`;
                 return `${label}${sdSuffix}`;
             })()}</td>
+            <td${e.s.LS && e.s.LS.stage && e.s.LS.stage !== 'OK' && e.s.LS.stage !== '??' ? ' class="ls-anomaly"' : ''}>${
+                e.s.LS
+                    ? `${e.s.LS.stage}${Number.isFinite(e.s.LS.n) ? ` <span class="raw-value">#${e.s.LS.n}</span>` : ''}`
+                    : '—'
+            }</td>
             <td>${githubCommitLink(e.s.V)}</td>
         </tr>`;
     }).join('');

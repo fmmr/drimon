@@ -331,6 +331,7 @@ td.wf-fbk  { color: var(--fbk); font-weight: 600; }
 td.wf-miss { color: var(--miss); font-weight: 600; }
 td.wf-fail { color: var(--fail); font-weight: 600; }
 td.cold-boot { color: var(--fail); font-weight: 600; }
+td.ls-anomaly { color: var(--fail); font-weight: 600; }
 .wr-timer { color: var(--muted); }
 .wr-button { color: var(--fbk); font-weight: 600; }
 
