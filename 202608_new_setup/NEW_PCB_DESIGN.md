@@ -140,6 +140,15 @@ Current 3× capacitive setup is unreliable (2 of 3 fail intermittently). Options
 **A6. Rescue-flash pigtail header — yes or no?**
 Standard 6-pin FTDI-pinout header inside the enclosure as a fallback if the on-board USB-serial chip dies. Cost: one 0.1" header (pennies). Upside: robustness. Downside: one more thing to lay out.
 
+**A7. Display power — separate rail from sensors, and how to avoid I²C phantom-power?**
+Currently locked: OLED + LCD (backpack logic + backlight LED) share the sensor 5 V rail. When the firmware doesn't need to show anything, *nothing* on the display group needs power — chip, backpack, or backlight. Evidence this matters: 2026-08-08→09 11-hour panic-restart loop held an 8 s display-pause on every cold-boot wake with all displays lit, estimated ~130 mAh extra drain (battery trough dropped from a normal ~60 % to ~45 %). See the v1.2 lessons appendix for the full incident context.
+
+Proposed change: split into two gated rails — one for sensors, one for the display group as a whole (OLED chip + LCD backpack logic + backlight LED). Complication: OLED and LCD sit on the same I²C bus (Wire1) as the sensors — if only the sensor rail is up, the displays' SDA/SCL pins back-feed through their internal ESD diodes into their unpowered Vcc net (same phantom-power failure the two-bus scheme already avoids for the fuel gauge). Two ways out:
+- **(a) Coordinate the gates** — display rail on ⇒ sensor rail on (firmware rule, GPIO ordering). Free, one extra MOSFET + one GPIO, but sensors always pay display cost when displays are on.
+- **(b) Bus switch on the display SDA/SCL stub** — small analog switch IC (e.g. TS3A44159, ~$0.60) or two N-MOSFETs isolate the display bus when its rail is down. Truly independent rails, one more part.
+
+To decide: does the flexibility of (b) justify the extra part, or is (a) enough given displays are only lit on button wakes anyway?
+
 ### B. Defaults to confirm (implementation details — quick nods)
 
 Each of these has a proposed default; unless BOSS pushes back, they land as-is.
@@ -188,6 +197,7 @@ Issues found on the deployed v1.2 board that shaped decisions above. Documented 
 - **J1–J13 1-Wire pins were never used** — the only 1-Wire consumer was the separate Soil+1wire header. → Dedicated I²C-only sockets and dedicated 1-Wire-only sockets, not mixed.
 - **DFR0559 boost quiescent (~25 mA) + ESP32 dev module's AMS1117 + CH340 (~10–15 mA)** dominated the always-on budget. → Gate the 5 V rail; power the ESP32 directly from a low-Iq LDO on battery+; USB-serial powered only by USB VBUS.
 - **DFR0559 and MAX17043 were wired in as separate breakout modules with loose wiring.** → Open question A2/A3 above — integrate or keep modular.
+- **Display group (OLED + LCD backpack + backlight LED) shares the sensor 5 V rail** — so it draws whenever any sensor cycle runs, even for headless timer wakes that don't touch the display. Surfaced by the 2026-08-08→09 panic-restart loop: 11 h of cold-boot wakes each held an 8 s display-pause with everything lit, estimated ~130 mAh of extra drain (battery trough went from a normal ~60 % to ~45 % overnight). → Open question A7 above — evaluate splitting displays onto their own gated rail (with a strategy for the I²C phantom-power issue).
 
 ## Skill-level context for collaborators
 
