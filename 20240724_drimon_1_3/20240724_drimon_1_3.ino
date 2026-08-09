@@ -200,7 +200,11 @@ void setup() {
     // Fresh boot (cold reset: POWERON/EXT/BROWNOUT/PANIC/…) — RTC state was wiped, WF cache is empty,
     // wake cause is UNDEFINED. Still POST so the WR token surfaces the reset reason on ThingSpeak.
     SHOULD_POST = digitalRead(POST_SWITCH_PIN) == LOW;
-    DISPLAY_ON = true;
+    // Only light displays on human-triggered cold boots (POWERON=battery reconnect, EXT=EN-button
+    // press). PANIC/WDT/BROWNOUT/SW = code died with no human around — keep dark to preserve battery
+    // (11-h panic-restart loop 2026-08-08→09 burned ~130 mAh on 8 s display-pauses per wake).
+    // Whitelist so any new ESP-IDF reset cause defaults to dark.
+    DISPLAY_ON = (g_resetReason == ESP_RST_POWERON || g_resetReason == ESP_RST_EXT);
     Serial.println("  Starting fresh");
   }
 
