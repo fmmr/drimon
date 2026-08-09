@@ -40,9 +40,23 @@
     color: var(--muted, #666);
 }
 
-.status-cell {
+/* Compact preview of the status column — visual is truncated to ~12 chars with ellipsis in a small
+   muted monospace, so you can see "there's data here" without cluttering the view. The DOM still
+   contains the full string, so drag-selecting rows and Cmd+C captures the complete raw status in
+   the clipboard (text-overflow:ellipsis only affects rendering, not the underlying text node). */
+#raw-table .status-cell {
     font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-    word-break: break-all;
+    font-size: 0.7em;
+    color: var(--muted, #999);
+    max-width: 12ch;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+#raw-table thead th:last-child {
+    font-size: 0.85em;
+    color: var(--muted, #666);
 }
 
 .hint {
