@@ -25,13 +25,14 @@ Promise.all(STATUS_CHANNELS.map(c =>
     });
 
 // Merge identical status strings observed within 60 s across the 3 channels (same wake → one row).
-// Mirror of status.js:mergeAcrossChannels. Sorted ascending during merge, then reversed for display.
+// Mirror of status.js:mergeAcrossChannels — also tracks which channel(s) each wake appeared on.
+// Sorted ascending during merge, then reversed for display.
 function mergeAcrossChannels(byChannel) {
     const raw = [];
-    for (const { feeds } of byChannel) {
+    for (const { num, feeds } of byChannel) {
         for (const f of feeds) {
             if (!f.status) continue;
-            raw.push({ t: moment.tz(f.created_at, TZ), raw: f.status });
+            raw.push({ t: moment.tz(f.created_at, TZ), raw: f.status, ch: num });
         }
     }
     raw.sort((a, b) => a.t.diff(b.t));
@@ -43,9 +44,22 @@ function mergeAcrossChannels(byChannel) {
             if (Math.abs(wakes[i].t.diff(e.t)) > MERGE_WINDOW_MS) break;
             if (wakes[i].raw === e.raw) { matched = wakes[i]; break; }
         }
-        if (!matched) wakes.push({ t: e.t, raw: e.raw });
+        if (matched) {
+            matched.channels.add(e.ch);
+        } else {
+            wakes.push({ t: e.t, raw: e.raw, channels: new Set([e.ch]) });
+        }
     }
     return wakes;
+}
+
+// Same rendering as status.js:channelBadges — 3-number badge showing which of the 3 status channels
+// carried this wake's status. Missing channels render as `·` in red.
+function channelBadges(channels) {
+    return STATUS_CHANNELS.map(c => channels.has(c.num)
+        ? `<span class="ch-ok" title="${c.label}">${c.num}</span>`
+        : `<span class="ch-missing" title="${c.label} — mangler">·</span>`
+    ).join(' ');
 }
 
 function render(byChannel) {
@@ -63,6 +77,7 @@ function render(byChannel) {
         const rawEscaped = e.raw.replace(/"/g, '&quot;');
         return `<tr data-raw="${rawEscaped}" title="Klikk for å kopiere">
             <td class="ts">${e.t.format('YYYY-MM-DD HH:mm:ss')}</td>
+            <td class="ch-cell">${channelBadges(e.channels)}</td>
             <td class="status-cell">${e.raw}</td>
         </tr>`;
     }).join('');
