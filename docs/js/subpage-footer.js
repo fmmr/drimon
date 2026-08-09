@@ -1,10 +1,11 @@
 (function () {
     const links = [
-        { href: 'index.html',      text: 'Dashboard' },
-        { href: 'windows.html',    text: 'Vindu' },
-        { href: 'calendar.html',   text: 'Kalender' },
-        { href: 'heat-frost.html', text: 'Varme/frost' },
-        { href: 'status.html',     text: 'Status' }
+        { href: 'index.html',        text: 'Dashboard' },
+        { href: 'windows.html',      text: 'Vindu' },
+        { href: 'calendar.html',     text: 'Kalender' },
+        { href: 'heat-frost.html',   text: 'Varme/frost' },
+        { href: 'status.html',       text: 'Status' },
+        { href: 'raw-statuses.html', text: 'Rå statuser' }
     ];
 
     const render = () => {

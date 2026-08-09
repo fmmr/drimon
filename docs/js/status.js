@@ -672,7 +672,9 @@ function renderRecent(entries) {
     if (heading) {
         const ch1Id = STATUS_CHANNELS[0].id;
         const url = `https://api.thingspeak.com/channels/${ch1Id}/status.json?results=20&days=1`;
-        heading.innerHTML = `<a href="${url}" target="_blank" rel="noopener noreferrer">Siste ${rows.length} statuser</a>`;
+        heading.innerHTML =
+            `<a href="${url}" target="_blank" rel="noopener noreferrer">Siste ${rows.length} statuser</a>` +
+            ` · <a href="raw-statuses.html">rå statuser (merged fra 3 kanaler)</a>`;
     }
     tbody.innerHTML = rows.map(e => {
         const wf = e.s.WF || '—';
