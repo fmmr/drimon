@@ -65,7 +65,7 @@
 // ---------- ThingSpeak posting ----------
 #define THINGSPEAK_INTER_POST_MS 10   // brief settle after client.stop() before next channel POST
 #define POST_FLASH_ON_MS 300          // LED-on duration for the 3 post-POST channel-result flashes (off stays at flashLED default 180 ms)
-#define MAX_POST_RETRY 2              // extra attempts per channel on transient network errors (0/-301/-302/-303/-304). Total attempts = 1 + MAX_POST_RETRY.
+#define MAX_POST_RETRY 1              // extra attempts per channel on transient network errors (0/-301/-302/-303/-304). Total attempts = 1 + MAX_POST_RETRY. Dropped from 2→1 on 2026-08-10: retry storms of 3×3 open/close cycles were triggering panics deep in lwIP/WiFiClient; a missed post is cheaper than a 30-h panic loop.
 #define POST_RETRY_DELAY_MS 750       // pause between retry attempts on the same channel (after client.stop()). Long enough for TCP to settle, short enough not to shift the next boundary.
 
 // ---------- Serial ----------
@@ -154,7 +154,6 @@ DeviceAddress termo2 = { 0x28, 0x0E, 0xE5, 0x6A, 0x00, 0x00, 0x00, 0x8E };  // m
 DeviceAddress termo3 = { 0x28, 0xBE, 0x62, 0x6B, 0x00, 0x00, 0x00, 0x9C };  // farthest
 OneWire oneWire(ONE_WIRE_PIN);
 DallasTemperature sensors(&oneWire);
-WiFiClient client;
 
 
 
@@ -210,6 +209,27 @@ void setup() {
   g_wakeNum = g_prevWakeNum + 1;   // wraps at 65535, harmless — just a serial for uniqueness
   prefs.putUShort("wnum", g_wakeNum);
 
+  g_resetReason = (uint8_t)esp_reset_reason();
+  g_wakeupCause = (uint8_t)esp_sleep_get_wakeup_cause();
+
+  // Circuit breaker: previous wake died inside the post block (stage starts with 'P': PS/P1/P2/P3/PA)
+  // AND this boot is a code-crash reset (not POWERON/EXT/DEEPSLEEP) → skip EVERYTHING and deep-sleep
+  // immediately. No setupPins delay, no beep/flash, no Serial, no WiFi, no sensors, no measure. Total
+  // wake time drops from ~5-7 s to ~100 ms, turning a 1.5 s panic loop into a NIGHT-interval back-off
+  // (20 min). Stage "CB" makes the skip visible in the next successful wake's LS token. Cleared as
+  // soon as any wake reaches stage("OK").
+  bool badReset = (g_resetReason != ESP_RST_POWERON &&
+                   g_resetReason != ESP_RST_EXT &&
+                   g_resetReason != ESP_RST_DEEPSLEEP);
+  if (badReset && g_lastStage[0] == 'P') {
+    stage("CB");
+    pinMode(BUTTON_PIN, INPUT_PULLUP);   // ensure GPIO 15 isn't floating so EXT0 doesn't spurious-wake
+    esp_sleep_enable_ext0_wakeup(GPIO_NUM_15, 0);
+    esp_sleep_enable_timer_wakeup((uint64_t)SLEEP_INTERVAL_NIGHT_MIN * 60ULL * 1000000ULL);
+    esp_deep_sleep_start();
+    // never returns
+  }
+
   stage("SP");
   setupPins();
   beep(50);
@@ -218,8 +238,6 @@ void setup() {
 
   Serial.println("Setup...");
   Serial.printf("  Wake #%u (previous #%u ended at stage: %s)\n", g_wakeNum, g_prevWakeNum, g_lastStage);
-  g_resetReason = (uint8_t)esp_reset_reason();
-  g_wakeupCause = (uint8_t)esp_sleep_get_wakeup_cause();
   Serial.printf("  Reset reason %u, wakeup cause %u\n", g_resetReason, g_wakeupCause);
   esp_sleep_wakeup_cause_t wakeup_reason = (esp_sleep_wakeup_cause_t)g_wakeupCause;
   if (wakeup_reason == ESP_SLEEP_WAKEUP_EXT0) {

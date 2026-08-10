@@ -7,22 +7,26 @@ static bool isTransientPostError(int code) {
   return code == 0 || code == -301 || code == -302 || code == -303 || code == -304;
 }
 
-// Attempt one channel POST with retry on transient errors. The setFields callable is invoked before
-// EVERY attempt because ThingSpeak.writeFields() clears its internal field buffer on both success and
-// failure paths (see resetWriteFields() call inside writeFields/abortWriteRaw in the library).
+// Attempt one channel POST with retry on transient errors. Each attempt uses a fresh WiFiClient
+// (local, scope-owned) so lwIP allocates a new TCP PCB every time — reusing the same client across
+// tight open/close cycles was the pattern that triggered the panic loop on 2026-08-07→10.
+// The setFields callable is invoked before EVERY attempt because ThingSpeak.writeFields() clears its
+// internal field buffer on both success and failure paths (see resetWriteFields() call inside
+// writeFields/abortWriteRaw in the library).
 static int postChannel(unsigned long chId, const char* apiKey, int chNum, const String& status,
                        std::function<void()> setFields, uint8_t& retryCount) {
   retryCount = 0;
   int result;
   while (true) {
+    WiFiClient client;
+    ThingSpeak.begin(client);
     setFields();
     ThingSpeak.setStatus(status);
     Serial.printf("  Thingspeak: Channel %d attempt %u of %u...\n", chNum, retryCount + 1, MAX_POST_RETRY + 1);
     result = ThingSpeak.writeFields(chId, apiKey);
     if (result == 200 || retryCount >= MAX_POST_RETRY || !isTransientPostError(result)) break;
     Serial.printf("  Thingspeak: Ch%d got %d — retrying after %d ms\n", chNum, result, POST_RETRY_DELAY_MS);
-    client.stop();
-    delay(POST_RETRY_DELAY_MS);
+    delay(POST_RETRY_DELAY_MS);   // client dtor at loop top closes the socket for us
     retryCount++;
   }
   if (result == 200) Serial.printf("  Thingspeak: Channel %d update successful.\n", chNum);
@@ -33,11 +37,11 @@ static int postChannel(unsigned long chId, const char* apiKey, int chNum, const 
 void postThingSpeak(SensorData& data) {
   long postStart = millis();
   digitalWrite(BLUE_LED_PIN, HIGH);
-  ThingSpeak.begin(client);
   Serial.println("Posting data to ThingSpeak...");
   bool anyPostOk = false;
   bool chOk[3] = {false, false, false};
 
+  stage("P1");
   lastPostResults[0] = postChannel(THINGSPEAK_1_CHANNEL, THINGSPEAK_1_API, 1, data.status, [&]() {
     ThingSpeak.setField(1, data.temperature);
     ThingSpeak.setField(2, data.humidity);
@@ -50,9 +54,9 @@ void postThingSpeak(SensorData& data) {
   }, postRetryCounts[0]);
   if (lastPostResults[0] == 200) { chOk[0] = true; anyPostOk = true; }
 
-  client.stop();
   delay(THINGSPEAK_INTER_POST_MS);
 
+  stage("P2");
   lastPostResults[1] = postChannel(THINGSPEAK_2_CHANNEL, THINGSPEAK_2_API, 2, data.status, [&]() {
     ThingSpeak.setField(1, data.bmeTemp);
     ThingSpeak.setField(2, data.ahtTemp);
@@ -65,9 +69,9 @@ void postThingSpeak(SensorData& data) {
   }, postRetryCounts[1]);
   if (lastPostResults[1] == 200) { chOk[1] = true; anyPostOk = true; }
 
-  client.stop();
   delay(THINGSPEAK_INTER_POST_MS);
 
+  stage("P3");
   lastPostResults[2] = postChannel(THINGSPEAK_3_CHANNEL, THINGSPEAK_3_API, 3, data.status, [&]() {
     ThingSpeak.setField(1, data.rssi);
     ThingSpeak.setField(2, data.batteryVoltage);
@@ -77,6 +81,7 @@ void postThingSpeak(SensorData& data) {
   }, postRetryCounts[2]);
   if (lastPostResults[2] == 200) { chOk[2] = true; anyPostOk = true; }
 
+  stage("PA");
   if (anyPostOk) {
     wifiFailStreak = 0;   // at least one channel persisted the pre-reset FC; safe to clear for next wake
     postFailStreak = 0;   // same idea for PF: a live post got through, clear the silent-post-fail streak
