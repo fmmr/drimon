@@ -220,16 +220,17 @@ void setup() {
   // Serial up first so both the CB early-exit path and the normal path can log via finalizeWake.
   Serial.begin(SERIAL_BAUD);
 
-  // Circuit breaker: previous wake died inside the post block (stage starts with 'P': PS/P1/P2/P3/PA)
-  // AND this boot is a code-crash reset (not POWERON/EXT/DEEPSLEEP) → skip EVERYTHING and deep-sleep
-  // immediately via finalizeWake. No setupPins delay, no beep/flash, no WiFi, no sensors, no measure.
-  // Total wake time drops from ~5-7 s to ~100 ms, turning a 1.5 s panic loop into a NIGHT-interval
-  // back-off. Stage "CB" makes the skip visible in the next successful wake's LS token. Cleared as
-  // soon as any wake reaches stage("OK").
+  // Circuit breaker: any code-crash reset (PANIC/WDT/BROWNOUT/SW — i.e. not POWERON/EXT/DEEPSLEEP)
+  // → skip EVERYTHING and deep-sleep immediately. No setupPins delay, no beep/flash, no WiFi, no
+  // sensors, no measure. Total wake time drops from ~5-7 s to ~100 ms, turning any panic loop into
+  // a NIGHT-interval back-off. Fires regardless of where the previous wake died (previously gated
+  // on stage=P*, but any repeated panic burns battery just as fast — universal protection is safer).
+  // The previous death stage is still visible in the alternating LS chain: <stage>#N → CB#N+1 →
+  // <stage>#N+2 → CB#N+3 as timer wakes retry every 20 min. Cleared as soon as any wake reaches OK.
   bool badReset = (g_resetReason != ESP_RST_POWERON &&
                    g_resetReason != ESP_RST_EXT &&
                    g_resetReason != ESP_RST_DEEPSLEEP);
-  if (badReset && g_lastStage[0] == 'P') {
+  if (badReset) {
     Serial.printf("CB: prev died at %s, reset=%u — skipping wake\n", g_lastStage, g_resetReason);
     enterDeepSleep(start, "CB", CB_LUX);
     // never returns
