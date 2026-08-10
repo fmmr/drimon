@@ -41,25 +41,36 @@ int getSleepDuration(float lux) {
   return                        snappedSleep(SLEEP_INTERVAL_DAY_MIN   * mult);   // in :00,:10,:20… / off (×3) :00,:30
 }
 
-void enterDeepSleep(int sleepDuration) {
-  // Turn off the power to the sensors
+// Sole exit point of setup(). Used by both the normal end-of-wake path and the CB early-exit.
+// Computes sleep from lux, powers down the rail + LEDs, logs one summary line, writes the final
+// stage breadcrumb to NVS, arms the wake sources, and sleeps. Never returns.
+//   start      — millis() captured at the top of setup(), for total-wake-time bookkeeping
+//   finalStage — "OK" for a clean full wake, "CB" for a circuit-breaker survival skip
+//   lux        — from the sensor read on the normal path; CB path passes CB_LUX (0 → NIGHT bucket
+//                → longest interval). No default: forcing the caller to name the value keeps the
+//                error-mode fallback from silently applying to a normal wake.
+// lastMeasureTimeMs / lastPostTimeMs are owned by their own sites and left untouched here.
+void enterDeepSleep(long start, const char* finalStage, float lux) {
   digitalWrite(SENSOR_POWER_PIN, LOW);
-
-  // Turn off all LEDs
   digitalWrite(GREEN_LED_PIN, LOW);
   digitalWrite(RED_LED_PIN, LOW);
   digitalWrite(BLUE_LED_PIN, LOW);
-
-  if (DISPLAY_ON){
+  if (DISPLAY_ON) {
     lcd.clear();
     display.clearDisplay();
   }
 
-  esp_sleep_enable_ext0_wakeup(GPIO_NUM_15, 0);
+  int sleepDuration = getSleepDuration(lux);
+  long totalElapsed = millis() - start;
+  lastTotalTimeMs = totalElapsed > UINT16_MAX ? UINT16_MAX : (uint16_t)totalElapsed;
+  Serial.printf("Wake %ld ms (measure %u, post %u). Sleeping %d s. Stage %s.\n",
+                totalElapsed, lastMeasureTimeMs, lastPostTimeMs, sleepDuration, finalStage);
+  stage(finalStage);
 
-  Serial.print("Going to deep sleep for ");
-  Serial.print(sleepDuration);
-  Serial.println(" seconds...");
+  // EXT0 wake needs a defined level on GPIO 15. Normal path already set INPUT_PULLUP in setupPins;
+  // repeat here so the CB early-exit path (which skips setupPins) doesn't leave the pin floating.
+  pinMode(BUTTON_PIN, INPUT_PULLUP);
+  esp_sleep_enable_ext0_wakeup(GPIO_NUM_15, 0);
   // 1000000ULL forces the multiplication into uint64_t — plain int overflows at ~2147 s (35.7 min),
   // which the night snap and any off-season snap can exceed.
   esp_sleep_enable_timer_wakeup((uint64_t)sleepDuration * 1000000ULL);

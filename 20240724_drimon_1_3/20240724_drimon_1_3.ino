@@ -110,6 +110,11 @@
 
 #define SNAP_BOUNDARY_BUFFER_SEC 30  // added to every snapped sleep. ESP32 uses its internal 150 kHz RC oscillator for deep-sleep timing (±5 % accuracy), so a 10-min sleep can drift up to ±30 s. Buffer covers the "wake early" side so posts still land inside the intended minute even at worst-case drift.
 
+// Lux value passed to finalizeWake() on the CB early-exit path (no measure ran, no lux available).
+// 0 < NIGHT_LEVEL → getSleepDuration returns the NIGHT bucket = longest interval available. If
+// getLocalTime is also unavailable (fresh boot, no NTP), snappedSleep falls back to intervalMinutes*60.
+#define CB_LUX 0.0f
+
 int dispLine = 0;
 bool SHOULD_POST = false;
 bool DISPLAY_ON = false;
@@ -212,21 +217,21 @@ void setup() {
   g_resetReason = (uint8_t)esp_reset_reason();
   g_wakeupCause = (uint8_t)esp_sleep_get_wakeup_cause();
 
+  // Serial up first so both the CB early-exit path and the normal path can log via finalizeWake.
+  Serial.begin(SERIAL_BAUD);
+
   // Circuit breaker: previous wake died inside the post block (stage starts with 'P': PS/P1/P2/P3/PA)
   // AND this boot is a code-crash reset (not POWERON/EXT/DEEPSLEEP) → skip EVERYTHING and deep-sleep
-  // immediately. No setupPins delay, no beep/flash, no Serial, no WiFi, no sensors, no measure. Total
-  // wake time drops from ~5-7 s to ~100 ms, turning a 1.5 s panic loop into a NIGHT-interval back-off
-  // (20 min). Stage "CB" makes the skip visible in the next successful wake's LS token. Cleared as
+  // immediately via finalizeWake. No setupPins delay, no beep/flash, no WiFi, no sensors, no measure.
+  // Total wake time drops from ~5-7 s to ~100 ms, turning a 1.5 s panic loop into a NIGHT-interval
+  // back-off. Stage "CB" makes the skip visible in the next successful wake's LS token. Cleared as
   // soon as any wake reaches stage("OK").
   bool badReset = (g_resetReason != ESP_RST_POWERON &&
                    g_resetReason != ESP_RST_EXT &&
                    g_resetReason != ESP_RST_DEEPSLEEP);
   if (badReset && g_lastStage[0] == 'P') {
-    stage("CB");
-    pinMode(BUTTON_PIN, INPUT_PULLUP);   // ensure GPIO 15 isn't floating so EXT0 doesn't spurious-wake
-    esp_sleep_enable_ext0_wakeup(GPIO_NUM_15, 0);
-    esp_sleep_enable_timer_wakeup((uint64_t)SLEEP_INTERVAL_NIGHT_MIN * 60ULL * 1000000ULL);
-    esp_deep_sleep_start();
+    Serial.printf("CB: prev died at %s, reset=%u — skipping wake\n", g_lastStage, g_resetReason);
+    enterDeepSleep(start, "CB", CB_LUX);
     // never returns
   }
 
@@ -234,7 +239,6 @@ void setup() {
   setupPins();
   beep(50);
   flashLED(GREEN_LED_PIN, 2);
-  Serial.begin(SERIAL_BAUD);
 
   Serial.println("Setup...");
   Serial.printf("  Wake #%u (previous #%u ended at stage: %s)\n", g_wakeNum, g_prevWakeNum, g_lastStage);
@@ -283,6 +287,7 @@ void setup() {
   dispPrint("Measuring...");
   stage("MS");
   SensorData data = measure(start);
+  lastMeasureTimeMs = data.timeUsed > UINT16_MAX ? UINT16_MAX : (uint16_t)data.timeUsed;
   Serial.println("Measuring: done");
 
 
@@ -308,13 +313,7 @@ void setup() {
   beep(40);
   beep(40);
 
-  int sleepDuration = getSleepDuration(data.lux);
-  long totalElapsed = millis() - start;
-  lastTotalTimeMs = totalElapsed > UINT16_MAX ? UINT16_MAX : (uint16_t)totalElapsed;
-  lastMeasureTimeMs = data.timeUsed > UINT16_MAX ? UINT16_MAX : (uint16_t)data.timeUsed;
-  Serial.printf("Total wake time %ld ms (measure %ld, post %u). Sleeping %d s.\n", totalElapsed, data.timeUsed, lastPostTimeMs, sleepDuration);
-  stage("OK");
-  enterDeepSleep(sleepDuration);
+  enterDeepSleep(start, "OK", data.lux);
 }
 
 void loop() {  // do nothing
