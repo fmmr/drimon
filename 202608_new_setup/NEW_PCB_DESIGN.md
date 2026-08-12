@@ -109,6 +109,80 @@ Connector inventory:
 
 Result: every module on the board can be desoldered and replaced independently, and every external cable (battery, solar, USB, sensors) plugs into a single dedicated connector with strain relief. No solder joint between two module headers exists on the finished board.
 
+### Power debuggability
+
+**Motivation.** Summer 2026 burned five days debugging a battery/charger/wire path where every question ("is the battery healthy?", "is the charger healthy?", "is the gauge reading right?", "is the connection actually making contact?") required unsoldering, guessing, and hoping. The new PCB fixes this by making every rail *measurable* and every module *isolatable in seconds*, plus firmware-side telemetry so most of the same questions can be answered from the status page without walking to the greenhouse.
+
+Answer this question — **"can I answer 'is X working?' with a multimeter probe in under 30 seconds, or via a single ThingSpeak status token, without disassembling anything?"** — for every part of the power path. If no, add the feature. The four hooks below cover it end-to-end:
+
+**1. Labelled test points and debug header** — the PCB actively invites a multimeter. Two forms so we're not limited to one workflow:
+
+- **Individual test loops** — 1 mm silkscreen-boxed pads (or preferably 0.5 mm through-hole loops that a probe hook can grab) at every rail listed below. Each labelled by name on silk.
+- **One consolidated debug header** — a single 0.1" 2×N pin header with all rails + shared GNDs in a fixed row order (`GND · BAT · SOLAR · USB · CHG_OUT · MUX_OUT · 3V3 · 5V_GATED · GND`). Plug a pigtail into it and every rail comes out on a single ribbon for probing without contorting into the enclosure. Doubles as a bench-supply injection point for a specific rail during rework.
+
+Both options together cost ~$0 (bare copper + solder mask + one header) and give a choice between "quick probe with one hand" (individual pads) or "hook up a probe fixture" (header).
+
+Rails to expose:
+
+| Test point | What it tells you if it reads wrong |
+|---|---|
+| `TP_BAT`      | battery raw voltage. 0 V = pack unplugged; 3.0–4.2 V = pack alive. |
+| `TP_SOLAR`    | solar panel voltage into DFR0559. <5 V in sun = panel or its wire is dead. |
+| `TP_USB`      | USB-C VBUS. 5 V when cable plugged, 0 otherwise. |
+| `TP_CHG_OUT`  | DFR0559 5 V output. 0 V but battery OK = boost dead or shut off. |
+| `TP_MUX_OUT`  | TPS2113A output. Should be = max(TP_CHG_OUT, TP_USB). |
+| `TP_3V3`      | LDO output. 0 V but TP_MUX_OUT OK = LDO dead. |
+| `TP_5V_GATED` | sensor rail. 0 V during a wake = MOSFET gate wrong. |
+| 3× `TP_GND`   | ground probe points spread across the board. |
+
+Each pad has a distinct silkscreen box so a multimeter probe lands cleanly without touching neighbours. Voltages readable while the board is powered and mounted — no unclipping needed. If we place the debug header near a case cutout with a small removable cover, you can probe without opening the enclosure at all.
+
+Optional companion: a small "debug breakout" pigtail (PCB or hand-wired) with the mating 2×N connector on one end and colour-labelled banana-plug tails or DuPont leads on the other. Lives in the toolbox. Plug in during a site visit and every rail is a probe-touch away.
+
+**2. Per-rail status LEDs** — one low-current LED (through ~20 kΩ, few µA) per power rail, silkscreen-labelled:
+
+| LED | Purpose — visible answer to "is X up?" |
+|---|---|
+| `LED_BAT`    | lit → battery is providing voltage to the board (not just cell-side). Dark → connection break upstream of the LED. |
+| `LED_CHG`    | lit → DFR0559 5 V output is on. |
+| `LED_MUX`    | lit → TPS2113A is passing power (either from battery-boost or USB). |
+| `LED_3V3`    | lit → always-on 3.3 V rail is up. If ESP32 seems dead, this LED tells you whether the LDO is the culprit. |
+| `LED_SENSOR` | lit → gated sensor rail is on (helps debug "sensors read garbage" — is the rail even up?). |
+
+Five LEDs, ~$0.05 each, ~10 µA total draw (irrelevant against ESP32 sleep current). Look at the board with a flashlight and you know immediately which rail is down without any measurement.
+
+**3. Inline isolation resistors** — 0 Ω 0603 resistors (or 2-pin jumper headers if BOSS prefers screwdriver-free work) on every inter-module trace that isn't a bus:
+
+| Isolator | Cutting it isolates… |
+|---|---|
+| `J_BAT_CHG`   | battery ⇄ DFR0559 — test if the boost fails independent of battery. |
+| `J_BAT_GAUGE` | battery ⇄ DFR0563 — test gauge without battery, or reverse. |
+| `J_CHG_MUX`   | DFR0559 output ⇄ TPS2113A — force USB-only power. |
+| `J_MUX_LDO`   | TPS2113A ⇄ LDO — bench-power the LDO directly during rework. |
+| `J_SENSOR`    | before the sensor-power MOSFET — bypass the gate for sensor-side troubleshooting. |
+
+Removing a 0 Ω resistor takes ~5 s with a soldering iron. Splashing it back another 5 s. Compare to today's "cut a trace, hope you soldered it back cleanly" workflow.
+
+**4. Firmware-side telemetry** — every rail readable in the status field, no probe needed:
+
+- `BV-4.16` — battery voltage (already have, via MAX17043) ✓
+- `V5-4.98` — 5 V rail voltage, via one ADC + resistor divider on ESP32
+- `V3-3.28` — 3.3 V rail voltage, via ESP32's internal Vref (no external parts)
+- `IB-152` (open Q — see below) — battery current in mA, if we fit an INA219 on the battery-to-charger trace. Also lets firmware compute pack internal resistance live: `Rint = (BV_rest − BV_load) / IB_load` — the answer to "is the battery pack dying?" as a single number, published every wake.
+- `CHG-1` — charger status (charging / not-charging / fault) if DFR0559 exposes a status pin.
+
+Each token above answers a specific field question that today requires a site visit and a multimeter. Extending the current status.html renderer to show them is a trivial follow-up.
+
+**Documented decision tree** — a `POWER_DEBUG.md` in `documentation/` with a flowchart:
+
+> ESP32 won't boot → look at LEDs.
+> - `LED_3V3` dark? → measure `TP_3V3`. Still 0? → LDO or its input dead. Check `LED_MUX`.
+> - `LED_MUX` dark? → measure `TP_CHG_OUT` and `TP_USB`. Both 0? → both sources dead. One >0 but `TP_MUX_OUT`=0? → TPS2113A blown.
+> - All LEDs lit but ESP32 dead? → not a power problem; go to CPU/reset section.
+> …etc.
+
+No more "measure everything at random and hope you spot the anomaly". Every failure mode has a documented path from symptom → measurement → fix.
+
 ## Sensor placement — three physical groups
 
 Groups drive the connector strategy. Where a sensor lives determines how its cable enters the enclosure and what connector it uses.
@@ -154,6 +228,9 @@ Current 3× capacitive setup is unreliable (2 of 3 fail intermittently). Options
 
 **A6. Rescue-flash pigtail header — yes or no?**
 Standard 6-pin FTDI-pinout header inside the enclosure as a fallback if the on-board USB-serial chip dies. Cost: one 0.1" header (pennies). Upside: robustness. Downside: one more thing to lay out.
+
+**A6b. Onboard battery-current sensor (INA219 or INA226)?**
+The `IB-` telemetry token proposed in Power debuggability requires a shunt-based current sensor on the battery-to-charger trace. INA219 is ~$1 and puts current + voltage on the I²C bus. Upside: live pack internal resistance calculation (`Rint = ΔV / I` per wake) — early warning of a degrading pack months before it dies mid-winter. Downside: one more part, one more thing to lay out, small quiescent draw (~1 mA on the shunt + IC). Alternative: skip it and rely on the "does the boost sag under load?" ADC readback on `V5-`. Decide: is per-wake internal resistance worth the part cost?
 
 **A7. Display power — separate rail from sensors, and how to avoid I²C phantom-power?**
 Currently locked: OLED + LCD (backpack logic + backlight LED) share the sensor 5 V rail. When the firmware doesn't need to show anything, *nothing* on the display group needs power — chip, backpack, or backlight. Evidence this matters: 2026-08-08→09 11-hour panic-restart loop held an 8 s display-pause on every cold-boot wake with all displays lit, estimated ~130 mAh extra drain (battery trough dropped from a normal ~60 % to ~45 %). See the v1.2 lessons appendix for the full incident context.
