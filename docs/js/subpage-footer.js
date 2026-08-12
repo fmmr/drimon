@@ -4,8 +4,7 @@
         { href: 'windows.html',      text: 'Vindu' },
         { href: 'calendar.html',     text: 'Kalender' },
         { href: 'heat-frost.html',   text: 'Varme/frost' },
-        { href: 'status.html',       text: 'Status' },
-        { href: 'raw-statuses.html', text: 'Rå statuser' }
+        { href: 'status.html',       text: 'Status' }
     ];
 
     const render = () => {

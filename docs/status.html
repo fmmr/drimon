@@ -14,6 +14,16 @@
     <header>
         <h1>Systemstatus</h1>
         <div id="controls"></div>
+        <nav class="presets">
+            <a href="?">standard</a> ·
+            <a href="?days=3">3d</a> ·
+            <a href="?days=7">7d</a> ·
+            <a href="?days=30">30d</a> ·
+            <a href="?showOnlyStatus=true">kun statuser</a> ·
+            <a href="?showOnlyStatus=true&amp;n=200">kun 200</a> ·
+            <a href="?raw=true">rå</a> ·
+            <a href="?raw=true&amp;n=500">rå 500</a>
+        </nav>
     </header>
     <main>
         <div id="loading">Laster…</div>
@@ -101,6 +111,20 @@
             <div id="dists" class="dists"></div>
         </section>
 
+        <section id="raw-section" hidden>
+            <p class="hint">Klikk på en rad for å kopiere kun status-strengen. Eller: dra-marker flere rader og Cmd+C — status-strengen er skjult visuelt men følger med i utklippet (tab-separert: tid · kanaler · status).</p>
+            <table id="raw-table">
+                <thead>
+                    <tr>
+                        <th>Tid (Oslo)</th>
+                        <th title="Kanaler 1=Drimon, 2=Detaljer, 3=Tech — grønn = status observert på denne kanalen, · = kanalen mangler dette wake">Kanaler</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </section>
+
         <section id="recent-section" hidden>
             <h2>Siste 20 statuser</h2>
             <table id="recent-table">
@@ -135,6 +159,7 @@
         <p class="footer" data-subpage-footer></p>
     </main>
     <script src="js/subpage-footer.js"></script>
+    <script src="js/status-recent.js"></script>
     <script src="js/status.js"></script>
 </body>
 </html>

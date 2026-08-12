@@ -49,6 +49,13 @@ header {
     border-bottom: 2px solid var(--accent);
     padding-bottom: 0.5rem;
     margin-bottom: 1rem;
+    /* Pin to viewport top so the preset links stay reachable while scrolling through the
+       (potentially very long) statuses table. background covers content scrolling underneath. */
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 10;
+    padding-top: 0.5rem;
 }
 
 h1 {
@@ -80,6 +87,22 @@ h2 a:hover,
 #controls {
     color: var(--muted);
     font-size: 0.9rem;
+}
+
+.presets {
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-top: 0.15rem;
+}
+
+.presets a {
+    color: var(--muted);
+    text-decoration: none;
+    border-bottom: 1px dotted currentColor;
+}
+
+.presets a:hover {
+    color: var(--fg);
 }
 
 #loading {
@@ -339,6 +362,74 @@ td.ls-anomaly { color: var(--fail); font-weight: 600; }
 .ch-ok      { color: var(--hit); font-weight: 600; }
 .ch-missing { color: var(--fail); font-weight: 600; }
 .retry-count { color: var(--fbk); font-size: 0.75em; font-weight: 700; margin-left: 1px; }
+
+/* Statuser table (both #recent-section 20-col parsed and #raw-section 3-col raw) is wider than
+   body's 820 px reading column. Break the section out to the full viewport width so the table gets
+   room. margin-inline uses the "50% − 50vw" trick to escape the centered parent
+   (body { margin: 0 auto; max-width: 820px }). Horizontal scroll kicks in only if the table still
+   doesn't fit (narrow screens). */
+#recent-section,
+#raw-section {
+    margin-inline: calc(50% - 50vw);
+    padding-inline: 1rem;
+    box-sizing: border-box;
+    overflow-x: auto;
+}
+
+/* Rå-modus (?raw=true) — compact log-style listing. */
+#raw-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-variant-numeric: tabular-nums;
+}
+
+#raw-table thead th {
+    text-align: left;
+    padding: 0.4em 0.6em;
+    border-bottom: 1px solid var(--border, #ccc);
+    color: var(--muted, #666);
+    font-weight: 500;
+    font-size: 0.9em;
+}
+
+#raw-table tbody td {
+    padding: 0.25em 0.6em;
+    vertical-align: top;
+    font-size: 0.85em;
+}
+
+#raw-table tbody tr {
+    cursor: pointer;
+    transition: background-color 0.15s ease-out;
+}
+
+#raw-table tbody tr:hover {
+    background-color: rgba(217, 122, 43, 0.10);
+}
+
+#raw-table tbody tr.copied,
+#raw-table tbody tr.copied:hover {
+    background-color: var(--hit, #7bb96b);
+}
+
+#raw-table .ts {
+    white-space: nowrap;
+    color: var(--muted, #666);
+}
+
+/* Full status string in monospace. No truncation — the section can scroll horizontally if needed. */
+#raw-table .status-cell {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 0.75em;
+    color: var(--muted, #999);
+    white-space: nowrap;
+}
+
+.hint {
+    color: var(--muted, #666);
+    font-size: 0.85em;
+    margin: 0 0 0.6em 0;
+}
 
 /* Visual grouping: columns that hold PREVIOUS-wake data (HTTP/FC/PF/Post/Tot)
    read as italic muted "context" distinct from current-wake columns. Only the group's

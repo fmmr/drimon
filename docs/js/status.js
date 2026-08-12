@@ -1,3 +1,5 @@
+// STATUS_CHANNELS and TZ/MERGE_WINDOW_MS/parser/helpers/renderRecentTable come from status-recent.js
+// (must be loaded before this script). Only the systemstatus-specific bits live here.
 const STATUS_CHANNELS = [
     { id: 2568299, num: 1, label: 'Drimon' },
     { id: 2584548, num: 2, label: 'Detaljer' },
@@ -6,18 +8,27 @@ const STATUS_CHANNELS = [
 const TECH_CHANNEL = 2584547;
 const TECH_VOLT_FIELD = 2;
 const TU_FIELD = 4;
-const MERGE_WINDOW_MS = 60000;
-const TZ = 'Europe/Oslo';
 
 const params = new URLSearchParams(location.search);
 const DAYS = Math.max(1, Math.min(400, parseInt(params.get('days') || '14', 10)));
 const RESULTS = Math.max(1, Math.min(8000, parseInt(params.get('results') || '8000', 10)));
-const RECENT = Math.max(1, Math.min(2000, parseInt(params.get('recent') || '20', 10)));
+const N = Math.max(1, Math.min(8000, parseInt(params.get('n') || '20', 10)));
+// Two switches on top of the same data pipeline:
+//   ?showOnlyStatus=true — skip charts / per-day breakdowns / distributions, show only the table
+//   ?raw=true            — render the table as raw status strings (3 cols) instead of the parsed
+//                          20-column projection. Implies showOnlyStatus=true (raw + summary charts
+//                          isn't a useful combination — nobody wants charts above a string dump).
+const RAW = params.get('raw') === 'true';
+const SHOW_ONLY_STATUS = RAW || params.get('showOnlyStatus') === 'true';
 
 moment.locale('nb');
 
 document.getElementById('controls').textContent =
-    `Siste ${DAYS} dager · henter opptil ${RESULTS} status-entries`;
+    `Siste ${DAYS} dager · henter opptil ${RESULTS} status-entries${SHOW_ONLY_STATUS ? ' · kun statuser-tabell' : ''}${RAW ? ' · rå-modus' : ''}`;
+
+const techFetch = SHOW_ONLY_STATUS
+    ? Promise.resolve({ feeds: [] })
+    : fetch(`https://api.thingspeak.com/channels/${TECH_CHANNEL}/feeds.json?results=${RESULTS}&days=${DAYS}`).then(r => r.json());
 
 Promise.all([
     ...STATUS_CHANNELS.map(c =>
@@ -25,7 +36,7 @@ Promise.all([
             .then(r => r.json())
             .then(d => ({ num: c.num, feeds: d.feeds || [] }))
     ),
-    fetch(`https://api.thingspeak.com/channels/${TECH_CHANNEL}/feeds.json?results=${RESULTS}&days=${DAYS}`).then(r => r.json())
+    techFetch
 ])
     .then(results => {
         const byChannel = results.slice(0, STATUS_CHANNELS.length);
@@ -36,148 +47,24 @@ Promise.all([
         document.getElementById('loading').textContent = 'Feil ved henting: ' + err.message;
     });
 
-function mergeAcrossChannels(byChannel) {
-    const raw = [];
-    for (const { num, feeds } of byChannel) {
-        for (const f of feeds) {
-            if (!f.status) continue;
-            raw.push({
-                t: moment.tz(f.created_at, TZ),
-                raw: f.status,
-                s: parseStatus(f.status),
-                ch: num
-            });
-        }
-    }
-    raw.sort((a, b) => a.t.diff(b.t));
-
-    const wakes = [];
-    for (const e of raw) {
-        let matched = null;
-        for (let i = wakes.length - 1; i >= 0; i--) {
-            if (Math.abs(wakes[i].t.diff(e.t)) > MERGE_WINDOW_MS) break;
-            if (wakes[i].raw === e.raw) { matched = wakes[i]; break; }
-        }
-        if (matched) {
-            matched.channels.add(e.ch);
-        } else if (Object.keys(e.s).length > 0) {
-            wakes.push({ t: e.t, s: e.s, raw: e.raw, channels: new Set([e.ch]) });
-        }
-    }
-    wakes.sort((a, b) => a.t.diff(b.t));
-    return wakes;
-}
-
-function shortBS(bs) {
-    return typeof bs === 'string' && bs.length >= 6 ? bs.slice(-6) : (bs || '—');
-}
-
-// BSSID bytes 1-4 (8 hex chars, lowercase) → node name. Source: documentation/MESH_NODES.md.
-// Match strategy: drop byte 0 (varies with LA-bit interface variants: `14` LAN OUI, `1A`/`1E`/`26`
-// locally-administered radios) and byte 5 (varies with per-interface offset LAN+1, LAN+2, …). Bytes
-// 1-2 = `91:82` are the Linksys OUI (kept as a safety check against non-Linksys APs collision-matching
-// on bytes 3-4 alone). Bytes 3-4 are the unique-per-node bytes.
-const MESH_NODES = {
-    '918294f9': 'SOV_MF',
-    '91828f5f': 'EXTRA_UTE',
-    '91828f6c': 'STUE',
-    '91829500': 'TV_ROM'
-};
-
-function nodePrefix(bs) {
-    return typeof bs === 'string' && bs.length >= 12 ? bs.slice(2, -2).toLowerCase() : null;
-}
-
-function nodeName(bs) {
-    const prefix = nodePrefix(bs);
-    return prefix ? (MESH_NODES[prefix] || null) : null;
-}
-
-function nodeLabel(bs) {
-    return nodeName(bs) || shortBS(bs);
-}
-
-function githubCommitLink(hash) {
-    if (!hash || hash === 'template' || hash === 'unknown') return hash || '—';
-    const clean = hash.replace(/\+$/, '');   // strip the dirty '+' before linking
-    const dirtySuffix = hash.endsWith('+') ? '+' : '';
-    return `<a class="version-link" href="https://github.com/fmmr/drimon/commit/${clean}" target="_blank" rel="noopener noreferrer" title="Open commit ${hash} on GitHub">${clean}${dirtySuffix}</a>`;
-}
-
-function channelBadges(channels) {
-    return STATUS_CHANNELS.map(c => channels.has(c.num)
-        ? `<span class="ch-ok" title="${c.label}">${c.num}</span>`
-        : `<span class="ch-missing" title="${c.label} — mangler">·</span>`
-    ).join(' ');
-}
-
-function lrBadges(lr, pr) {
-    if (!Array.isArray(lr) || lr.length !== 3) return '—';
-    const prArr = Array.isArray(pr) && pr.length === 3 ? pr : [0, 0, 0];
-    return lr.map((code, i) => {
-        const cls = code === 200 ? 'ch-ok' : 'ch-missing';
-        const label = code === 200 ? 'OK' : (code === 0 ? 'ingen respons' : `HTTP ${code}`);
-        const retries = Number.isFinite(prArr[i]) ? prArr[i] : 0;
-        const retrySuffix = retries > 0 ? `<sup class="retry-count">+${retries}</sup>` : '';
-        const fullLabel = retries > 0 ? `${label} · ${retries} ekstra forsøk` : label;
-        return `<span class="${cls}" title="${fullLabel}">${code}${retrySuffix}</span>`;
-    }).join(' ');
-}
-
-const STATUS_TOKENS = [
-    { prefix: 'T-',  key: 'T',  parse: v => v },
-    { prefix: 'W-',  key: 'W',  parse: v => v },
-    { prefix: 'B-',  key: 'B',  parse: v => v },
-    { prefix: 'P-',  key: 'P',  parse: v => v },
-    { prefix: 'WF-', key: 'WF', parse: v => v },
-    { prefix: 'BS-', key: 'BS', parse: v => v },
-    { prefix: 'WT-', key: 'WT', parse: v => parseInt(v, 10) },
-    { prefix: 'FC-', key: 'FC', parse: v => parseInt(v, 10) },
-    { prefix: 'PF-', key: 'PF', parse: v => parseInt(v, 10) },
-    { prefix: 'BV-', key: 'BV', parse: v => parseFloat(v) },
-    { prefix: 'TU-', key: 'TU', parse: v => parseInt(v, 10) },
-    { prefix: 'TV-', key: 'TV', parse: v => parseFloat(v) },
-    { prefix: 'LX-', key: 'LX', parse: v => parseInt(v, 10) },
-    { prefix: 'WD-', key: 'WD', parse: v => parseInt(v, 10) },
-    { prefix: 'LR-', key: 'LR', parse: v => v.split('.').map(x => parseInt(x, 10)) },
-    { prefix: 'PR-', key: 'PR', parse: v => v.split('.').map(x => parseInt(x, 10)) },
-    { prefix: 'LTU-', key: 'LTU', parse: v => parseInt(v, 10) },
-    { prefix: 'LP-', key: 'LP', parse: v => parseInt(v, 10) },
-    { prefix: 'LT-', key: 'LT', parse: v => parseInt(v, 10) },
-    { prefix: 'WR-', key: 'WR', parse: v => v.split('.').map(x => parseInt(x, 10)) },
-    // LS format: `<wakeSerial>.<stage>` (e.g. `3.OK`, `7.WF`). Older firmware emitted just the stage
-    // (`OK`, `WF`); handle both — missing serial → n=null. Serial ensures each wake's status is
-    // unique so identical panic-loop rows don't merge in mergeAcrossChannels().
-    { prefix: 'LS-', key: 'LS', parse: v => {
-        const dot = v.indexOf('.');
-        if (dot < 0) return { n: null, stage: v };
-        return { n: parseInt(v.slice(0, dot), 10), stage: v.slice(dot + 1) };
-    }},
-    { prefix: 'V-',  key: 'V',  parse: v => v },
-    { prefix: 'SD-', key: 'SD', parse: v => parseInt(v, 10) }
-];
-const LIGHT_TOKENS = new Set(['NIGHT', 'DUSK', 'SHADE', 'SUN']);
-
-function parseStatus(s) {
-    const out = {};
-    if (!s) return out;
-    for (const p of s.split('_')) {
-        if (!p) continue;
-        if (LIGHT_TOKENS.has(p)) { out.LIGHT = p; continue; }
-        const t = STATUS_TOKENS.find(tk => p.startsWith(tk.prefix));
-        if (t) out[t.key] = t.parse(p.slice(t.prefix.length));
-        // unknown tokens are silently ignored — never pollute another field
-    }
-    return out;
-}
-
 function render(byChannel, tech) {
-    const entries = mergeAcrossChannels(byChannel);
+    const entries = mergeAcrossChannels(byChannel, STATUS_CHANNELS);
 
     if (!entries.length) {
         document.getElementById('loading').textContent = 'Ingen status-data.';
         return;
     }
+
+    if (RAW) {
+        renderRawTable(document.querySelector('#raw-table tbody'), entries, N, STATUS_CHANNELS);
+        document.getElementById('raw-section').hidden = false;
+    } else {
+        renderRecentTable(document.querySelector('#recent-table tbody'), entries, N, STATUS_CHANNELS, document.querySelector('#recent-section h2'));
+        document.getElementById('recent-section').hidden = false;
+    }
+    document.getElementById('loading').hidden = true;
+
+    if (SHOW_ONLY_STATUS) return;
 
     const wifiEntries = entries.filter(e => e.s.WF || Number.isFinite(e.s.WT));
     const fcEntries = entries.filter(e => Number.isFinite(e.s.FC));
@@ -206,10 +93,8 @@ function render(byChannel, tech) {
     renderFcPerDay(fcEntries);
     renderHttpPerDay(entries);
     renderDistributions(entries);
-    renderRecent(entries);
 
-    document.getElementById('loading').hidden = true;
-    for (const id of ['stats', 'wifi-section', 'lt-section', 'tu-section', 'lp-section', 'wt-section', 'battery-section', 'fc-section', 'http-section', 'dists-section', 'recent-section']) {
+    for (const id of ['stats', 'wifi-section', 'lt-section', 'tu-section', 'lp-section', 'wt-section', 'battery-section', 'fc-section', 'http-section', 'dists-section']) {
         document.getElementById(id).hidden = false;
     }
 }
@@ -349,64 +234,6 @@ function groupByDay(entries) {
     return [...days.entries()]
         .sort((a, b) => b[0].localeCompare(a[0]))
         .map(([key, list]) => ({ key, day: moment.tz(key, TZ), list }));
-}
-
-const RESET_REASON_NAMES = {
-    1: 'POWERON',
-    2: 'EXT',
-    3: 'SW',
-    4: 'PANIC',
-    5: 'INT_WDT',
-    6: 'TASK_WDT',
-    7: 'WDT',
-    8: 'DEEPSLEEP',
-    9: 'BROWNOUT',
-    10: 'SDIO'
-};
-const WAKEUP_CAUSE_NAMES = {
-    0: 'UNDEFINED',
-    2: 'EXT0',
-    4: 'TIMER'
-};
-
-function wrEntry(e) {
-    return Array.isArray(e.s.WR) && e.s.WR.length === 2 && Number.isFinite(e.s.WR[0]) && Number.isFinite(e.s.WR[1])
-        ? e.s.WR
-        : null;
-}
-
-function isColdBoot(e) {
-    const wr = wrEntry(e);
-    return wr !== null && wr[0] !== 8;
-}
-
-function anomalyReasons(e) {
-    const reasons = [];
-    const wr = wrEntry(e);
-    if (wr && !(wr[0] === 8 && (wr[1] === 4 || wr[1] === 2))) {
-        const rr = RESET_REASON_NAMES[wr[0]] || wr[0];
-        const wc = WAKEUP_CAUSE_NAMES[wr[1]] || wr[1];
-        reasons.push(`WR-${wr[0]}.${wr[1]} (${rr}/${wc})`);
-    }
-    if (e.channels && e.channels.size < STATUS_CHANNELS.length) {
-        const missing = STATUS_CHANNELS.filter(c => !e.channels.has(c.num)).map(c => c.num).join(',');
-        reasons.push(`kanal-tap: ${missing}`);
-    }
-    if (Array.isArray(e.s.PR) && e.s.PR.some(v => Number.isFinite(v) && v > 0)) {
-        reasons.push(`retries=${e.s.PR.join('.')}`);
-    }
-    if (Number.isFinite(e.s.FC) && e.s.FC > 0) reasons.push(`FC=${e.s.FC}`);
-    if (Number.isFinite(e.s.PF) && e.s.PF > 0) reasons.push(`PF=${e.s.PF}`);
-    if (Array.isArray(e.s.LR) && e.s.LR.some(c => c !== 200 && c !== 0)) {
-        reasons.push(`LR=${e.s.LR.join('.')}`);
-    }
-    // LS.stage='OK' = previous wake entered deep sleep cleanly. Anything else = previous wake died
-    // mid-phase. '??' = first-ever boot (no prior NVS write); don't flag as anomaly.
-    if (e.s.LS && typeof e.s.LS.stage === 'string' && e.s.LS.stage !== 'OK' && e.s.LS.stage !== '??') {
-        const nPart = Number.isFinite(e.s.LS.n) ? `${e.s.LS.n}.` : '';
-        reasons.push(`LS=${nPart}${e.s.LS.stage}`);
-    }
-    return reasons;
 }
 
 function renderStats(entries, wifiEntries, tuEntries, fcEntries, voltEntries, pfEntries) {
@@ -663,103 +490,6 @@ function renderDistributions(entries) {
             : '';
         return `<div class="dist-group"><div class="dist-title">${g.title} · n=${total}</div>${rows}${footer}</div>`;
     }).join('');
-}
-
-function renderRecent(entries) {
-    const tbody = document.querySelector('#recent-table tbody');
-    const rows = entries.slice(-RECENT).reverse();
-    const heading = document.querySelector('#recent-section h2');
-    if (heading) {
-        const ch1Id = STATUS_CHANNELS[0].id;
-        const url = `https://api.thingspeak.com/channels/${ch1Id}/status.json?results=20&days=1`;
-        heading.innerHTML =
-            `<a href="${url}" target="_blank" rel="noopener noreferrer">Siste ${rows.length} statuser</a>` +
-            ` · <a href="raw-statuses.html">rå statuser (merged fra 3 kanaler)</a>`;
-    }
-    tbody.innerHTML = rows.map(e => {
-        const wf = e.s.WF || '—';
-        const wfCls = wf === '—' ? '' : ` class="wf-${wf.toLowerCase()}"`;
-        const rawEscaped = e.raw ? e.raw.replace(/"/g, '&quot;') : '';
-        const reasons = anomalyReasons(e);
-        const trClass = reasons.length ? ' class="anomaly"' : '';
-        const titlePrefix = reasons.length ? `⚠ Uvanlig: ${reasons.join(' · ')} — ` : '';
-        const rawAttrs = e.raw ? ` title="${titlePrefix}Klikk for å kopiere: ${rawEscaped}" data-raw="${rawEscaped}"` : '';
-        return `<tr${trClass}${rawAttrs}>
-            <td>${e.t.format('D. MMM HH:mm')}</td>
-            <td class="ch-cell">${channelBadges(e.channels)}</td>
-            <td class="ch-cell prev-wake-col">${lrBadges(e.s.LR, e.s.PR)}</td>
-            <td class="prev-wake-col">${Number.isFinite(e.s.FC) ? e.s.FC : '—'}</td>
-            <td class="prev-wake-col">${Number.isFinite(e.s.PF) ? e.s.PF : '—'}</td>
-            <td class="prev-wake-col">${Number.isFinite(e.s.LTU) ? e.s.LTU : '—'}</td>
-            <td class="prev-wake-col">${Number.isFinite(e.s.LP) ? e.s.LP : '—'}</td>
-            <td class="prev-wake-col">${Number.isFinite(e.s.LT) ? e.s.LT : '—'}</td>
-            <td>${Number.isFinite(e.s.TU) ? e.s.TU : '—'}</td>
-            <td>${Number.isFinite(e.s.WT) ? e.s.WT : '—'}</td>
-            <td${wfCls}>${wf}</td>
-            <td title="${e.s.BS || ''}${nodeName(e.s.BS) ? ` — ${nodeName(e.s.BS)}` : ''}">${e.s.BS ? nodeLabel(e.s.BS) : '—'}</td>
-            <td>${e.s.LIGHT || '—'}${Number.isFinite(e.s.LX) ? ` <span class="raw-value">${e.s.LX}</span>` : ''}</td>
-            <td>${e.s.W || '—'}${Number.isFinite(e.s.WD) ? ` <span class="raw-value">${e.s.WD}</span>` : ''}</td>
-            <td>${e.s.T || '—'}${Number.isFinite(e.s.TV) ? ` <span class="raw-value">${e.s.TV.toFixed(1)}</span>` : ''}</td>
-            <td>${e.s.B || '—'}${Number.isFinite(e.s.BV) ? ` <span class="raw-value">${e.s.BV.toFixed(2)}</span>` : ''}</td>
-            <td>${e.s.P || '—'}</td>
-            <td${isColdBoot(e) ? ' class="cold-boot"' : ''}>${(() => {
-                const wr = wrEntry(e);
-                const sdSuffix = Number.isFinite(e.s.SD) && e.s.SD > 0
-                    ? ` <span class="raw-value">${e.s.SD / 1000}s</span>`
-                    : '';
-                if (!wr) return `—${sdSuffix}`;
-                const rrName = RESET_REASON_NAMES[wr[0]] || String(wr[0]);
-                const wcName = WAKEUP_CAUSE_NAMES[wr[1]] || String(wr[1]);
-                const title = `WR-${wr[0]}.${wr[1]} — ${rrName} · ${wcName}`;
-                let label;
-                if (wr[0] !== 8) label = `<span title="${title}">${rrName}</span>`;
-                else if (wr[1] === 2) label = `<span class="wr-button" title="${title}">BUTTON</span>`;
-                else if (wr[1] === 4) label = `<span class="wr-timer" title="${title}">TIMER</span>`;
-                else label = `<span title="${title}">${wcName}</span>`;
-                return `${label}${sdSuffix}`;
-            })()}</td>
-            <td${e.s.LS && e.s.LS.stage && e.s.LS.stage !== 'OK' && e.s.LS.stage !== '??' ? ' class="ls-anomaly"' : ''}>${
-                e.s.LS
-                    ? `${e.s.LS.stage}${Number.isFinite(e.s.LS.n) ? ` <span class="raw-value">#${e.s.LS.n}</span>` : ''}`
-                    : '—'
-            }</td>
-            <td>${githubCommitLink(e.s.V)}</td>
-        </tr>`;
-    }).join('');
-
-    tbody.onclick = (evt) => {
-        if (evt.target.closest('a')) return;   // let commit-hash / other links work normally
-        const tr = evt.target.closest('tr[data-raw]');
-        if (!tr) return;
-        const raw = tr.dataset.raw;
-        if (!raw) return;
-        copyToClipboard(raw).then(ok => {
-            if (!ok) return;
-            tr.classList.add('copied');
-            setTimeout(() => tr.classList.remove('copied'), 600);
-        });
-    };
-}
-
-// navigator.clipboard requires a secure context (HTTPS/localhost). Falls back to the deprecated
-// execCommand('copy') via a hidden textarea for plain-HTTP dev URLs like http://local.finn.no:8000.
-function copyToClipboard(text) {
-    if (navigator.clipboard && window.isSecureContext) {
-        return navigator.clipboard.writeText(text).then(() => true).catch(() => false);
-    }
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    ta.setAttribute('readonly', '');
-    ta.style.position = 'fixed';
-    ta.style.top = '0';
-    ta.style.left = '0';
-    ta.style.opacity = '0';
-    document.body.appendChild(ta);
-    ta.select();
-    let ok = false;
-    try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
-    document.body.removeChild(ta);
-    return Promise.resolve(ok);
 }
 
 function countBy(list, fn) {
