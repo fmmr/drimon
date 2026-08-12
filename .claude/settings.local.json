@@ -56,7 +56,10 @@
       "Read(//Users/fmr/projects/fritzing/**)",
       "Read(//private/tmp/fritzing_peek/**)",
       "Bash(sips -s format png svg.breadboard.esp32*.svg --out breadboard.png)",
-      "Bash(sips -s format png svg.schematic.esp32*.svg --out schematic.png)"
+      "Bash(sips -s format png svg.schematic.esp32*.svg --out schematic.png)",
+      "Bash(/Users/fmr/projects/drimon/scripts/panics_per_day.py --days 7)",
+      "Bash(/Users/fmr/projects/drimon/scripts/battery_history.py --lowest 5)",
+      "Bash(/Users/fmr/projects/drimon/scripts/wake_details.py --only PANIC --n 5 --days 3)"
     ],
     "deny": []
   },
