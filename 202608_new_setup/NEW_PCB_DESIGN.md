@@ -8,7 +8,7 @@ Replace the current PCB with a design that:
 
 1. **Survives prolonged low-solar periods.** The current board dies after ~12–14 days on battery alone; target ≥25 days. Root cause is the DFR0559 boost converter's ~25 mA continuous quiescent draw dominating the daily budget, plus the ESP32 dev module's onboard AMS1117 LDO + CH340 adding another ~10–15 mA continuous. Both are eliminated in the new design.
 2. **Flashes without disassembling the enclosure.** USB-C connector on the PCB reaches an enclosure cutout; plug in, flash, unplug.
-3. **Wires cleanly.** Keyed connectors, colour-coded wire jackets, silkscreen legend that lets a future reader trace any signal in seconds. No repeat of the v1.2 wire-spaghetti. **Zero hand-soldered inter-module wires** — every connection between component modules (DFR0559 charger, DFR0563 gauge, ESP32, TPS2113A, USB-C) is a PCB trace. Hand-soldered joints between BAT+/BAT− on the Charger and Gauge failed twice in v1.2 (2025 fall, 2026-08-12 dusk); making inter-module wiring impossible on the new PCB retires the entire failure class.
+3. **Wires cleanly.** Keyed connectors, colour-coded wire jackets, silkscreen legend that lets a future reader trace any signal in seconds. No repeat of the v1.2 wire-spaghetti. **Zero hand-soldered inter-module wires** — every connection between component modules (DFR0559 charger, DFR0563 gauge, ESP32, TPS2113A, USB-C) is a PCB trace. Hand-soldered inter-module joints have failed on v1.2 at least twice on different wire runs (solar-to-charger, and later the BAT+/BAT− path between charger and battery/gauge — 2026-08-12); making inter-module wiring impossible on the new PCB retires the entire failure class.
 4. **Has real headroom** for adding new sensors without hand-soldering to breakout pads.
 
 **Non-goal**: matching v1.2's physical layout, pin assignments, connector choices, or enclosure arrangement. Only the sensor set (what data the firmware collects) is carried forward. Everything about how those sensors are mounted, connected, and routed is open.
@@ -96,7 +96,7 @@ Battery+ (1S3P, ~8400 mAh @ 3.7 V nominal)
 
 **Power interconnects — dedicated PCB connectors, no wires between modules:**
 
-Every power-domain interface gets its own labelled, keyed connector on the PCB. All routing between them is copper trace, not hand-soldered wire. This is a hard rule — the v1.2 hand-soldered BAT+/BAT− joints between the DFR0559 (charger) and DFR0563 (gauge) failed twice, most recently 2026-08-12 (see `documentation/HARDWARE_SOLAR_CHARGING_CHECK.md`). The failure mode: joint works under trickle-charge current (small), collapses under WiFi TX burst current (large) → boost output drops → ESP32 brownouts → panic loop until sunrise restores solar-direct power.
+Every power-domain interface gets its own labelled, keyed connector on the PCB. All routing between them is copper trace, not hand-soldered wire. This is a hard rule — v1.2 has repeatedly lost inter-module hand-soldered joints (see `documentation/HARDWARE_SOLAR_CHARGING_CHECK.md` for the earlier solar-to-charger incident; a separate joint on the BAT+/BAT− path between charger and battery/gauge failed 2026-08-12). The typical failure mode: joint works under trickle-charge current (small), collapses under WiFi TX burst current (large) → boost output drops → ESP32 brownouts → panic loop until sunrise restores solar-direct power.
 
 Connector inventory:
 
