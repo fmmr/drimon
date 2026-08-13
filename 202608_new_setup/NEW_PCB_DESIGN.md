@@ -49,21 +49,24 @@ Battery+ (1S3P, ~8400 mAh @ 3.7 V nominal)
   ├── MAX17043 fuel gauge                          (always-on, ~50 µA)
   │       └── I²C bus "Wire" (GPIO 21/22), pull-ups on always-on 3.3 V
   │
-  ├── DFR0559 charger  ── solar in
-  │                     ── (optional) USB VBUS in
-  │                     └── 5 V out ── P-MOSFET (GPIO-gated) ── gated 5 V rail
-  │                                                                 ├── OLED, LCD
-  │                                                                 ├── All sensor VCCs
-  │                                                                 └── I²C bus "Wire1" pull-ups
+  ├── P-MOSFET (GPIO-gated, "CHG_DISC") ── DFR0559 charger  ── solar in
+  │                                        ── (optional) USB VBUS in
+  │                                        └── 5 V out ── P-MOSFET (GPIO-gated) ── gated 5 V rail
+  │                                                                                    ├── OLED, LCD
+  │                                                                                    ├── All sensor VCCs
+  │                                                                                    └── I²C bus "Wire1" pull-ups
   │
   └── TPS2113A power mux ── LOAD ── AP2112K-3.3 LDO ── ESP32 3.3 V  (always-on)
         ▲
         └── USB-C VBUS (wins over battery when present)
 ```
 
+The DFR0559's USB OUT is intentionally unused. The whole purpose of the new board is to eliminate its ~25 mA boost quiescent — ESP32 is powered from battery via the LDO instead. The DFR0559 exists only to charge (solar / USB in → battery) and to feed the gated sensor 5 V rail while sensors are active.
+
 **Why this shape**:
 
-- **The DFR0559's ~25 mA boost quiescent** is the root cause of off-season death. Gating the 5 V output through a MOSFET kills that between wakes. Target off-season quiescent: <500 µA total board draw.
+- **The DFR0559's ~25 mA boost quiescent** is the root cause of off-season death. USB OUT is not used — ESP32 runs from the LDO path instead — and the boost's 5 V header output is gated through a MOSFET for sensor use only. Target off-season quiescent: <500 µA total board draw.
+- **`CHG_DISC` P-MOSFET between battery+ and the DFR0559's `BAT+` pin** — GPIO-controlled charge disconnect. Closed by default for normal charging. Firmware opens it briefly (~200 ms) when it needs a bias-free battery voltage reading from the gauge (the DFR0559's charge circuit clamps the shared terminal to its CV target and hides the true cell EMF). Also usable for any future need to force charging off. Only safe because ESP32 no longer depends on the DFR0559's boost for power — LDO path keeps running. Once per wake at most; charger algorithm re-evaluates on reconnect and resumes normally.
 - **The ESP32 needs to be always-on** to keep RTC data across deep sleep. A dedicated low-Iq LDO (AP2112K-3.3, 55 µA Iq, 600 mA rated) from battery+ gives it a clean rail without depending on the DFR0559's boost being on.
 - **The fuel gauge stays always-on** so ModelGauge keeps integrating charge in/out across wakes — needed for predicting deep-discharge cutoff in the off-season.
 - **The TPS2113A power multiplexer** eliminates the manual "kill battery switch before flashing" step. USB VBUS is priority-selected when present, battery when not. No firmware special-case.
@@ -129,6 +132,7 @@ Rails to expose:
 | `TP_BAT`      | battery raw voltage. 0 V = pack unplugged; 3.0–4.2 V = pack alive. |
 | `TP_SOLAR`    | solar panel voltage into DFR0559. <5 V in sun = panel or its wire is dead. |
 | `TP_USB`      | USB-C VBUS. 5 V when cable plugged, 0 otherwise. |
+| `TP_BAT_CHG`  | battery side of the CHG_DISC MOSFET. Should equal `TP_BAT` when the FET is closed. Differs → FET stuck open or wrong drive polarity. |
 | `TP_CHG_OUT`  | DFR0559 5 V output. 0 V but battery OK = boost dead or shut off. |
 | `TP_MUX_OUT`  | TPS2113A output. Should be = max(TP_CHG_OUT, TP_USB). |
 | `TP_3V3`      | LDO output. 0 V but TP_MUX_OUT OK = LDO dead. |
@@ -165,10 +169,10 @@ Removing a 0 Ω resistor takes ~5 s with a soldering iron. Splashing it back ano
 
 **4. Firmware-side telemetry** — every rail readable in the status field, no probe needed:
 
-- `BV-4.16` — battery voltage (already have, via MAX17043) ✓
+- `BV-4.16` — battery voltage (already have, via MAX17043) ✓ — but note: this reads the shared BAT node, which is clamped to the DFR0559's CV target when charging is active. For a *true* cell EMF, firmware pulses `CHG_DISC` open for ~200 ms and re-samples (see below).
+- `BVR-3.98` — battery voltage sampled with `CHG_DISC` open (rest EMF, no charger clamp). Compared against `BV` in the same wake, the delta is the current charger bias — a live signal for "how far off is my SoC estimate right now?".
 - `V5-4.98` — 5 V rail voltage, via one ADC + resistor divider on ESP32
 - `V3-3.28` — 3.3 V rail voltage, via ESP32's internal Vref (no external parts)
-- `IB-152` (open Q — see below) — battery current in mA, if we fit an INA219 on the battery-to-charger trace. Also lets firmware compute pack internal resistance live: `Rint = (BV_rest − BV_load) / IB_load` — the answer to "is the battery pack dying?" as a single number, published every wake.
 - `CHG-1` — charger status (charging / not-charging / fault) if DFR0559 exposes a status pin.
 
 Each token above answers a specific field question that today requires a site visit and a multimeter. Extending the current status.html renderer to show them is a trivial follow-up.
@@ -230,7 +234,7 @@ Current 3× capacitive setup is unreliable (2 of 3 fail intermittently). Options
 Standard 6-pin FTDI-pinout header inside the enclosure as a fallback if the on-board USB-serial chip dies. Cost: one 0.1" header (pennies). Upside: robustness. Downside: one more thing to lay out.
 
 **A6b. Onboard battery-current sensor (INA219 or INA226)?**
-The `IB-` telemetry token proposed in Power debuggability requires a shunt-based current sensor on the battery-to-charger trace. INA219 is ~$1 and puts current + voltage on the I²C bus. Upside: live pack internal resistance calculation (`Rint = ΔV / I` per wake) — early warning of a degrading pack months before it dies mid-winter. Downside: one more part, one more thing to lay out, small quiescent draw (~1 mA on the shunt + IC). Alternative: skip it and rely on the "does the boost sag under load?" ADC readback on `V5-`. Decide: is per-wake internal resistance worth the part cost?
+With the `CHG_DISC` FET already giving us bias-free voltage samples (BVR), the case for an INA219 shrinks — most of what we needed the current data for (knowing when the charger is idle so we can trust a voltage reading) is now obtainable by just pulsing CHG_DISC and re-sampling. INA219 would still add live pack internal resistance measurement (`Rint = (BV_charge − BVR_rest) / I_charge` computed continuously), an early warning of a degrading pack. Cost: ~$1 part, one more layout, ~1 mA quiescent on the shunt + IC. Decide: is continuous ESR trending worth the part, or is the once-per-wake BV/BVR pair enough?
 
 **A7. Display power — separate rail from sensors, and how to avoid I²C phantom-power?**
 Currently locked: OLED + LCD (backpack logic + backlight LED) share the sensor 5 V rail. When the firmware doesn't need to show anything, *nothing* on the display group needs power — chip, backpack, or backlight. Evidence this matters: 2026-08-08→09 11-hour panic-restart loop held an 8 s display-pause on every cold-boot wake with all displays lit, estimated ~130 mAh extra drain (battery trough dropped from a normal ~60 % to ~45 %). See the v1.2 lessons appendix for the full incident context.
