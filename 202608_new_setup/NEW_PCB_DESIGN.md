@@ -214,8 +214,21 @@ Grouped by subsystem, split into "needs discussion" vs. "sensible defaults that 
 
 ### A. Needs BOSS input (architectural)
 
-**A1. Enclosure — redesign or keep?**
-Current setup is clip-together clear plastic boxes joined side-by-side. Hard to reach into, not IP-rated. Options: keep-and-adapt (constrain the new PCB to fit the current cutout layout); design a new enclosure (3D-printed, laser-cut, or off-the-shelf project box, likely IP54+); somewhere in between. This decision drives PCB size, connector positions, and how sensors mount.
+**A1. Enclosure — redesign (BOSS wants new, current one isn't cutting it).**
+Current setup (clip-together clear plastic boxes joined side-by-side) is being replaced. Requirements captured from BOSS:
+1. **Easy mounting** — every part (PCB, battery pack, DFR0559 if separate, displays, buttons) must have a defined mounting point; no hot-glue-and-hope.
+2. **As small as practical** — compact but with all parts nicely laid out; no wasted volume.
+3. **Simple install / uninstall in the greenhouse** — quick to remove before high-pressure washing or for winter storage. **As few external cable connections as possible, and every one of them easy to unplug/replug.** Ideally a single connector or a small set of clearly-labelled ones.
+4. **Front-facing viewing surface** — status LEDs, both displays (OLED + LCD), and all buttons must be visible/accessible from the front without opening the box.
+5. **Mounting orientation: underside of an existing shelf.** So the "front" is what's visible when looking up at the shelf underside. Mounting brackets/screws must accommodate this orientation.
+
+Open sub-decisions to work through:
+- Enclosure fabrication: 3D-printed (custom shape, prototyping-friendly), off-the-shelf project box (fastest, less pretty), laser-cut acrylic (in between).
+- IP rating: greenhouse is humid + occasionally high-pressure washed nearby. IP54 minimum? Full IP65/67 (sealed) trickier with connectors and vented sensors (BME280/AHT20 need air access).
+- Sensor cable exit strategy — see A4.
+- Battery accessibility (swap without desoldering) — dictates internal layout.
+
+This decision drives PCB size, connector positions, and sensor mounting; needs to land early because everything else depends on the physical envelope.
 
 **A2. DFR0559 — integrate onto the main PCB or keep as a separate module?**
 Today it's a separate carrier board wired in. Integrating saves the loose wires and Wago connectors but couples the DFR0559 tightly to the main PCB (harder to swap if it dies). Trade-off: cleaner wiring vs. reworkability.

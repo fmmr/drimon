@@ -1,47 +1,81 @@
-I want to continue the Drimon greenhouse-monitor PCB redesign. This is a resume from a prior brainstorming session, not a fresh start.
+I want to continue the Drimon greenhouse-monitor PCB redesign. This is a resume from a prior brainstorming + hardware-debugging session, not a fresh start.
 
 ## Start here
 
-Read `202608_new_setup/NEW_PCB_DESIGN.md` end-to-end. It's the single source of truth for the design and it's structured for a resume:
+Read `202608_new_setup/NEW_PCB_DESIGN.md` end-to-end. It's the single source of truth and it's structured for a resume:
 
 1. **Purpose** and **Design goals** — what the new board must achieve
 2. **Sensor set** — the data firmware collects (non-negotiable)
-3. **Locked design decisions** — power topology, flashing, connectors, wiring conventions (all already decided; do not renegotiate)
+3. **Locked design decisions** — power topology, flashing, connectors, wiring conventions, power debuggability
 4. **Sensor placement** — three physical groups (on-PCB / on-enclosure / remote)
 5. **Open design questions** — split into:
-   - **A. Needs BOSS input** (architectural — A1..A6)
+   - **A. Needs BOSS input** (architectural — A1..A7)
    - **B. Defaults to confirm** (implementation defaults with a proposed answer each — B1..B10, quick nods)
 6. **Reference material**, **v1.2 lessons appendix**, **skill-level context**
 
+## Context you also need to know (added since last brainstorm)
+
+- **Panic-loop crisis, 2026-08-07 through 2026-08-13.** For a full week the deployed board (v1.2, firmware 60abeb8) went into nightly panic-reboot loops (25 k+ wakes overnight, ~1.6 s per cycle), draining the battery ~5-8 mAh net each night. Investigation ended with a diagnosis of **failing pack + high internal resistance under load**, not the firmware and not the solder joints (which were checked and confirmed OK). The DFR0559 charger, when unloaded, clamps the shared BAT node to its CV target and *hides* the true cell EMF from the fuel gauge — so we spent days chasing wrong theories about firmware, WiFi retries, and solder joints when the actual issue was the pack. Full incident timeline preserved in `documentation/HARDWARE_SOLAR_CHARGING_CHECK.md`-style detail is scattered across the raw statuses at drimon.rodland.no; the design-relevant lessons are all captured in the doc's **Power debuggability** section and the new **CHG_DISC** MOSFET (see below).
+
+- **Firmware fixes deployed 2026-08-13 (commit 0cd7dc1 and follow-ups)** and validated across the first clean night 2026-08-13/14:
+  - Fresh `WiFiClient` per POST attempt (avoids lwIP PCB reuse under retry stress)
+  - `MAX_POST_RETRY 2 → 1` (halves retry blast radius)
+  - `P1`/`P2`/`P3`/`PA` stage breadcrumbs inside `postThingSpeak` for pinpointing crash location
+  - **Circuit breaker (CB)**: any bad reset (PANIC / WDT / BROWNOUT / SW / unknown) triggers a stage("CB") + NIGHT-interval deep sleep. Turns a panic loop into a 20-min back-off. Fired exactly once during the first clean night — caught a single brownout, resumed normal operation. Confirmed working as designed.
+  - Unified `enterDeepSleep(long start, const char* finalStage, float lux)` — single exit point from setup(), used by both normal end-of-wake and CB early-exit.
+  - Do NOT touch firmware this session; note it here only so you know what state the deployed system is in.
+
+- **New PCB design has grown two new features** as a result of the debugging week — both already documented in NEW_PCB_DESIGN.md:
+  - **Power debuggability** (test points, per-rail status LEDs, inline 0Ω isolation resistors, debug header + optional breakout pigtail, firmware-side rail-voltage telemetry tokens `V5-`, `V3-`, `BV-`, `BVR-`)
+  - **CHG_DISC P-MOSFET** between battery+ and DFR0559 BAT+ pin — firmware can pulse it open briefly to get a bias-free battery voltage reading (`BVR-` token) that isn't clamped by the CV charger. Safe because ESP32 no longer depends on the DFR0559's boost — it runs from the LDO path.
+
+- **Enclosure requirements captured** (see A1 in the open questions):
+  1. Easy mounting for every part
+  2. As small as practical
+  3. Simple install/uninstall for pressure washing + winter storage; as few external cables as possible, each easy to unplug
+  4. LEDs + both displays + buttons front-visible
+  5. Mounted underside of an existing shelf (front-facing direction = downward-visible)
+
 ## Framing — do not slip on this
 
-The current v1.2 PCB, its wiring topology, and its enclosure arrangement are **not constraints** on the new design. Only the sensor set (what data firmware collects) is carried forward. Everything else — physical layout, PCB pin assignments, connector choices, sensor mounting, enclosure geometry, whether the DFR0559 / MAX17043 sit integrated on the main PCB or remain as separate modules — is fully open. Don't anchor on v1.2 when proposing new-design choices. The v1.2 lessons appendix in the doc explains what to protect against; it is context, not a template.
+The current v1.2 PCB, its wiring topology, and its enclosure arrangement are **not constraints** on the new design. Only the sensor set (what data firmware collects) is carried forward. Everything else — physical layout, PCB pin assignments, connector choices, sensor mounting, enclosure geometry, whether the DFR0559 / MAX17043 sit integrated on the main PCB or remain as separate modules — is fully open. The v1.2 lessons appendix in the doc explains what to protect against; it is context, not a template.
+
+Similarly: KiCad, Aisler, 2-layer FR4 are all **working assumptions**, not requirements. If a better tool, fab, or layer count fits the design when we get there, we take it.
 
 ## What to do first
 
-Walk the **B (defaults to confirm)** list first — it's a quick pass, each item has a proposed default with rationale. Present them one at a time (or grouped) and ask BOSS for a nod or a redirect. Landing these clears noise before tackling the architectural questions.
+Walk the **B (defaults to confirm)** list first — quick pass, each item has a proposed default with rationale. Present them one at a time (or grouped) and ask BOSS for a nod or a redirect. Land these before tackling architectural questions.
 
-Then walk the **A (needs BOSS input)** list in order — each is a real trade-off, needs discussion. For each, give trade-off analysis and a recommendation, then wait for a decision.
+Then walk the **A (needs BOSS input)** list in order — each is a real trade-off, needs discussion. For each, give trade-off analysis and a recommendation, then wait for a decision. **A1 (enclosure) is the biggest and needs to land early** because everything else depends on the physical envelope.
 
-For every decision that lands, edit the `NEW_PCB_DESIGN.md` file to move the item out of "open" and into the locked-decisions section (or wherever it belongs). Keep the doc clean going forward — don't leave a chronological session log; the doc should always describe the current state of the design.
+For every decision that lands, edit `NEW_PCB_DESIGN.md` to move the item out of "open" and into the locked-decisions section (or wherever it belongs). Keep the doc clean going forward — don't leave a chronological session log; the doc should always describe the current state of the design.
 
 ## Style
 
 - Call BOSS "BOSS".
-- BOSS is a strong Kotlin/Java/C++ dev, not an EE. Explain hardware trade-offs from first principles; don't just name parts.
-- For critical or unattended workflows, prefer hardware (a $2 IC) over firmware workarounds when both are viable. See the flashing decision in the doc for an example.
-- Don't narrate; act. Terse updates at key moments.
+- BOSS is a strong Kotlin/Java/C++ dev, not an EE. Can solder, doesn't natively read schematics or reason about analog circuits from first principles. Explain hardware trade-offs from first principles; don't just name parts. When BOSS asks "why", assume they mean it — no jargon-shortcuts.
+- Don't quote the design doc back to BOSS as if it were external evidence. BOSS is the author; the doc is our shared notes, not an authority.
+- For critical or unattended workflows, prefer hardware (a $2 IC) over firmware workarounds when both are viable. The flashing decision in the doc is an example.
+- Don't narrate; act. Terse updates at key moments. Give a one-line commit message when a task is done.
 - The I²C socket pinout is locked to `SDA – SCL – VCC – GND` so existing sensor plugs carry over — do not renegotiate.
-- Don't touch firmware in this session. It's a hardware-design session only.
+- Don't touch firmware in this session. It's a hardware-design session only. (Firmware is currently healthy on 0cd7dc1+.)
 
 ## Supporting files (in `202608_new_setup/`)
 
-- `NEW_PCB_DESIGN.md` — the design brief (read this)
-- `old/aisler.png` — Aisler etching preview of the deployed v1.2 board
+- `NEW_PCB_DESIGN.md` — the design brief (read this first)
+- `old/aisler.png` — Aisler etching preview of the deployed v1.2 board (silkscreen "v 1.2")
 - `old/all_on_one_with_power_common_soil_onewire_netlist.xml` — v1.2 netlist
 - `old/IMG_2849.JPG`, `old/IMG_2850.JPG`, `old/IMG_2851.JPG` — live-setup photos
 
-## Firmware for read-only reference
+## Firmware for read-only reference (do not edit)
 
-- `20240724_drimon_1_3/*.ino`
+- `20240724_drimon_1_3/*.ino` — current firmware, commit 0cd7dc1+
 - `documentation/HARDWARE.md`, `documentation/QUICK_REFERENCE.md`, `documentation/ARCHITECTURE.md`
+
+## Analysis scripts (already exist)
+
+- `scripts/panics_per_day.py` — per-day panic count + battery levels + first-panic conditions
+- `scripts/battery_history.py` — long-term battery voltage per day (via tech channel field 2)
+- `scripts/wake_details.py` — per-wake detailed columns with `--only <stage>` filter (e.g. `--only PANIC`, `--only CB`)
+
+Any of these can be re-run to verify current field state before making design assumptions.
