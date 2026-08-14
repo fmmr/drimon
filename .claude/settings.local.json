@@ -60,7 +60,8 @@
       "Bash(/Users/fmr/projects/drimon/scripts/panics_per_day.py --days 7)",
       "Bash(/Users/fmr/projects/drimon/scripts/battery_history.py --lowest 5)",
       "Bash(/Users/fmr/projects/drimon/scripts/wake_details.py --only PANIC --n 5 --days 3)",
-      "WebFetch(domain:wiki.dfrobot.com)"
+      "WebFetch(domain:wiki.dfrobot.com)",
+      "Bash(/Users/fmr/projects/drimon/scripts/wake_details.py --n 300 --days 2)"
     ],
     "deny": []
   },

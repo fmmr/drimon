@@ -1,6 +1,6 @@
 # Drimon PCB Redesign
 
-Design brief for the next revision of the Drimon greenhouse-monitor PCB. Clean-sheet redesign, KiCad-drawn, Aisler-fabricated.
+Design brief for the next revision of the Drimon greenhouse-monitor PCB. Clean-sheet redesign. Working assumptions: KiCad for design, Aisler for fab, 2-layer FR4 — but none of these are locked. Better tool, better fab, or more layers are all fair game if they improve the outcome.
 
 ## Purpose
 
@@ -36,8 +36,10 @@ Also on the enclosure (not sensors): wake button, reset button, POST-enable swit
 
 ### Fab and tooling
 
-- **Fab house**: Aisler. Design rules: 6 mil (0.15 mm) minimum trace, 0.4 mm minimum drill, 2-layer FR4.
-- **EDA tool**: KiCad. Not Fritzing. Fritzing's weak DRC / ERC allowed a manufactured SCL trace cut and two disjoint 5 V nets on v1.2; KiCad catches this class of error before manufacture.
+- **Fab house**: **default Aisler** — European, quality, previously used. Not a requirement; JLCPCB (cheaper, larger SMT catalog if we ever add machine-assembly), OSH Park, PCBWay, or others are all fair alternatives. Pick whichever suits the final design when we're ready to fab.
+- **Board layers**: **default 2-layer FR4** — likely sufficient for this design's complexity and keeps cost lowest. Not a requirement; go to 4-layer if routing genuinely benefits (e.g. dedicated ground/power plane pair improves noise on the analog sensor rails, or density forces it). Decide when the layout is being routed.
+- **Design rules**: 6 mil (0.15 mm) minimum trace, 0.4 mm minimum drill are the current Aisler defaults; adjust to whichever fab we actually pick.
+- **EDA tool**: **default KiCad** — free, open source, strong ERC/DRC, large community. Alternatives considered: EasyEDA (browser-based, easier learning curve, tied to JLCPCB); Fritzing (weakest ERC/DRC of the three, and its permissive rule-checking is what let two real electrical errors ship on v1.2 — a manufactured SCL trace cut and two disjoint 5 V nets). No hard commitment yet; whatever tool gets the design across the finish line without shipping electrical bugs is fine.
 
 ### Power architecture
 
