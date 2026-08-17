@@ -36,6 +36,8 @@ Read `202608_new_setup/NEW_PCB_DESIGN.md` end-to-end. It's the single source of 
   4. LEDs + both displays + buttons front-visible
   5. Mounted underside of an existing shelf (front-facing direction = downward-visible)
 
+- **LoRa / Meshtastic as new uplink direction.** Greenhouse WiFi is unreliable — not just locally, but the internet uplink is a 10 km directional-antenna WiFi link that fails hard and often. Design intent for the new PCB is to switch primary uplink to **LoRa via SX1262 using Meshtastic protocol**, riding the public mesh (Rødtangen has visible coverage on <https://analyzer.letsmesh.net/map>). Keep WiFi as a fallback during validation. Three architecture options captured as open question A8 — hardware topology depends on coverage test result from a first-buy Heltec V3.
+
 ## Framing — do not slip on this
 
 The current v1.2 PCB, its wiring topology, and its enclosure arrangement are **not constraints** on the new design. Only the sensor set (what data firmware collects) is carried forward. Everything else — physical layout, PCB pin assignments, connector choices, sensor mounting, enclosure geometry, whether the DFR0559 / MAX17043 sit integrated on the main PCB or remain as separate modules — is fully open. The v1.2 lessons appendix in the doc explains what to protect against; it is context, not a template.

@@ -10,6 +10,7 @@ Replace the current PCB with a design that:
 2. **Flashes without disassembling the enclosure.** USB-C connector on the PCB reaches an enclosure cutout; plug in, flash, unplug.
 3. **Wires cleanly.** Keyed connectors, colour-coded wire jackets, silkscreen legend that lets a future reader trace any signal in seconds. No repeat of the v1.2 wire-spaghetti. **Zero hand-soldered inter-module wires** — every connection between component modules (DFR0559 charger, DFR0563 gauge, ESP32, TPS2113A, USB-C) is a PCB trace. Hand-soldered inter-module joints have failed on v1.2 at least twice on different wire runs (solar-to-charger, and later the BAT+/BAT− path between charger and battery/gauge — 2026-08-12); making inter-module wiring impossible on the new PCB retires the entire failure class.
 4. **Has real headroom** for adding new sensors without hand-soldering to breakout pads.
+5. **Uplink independence from the current fragile WiFi path.** The greenhouse's internet uplink is a 10 km directional WiFi antenna link that fails hard and often — separate from any local WiFi flakiness. Design intent: LoRa via SX1262 as an independent uplink using the Meshtastic public mesh (Rødtangen area has visible coverage on <https://analyzer.letsmesh.net/map>). WiFi kept as a possible fallback while LoRa proves itself, but LoRa is the target primary path.
 
 **Non-goal**: matching v1.2's physical layout, pin assignments, connector choices, or enclosure arrangement. Only the sensor set (what data the firmware collects) is carried forward. Everything about how those sensors are mounted, connected, and routed is open.
 
@@ -73,6 +74,15 @@ The DFR0559's USB OUT is intentionally unused. The whole purpose of the new boar
 - **The fuel gauge stays always-on** so ModelGauge keeps integrating charge in/out across wakes — needed for predicting deep-discharge cutoff in the off-season.
 - **The TPS2113A power multiplexer** eliminates the manual "kill battery switch before flashing" step. USB VBUS is priority-selected when present, battery when not. No firmware special-case.
 - **Two I²C buses** avoid I²C phantom-powering (pull-ups back-feeding current into powered-down sensor chips via their SDA/SCL pins). Fuel gauge on the always-on bus; everything else on the gated bus.
+
+### Radio / uplink
+
+- **LoRa via SX1262** — 868 MHz EU band. Intended primary uplink using the Meshtastic public mesh (Rødtangen area has visible node coverage). Motivation: independence from the greenhouse's fragile 10 km directional-antenna WiFi uplink, plus lower per-transmit current than WiFi (~50 mA vs ~200 mA burst).
+- **Meshtastic protocol** — established public mesh network, no need to run our own gateway if public coverage holds. Cell-phone-style pattern: our node broadcasts a status packet, gets relayed hop-by-hop, eventually reaches a gateway-node with internet uplink → forwarded to ThingSpeak (via a firmware bridge from the receiving gateway; details TBD once we test coverage).
+- **Antenna** — SMA passthrough on the enclosure wall, external 868 MHz dipole (~86 mm). U.FL pigtail from the SX1262 to the SMA connector inside.
+- **WiFi kept as fallback** during LoRa validation phase. Once LoRa is proven reliable over months, WiFi can be dropped (or kept as a completely optional backup).
+- **Duty-cycle budget**: EU 868 MHz allows ~36 s/hour airtime; current post rate (~6/hour × ~1 s each = ~6 s/hour) fits comfortably. Room to increase to ~30 posts/hour if needed.
+- Architecture details — same-ESP32-plus-SX1262-chip vs separate-Heltec-as-modem — see open question A8.
 
 ### Flashing
 
@@ -250,6 +260,27 @@ Standard 6-pin FTDI-pinout header inside the enclosure as a fallback if the on-b
 
 **A6b. Onboard battery-current sensor (INA219 or INA226)?**
 With the `CHG_DISC` FET already giving us bias-free voltage samples (BVR), the case for an INA219 shrinks — most of what we needed the current data for (knowing when the charger is idle so we can trust a voltage reading) is now obtainable by just pulsing CHG_DISC and re-sampling. INA219 would still add live pack internal resistance measurement (`Rint = (BV_charge − BVR_rest) / I_charge` computed continuously), an early warning of a degrading pack. Cost: ~$1 part, one more layout, ~1 mA quiescent on the shunt + IC. Decide: is continuous ESR trending worth the part, or is the once-per-wake BV/BVR pair enough?
+
+**A8. LoRa/Meshtastic hardware topology — same-ESP32 or separate node?**
+Three architectures for wiring LoRa into the system, all viable:
+
+- **A8-a. Same ESP32 + SX1262 breakout via SPI.** Our current ESP32 runs both radios; ~6 GPIO pins + one JST-XH connector for a bare SX1262 module (e.g. RFM95W, Ebyte E22-900M22S, ~€10). Cleanest hardware; firmware has to implement Meshtastic protocol on top of a LoRa library (RadioLib supports it partially — feasibility check needed).
+- **A8-b. Same ESP32 + SX1262, custom point-to-point (no Meshtastic protocol).** Same hardware as A8-a but we skip Meshtastic and use a simple custom LoRa link direct to our own gateway node. Gives up the public mesh; requires operating our own gateway. Simpler firmware. Doesn't benefit from Rødtangen's existing coverage.
+- **A8-c. Separate Heltec V3 running stock Meshtastic firmware, UART-linked to our ESP32.** Meshtastic-compatible board on the PCB, connected via 2 pins (TX/RX) or SPI. Meshtastic handles the mesh; our firmware just writes status strings over UART. Simplest firmware split; adds ~€25 in hardware and one more module on the board.
+
+Trade-off summary:
+| | A8-a | A8-b | A8-c |
+|---|---|---|---|
+| Uses public Meshtastic mesh? | Yes (if we implement protocol) | No | Yes |
+| Firmware effort | Medium-large | Small | Small |
+| Extra hardware cost | ~€10 | ~€10 (+ own gateway) | ~€25 |
+| Own gateway needed? | No, if public mesh covers | Yes | No, if public mesh covers |
+| Board complexity | Low | Low | Medium |
+
+Order of experiments to inform this decision:
+1. Buy one Heltec V3 (~€25), flash stock Meshtastic firmware, deploy in greenhouse for a week — measure how many neighboring nodes it reaches and packet delivery rate.
+2. If coverage is solid → decide between A8-a (integrate LoRa on our board, implement Meshtastic protocol) or A8-c (keep the Heltec as a permanent modem). A8-c is likely lower-risk.
+3. If coverage is patchy → A8-b with own home gateway becomes more attractive.
 
 **A7. Display power — separate rail from sensors, and how to avoid I²C phantom-power?**
 Currently locked: OLED + LCD (backpack logic + backlight LED) share the sensor 5 V rail. When the firmware doesn't need to show anything, *nothing* on the display group needs power — chip, backpack, or backlight. Evidence this matters: 2026-08-08→09 11-hour panic-restart loop held an 8 s display-pause on every cold-boot wake with all displays lit, estimated ~130 mAh extra drain (battery trough dropped from a normal ~60 % to ~45 %). See the v1.2 lessons appendix for the full incident context.
