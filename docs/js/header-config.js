@@ -165,11 +165,19 @@ const DEFAULT_HEADER_CONFIG = {
                 icon: 'fas fa-redo-alt',
                 titleKey: 'rebootPi'
             }
+        },
+        statusPageLink: {
+            type: 'pageLink',
+            config: {
+                href: 'status.html?showOnlyStatus=true',
+                icon: 'fas fa-signal',
+                title: 'Systemstatus'
+            }
         }
     },
-    
+
     // Layout order (single row for regular mode)
-    layout: ['logo', 'data', 'thingspeak', 'dateRanges', 'settingsDropdown', 'languageSwitcher', 'darkModeToggle', 'statsToggle', 'resultsInput'],
+    layout: ['logo', 'data', 'thingspeak', 'dateRanges', 'settingsDropdown', 'languageSwitcher', 'darkModeToggle', 'statsToggle', 'statusPageLink', 'resultsInput'],
     
     // Header theme
     theme: 'modern-header'
@@ -230,7 +238,7 @@ const HEADER_MODE_CONFIGS = [
             statusPageLink: {
                 type: 'pageLink',
                 config: {
-                    href: 'status.html',
+                    href: 'status.html?showOnlyStatus=true',
                     icon: 'fas fa-signal',
                     title: 'Systemstatus'
                 }

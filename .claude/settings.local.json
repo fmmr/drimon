@@ -62,7 +62,10 @@
       "Bash(/Users/fmr/projects/drimon/scripts/wake_details.py --only PANIC --n 5 --days 3)",
       "WebFetch(domain:wiki.dfrobot.com)",
       "Bash(/Users/fmr/projects/drimon/scripts/wake_details.py --n 300 --days 2)",
-      "WebFetch(domain:www.nkon.nl)"
+      "WebFetch(domain:www.nkon.nl)",
+      "Bash(/Users/fmr/projects/drimon/scripts/panics_per_day.py --days 8)",
+      "Bash(/Users/fmr/projects/drimon/scripts/wake_details.py --only CB --n 20 --days 8)",
+      "Bash(/Users/fmr/projects/drimon/scripts/wake_details.py --n 3 --days 1)"
     ],
     "deny": []
   },

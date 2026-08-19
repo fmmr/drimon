@@ -234,7 +234,7 @@
     background: none;
     border: none;
     cursor: pointer;
-    padding: 8px;
+    padding: 8px 4px;
     border-radius: 4px;
     transition: background-color 0.2s ease;
 }
@@ -439,7 +439,7 @@
 /* Mobile multi-row styling */
 .mobile-header .header-row-1 {
     justify-content: flex-start;
-    gap: 8px;
+    gap: 2px;
     align-items: center;
 }
 

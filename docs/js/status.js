@@ -12,7 +12,7 @@ const TU_FIELD = 4;
 const params = new URLSearchParams(location.search);
 const DAYS = Math.max(1, Math.min(400, parseInt(params.get('days') || '14', 10)));
 const RESULTS = Math.max(1, Math.min(8000, parseInt(params.get('results') || '8000', 10)));
-const N = Math.max(1, Math.min(8000, parseInt(params.get('n') || '20', 10)));
+const N = Math.max(1, Math.min(8000, parseInt(params.get('n') || '150', 10)));
 // Two switches on top of the same data pipeline:
 //   ?showOnlyStatus=true — skip charts / per-day breakdowns / distributions, show only the table
 //   ?raw=true            — render the table as raw status strings (3 cols) instead of the parsed
