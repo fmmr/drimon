@@ -276,11 +276,25 @@ Trade-off summary:
 | Extra hardware cost | ~€10 | ~€10 (+ own gateway) | ~€25 |
 | Own gateway needed? | No, if public mesh covers | Yes | No, if public mesh covers |
 | Board complexity | Low | Low | Medium |
+| **Per-wake energy (LoRa portion)** | **~0.033 mAh** (SX1262 1 s TX only) | **~0.033 mAh** (same) | **~0.22 mAh** (Heltec power-cycled 10 s @ 80 mA) |
+| **Daily energy** (144 wakes) | ~5 mAh/day | ~5 mAh/day | ~32 mAh/day (~WiFi-equivalent) |
+
+Power notes for A8-c specifically:
+- **Heltec always-on is non-viable** (~50–80 mA continuous → ~1500 mAh/day, kills pack in ~6 days without solar).
+- **Heltec must be power-cycled** via a MOSFET (same pattern as the sensor rail). Boot ~5–10 s → send status over UART → cut power. Adds ~10 s per wake.
+- No GPS on the V3, so no satellite-lock delay to worry about.
+- Set Meshtastic role to **`CLIENT_MUTE`** — send-only, don't relay for other nodes (irrelevant if power-cycled anyway, but explicit).
 
 Order of experiments to inform this decision:
 1. Buy one Heltec V3 (~€25), flash stock Meshtastic firmware, deploy in greenhouse for a week — measure how many neighboring nodes it reaches and packet delivery rate.
-2. If coverage is solid → decide between A8-a (integrate LoRa on our board, implement Meshtastic protocol) or A8-c (keep the Heltec as a permanent modem). A8-c is likely lower-risk.
-3. If coverage is patchy → A8-b with own home gateway becomes more attractive.
+2. If coverage is solid → decide between A8-a (best power, hardest firmware) and A8-c (Heltec-equivalent power to WiFi, easiest firmware).
+3. If coverage is patchy → A8-b with own home gateway becomes more attractive (best power + simple firmware, but no public-mesh benefit).
+
+Decisions still to make (in order):
+- Confirm coverage with the Heltec test → informs A8-a / A8-b / A8-c pick
+- Own home gateway: yes or no (mandatory for A8-b, insurance for A8-a/c)
+- Meshtastic role setting for our node (`CLIENT_MUTE` recommended)
+- Whether to keep WiFi as a fallback path in firmware, or drop it once LoRa is proven
 
 **A7. Display power — separate rail from sensors, and how to avoid I²C phantom-power?**
 Currently locked: OLED + LCD (backpack logic + backlight LED) share the sensor 5 V rail. When the firmware doesn't need to show anything, *nothing* on the display group needs power — chip, backpack, or backlight. Evidence this matters: 2026-08-08→09 11-hour panic-restart loop held an 8 s display-pause on every cold-boot wake with all displays lit, estimated ~130 mAh extra drain (battery trough dropped from a normal ~60 % to ~45 %). See the v1.2 lessons appendix for the full incident context.
