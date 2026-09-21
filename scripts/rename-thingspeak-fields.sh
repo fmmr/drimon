@@ -8,7 +8,7 @@
 # account. These are NOT channel Write API Keys.
 
 # ─── EDIT THESE, then run: bash scripts/rename-thingspeak-fields.sh ───
-# WARNING: do not commit this file with real keys — revert to PASTE_HERE
+# WARNING: do not commit this file with real keys — revert to CHANGE_ME
 #          (or wipe with `git checkout -- scripts/rename-thingspeak-fields.sh`)
 #          before staging.
 USER_KEY_MAIN="CHANGE_ME"   # owns 2568299 (DRIVHUS), 2584547 (TECH), 2584548 (TEMP)
@@ -18,7 +18,7 @@ USER_KEY_EXT="CHANGE_ME"    # owns 2626867 (EXT)
 set -euo pipefail
 
 for k in USER_KEY_MAIN USER_KEY_EXT; do
-    if [[ "${!k}" == "PASTE_HERE" ]]; then
+    if [[ "${!k}" == "CHANGE_ME" ]]; then
         echo "error: paste the User API Key into $k at the top of this script" >&2
         exit 1
     fi
