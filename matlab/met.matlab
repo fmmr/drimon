@@ -22,6 +22,7 @@ metHum        = details.relative_humidity;
 precipitation = details.precipitation_rate;
 wind          = details.wind_speed;
 uvIndex       = details.ultraviolet_index_clear_sky;
+apparentTemp  = details.apparent_air_temperature;
 tempDiff = temp - metTemp;
 humDiff  = hum  - metHum;
 
@@ -31,8 +32,9 @@ sane = metTemp       > -30 && metTemp       <  40 && ...
        precipitation >=  0 && precipitation <  50  && ...
        wind          >=  0 && wind          <  60  && ...
        uvIndex       >=  0 && uvIndex       <  15  && ...
+       apparentTemp  > -50 && apparentTemp  <  50  && ...
        timestamp > hour_ago;
 
 if sane
-    thingSpeakWrite(writeChannelID,'Fields',[1,2,3,4,5,6,7,8],'Values',{metTemp, metHum, tempDiff, humDiff, wind, precipitation, temp, uvIndex},'WriteKey',writeAPIKey)
+    thingSpeakWrite(writeChannelID,'Fields',[1,2,3,4,5,6,7,8],'Values',{metTemp, metHum, tempDiff, humDiff, wind, precipitation, apparentTemp, uvIndex},'WriteKey',writeAPIKey)
 end

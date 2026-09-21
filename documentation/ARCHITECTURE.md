@@ -107,7 +107,7 @@ Server-side script that runs inside ThingSpeak's MATLAB Analysis service, trigge
 - Reads greenhouse temp+humidity from Ch 2568299
 - Fetches nowcast weather from MET Norway for the greenhouse coordinates
 - Computes greenhouse-vs-outdoor diffs
-- Writes 8 fields (met temp/hum, diffs, wind, precipitation, UV, temp) to **Ch 2626867** (`EXT_CHANNEL`, "External weather")
+- Writes 8 fields (met temp/hum, diffs, wind, precipitation, apparent temp, UV) to **Ch 2626867** (`EXT_CHANNEL`, "External weather")
 
 Two ThingSpeak accounts involved: the trigger/analysis account (owns Ch 2568/2584/2584) and the write-target account (owns Ch 2626). Details: [`matlab/README.md`](../matlab/README.md).
 

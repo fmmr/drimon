@@ -37,7 +37,7 @@ The file `met.matlab` in this repo is a snapshot for reference. To change behavi
 | 4 | `humDiff` (hum − metHum) | — |
 | 5 | `wind` (wind_speed) | webapp: `chart-wind` |
 | 6 | `precipitation` (precipitation_rate) | webapp: `chart-rain` |
-| 7 | `temp` (greenhouse temp, from read channel) | — (redundant with source channel) |
+| 7 | `apparentTemp` (MET.no `apparent_air_temperature`, "feels like") | — (repurposed from redundant greenhouse-temp mirror on 2026-09-21) |
 | 8 | `uvIndex` (ultraviolet_index_clear_sky) | webapp: `chart-uv-index` |
 
 ## Robustness
