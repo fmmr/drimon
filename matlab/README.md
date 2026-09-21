@@ -40,8 +40,8 @@ The file `met.matlab` in this repo is a snapshot for reference. To change behavi
 | 7 | `temp` (greenhouse temp, from read channel) | — (redundant with source channel) |
 | 8 | `uvIndex` (ultraviolet_index_clear_sky) | webapp: `chart-uv-index` |
 
-## Fragility notes
+## Robustness
 
-The scraper uses a legacy `urlfilter(url, targetString, N)` helper that returns the first N numeric values after `targetString`. It's **positional** — MET Norway adding a field between existing ones will shift the indices. This happened once (UV index was added, shifting wind's position); see the July 2026 fix in git history.
+The scraper uses `webread` + `jsondecode` and looks fields up by name (`details.air_temperature`, `details.wind_speed`, …). MET adding new fields (they added `ultraviolet_index_clear_sky` in July 2026 and `apparent_air_temperature` in September 2026, both alphabetically inserted) no longer shifts anything. Each field also has a plausibility gate — the whole write is skipped if any value is out of range, so a malformed API response drops the sample rather than polluting the channel.
 
-If wind or another field starts showing garbage on the site, the MET API response format has probably changed again. Rebuild with `webread()` + JSON field lookup by name for a robust fix.
+Historical note: earlier versions used a positional `urlfilter(url, targetString, N)` helper. It broke each time MET added a field. If you find yourself reverting to it, don't — see git history for the two prior incidents.
