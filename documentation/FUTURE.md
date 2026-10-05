@@ -2,6 +2,8 @@
 
 Living list of things worth building. Ordered roughly by "cool + achievable from existing data". Ideas at the top are more concrete; wishlist at the bottom is looser.
 
+> **Status (2026-10-04):** Greenhouse shut down for winter — windows permanently closed, plants removed, watering (2×/day) off. ESP32 + sensors left running for winter observation only (no active regulation). New cells + v1.4 PCB planned for spring.
+
 ---
 
 ## Brainstorm — Aug 2026

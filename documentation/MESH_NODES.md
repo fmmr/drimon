@@ -18,7 +18,7 @@ Bytes 1–2 (`91:82`) are part of the Linksys OUI and are constant across every 
 | **STUE** | Living room | 192.168.1.166 | `14:91:82:8F:6C:4E` | `91828f6c` |
 | **TV_ROM** | TV room | 192.168.1.147 | `14:91:82:95:00:DD` | `91829500` |
 
-The 2.4 GHz radio (which the ESP32 associates with) is typically **LAN MAC + 1 on the last byte** with the LAN OUI first byte. Only SOV_MF's 2.4 GHz BSSID has been observed in production (`14:91:82:94:F9:C4`, ESP32 `BS-14918294f9c4`). If the mesh ever routes the ESP32 to a different radio variant (e.g. `1A:91:82:94:F9:xx`), the middle-4-bytes match will still identify the node correctly.
+The 2.4 GHz radio (which the ESP32 associates with) is typically **LAN MAC + 1 on the last byte** with the LAN OUI first byte. In practice the ESP32 has associated with two nodes so far: **STUE** (`14:91:82:8F:6C:4F`, `BS-1491828f6c4f`) as the normal associator, and **SOV_MF** (`14:91:82:94:F9:C4`, `BS-14918294f9c4`) which took over on 2026-10-04 when STUE lost power for ~4 h and the RTC-cached BSSID stopped answering, triggering a mesh handoff. If the mesh ever routes the ESP32 to a different radio variant (e.g. `1A:91:82:94:F9:xx`), the middle-4-bytes match will still identify the node correctly.
 
 ## Other radio MACs per node
 
